@@ -4,10 +4,10 @@
   "repository": "git@github.com:TryGhost/TrafficAnalytics.git",
   "author": "Ghost Foundation",
   "license": "MIT",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "dev": "node app.js",
-    "test:unit": "NODE_ENV=testing c8 --all --check-coverage --100  --reporter text --reporter cobertura mocha './test/**/*.test.js'",
+    "dev": "node server.js",
+    "test:unit": "NODE_ENV=testing c8 --all --check-coverage --100 --include 'src/**' --reporter text --reporter cobertura mocha './test/**/*.test.js'",
     "test": "yarn test:unit",
     "lint:code": "eslint *.js lib/ --ext .js --cache",
     "lint": "yarn lint:code",
@@ -15,8 +15,8 @@
     "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
   },
   "files": [
-    "app.js",
-    "lib"
+    "server.js",
+    "src"
   ],
   "devDependencies": {
     "c8": "10.1.3",

@@ -1,13 +1,11 @@
-const assert = require('assert/strict');
 const request = require('supertest');
-const app = require('../app');
+const app = require('../src/app');
 
 describe('Express App', () => {
-    it('should return "Hello World" on the root route', async () => {
-        const response = await request(app)
+    it('should return "Hello World" on the root route', () => {
+        return request(app)
             .get('/')
-            .expect(200);
-
-        assert.equal(response.text, 'Hello World');
+            .expect(200)
+            .expect('Hello World');
     });
 });
