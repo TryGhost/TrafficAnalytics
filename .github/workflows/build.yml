@@ -78,7 +78,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics
+            europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics
           tags: |
             ${{ github.ref == 'refs/heads/main' && 'type=edge,branch=main' || '' }}
             type=semver,pattern={{version}}
