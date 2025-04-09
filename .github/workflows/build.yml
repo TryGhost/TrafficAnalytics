@@ -49,7 +49,7 @@ jobs:
   test:
     name: Test
     environment: build
-    needs: [extract-node-version]
+    needs: extract-node-version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -63,7 +63,7 @@ jobs:
   build-push:
     name: Build and Push
     environment: build
-    needs: [extract-node-version, lint, check-yarn-lock, test]
+    needs: [lint, check-yarn-lock, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
