@@ -49,7 +49,7 @@ jobs:
   test:
     name: Test
     environment: build
-    needs: [extract-node-version, lint, check-yarn-lock]
+    needs: [extract-node-version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
