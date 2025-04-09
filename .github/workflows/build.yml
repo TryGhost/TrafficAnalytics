@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  extract-node-version:
+    name: Extract Node Version
+    runs-on: ubuntu-latest
+    outputs:
+      node_version: ${{ steps.node-version.outputs.node_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract Node version from Dockerfile
+        id: node-version
+        run: |
+          NODE_VERSION=$(grep -oP 'FROM node:\K[0-9]+' Dockerfile)
+          echo "node_version=$NODE_VERSION" >> $GITHUB_OUTPUT
+
+  lint:
+    name: Lint
+    needs: extract-node-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.extract-node-version.outputs.node_version }}
+          cache: "yarn"
+      - run: yarn install
+      - run: yarn lint
+  
+  check-yarn-lock:
+    needs: extract-node-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.extract-node-version.outputs.node_version }}
+          cache: "yarn"
+      - name: Check yarn.lock
+        run: yarn install --frozen-lockfile
+
+  test:
+    name: Test
+    environment: build
+    needs: [extract-node-version, lint, check-yarn-lock]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.extract-node-version.outputs.node_version }}
+          cache: "yarn"
+      - run: yarn install
+      - run: yarn test
+  
+  build-push:
+    name: Build and Push
+    environment: build
+    needs: [extract-node-version, lint, check-yarn-lock, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Login to GCP Artifact Registry"
+        uses: docker/login-action@v3
+        with:
+          registry: europe-docker.pkg.dev
+          username: _json_key
+          password: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+      - name: Traffic Analytics Docker meta
+        id: traffic-analytics-docker-metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics
+          tags: |
+            ${{ github.ref == 'refs/heads/main' && 'type=edge,branch=main' || '' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,priority=1100
+      - name: Build Docker image
+        id: build-docker-image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          tags: ${{ steps.traffic-analytics-docker-metadata.outputs.tags }}

@@ -69,3 +69,4 @@ typings/
 .DS_Store
 
 # Traffic Analytics Custom
+.actsecrets

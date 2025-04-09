@@ -9,7 +9,7 @@
     "dev": "node server.js",
     "test:unit": "NODE_ENV=testing c8 --all --check-coverage --100 --include 'src/**' --reporter text --reporter cobertura mocha './test/**/*.test.js'",
     "test": "yarn test:unit",
-    "lint:code": "eslint *.js lib/ --ext .js --cache",
+    "lint:code": "eslint *.js src/ --ext .js --cache",
     "lint": "yarn lint:code",
     "preship": "yarn test",
     "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
@@ -20,7 +20,7 @@
   ],
   "devDependencies": {
     "c8": "10.1.3",
-    "eslint": "9.24.0",
+    "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.4.0",
     "mocha": "11.1.0",
     "sinon": "20.0.0",
