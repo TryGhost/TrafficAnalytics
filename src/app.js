@@ -15,7 +15,7 @@ app.get('/', (req, res) => {
     res.status(200).send('Hello World - Github Actions Deployment Test');
 });
 
-app.get('/tb/web_analytics', (req, res) => {
+app.post('/tb/web_analytics', (req, res) => {
     httpProxy.web(req, res);
 });
 
