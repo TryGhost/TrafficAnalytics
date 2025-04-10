@@ -6,6 +6,7 @@ const app = express();
 
 // Request logging middleware
 app.use((req, res, next) => {
+    // eslint-disable-next-line no-console
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} ${res.statusCode}`);
     next();
 });

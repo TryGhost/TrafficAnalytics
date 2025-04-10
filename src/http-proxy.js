@@ -1,4 +1,4 @@
-var httpProxy = require('http-proxy');
+let httpProxy = require('http-proxy');
 const url = require('url');
 
 const proxy = httpProxy.createProxyServer({
@@ -6,7 +6,7 @@ const proxy = httpProxy.createProxyServer({
     ignorePath: true
 });
 
-proxy.on('proxyReq', function(proxyReq, req, res, options) {
+proxy.on('proxyReq', function (proxyReq, req, res, options) {
     // Parse the target URL
     const parsedUrl = url.parse(proxyReq.path, true);
     
