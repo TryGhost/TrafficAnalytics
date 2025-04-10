@@ -6,6 +6,6 @@ describe('Express App', () => {
         return request(app)
             .get('/')
             .expect(200)
-            .expect('Hello World');
+            .expect('Hello World - Github Actions Deployment Test');
     });
 });
