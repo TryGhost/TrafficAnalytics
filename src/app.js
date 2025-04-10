@@ -1,10 +1,25 @@
 // Main module file
-
 const express = require('express');
+const httpProxy = require('./http-proxy');
+
 const app = express();
 
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} ${res.statusCode}`);
+    next();
+});
+
 app.get('/', (req, res) => {
-    res.send('Hello World - Github Actions Deployment Test');
+    res.status(200).send('Hello World - Github Actions Deployment Test');
+});
+
+app.get('/tb/web_analytics', (req, res) => {
+    httpProxy.web(req, res);
+});
+
+app.get('/local-proxy*', (req, res) => {
+    res.status(200).send('Hello World - From the local proxy');
 });
 
 module.exports = app;
