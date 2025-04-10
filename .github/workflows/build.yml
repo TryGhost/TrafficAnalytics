@@ -120,7 +120,7 @@ jobs:
           service: stg-${{ matrix.region_name }}-traffic-analytics
           skip_default_labels: true
           labels: |-
-            commit-sha=${{ github.sha }}  deploy-staging:
+            commit-sha=${{ github.sha }}
   
   deploy-production:
     if: github.ref == 'refs/heads/main'
