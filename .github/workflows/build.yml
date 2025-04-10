@@ -65,6 +65,8 @@ jobs:
     environment: build
     needs: [lint, check-yarn-lock, test]
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.traffic-analytics-docker-metadata.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - name: "Login to GCP Artifact Registry"
@@ -92,3 +94,30 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.traffic-analytics-docker-metadata.outputs.tags }}
+  
+  deploy-staging:
+    if: github.ref == 'refs/heads/main'
+    name: Deploy (Staging)
+    needs: build-push
+    runs-on: ubuntu-latest
+    environment: staging
+    strategy:
+      matrix:
+        region: [europe-west4]
+        include:
+          - region: europe-west4
+            region_name: netherlands
+    steps:
+      - name: "Auth with Google Cloud"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+      - name: "Deploy to Cloud Run"
+        uses: google-github-actions/deploy-cloud-run@v2
+        with:
+          image: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:${{ needs.build-push.outputs.version }}
+          region: ${{ matrix.region }}
+          service: stg-${{ matrix.region_name }}-traffic-analytics
+          skip_default_labels: true
+          labels: |-
+            commit-sha=${{ github.sha }}
