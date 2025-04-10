@@ -22,6 +22,8 @@ proxy.on('proxyReq', function (proxyReq, req, res, options) {
 });
 
 proxy.on('error', (err, req, res) => {
+    // eslint-disable-next-line no-console
+    console.error('Proxy Error:', err);
     res.status(500).send('Proxy Error');    
 });
 
