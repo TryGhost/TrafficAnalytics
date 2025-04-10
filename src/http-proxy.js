@@ -3,7 +3,8 @@ const url = require('url');
 
 const proxy = httpProxy.createProxyServer({
     target: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
-    ignorePath: true
+    ignorePath: true,
+    changeOrigin: true
 });
 
 proxy.on('proxyReq', function (proxyReq, req, res, options) {
