@@ -63,6 +63,56 @@ describe('Fastify App', function () {
             });
     });
 
+    // Test that requests without both name and token are rejected
+    it('should reject requests without token parameter', function (done) {
+        request(server)
+            .post('/tb/web_analytics?name=test')
+            .expect(400)
+            .expect(function (res) {
+                if (!res.body.error || !res.body.message) {
+                    throw new Error('Expected error response with message');
+                }
+            })
+            .end(done);
+    });
+
+    it('should reject requests without name parameter', function (done) {
+        request(server)
+            .post('/tb/web_analytics?token=abc123')
+            .expect(400)
+            .expect(function (res) {
+                if (!res.body.error || !res.body.message) {
+                    throw new Error('Expected error response with message');
+                }
+            })
+            .end(done);
+    });
+
+    it('should reject requests with empty parameters', function (done) {
+        request(server)
+            .post('/tb/web_analytics?token=&name=test')
+            .expect(400)
+            .expect(function (res) {
+                if (!res.body.error || !res.body.message) {
+                    throw new Error('Expected error response with message');
+                }
+            })
+            .end(done);
+    });
+
+    it('should accept requests with both parameters', function (done) {
+        request(server)
+            .post('/tb/web_analytics?token=abc123&name=test')
+            .expect(function (res) {
+                // This should be proxied, so we can't assume a specific status code
+                // Just verify it's not 400 (bad request)
+                if (res.status === 400) {
+                    throw new Error('Request was rejected when it should have been accepted');
+                }
+            })
+            .end(done);
+    });
+
     // Test for invalid URLs to trigger error handling
     it('should handle proxy errors gracefully', function (done) {
         // Temporarily modify the PROXY_TARGET to an invalid value to trigger error
