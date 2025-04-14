@@ -33,7 +33,7 @@ app.post('/tb/web_analytics', (req, res) => {
     httpProxy.web(req, res);
 });
 
-app.get('/local-proxy*', (req, res) => {
+app.post('/local-proxy*', (req, res) => {
     res.status(200).send('Hello World - From the local proxy');
 });
 
