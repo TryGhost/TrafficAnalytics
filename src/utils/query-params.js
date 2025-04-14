@@ -13,10 +13,10 @@ function filterQueryParams(url) {
     
     // Create new query string with only these parameters
     const newSearchParams = new URLSearchParams();
-    if (token) {
+    if (token && token.trim() !== '') {
         newSearchParams.set('token', token);
     }
-    if (name) {
+    if (name && name.trim() !== '') {
         newSearchParams.set('name', name);
     }
     
