@@ -38,7 +38,9 @@ fastify.register(require('@fastify/cors'), {
 
 // Request logging hook
 fastify.addHook('onRequest', (request, reply, done) => {
-    request.log.info(`${request.method} ${request.url}`);
+    if (process.env.NODE_ENV !== 'testing') {
+        request.log.info(`${request.method} ${request.url}`);
+    }
     done();
 });
 
