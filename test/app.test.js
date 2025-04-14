@@ -45,98 +45,100 @@ describe('Fastify App', function () {
         targetRequests.length = 0;
     });
 
-    it('should return Hello World on the root route', async function () {
-        await request(proxyServer)
-            .get('/')
-            .expect(200)
-            .expect('Hello World - Github Actions Deployment Test');
+    describe('/', function () {
+        it('should return Hello World on the root route', async function () {
+            await request(proxyServer)
+                .get('/')
+                .expect(200)
+                .expect('Hello World - Github Actions Deployment Test');
+        });
+
+        it('should respond 404 to other methods on root route', async function () {
+            await request(proxyServer)
+                .post('/')
+                .expect(404);
+        });
     });
 
-    it('should handle requests to local-proxy path', async function () {
-        await request(proxyServer)
-            .post('/local-proxy')
-            .expect(200)
-            .expect('Hello World - From the local proxy');
+    describe('/local-proxy', function () {
+        it('should handle requests to local-proxy path', async function () {
+            await request(proxyServer)
+                .post('/local-proxy')
+                .expect(200)
+                .expect('Hello World - From the local proxy');
+        });
+
+        it('should respond 404 to GET on local-proxy path', async function () {
+            await request(proxyServer)
+                .get('/local-proxy')
+                .expect(404);
+        });
     });
 
-    // Test different HTTP methods against the root route
-    // (helps test the async handler)
-    it('should respond to other methods on root route', async function () {
-        await request(proxyServer)
-            .post('/')
-            .expect(404);
-    });
+    describe('/tb/web_analytics', function () {
+        it('should reject requests without token parameter', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics?name=test')
+                .expect(400)
+                .expect(function (res) {
+                    if (!res.body.error || !res.body.message) {
+                        throw new Error('Expected error response with message');
+                    }
+                });
+        });
 
-    // Test different HTTP methods against the local-proxy route
-    it('should not respond to GET on local-proxy path', async function () {
-        request(proxyServer)
-            .get('/local-proxy')
-            .expect(404);
-    });
+        it('should reject requests without name parameter', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics?token=abc123')
+                .expect(400)
+                .expect(function (res) {
+                    if (!res.body.error || !res.body.message) {
+                        throw new Error('Expected error response with message');
+                    }
+                });
+        });
 
-    // Test that requests without both name and token are rejected
-    it('should reject requests without token parameter', async function () {
-        request(proxyServer)
-            .post('/tb/web_analytics?name=test')
-            .expect(400)
-            .expect(function (res) {
-                if (!res.body.error || !res.body.message) {
-                    throw new Error('Expected error response with message');
-                }
-            });
-    });
+        it('should reject requests with empty parameters', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics?token=&name=test')
+                .expect(400)
+                .expect(function (res) {
+                    if (!res.body.error || !res.body.message) {
+                        throw new Error('Expected error response with message');
+                    }
+                });
+        });
 
-    it('should reject requests without name parameter', async function () {
-        request(proxyServer)
-            .post('/tb/web_analytics?token=abc123')
-            .expect(400)
-            .expect(function (res) {
-                if (!res.body.error || !res.body.message) {
-                    throw new Error('Expected error response with message');
-                }
-            });
-    });
+        it('should accept requests with both parameters', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics?token=abc123&name=test')
+                .expect(function (res) {
+                    // This should be proxied, so we can't assume a specific status code
+                    // Just verify it's not 400 (bad request)
+                    if (res.status === 400) {
+                        throw new Error('Request was rejected when it should have been accepted');
+                    }
+                });
+        });
 
-    it('should reject requests with empty parameters', async function () {
-        request(proxyServer)
-            .post('/tb/web_analytics?token=&name=test')
-            .expect(400)
-            .expect(function (res) {
-                if (!res.body.error || !res.body.message) {
-                    throw new Error('Expected error response with message');
-                }
-            });
-    });
+        it('should proxy requests to the target server', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .expect(202);
 
-    it('should accept requests with both parameters', async function () {
-        request(proxyServer)
-            .post('/tb/web_analytics?token=abc123&name=test')
-            .expect(function (res) {
-                // This should be proxied, so we can't assume a specific status code
-                // Just verify it's not 400 (bad request)
-                if (res.status === 400) {
-                    throw new Error('Request was rejected when it should have been accepted');
-                }
-            });
-    });
+            assert.equal(targetRequests.length, 1);
+            assert.equal(targetRequests[0].method, 'POST');
+            assert.equal(targetRequests[0].url, '/?token=abc123&name=test');
+            assert.equal(targetRequests[0].query.token, 'abc123');
+            assert.equal(targetRequests[0].query.name, 'test');
+        });
 
-    it('should handle proxy errors gracefully', async function () {
-        await request(proxyServer)
-            .post('/tb/web_analytics')
-            .set('x-test-header-400', 'true')
-            .expect(400);
-    });
-
-    it('should proxy requests to the target server', async function () {
-        await request(proxyServer)
-            .post('/tb/web_analytics')
-            .query({token: 'abc123', name: 'test'})
-            .expect(202);
-
-        assert.equal(targetRequests.length, 1);
-        assert.equal(targetRequests[0].method, 'POST');
-        assert.equal(targetRequests[0].url, '/?token=abc123&name=test');
-        assert.equal(targetRequests[0].query.token, 'abc123');
-        assert.equal(targetRequests[0].query.name, 'test');
+        it('should handle proxy errors gracefully', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .set('x-test-header-400', 'true')
+                .expect(400);
+        });
     });
 });
