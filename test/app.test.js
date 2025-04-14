@@ -21,9 +21,8 @@ describe('Fastify App', function () {
         process.env.PROXY_TARGET = targetUrl;
         process.env.LOG_LEVEL = 'silent';
         app = require('../src/app');
-        app.ready().then(function () {
-            proxyServer = app.server;
-        });
+        await app.ready();
+        proxyServer = app.server;
     });
 
     after(function () {
