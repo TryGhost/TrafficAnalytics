@@ -1,107 +1,115 @@
 const request = require('supertest');
-const app = require('../src/app');
-
+const assert = require('node:assert/strict');
+const createMockUpstream = require('./utils/mock-upstream');
 // This approach uses the inline server provided by Fastify for testing
 describe('Fastify App', function () {
     // Create a new instance of the app for testing
-    let server;
-    
-    before(function (done) {
-        // Build the server
+    let targetServer;
+    let proxyServer;
+    let targetRequests = [];
+
+    let targetUrl;
+    let app;
+
+    before(async function () {
+        targetServer = createMockUpstream(targetRequests);
+        await targetServer.listen({port: 0});
+        targetUrl = `http://${targetServer.server.address().address}:${targetServer.server.address().port}`;
+
+        // Set the PROXY_TARGET environment variable before requiring the app
+        process.env.PROXY_TARGET = targetUrl;
+        process.env.LOG_LEVEL = 'silent';
+        app = require('../src/app');
         app.ready().then(function () {
-            server = app.server;
-            done();
-        }).catch(done);
+            proxyServer = app.server;
+        });
     });
-    
-    after(function (done) {
-        app.close().then(function () {
-            done();
-        }).catch(done);
+
+    after(function () {
+        const promises = [];
+        if (app) {
+            promises.push(app.close());
+        }
+
+        if (targetServer) {
+            promises.push(targetServer.close());
+        }
+
+        return Promise.all(promises);
     });
-    
-    it('should return Hello World on the root route', function (done) {
-        request(server)
+
+    beforeEach(function () {
+        // Clear the targetRequests array in place
+        // This is necessary because the target server is a mock and the requests are recorded in the same array
+        // Using targetRequests = [] would create a new array, and the mock upstream would not record any requests
+        targetRequests.length = 0;
+    });
+
+    it('should return Hello World on the root route', async function () {
+        await request(proxyServer)
             .get('/')
             .expect(200)
-            .expect('Hello World - Github Actions Deployment Test', done);
+            .expect('Hello World - Github Actions Deployment Test');
     });
-    
-    it('should handle requests to local-proxy path', function (done) {
-        request(server)
+
+    it('should handle requests to local-proxy path', async function () {
+        await request(proxyServer)
             .post('/local-proxy')
             .expect(200)
-            .expect('Hello World - From the local proxy', done);
+            .expect('Hello World - From the local proxy');
     });
-    
-    // Test different HTTP methods against the root route 
+
+    // Test different HTTP methods against the root route
     // (helps test the async handler)
-    it('should respond to other methods on root route', function (done) {
-        request(server)
+    it('should respond to other methods on root route', async function () {
+        await request(proxyServer)
             .post('/')
-            .expect(404, done);
+            .expect(404);
     });
 
     // Test different HTTP methods against the local-proxy route
-    it('should not respond to GET on local-proxy path', function (done) {
-        request(server)
+    it('should not respond to GET on local-proxy path', async function () {
+        request(proxyServer)
             .get('/local-proxy')
-            .expect(404, done);
-    });
-    
-    // Test that the proxy route exists and responds (doesn't have to be 200/204)
-    it('should have the web_analytics route registered', function (done) {
-        request(server)
-            .options('/tb/web_analytics')
-            .end(function (err) {
-                // Just verify we get some response (status code doesn't matter)
-                if (err) {
-                    return done(err);
-                }
-                // We got a response, that's all we need to verify
-                done();
-            });
+            .expect(404);
     });
 
     // Test that requests without both name and token are rejected
-    it('should reject requests without token parameter', function (done) {
-        request(server)
+    it('should reject requests without token parameter', async function () {
+        request(proxyServer)
             .post('/tb/web_analytics?name=test')
             .expect(400)
             .expect(function (res) {
                 if (!res.body.error || !res.body.message) {
                     throw new Error('Expected error response with message');
                 }
-            })
-            .end(done);
+            });
     });
 
-    it('should reject requests without name parameter', function (done) {
-        request(server)
+    it('should reject requests without name parameter', async function () {
+        request(proxyServer)
             .post('/tb/web_analytics?token=abc123')
             .expect(400)
             .expect(function (res) {
                 if (!res.body.error || !res.body.message) {
                     throw new Error('Expected error response with message');
                 }
-            })
-            .end(done);
+            });
     });
 
-    it('should reject requests with empty parameters', function (done) {
-        request(server)
+    it('should reject requests with empty parameters', async function () {
+        request(proxyServer)
             .post('/tb/web_analytics?token=&name=test')
             .expect(400)
             .expect(function (res) {
                 if (!res.body.error || !res.body.message) {
                     throw new Error('Expected error response with message');
                 }
-            })
-            .end(done);
+            });
     });
 
-    it('should accept requests with both parameters', function (done) {
-        request(server)
+    it('should accept requests with both parameters', async function () {
+        request(proxyServer)
             .post('/tb/web_analytics?token=abc123&name=test')
             .expect(function (res) {
                 // This should be proxied, so we can't assume a specific status code
@@ -109,29 +117,26 @@ describe('Fastify App', function () {
                 if (res.status === 400) {
                     throw new Error('Request was rejected when it should have been accepted');
                 }
-            })
-            .end(done);
+            });
     });
 
-    // Test for invalid URLs to trigger error handling
-    it('should handle proxy errors gracefully', function (done) {
-        // Temporarily modify the PROXY_TARGET to an invalid value to trigger error
-        const originalProxyTarget = process.env.PROXY_TARGET;
-        process.env.PROXY_TARGET = 'http://invalid-nonexistent-host';
-        
-        // Send request that should trigger proxy error
-        request(server)
+    it('should handle proxy errors gracefully', async function () {
+        await request(proxyServer)
             .post('/tb/web_analytics')
-            .end(function (err) {
-                // Restore original PROXY_TARGET
-                process.env.PROXY_TARGET = originalProxyTarget;
-                
-                // Error from supertest shouldn't stop test
-                if (err) {
-                    // Still consider test passed since we just wanted to trigger error
-                    return done();
-                }
-                done();
-            });
+            .set('x-test-header-400', 'true')
+            .expect(400);
+    });
+
+    it('should proxy requests to the target server', async function () {
+        await request(proxyServer)
+            .post('/tb/web_analytics')
+            .query({token: 'abc123', name: 'test'})
+            .expect(202);
+
+        assert.equal(targetRequests.length, 1);
+        assert.equal(targetRequests[0].method, 'POST');
+        assert.equal(targetRequests[0].url, '/?token=abc123&name=test');
+        assert.equal(targetRequests[0].query.token, 'abc123');
+        assert.equal(targetRequests[0].query.name, 'test');
     });
 });
