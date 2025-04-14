@@ -1,5 +1,7 @@
 const request = require('supertest');
 const app = require('../src/app');
+const {filterQueryParams} = require('../src/utils/query-params');
+const assert = require('assert').strict;
 
 // This approach uses the inline server provided by Fastify for testing
 describe('Fastify App', function () {
@@ -47,58 +49,35 @@ describe('Fastify App', function () {
                 done();
             });
     });
+});
 
-    // Test the parameter filtering logic directly without making HTTP requests
-    it('should filter query parameters correctly', function () {
-        // Implementation from app.js
-        const filterQueryParams = function (url) {
-            // Get query parameters without creating a full URL object
-            const searchParams = new URLSearchParams(url.split('?')[1] || '');
-            
-            // Extract only token and name
-            const token = searchParams.get('token');
-            const name = searchParams.get('name');
-            
-            // Create new query string with only these parameters
-            const newSearchParams = new URLSearchParams();
-            if (token) {
-                newSearchParams.set('token', token);
-            }
-            if (name) {
-                newSearchParams.set('name', name);
-            }
-            
-            // Update the request URL (keep pathname, replace query)
-            const path = url.split('?')[0];
-            return path + (newSearchParams.toString() ? `?${newSearchParams.toString()}` : '');
-        };
-        
-        // Test cases
-        const testCases = [
-            {
-                input: '/tb/web_analytics?token=abc123&name=test&unwanted=param',
-                expected: '/tb/web_analytics?token=abc123&name=test'
-            },
-            {
-                input: '/tb/web_analytics?unwanted=param',
-                expected: '/tb/web_analytics'
-            },
-            {
-                input: '/tb/web_analytics?token=xyz',
-                expected: '/tb/web_analytics?token=xyz'
-            },
-            {
-                input: '/tb/web_analytics?name=test',
-                expected: '/tb/web_analytics?name=test'
-            }
-        ];
-        
-        // Run all test cases
-        testCases.forEach(function (testCase) {
-            const result = filterQueryParams(testCase.input);
-            if (result !== testCase.expected) {
-                throw new Error(`Expected "${testCase.expected}", got "${result}"`);
-            }
-        });
+// Separate test suite for the query parameter filtering utility
+describe('Query Parameter Filtering', function () {
+    it('should filter out unwanted query parameters while keeping token and name', function () {
+        const input = '/tb/web_analytics?token=abc123&name=test&unwanted=param';
+        const expected = '/tb/web_analytics?token=abc123&name=test';
+        const result = filterQueryParams(input);
+        assert.equal(result, expected);
+    });
+
+    it('should remove all parameters if none are allowed', function () {
+        const input = '/tb/web_analytics?unwanted=param';
+        const expected = '/tb/web_analytics';
+        const result = filterQueryParams(input);
+        assert.equal(result, expected);
+    });
+
+    it('should keep only token parameter if present', function () {
+        const input = '/tb/web_analytics?token=xyz';
+        const expected = '/tb/web_analytics?token=xyz';
+        const result = filterQueryParams(input);
+        assert.equal(result, expected);
+    });
+
+    it('should keep only name parameter if present', function () {
+        const input = '/tb/web_analytics?name=test';
+        const expected = '/tb/web_analytics?name=test';
+        const result = filterQueryParams(input);
+        assert.equal(result, expected);
     });
 });
