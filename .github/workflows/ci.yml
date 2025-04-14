@@ -26,7 +26,7 @@ jobs:
         run: yarn lint
 
   test:
-    name: Test (Node ${{ matrix.node }})
+    name: Unit Tests (Node ${{ matrix.node }})
     needs: lint
     runs-on: ubuntu-latest
     strategy:
