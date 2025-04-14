@@ -1,6 +1,7 @@
 const request = require('supertest');
 const assert = require('node:assert/strict');
-const createMockUpstream = require('./utils/mock-upstream');
+const createMockUpstream = require('./testUtils/mock-upstream');
+
 // This approach uses the inline server provided by Fastify for testing
 describe('Fastify App', function () {
     // Create a new instance of the app for testing
