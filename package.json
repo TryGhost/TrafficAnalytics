@@ -9,7 +9,7 @@
     "dev": "node server.js",
     "test:unit": "NODE_ENV=testing c8 --all --include 'src/**' --reporter text --reporter cobertura mocha './test/**/*.test.js'",
     "test": "yarn test:unit",
-    "lint:code": "eslint *.js src/ --ext .js --cache",
+    "lint:code": "eslint *.js src/ test/ --ext .js --cache",
     "lint": "yarn lint:code",
     "preship": "yarn test",
     "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
@@ -27,7 +27,10 @@
     "supertest": "^6.3.3"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "http-proxy": "^1.18.1"
+    "@fastify/cors": "^8.3.0",
+    "@fastify/http-proxy": "^9.0.0",
+    "dotenv": "^16.4.7",
+    "fastify": "^4.19.0",
+    "pino-pretty": "^10.0.0"
   }
 }

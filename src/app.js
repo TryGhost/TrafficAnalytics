@@ -1,40 +1,48 @@
 // Main module file
-const express = require('express');
-const httpProxy = require('./http-proxy');
+require('dotenv').config();
 
-const app = express();
-
-// Request logging middleware
-app.use((req, res, next) => {
-    // eslint-disable-next-line no-console
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} ${res.statusCode}`);
-    next();
-});
-
-// CORS middleware to allow requests from all origins
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    
-    // Handle preflight requests
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+const fastify = require('fastify')({
+    logger: {
+        transport: {
+            target: 'pino-pretty'
+        }
     }
-    
-    next();
 });
 
-app.get('/', (req, res) => {
-    res.status(200).send('Hello World - Github Actions Deployment Test');
+// Register CORS plugin
+fastify.register(require('@fastify/cors'), {
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 });
 
-app.post('/tb/web_analytics', (req, res) => {
-    httpProxy.web(req, res);
+// Request logging hook
+fastify.addHook('onRequest', (request, reply, done) => {
+    request.log.info(`${request.method} ${request.url}`);
+    done();
 });
 
-app.post('/local-proxy*', (req, res) => {
-    res.status(200).send('Hello World - From the local proxy');
+// Register HTTP proxy for /tb/web_analytics
+fastify.register(require('@fastify/http-proxy'), {
+    upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
+    prefix: '/tb/web_analytics',
+    rewritePrefix: '',
+    httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+    replyOptions: {
+        onError: (reply, err) => {
+            reply.log.error(err);
+            reply.status(502).send({error: 'Proxy error'});
+        }
+    }
 });
 
-module.exports = app;
+// Routes
+fastify.get('/', async () => {
+    return 'Hello World - Github Actions Deployment Test';
+});
+
+fastify.post('/local-proxy*', async () => {
+    return 'Hello World - From the local proxy';
+});
+
+module.exports = fastify;
