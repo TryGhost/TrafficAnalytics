@@ -26,8 +26,31 @@ fastify.addHook('onRequest', (request, reply, done) => {
 fastify.register(require('@fastify/http-proxy'), {
     upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
     prefix: '/tb/web_analytics',
-    rewritePrefix: '',
+    rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
     httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+    rewriteRequest: (req) => {
+        // Get query parameters without creating a full URL object
+        const searchParams = new URLSearchParams(req.url.split('?')[1] || '');
+        
+        // Extract only token and name
+        const token = searchParams.get('token');
+        const name = searchParams.get('name');
+        
+        // Create new query string with only these parameters
+        const newSearchParams = new URLSearchParams();
+        if (token) {
+            newSearchParams.set('token', token);
+        }
+        if (name) {
+            newSearchParams.set('name', name);
+        }
+        
+        // Update the request URL (keep pathname, replace query)
+        const path = req.url.split('?')[0];
+        req.url = path + (newSearchParams.toString() ? `?${newSearchParams.toString()}` : '');
+        
+        return req;
+    },
     replyOptions: {
         onError: (reply, err) => {
             reply.log.error(err);
