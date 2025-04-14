@@ -53,7 +53,7 @@ fastify.register(require('@fastify/http-proxy'), {
         const searchParams = new URLSearchParams(request.url.split('?')[1] || '');
         const token = searchParams.get('token');
         const name = searchParams.get('name');
-        
+
         // Verify both token and name are present and not empty
         if (!token || token.trim() === '' || !name || name.trim() === '') {
             reply.code(400).send({
@@ -62,7 +62,7 @@ fastify.register(require('@fastify/http-proxy'), {
             });
             return;
         }
-        
+
         done();
     },
     rewriteRequest: (req) => {
