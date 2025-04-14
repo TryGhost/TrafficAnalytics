@@ -50,17 +50,16 @@ fastify.register(require('@fastify/http-proxy'), {
     prefix: '/tb/web_analytics',
     rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
     httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-    preHandler: (request, reply, done) => {
-        // Extract parameters from query string
-        const searchParams = new URLSearchParams(request.url.split('?')[1] || '');
-        const token = searchParams.get('token');
-        const name = searchParams.get('name');
+    preValidation: (request, reply, done) => {
+        // Validate the request before proxying it
+        const token = request.query.token;
+        const name = request.query.name;
 
         // Verify both token and name are present and not empty
         if (!token || token.trim() === '' || !name || name.trim() === '') {
             reply.code(400).send({
                 error: 'Bad Request',
-                message: 'Both token and name parameters are required'
+                message: 'Token and name query parameters are required'
             });
             return;
         }
