@@ -74,7 +74,7 @@ jobs:
         with:
           registry: europe-docker.pkg.dev
           username: _json_key
-          password: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          password: ${{ secrets.GCP_ARTIFACT_REGISTRY_SERVICE_ACCOUNT_KEY }}
       - name: Traffic Analytics Docker meta
         id: traffic-analytics-docker-metadata
         uses: docker/metadata-action@v5
