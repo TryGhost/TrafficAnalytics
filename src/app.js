@@ -1,6 +1,7 @@
 // Main module file
 require('dotenv').config();
 const {filterQueryParams} = require('./utils/query-params');
+const uap = require('ua-parser-js');
 
 const fastify = require('fastify')({
     logger: {
@@ -64,6 +65,26 @@ fastify.register(require('@fastify/http-proxy'), {
             return;
         }
 
+        // Validate the request body
+        if (!request.body || Object.keys(request.body).length === 0 || !request.body.payload) {
+            reply.code(400).send({
+                error: 'Bad Request',
+                message: 'Request body is required'
+            });
+            return;
+        }
+
+        done();
+    },
+    preHandler: (request, reply, done) => {
+        // Process & Modify the request body
+        const ua = new uap(request.body.payload.user_agent);
+        const os = ua.getOS().name || 'unknown';
+        const browser = ua.getBrowser().name || 'unknown';
+        const device = ua.getDevice().type || 'desktop';
+        request.body.payload.os = os;
+        request.body.payload.browser = browser;
+        request.body.payload.device = device;
         done();
     },
     rewriteRequest: (req) => {

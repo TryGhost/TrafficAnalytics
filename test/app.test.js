@@ -2,6 +2,25 @@ const request = require('supertest');
 const assert = require('node:assert/strict');
 const createMockUpstream = require('./testUtils/mock-upstream');
 
+const eventPayload = {
+    timestamp: '2025-04-14T22:16:06.095Z',
+    action: 'page_hit',
+    version: '1',
+    session_id: '9017be4c-3065-484b-b117-9719ad1e3977',
+    payload: {
+        user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+        locale: 'en-US',
+        location: 'US',
+        referrer: null,
+        pathname: '/',
+        href: 'https://www.chrisraible.com/',
+        site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
+        post_uuid: 'undefined',
+        member_uuid: 'undefined',
+        member_status: 'undefined'
+    }
+};
+
 // This approach uses the inline server provided by Fastify for testing
 describe('Fastify App', function () {
     // Create a new instance of the app for testing
@@ -109,22 +128,18 @@ describe('Fastify App', function () {
                 });
         });
 
-        it('should accept requests with both parameters', async function () {
+        it('should reject requests with empty body', async function () {
             await request(proxyServer)
                 .post('/tb/web_analytics?token=abc123&name=test')
-                .expect(function (res) {
-                    // This should be proxied, so we can't assume a specific status code
-                    // Just verify it's not 400 (bad request)
-                    if (res.status === 400) {
-                        throw new Error('Request was rejected when it should have been accepted');
-                    }
-                });
+                .send({})
+                .expect(400);
         });
 
         it('should proxy requests to the target server', async function () {
             await request(proxyServer)
                 .post('/tb/web_analytics')
                 .query({token: 'abc123', name: 'test'})
+                .send(eventPayload)
                 .expect(202);
 
             assert.equal(targetRequests.length, 1);
@@ -139,6 +154,39 @@ describe('Fastify App', function () {
                 .post('/tb/web_analytics')
                 .set('x-test-header-400', 'true')
                 .expect(400);
+        });
+
+        it('should parse the OS from the user agent and pass it to the upstream server', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .send(eventPayload)
+                .expect(202);
+
+            const targetRequest = targetRequests[0];
+            assert.equal(targetRequest.body.payload.os, 'macOS');
+        });
+
+        it('should parse the browser from the user agent and pass it to the upstream server', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .send(eventPayload)
+                .expect(202);
+
+            const targetRequest = targetRequests[0];
+            assert.equal(targetRequest.body.payload.browser, 'Chrome');
+        });
+
+        it('should parse the device from the user agent and pass it to the upstream server', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .send(eventPayload)
+                .expect(202);
+
+            const targetRequest = targetRequests[0];
+            assert.equal(targetRequest.body.payload.device, 'desktop');
         });
     });
 });
