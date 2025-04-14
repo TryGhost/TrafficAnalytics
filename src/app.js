@@ -4,8 +4,27 @@ const {filterQueryParams} = require('./utils/query-params');
 
 const fastify = require('fastify')({
     logger: {
+        level: process.env.LOG_LEVEL || 'info',
         transport: {
-            target: 'pino-pretty'
+            target: 'pino-pretty',
+            options: {
+                translateTime: 'HH:MM:ss',
+                ignore: 'pid,hostname,reqId,responseTime,req,res',
+                messageFormat: '{msg} {url}'
+            }
+        },
+        serializers: {
+            req: function (req) {
+                return {
+                    method: req.method,
+                    url: req.url
+                };
+            },
+            res: function (res) {
+                return {
+                    statusCode: res.statusCode
+                };
+            }
         }
     }
 });
