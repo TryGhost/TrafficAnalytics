@@ -1,0 +1,66 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+          - both
+      tag:
+        description: 'Docker tag to rollback to'
+        required: true
+        type: string
+
+jobs:
+  rollback-staging:
+    if: github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'both'
+    name: Rollback (Staging)
+    runs-on: ubuntu-latest
+    environment: staging
+    strategy:
+      matrix:
+        region: [europe-west4]
+        include:
+          - region: europe-west4
+            region_name: netherlands
+    steps:
+      - name: "Auth with Google Cloud"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
+      - name: "Deploy to Cloud Run"
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          image: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:${{ github.event.inputs.tag }}
+          region: ${{ matrix.region }}
+          service: stg-${{ matrix.region_name }}-traffic-analytics
+          skip_default_labels: true
+
+  rollback-production:
+    if: github.event.inputs.environment == 'production' || github.event.inputs.environment == 'both'
+    name: Rollback (Production)
+    runs-on: ubuntu-latest
+    environment: production
+    strategy:
+      matrix:
+        region: [europe-west4]
+        include:
+          - region: europe-west4
+            region_name: netherlands
+    steps:
+      - name: "Auth with Google Cloud"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
+      - name: "Deploy to Cloud Run"
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          image: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:${{ github.event.inputs.tag }}
+          region: ${{ matrix.region }}
+          service: prd-${{ matrix.region_name }}-traffic-analytics
+          skip_default_labels: true
