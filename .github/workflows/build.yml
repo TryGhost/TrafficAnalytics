@@ -111,7 +111,7 @@ jobs:
       - name: "Auth with Google Cloud"
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
       - name: "Deploy to Cloud Run"
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -138,7 +138,7 @@ jobs:
       - name: "Auth with Google Cloud"
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
       - name: "Deploy to Cloud Run"
         uses: google-github-actions/deploy-cloudrun@v2
         with:
