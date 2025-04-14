@@ -15,7 +15,7 @@ describe('Fastify App', function () {
     before(async function () {
         targetServer = createMockUpstream(targetRequests);
         await targetServer.listen({port: 0});
-        targetUrl = `http://${targetServer.server.address().address}:${targetServer.server.address().port}`;
+        targetUrl = `http://127.0.0.1:${targetServer.server.address().port}`;
 
         // Set the PROXY_TARGET environment variable before requiring the app
         process.env.PROXY_TARGET = targetUrl;
