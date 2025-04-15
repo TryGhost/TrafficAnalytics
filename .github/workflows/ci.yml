@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint-and-test:
-    name: Lint and Test
+    name: Lint and Test (Node ${{ matrix.node }})
     strategy:
       matrix:
         node: [20, 22]
