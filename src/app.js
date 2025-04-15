@@ -1,7 +1,7 @@
 // Main module file
 require('dotenv').config();
 const {filterQueryParams} = require('./utils/query-params');
-const uap = require('ua-parser-js');
+const {processRequest} = require('./lib/proxy');
 
 const fastify = require('fastify')({
     logger: {
@@ -77,20 +77,7 @@ fastify.register(require('@fastify/http-proxy'), {
         done();
     },
     preHandler: (request, reply, done) => {
-        // Process & Modify the request body
-        try {
-            const ua = new uap(request.headers['user-agent']);
-            const os = ua.getOS() || {name: 'unknown', version: 'unknown'};
-            const browser = ua.getBrowser() || {name: 'unknown', version: 'unknown', major: 'unknown', type: 'unknown'};
-            const device = ua.getDevice() || {type: 'unknown', vendor: 'unknown', model: 'unknown'};
-            request.body.payload.meta = {};
-            request.body.payload.meta.os = os;
-            request.body.payload.meta.browser = browser;
-            request.body.payload.meta.device = device;
-        } catch (error) {
-            request.log.error(error);
-            // We should fail silently here, because we don't want to break the proxy for non-critical functionality
-        }
+        processRequest(request);
 
         done();
     },
