@@ -1,7 +1,7 @@
 // Main module file
 require('dotenv').config();
 const {filterQueryParams} = require('./utils/query-params');
-const {processRequest} = require('./lib/proxy');
+const {processRequest, validateRequest} = require('./services/proxy');
 
 const fastify = require('fastify')({
     logger: {
@@ -51,36 +51,8 @@ fastify.register(require('@fastify/http-proxy'), {
     prefix: '/tb/web_analytics',
     rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
     httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-    preValidation: (request, reply, done) => {
-        // Validate the request before proxying it
-        const token = request.query.token;
-        const name = request.query.name;
-
-        // Verify both token and name are present and not empty
-        if (!token || token.trim() === '' || !name || name.trim() === '') {
-            reply.code(400).send({
-                error: 'Bad Request',
-                message: 'Token and name query parameters are required'
-            });
-            return;
-        }
-
-        // Validate the request body
-        if (!request.body || Object.keys(request.body).length === 0 || !request.body.payload) {
-            reply.code(400).send({
-                error: 'Bad Request',
-                message: 'Request body is required'
-            });
-            return;
-        }
-
-        done();
-    },
-    preHandler: (request, reply, done) => {
-        processRequest(request);
-
-        done();
-    },
+    preValidation: validateRequest,
+    preHandler: processRequest,
     rewriteRequest: (req) => {
         // Filter query parameters to only include token and name
         req.url = filterQueryParams(req.url);
