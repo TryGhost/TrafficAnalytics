@@ -2,7 +2,7 @@ ARG NODE_VERSION=22
 ARG BUILD_TYPE=production
 
 FROM node:${NODE_VERSION}-alpine AS base
-WORKDIR /usr/src/app
+WORKDIR /app
 COPY package.json yarn.lock ./
 
 # Development
