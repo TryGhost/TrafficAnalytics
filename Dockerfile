@@ -1,20 +1,19 @@
-# Use Node.js LTS version as the base image
-FROM node:22-alpine
+ARG NODE_VERSION=22
+ARG BUILD_TYPE=production
 
-# Create app directory
+FROM node:${NODE_VERSION}-alpine AS base
 WORKDIR /usr/src/app
-
-# Copy package files
 COPY package.json yarn.lock ./
 
-# Install dependencies
+# Development
+FROM base AS development-build
 RUN yarn install --frozen-lockfile
 
-# Copy app source
+# Production
+FROM base AS production-build
+RUN yarn install --production --frozen-lockfile && \
+    rm -rf test
+
+FROM ${BUILD_TYPE}-build AS final
 COPY . .
-
-# Expose the port the app runs on
-EXPOSE 3000
-
-# Command to run the application
-CMD ["yarn", "dev"] 
+CMD ["yarn", "dev"]

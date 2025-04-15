@@ -10,7 +10,6 @@ yarn-debug.log
 yarn-error.log
 
 # Testing
-test
 coverage
 .nyc_output
 
