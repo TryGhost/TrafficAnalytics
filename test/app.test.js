@@ -165,7 +165,7 @@ describe('Fastify App', function () {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.deepEqual(targetRequest.body.payload.meta.os, {name: 'macOS', version: '10.15.7'});
+            assert.deepEqual(targetRequest.body.payload.meta.os, {name: 'Mac OS', version: '10.15.7'});
         });
 
         it('should parse the browser from the user agent and pass it to the upstream server', async function () {
