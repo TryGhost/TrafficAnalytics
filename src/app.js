@@ -2,7 +2,6 @@
 require('dotenv').config();
 const {filterQueryParams} = require('./utils/query-params');
 const uap = require('ua-parser-js');
-const {isBot} = require('ua-parser-js/helpers');
 
 const fastify = require('fastify')({
     logger: {
@@ -84,7 +83,6 @@ fastify.register(require('@fastify/http-proxy'), {
             const os = ua.getOS() || {name: 'unknown', version: 'unknown'};
             const browser = ua.getBrowser() || {name: 'unknown', version: 'unknown', major: 'unknown', type: 'unknown'};
             const device = ua.getDevice() || {type: 'unknown', vendor: 'unknown', model: 'unknown'};
-            console.log(isBot(request.headers['user-agent']));
             request.body.payload.meta = {};
             request.body.payload.meta.os = os;
             request.body.payload.meta.browser = browser;
