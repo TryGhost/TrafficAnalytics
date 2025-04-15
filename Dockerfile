@@ -16,4 +16,4 @@ RUN yarn install --production --frozen-lockfile && \
 
 FROM ${BUILD_TYPE}-build AS final
 COPY . .
-CMD ["yarn", "dev"]
+CMD ["node", "server.js"]
