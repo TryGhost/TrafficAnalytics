@@ -6,8 +6,8 @@
   "license": "MIT",
   "main": "server.js",
   "scripts": {
-    "dev": "node server.js",
-    "dev:watch": "nodemon --watch src --watch server.js server.js",
+    "dev": "nodemon --watch src --watch server.js server.js",
+    "start": "node server.js",
     "test:unit": "NODE_ENV=testing c8 --all --include 'src/**' --reporter text --reporter cobertura mocha './test/**/*.test.js'",
     "test": "yarn test:unit",
     "lint:code": "eslint *.js src/ test/ --ext .js --cache",
