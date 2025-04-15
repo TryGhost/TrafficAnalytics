@@ -78,13 +78,14 @@ fastify.register(require('@fastify/http-proxy'), {
     },
     preHandler: (request, reply, done) => {
         // Process & Modify the request body
-        const ua = new uap(request.body.payload.user_agent);
-        const os = ua.getOS().name || 'unknown';
-        const browser = ua.getBrowser().name || 'unknown';
-        const device = ua.getDevice().type || 'desktop';
-        request.body.payload.os = os;
-        request.body.payload.browser = browser;
-        request.body.payload.device = device;
+        const ua = new uap(request.headers['user-agent']);
+        const os = ua.getOS() || {name: 'unknown', version: 'unknown'};
+        const browser = ua.getBrowser() || {name: 'unknown', version: 'unknown', major: 'unknown', type: 'unknown'};
+        const device = ua.getDevice() || {type: 'unknown', vendor: 'unknown', model: 'unknown'};
+        request.body.payload.meta = {};
+        request.body.payload.meta.os = os;
+        request.body.payload.meta.browser = browser;
+        request.body.payload.meta.device = device;
         done();
     },
     rewriteRequest: (req) => {

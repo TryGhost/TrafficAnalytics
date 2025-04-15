@@ -156,37 +156,40 @@ describe('Fastify App', function () {
                 .expect(400);
         });
 
-        it('should parse the OS from the user agent and pass it to the upstream server', async function () {
+        it('should parse the OS from the user agent and pass it to the upstream server under the meta key', async function () {
             await request(proxyServer)
                 .post('/tb/web_analytics')
                 .query({token: 'abc123', name: 'test'})
+                .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                 .send(eventPayload)
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.equal(targetRequest.body.payload.os, 'macOS');
+            assert.deepEqual(targetRequest.body.payload.meta.os, {name: 'macOS', version: '10.15.7'});
         });
 
         it('should parse the browser from the user agent and pass it to the upstream server', async function () {
             await request(proxyServer)
                 .post('/tb/web_analytics')
                 .query({token: 'abc123', name: 'test'})
+                .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                 .send(eventPayload)
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.equal(targetRequest.body.payload.browser, 'Chrome');
+            assert.deepEqual(targetRequest.body.payload.meta.browser, {name: 'Chrome', version: '135.0.0.0', major: '135'});
         });
 
         it('should parse the device from the user agent and pass it to the upstream server', async function () {
             await request(proxyServer)
                 .post('/tb/web_analytics')
                 .query({token: 'abc123', name: 'test'})
+                .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                 .send(eventPayload)
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.equal(targetRequest.body.payload.device, 'desktop');
+            assert.deepEqual(targetRequest.body.payload.meta.device, {vendor: 'Apple', model: 'Macintosh'});
         });
     });
 });
