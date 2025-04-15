@@ -2,5 +2,12 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>TryGhost/.github:renovate-config"
+  ],
+  "packageRules": [
+    {
+      "description": "Pin ua-parser-js to <2.0.0 to remain on the MIT license. Versions 2.0.0+ switched to AGPL, which is not compatible with our MIT license.",
+      "matchPackageNames": ["ua-parser-js"],
+      "allowedVersions": "<2.0.0"
+    }
   ]
 }
