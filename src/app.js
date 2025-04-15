@@ -1,6 +1,7 @@
 // Main module file
 require('dotenv').config();
 const {filterQueryParams} = require('./utils/query-params');
+const uap = require('ua-parser-js');
 
 const fastify = require('fastify')({
     logger: {
@@ -50,19 +51,45 @@ fastify.register(require('@fastify/http-proxy'), {
     prefix: '/tb/web_analytics',
     rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
     httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-    preHandler: (request, reply, done) => {
-        // Extract parameters from query string
-        const searchParams = new URLSearchParams(request.url.split('?')[1] || '');
-        const token = searchParams.get('token');
-        const name = searchParams.get('name');
+    preValidation: (request, reply, done) => {
+        // Validate the request before proxying it
+        const token = request.query.token;
+        const name = request.query.name;
 
         // Verify both token and name are present and not empty
         if (!token || token.trim() === '' || !name || name.trim() === '') {
             reply.code(400).send({
                 error: 'Bad Request',
-                message: 'Both token and name parameters are required'
+                message: 'Token and name query parameters are required'
             });
             return;
+        }
+
+        // Validate the request body
+        if (!request.body || Object.keys(request.body).length === 0 || !request.body.payload) {
+            reply.code(400).send({
+                error: 'Bad Request',
+                message: 'Request body is required'
+            });
+            return;
+        }
+
+        done();
+    },
+    preHandler: (request, reply, done) => {
+        // Process & Modify the request body
+        try {
+            const ua = new uap(request.headers['user-agent']);
+            const os = ua.getOS() || {name: 'unknown', version: 'unknown'};
+            const browser = ua.getBrowser() || {name: 'unknown', version: 'unknown', major: 'unknown', type: 'unknown'};
+            const device = ua.getDevice() || {type: 'unknown', vendor: 'unknown', model: 'unknown'};
+            request.body.payload.meta = {};
+            request.body.payload.meta.os = os;
+            request.body.payload.meta.browser = browser;
+            request.body.payload.meta.device = device;
+        } catch (error) {
+            request.log.error(error);
+            // We should fail silently here, because we don't want to break the proxy for non-critical functionality
         }
 
         done();
