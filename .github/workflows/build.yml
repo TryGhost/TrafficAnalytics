@@ -17,7 +17,7 @@ jobs:
       - name: Extract Node version from Dockerfile
         id: node-version
         run: |
-          NODE_VERSION=$(grep -oP 'FROM node:\K[0-9]+' Dockerfile)
+          NODE_VERSION=$(grep -oP 'ARG NODE_VERSION=\K[0-9]+' Dockerfile)
           echo "node_version=$NODE_VERSION" >> $GITHUB_OUTPUT
 
   lint:
