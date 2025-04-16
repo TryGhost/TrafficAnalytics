@@ -23,7 +23,7 @@ jobs:
   lint-and-test:
     name: Lint and Test
     needs: [extract-node-version]
-    uses: ./.github/actions/lint-and-test.yml
+    uses: ./.github/workflows/lint-and-test.yml
     with:
       node-version: ${{ needs.extract-node-version.outputs.node_version }}
   
