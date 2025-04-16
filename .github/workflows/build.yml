@@ -64,7 +64,7 @@ jobs:
           tags: ${{ steps.traffic-analytics-docker-metadata.outputs.tags }}
   
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ci'
     name: Deploy
     needs: build-push
     strategy:
