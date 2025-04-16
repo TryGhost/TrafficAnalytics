@@ -25,7 +25,7 @@ jobs:
     needs: [extract-node-version]
     uses: ./.github/workflows/lint-and-test.yml
     with:
-      node-version: ${{ needs.extract-node-version.outputs.node_version }}
+      node-version: ${{ fromJSON(needs.extract-node-version.outputs.node_version) }}
   
   build-push:
     name: Build and Push
