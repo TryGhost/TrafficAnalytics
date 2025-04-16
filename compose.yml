@@ -1,7 +1,7 @@
-name: traffic-analytics-proxy
+name: traffic-analytics
 
 services:
-  traffic-analytics-proxy:
+  proxy-server:
     build:
       context: .
       dockerfile: Dockerfile
@@ -12,6 +12,9 @@ services:
       - 3000:3000
     volumes:
       - .:/app
-      - /app/node_modules
+      - node_modules_volume:/app/node_modules
     env_file:
       - .env
+
+volumes:
+  node_modules_volume:
