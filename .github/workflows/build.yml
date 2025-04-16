@@ -74,10 +74,13 @@ jobs:
         include:
           - region: europe-west4
             region_name: netherlands
-    uses: ./.github/workflows/deploy.yml
-    with:
-      environment: ${{ matrix.environment }}
-      region: ${{ matrix.region }}
-      version: ${{ needs.build-push.outputs.version }}
-      service: >-
-        ${{ contains(matrix.environment, 'staging') && 'stg' || 'prd' }}-${{ matrix.region_name }}-traffic-analytics
+    environment: ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/deploy.yml
+        with:
+          region: ${{ matrix.region }}
+          version: ${{ needs.build-push.outputs.version }}
+          service: >-
+            ${{ contains(matrix.environment, 'staging') && 'stg' || 'prd' }}-${{ matrix.region_name }}-traffic-analytics
