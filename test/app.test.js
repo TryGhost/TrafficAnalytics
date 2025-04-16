@@ -165,7 +165,7 @@ describe('Fastify App', function () {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.deepEqual(targetRequest.body.payload.meta.os, {name: 'Mac OS', version: '10.15.7'});
+            assert.deepEqual(targetRequest.body.payload.meta.os, 'macos');
         });
 
         it('should parse the browser from the user agent and pass it to the upstream server', async function () {
@@ -177,7 +177,7 @@ describe('Fastify App', function () {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.deepEqual(targetRequest.body.payload.meta.browser, {name: 'Chrome', version: '135.0.0.0', major: '135'});
+            assert.deepEqual(targetRequest.body.payload.meta.browser, 'chrome');
         });
 
         it('should parse the device from the user agent and pass it to the upstream server', async function () {
@@ -189,7 +189,7 @@ describe('Fastify App', function () {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.deepEqual(targetRequest.body.payload.meta.device, {vendor: 'Apple', model: 'Macintosh'});
+            assert.deepEqual(targetRequest.body.payload.meta.device, 'desktop');
         });
     });
 });
