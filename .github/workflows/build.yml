@@ -79,7 +79,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: ls -la
-      - run: ls -la .github/workflows
+      - run: ls -la ./.github/workflows
+      - run: ls -la ./.github/workflows/deploy.yml
+      - run: cat ./.github/workflows/deploy.yml
+      - run: pwd
       - uses: ./.github/workflows/deploy.yml
         with:
           region: ${{ matrix.region }}
