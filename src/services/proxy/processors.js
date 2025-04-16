@@ -45,6 +45,10 @@ function parseUserAgent(request) {
     } catch (error) {
         request.log.error(error);
         // We should fail silently here, because we don't want to break the proxy for non-critical functionality
+        request.body.payload.meta = {};
+        request.body.payload.meta.os = 'unknown';
+        request.body.payload.meta.browser = 'unknown';
+        request.body.payload.meta.device = 'unknown';
     }
 }
 
