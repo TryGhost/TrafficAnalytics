@@ -1,0 +1,37 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      region:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+      service:
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    name: Deploy (${{ inputs.environment }} - ${{ inputs.service }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: "Auth with Google Cloud"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
+      - name: "Deploy to Cloud Run"
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          image: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:${{ inputs.version }}
+          region: ${{ inputs.region }}
+          service: ${{ inputs.service }}
+          skip_default_labels: true
+          labels: |-
+            commit-sha=${{ github.sha }}
