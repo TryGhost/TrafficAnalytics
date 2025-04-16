@@ -21,7 +21,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy (${{ inputs.environment }} - ${{ inputs.service }})
+    name: Deploy (${{ inputs.service }})
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
