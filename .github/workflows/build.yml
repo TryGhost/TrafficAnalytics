@@ -63,9 +63,9 @@ jobs:
           push: true
           tags: ${{ steps.traffic-analytics-docker-metadata.outputs.tags }}
   
-  deploy:
+  deploy-staging:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ci'
-    name: Deploy
+    name: Deploy (staging)
     needs: build-push
     strategy:
       matrix:
@@ -79,3 +79,4 @@ jobs:
       region: ${{ matrix.region }}
       version: ${{ needs.build-push.outputs.version }}
       service: stg-${{ matrix.region_name }}-traffic-analytics
+    secrets: inherit

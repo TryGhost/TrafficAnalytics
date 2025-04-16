@@ -15,6 +15,9 @@ on:
       service:
         required: true
         type: string
+    secrets:
+      GCP_DEPLOY_SERVICE_ACCOUNT_KEY:
+        required: true
 
 jobs:
   deploy:
