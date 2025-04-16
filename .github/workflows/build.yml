@@ -69,23 +69,13 @@ jobs:
     needs: build-push
     strategy:
       matrix:
-        environment: [staging, production]
         region: [europe-west4]
         include:
           - region: europe-west4
             region_name: netherlands
-    environment: ${{ matrix.environment }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: ls -la
-      - run: ls -la ./.github/workflows
-      - run: ls -la ./.github/workflows/deploy.yml
-      - run: cat ./.github/workflows/deploy.yml
-      - run: pwd
-      - uses: ./.github/workflows/deploy.yml
-        with:
-          region: ${{ matrix.region }}
-          version: ${{ needs.build-push.outputs.version }}
-          service: >-
-            ${{ contains(matrix.environment, 'staging') && 'stg' || 'prd' }}-${{ matrix.region_name }}-traffic-analytics
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+      region: ${{ matrix.region }}
+      version: ${{ needs.build-push.outputs.version }}
+      service: stg-${{ matrix.region_name }}-traffic-analytics
