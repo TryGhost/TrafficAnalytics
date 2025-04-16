@@ -25,7 +25,7 @@ jobs:
     needs: [extract-node-version]
     uses: ./.github/workflows/lint-and-test.yml
     with:
-      node-version: ${{ needs.extract-node-version.outputs.node_version }}
+      node-version: ${{ fromJSON(needs.extract-node-version.outputs.node_version) }}
   
   build-push:
     name: Build and Push
@@ -63,56 +63,22 @@ jobs:
           push: true
           tags: ${{ steps.traffic-analytics-docker-metadata.outputs.tags }}
   
-  deploy-staging:
-    if: github.ref == 'refs/heads/main'
-    name: Deploy (Staging)
+  deploy:
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ci'
+    name: Deploy
     needs: build-push
-    runs-on: ubuntu-latest
-    environment: staging
     strategy:
       matrix:
+        environment: [staging, production]
         region: [europe-west4]
         include:
           - region: europe-west4
             region_name: netherlands
-    steps:
-      - name: "Auth with Google Cloud"
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
-      - name: "Deploy to Cloud Run"
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          image: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:${{ needs.build-push.outputs.version }}
-          region: ${{ matrix.region }}
-          service: stg-${{ matrix.region_name }}-traffic-analytics
-          skip_default_labels: true
-          labels: |-
-            commit-sha=${{ github.sha }}
-  
-  deploy-production:
-    if: github.ref == 'refs/heads/main'
-    name: Deploy (Production)
-    needs: build-push
-    runs-on: ubuntu-latest
-    environment: production
-    strategy:
-      matrix:
-        region: [europe-west4]
-        include:
-          - region: europe-west4
-            region_name: netherlands
-    steps:
-      - name: "Auth with Google Cloud"
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
-      - name: "Deploy to Cloud Run"
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          image: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:${{ needs.build-push.outputs.version }}
-          region: ${{ matrix.region }}
-          service: prd-${{ matrix.region_name }}-traffic-analytics
-          skip_default_labels: true
-          labels: |-
-            commit-sha=${{ github.sha }}
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: ${{ matrix.environment }}
+      region: ${{ matrix.region }}
+      version: ${{ needs.build-push.outputs.version }}
+      service: >-
+        ${{ contains(matrix.environment, 'staging') && 'stg' || 'prd' }}-${{ matrix.region_name }}-traffic-analytics
+    secrets: inherit
