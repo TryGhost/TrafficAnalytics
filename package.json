@@ -25,7 +25,7 @@
     "eslint-plugin-ghost": "3.4.0",
     "mocha": "11.1.0",
     "nodemon": "3.1.9",
-    "sinon": "20.0.0",
+    "sinon": "^20.0.0",
     "supertest": "6.3.4"
   },
   "dependencies": {
