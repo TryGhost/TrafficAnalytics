@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/deploy.yml
+      - uses: ./deploy.yml
         with:
           region: ${{ matrix.region }}
           version: ${{ needs.build-push.outputs.version }}
