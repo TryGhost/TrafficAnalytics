@@ -63,20 +63,22 @@ jobs:
           push: true
           tags: ${{ steps.traffic-analytics-docker-metadata.outputs.tags }}
   
-  deploy-staging:
+  deploy:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ci'
-    name: Deploy (staging)
+    name: Deploy
     needs: build-push
     strategy:
       matrix:
+        environment: [staging, production]
         region: [europe-west4]
         include:
           - region: europe-west4
             region_name: netherlands
     uses: ./.github/workflows/deploy.yml
     with:
-      environment: staging
+      environment: ${{ matrix.environment }}
       region: ${{ matrix.region }}
       version: ${{ needs.build-push.outputs.version }}
-      service: stg-${{ matrix.region_name }}-traffic-analytics
+      service: >-
+        ${{ contains(matrix.environment, 'staging') && 'stg' || 'prd' }}-${{ matrix.region_name }}-traffic-analytics
     secrets: inherit
