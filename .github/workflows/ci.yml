@@ -12,6 +12,6 @@ jobs:
     strategy:
       matrix:
         node: [20, 22]
-    uses: ./.github/workflows/lint-and-test.yml
+    uses: ./.github/actions/lint-and-test.yml
     with:
       node-version: ${{ matrix.node }}

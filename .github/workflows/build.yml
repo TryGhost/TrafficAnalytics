@@ -20,50 +20,17 @@ jobs:
           NODE_VERSION=$(grep -oP 'ARG NODE_VERSION=\K[0-9]+' Dockerfile)
           echo "node_version=$NODE_VERSION" >> $GITHUB_OUTPUT
 
-  lint:
-    name: Lint
-    needs: extract-node-version
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ needs.extract-node-version.outputs.node_version }}
-          cache: "yarn"
-      - run: yarn install
-      - run: yarn lint
-  
-  check-yarn-lock:
-    name: Check Yarn Lock
-    needs: extract-node-version
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ needs.extract-node-version.outputs.node_version }}
-          cache: "yarn"
-      - name: Check yarn.lock
-        run: yarn install --frozen-lockfile
-
-  test:
-    name: Test
-    environment: build
-    needs: extract-node-version
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ needs.extract-node-version.outputs.node_version }}
-          cache: "yarn"
-      - run: yarn install
-      - run: yarn test
+  lint-and-test:
+    name: Lint and Test
+    needs: [extract-node-version]
+    uses: ./.github/actions/lint-and-test.yml
+    with:
+      node-version: ${{ needs.extract-node-version.outputs.node_version }}
   
   build-push:
     name: Build and Push
     environment: build
-    needs: [lint, check-yarn-lock, test]
+    needs: [lint-and-test]
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.traffic-analytics-docker-metadata.outputs.version }}
