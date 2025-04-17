@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import {describe, it, expect} from 'vitest';
 import * as processors from '../../../src/services/proxy/processors';
-import { HttpProxyRequest } from '../../../src/types';
+import {FastifyRequest, HttpProxyRequest} from '../../../src/types';
 
-const { parseUserAgent } = processors;
+const {parseUserAgent} = processors;
 
 describe('Processors', () => {
     describe('parseUserAgent', () => {
@@ -15,11 +15,11 @@ describe('Processors', () => {
                     payload: {}
                 },
                 log: {
-                    error: (err: Error) => {},
-                    info: (message: string) => {}
+                    error: () => {},
+                    info: () => {}
                 }
             };
-            parseUserAgent(request as HttpProxyRequest);
+            parseUserAgent(request as FastifyRequest);
 
             expect(request.body?.payload.meta).toEqual({
                 os: 'macos',
@@ -37,11 +37,11 @@ describe('Processors', () => {
                     payload: {}
                 },
                 log: {
-                    error: (err: Error) => {},
-                    info: (message: string) => {}
+                    error: () => {},
+                    info: () => {}
                 }
             };
-            parseUserAgent(request as HttpProxyRequest);
+            parseUserAgent(request as FastifyRequest);
             // ua-parser-js returns 'Mobile Safari' before normalization
             expect(request.body?.payload.meta?.browser).toBe('safari');
         });
@@ -55,11 +55,11 @@ describe('Processors', () => {
                     payload: {}
                 },
                 log: {
-                    error: (err: Error) => {},
-                    info: (message: string) => {}
+                    error: () => {},
+                    info: () => {}
                 }
             };
-            parseUserAgent(request as HttpProxyRequest);
+            parseUserAgent(request as FastifyRequest);
 
             expect(request.body?.payload.meta?.os).toBe('macos');
         });
@@ -73,11 +73,11 @@ describe('Processors', () => {
                     payload: {}
                 },
                 log: {
-                    error: (err: Error) => {},
-                    info: (message: string) => {}
+                    error: () => {},
+                    info: () => {}
                 }
             };
-            parseUserAgent(request as HttpProxyRequest);
+            parseUserAgent(request as FastifyRequest);
 
             expect(request.body?.payload.meta?.device).toBe('bot');
         });
@@ -89,11 +89,11 @@ describe('Processors', () => {
                     payload: {}
                 },
                 log: {
-                    error: (err: Error) => {},
-                    info: (message: string) => {}
+                    error: () => {},
+                    info: () => {}
                 }
             };
-            parseUserAgent(request as HttpProxyRequest);
+            parseUserAgent(request as FastifyRequest);
 
             expect(request.body?.payload.meta).toBeUndefined();
         });

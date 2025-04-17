@@ -1,4 +1,4 @@
-import { FastifyRequest as FastifyRequestBase, FastifyReply as FastifyReplyBase } from 'fastify';
+import {FastifyRequest as FastifyRequestBase, FastifyReply as FastifyReplyBase} from 'fastify';
 
 export interface PayloadMeta {
     os: string;
@@ -46,4 +46,4 @@ export interface HttpProxyRequest {
         [key: string]: string | undefined;
     };
     method: string;
-} 
+}

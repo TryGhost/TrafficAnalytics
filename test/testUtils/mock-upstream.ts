@@ -1,11 +1,11 @@
-import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import Fastify, {FastifyInstance, FastifyRequest, FastifyReply} from 'fastify';
 
 type TargetRequest = {
     method: string;
     url: string;
-    query: Record<string, any>;
-    headers: Record<string, any>;
-    body: any;
+    query: Record<string, string>;
+    headers: Record<string, string>;
+    body: Record<string, unknown>;
 };
 
 function createMockUpstream(targetRequests: TargetRequest[]): FastifyInstance {
@@ -20,9 +20,9 @@ function createMockUpstream(targetRequests: TargetRequest[]): FastifyInstance {
         targetRequests.push({
             method: req.method,
             url: req.url,
-            query: req.query as Record<string, any>,
-            headers: req.headers as Record<string, any>,
-            body: req.body
+            query: req.query as Record<string, string>,
+            headers: req.headers as Record<string, string>,
+            body: req.body as Record<string, unknown>
         });
         
         reply.code(202).send({successful_rows: 1, quarantined_rows: 0});

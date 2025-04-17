@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
+import {describe, it, expect, beforeEach, beforeAll, afterAll} from 'vitest';
 import request from 'supertest';
 import createMockUpstream from './testUtils/mock-upstream';
-import { FastifyInstance } from 'fastify';
-import { Server } from 'http';
+import {FastifyInstance} from 'fastify';
+import {Server} from 'http';
 
 const eventPayload = {
     timestamp: '2025-04-14T22:16:06.095Z',
@@ -23,12 +23,13 @@ const eventPayload = {
     }
 };
 
+// Renamed to avoid unused variable warning
 type TargetRequest = {
     method: string;
     url: string;
-    query: Record<string, any>;
-    headers: Record<string, any>;
-    body: any;
+    query: Record<string, string>;
+    headers: Record<string, string>;
+    body: Record<string, unknown>;
 };
 
 // This approach uses the inline server provided by Fastify for testing
@@ -36,10 +37,10 @@ describe('Fastify App', () => {
     // Create a new instance of the app for testing
     let targetServer: FastifyInstance;
     let proxyServer: Server;
-    let targetRequests: any[] = [];
+    const targetRequests: TargetRequest[] = [];
 
     let targetUrl: string;
-    let app: any;
+    let app: FastifyInstance;
 
     beforeAll(async () => {
         targetServer = createMockUpstream(targetRequests);

@@ -1,5 +1,5 @@
 import uap from 'ua-parser-js';
-import { FastifyRequest, PayloadMeta } from '../../types';
+import {FastifyRequest, PayloadMeta} from '../../types';
 
 function isBot(userAgentString: string): boolean {
     const botPattern = /wget|ahrefsbot|curl|bot|crawler|spider|urllib|bitdiscovery|\+https:\/\/|googlebot/i;
@@ -44,7 +44,7 @@ export function parseUserAgent(request: FastifyRequest): void {
             browser: browserName,
             device: deviceType
         };
-        
+
         request.body.payload.meta = meta;
     } catch (error) {
         request.log.error(error);
@@ -54,7 +54,7 @@ export function parseUserAgent(request: FastifyRequest): void {
             browser: 'unknown',
             device: 'unknown'
         };
-        
+
         request.body.payload.meta = meta;
     }
-} 
+}

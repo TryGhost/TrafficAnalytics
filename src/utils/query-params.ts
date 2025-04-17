@@ -23,4 +23,4 @@ export function filterQueryParams(url: string): string {
     // Update the request URL (keep pathname, replace query)
     const path = url.split('?')[0];
     return path + (newSearchParams.toString() ? `?${newSearchParams.toString()}` : '');
-} 
+}

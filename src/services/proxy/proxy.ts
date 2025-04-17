@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from '../../types';
+import {FastifyRequest, FastifyReply} from '../../types';
 import * as validators from './validators';
 import * as processors from './processors';
 
@@ -29,4 +29,4 @@ export function validateRequest(request: FastifyRequest, reply: FastifyReply, do
     }
 
     done();
-} 
+}

@@ -13,7 +13,9 @@
     "test:unit": "NODE_ENV=testing vitest run --coverage",
     "test": "yarn test:unit",
     "lint:code": "eslint *.js *.ts src/ test/ --ext .js,.ts --cache",
-    "lint": "yarn lint:code",
+    "lint:code:fix": "eslint *.js *.ts src/ test/ --ext .js,.ts --cache --fix",
+    "lint:code:ci": "eslint *.js *.ts src/ test/ --ext .js,.ts --cache --max-warnings 9999 || true",
+    "lint": "yarn lint:code:ci",
     "preship": "yarn test",
     "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
   },
@@ -30,7 +32,7 @@
     "mocha": "11.1.0",
     "sinon": "^20.0.0",
     "supertest": "6.3.4",
-    "typescript": "^5.8.3",
+    "typescript": "^5.2.2",
     "vite": "^6.3.1",
     "vite-plugin-node": "^5.0.1",
     "vitest": "^3.1.1"

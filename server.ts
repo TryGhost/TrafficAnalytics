@@ -19,4 +19,4 @@ if (process.env.NODE_ENV !== 'production' && require.main === module) {
 }
 
 // Export the app for Vite
-export default app; 
+export default app;

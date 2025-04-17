@@ -2,12 +2,12 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { FastifyInstance } from 'fastify';
+import {FastifyInstance} from 'fastify';
 import fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyHttpProxy from '@fastify/http-proxy';
-import { filterQueryParams } from './utils/query-params';
-import { processRequest, validateRequest } from './services/proxy';
+import {filterQueryParams} from './utils/query-params';
+import {processRequest, validateRequest} from './services/proxy';
 
 // Create Fastify instance
 const app: FastifyInstance = fastify({
@@ -82,4 +82,4 @@ app.post('/local-proxy*', async () => {
     return 'Hello World - From the local proxy';
 });
 
-export default app; 
+export default app;

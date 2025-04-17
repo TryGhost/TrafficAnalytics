@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import {describe, it, expect} from 'vitest';
 import * as queryParams from '../../src/utils/query-params';
 
-const { filterQueryParams } = queryParams;
+const {filterQueryParams} = queryParams;
 
 describe('Query Parameter Filtering', () => {
     it('should filter out unwanted query parameters while keeping token and name', () => {
