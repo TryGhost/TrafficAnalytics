@@ -1,11 +1,12 @@
-const uap = require('ua-parser-js');
+import uap from 'ua-parser-js';
+import { FastifyRequest, PayloadMeta } from '../../types';
 
-function isBot(userAgentString) {
+function isBot(userAgentString: string): boolean {
     const botPattern = /wget|ahrefsbot|curl|bot|crawler|spider|urllib|bitdiscovery|\+https:\/\/|googlebot/i;
     return botPattern.test(userAgentString);
 }
 
-function parseUserAgent(request) {
+export function parseUserAgent(request: FastifyRequest): void {
     if (!request.headers['user-agent']) {
         return;
     }
@@ -38,20 +39,22 @@ function parseUserAgent(request) {
             deviceType = 'bot';
         }
 
-        request.body.payload.meta = {};
-        request.body.payload.meta.os = osName;
-        request.body.payload.meta.browser = browserName;
-        request.body.payload.meta.device = deviceType;
+        const meta: PayloadMeta = {
+            os: osName,
+            browser: browserName,
+            device: deviceType
+        };
+        
+        request.body.payload.meta = meta;
     } catch (error) {
         request.log.error(error);
         // We should fail silently here, because we don't want to break the proxy for non-critical functionality
-        request.body.payload.meta = {};
-        request.body.payload.meta.os = 'unknown';
-        request.body.payload.meta.browser = 'unknown';
-        request.body.payload.meta.device = 'unknown';
+        const meta: PayloadMeta = {
+            os: 'unknown',
+            browser: 'unknown',
+            device: 'unknown'
+        };
+        
+        request.body.payload.meta = meta;
     }
-}
-
-module.exports = {
-    parseUserAgent
-};
+} 

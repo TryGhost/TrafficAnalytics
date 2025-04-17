@@ -6,27 +6,33 @@
   "license": "MIT",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon --watch src --watch server.js server.js",
-    "start": "node server.js",
-    "test:unit": "NODE_ENV=testing c8 --all --include 'src/**' --reporter text --reporter cobertura mocha './test/**/*.test.js'",
+    "build": "vite build",
+    "dev": "vite",
+    "start": "node dist/server.js",
+    "pretest": "yarn build",
+    "test:unit": "NODE_ENV=testing c8 --all --include 'dist/src/**' --reporter text --reporter cobertura mocha './test/**/*.test.js'",
     "test": "yarn test:unit",
-    "lint:code": "eslint *.js src/ test/ --ext .js --cache",
+    "lint:code": "eslint *.js *.ts src/ test/ --ext .js,.ts --cache",
     "lint": "yarn lint:code",
     "preship": "yarn test",
     "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
   },
   "files": [
-    "server.js",
-    "src"
+    "dist"
   ],
   "devDependencies": {
+    "@types/dotenv": "^8.2.3",
+    "@types/node": "^22.14.1",
+    "@types/ua-parser-js": "^0.7.39",
     "c8": "10.1.3",
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.4.0",
     "mocha": "11.1.0",
-    "nodemon": "3.1.9",
     "sinon": "^20.0.0",
-    "supertest": "6.3.4"
+    "supertest": "6.3.4",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.1",
+    "vite-plugin-node": "^5.0.1"
   },
   "dependencies": {
     "@fastify/cors": "11.0.1",

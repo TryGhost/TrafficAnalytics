@@ -1,4 +1,5 @@
-const {filterQueryParams} = require('../../src/utils/query-params');
+const queryParams = require('../../dist/src/utils/query-params');
+const {filterQueryParams} = queryParams;
 const assert = require('assert').strict;
 
 describe('Query Parameter Filtering', function () {

@@ -1,9 +1,16 @@
 // Main module file
-require('dotenv').config();
-const {filterQueryParams} = require('./utils/query-params');
-const {processRequest, validateRequest} = require('./services/proxy');
+import dotenv from 'dotenv';
+dotenv.config();
 
-const fastify = require('fastify')({
+import { FastifyInstance } from 'fastify';
+import fastify from 'fastify';
+import fastifyCors from '@fastify/cors';
+import fastifyHttpProxy from '@fastify/http-proxy';
+import { filterQueryParams } from './utils/query-params';
+import { processRequest, validateRequest } from './services/proxy';
+
+// Create Fastify instance
+const app: FastifyInstance = fastify({
     logger: {
         level: process.env.LOG_LEVEL || 'info',
         transport: {
@@ -15,13 +22,13 @@ const fastify = require('fastify')({
             }
         },
         serializers: {
-            req: function (req) {
+            req: function (req: any) {
                 return {
                     method: req.method,
                     url: req.url
                 };
             },
-            res: function (res) {
+            res: function (res: any) {
                 return {
                     statusCode: res.statusCode
                 };
@@ -31,14 +38,14 @@ const fastify = require('fastify')({
 });
 
 // Register CORS plugin
-fastify.register(require('@fastify/cors'), {
+app.register(fastifyCors, {
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 });
 
 // Request logging hook
-fastify.addHook('onRequest', (request, reply, done) => {
+app.addHook('onRequest', (request, reply, done) => {
     if (process.env.NODE_ENV !== 'testing') {
         request.log.info(`${request.method} ${request.url}`);
     }
@@ -46,33 +53,33 @@ fastify.addHook('onRequest', (request, reply, done) => {
 });
 
 // Register HTTP proxy for /tb/web_analytics
-fastify.register(require('@fastify/http-proxy'), {
+app.register(fastifyHttpProxy, {
     upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
     prefix: '/tb/web_analytics',
     rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
     httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-    preValidation: validateRequest,
-    preHandler: processRequest,
-    rewriteRequest: (req) => {
+    preValidation: validateRequest as any,
+    preHandler: processRequest as any,
+    rewriteRequest: (req: any) => {
         // Filter query parameters to only include token and name
         req.url = filterQueryParams(req.url);
         return req;
     },
     replyOptions: {
-        onError: (reply, err) => {
-            reply.log.error(err);
+        onError: (reply, error) => {
+            reply.log.error(error);
             reply.status(502).send({error: 'Proxy error'});
         }
     }
-});
+} as any); // Using type assertion to avoid complex type issues
 
 // Routes
-fastify.get('/', async () => {
+app.get('/', async () => {
     return 'Hello World - Github Actions Deployment Test';
 });
 
-fastify.post('/local-proxy*', async () => {
+app.post('/local-proxy*', async () => {
     return 'Hello World - From the local proxy';
 });
 
-module.exports = fastify;
+export default app; 

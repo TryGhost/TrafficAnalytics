@@ -1,12 +1,13 @@
-const validators = require('./validators');
-const processors = require('./processors');
+import { FastifyRequest, FastifyReply } from '../../types';
+import * as validators from './validators';
+import * as processors from './processors';
 
 // Accepts a request object
 // Does some processing — user agent parsing, geoip lookup, etc.
 // Modifies the request object in place
 // Called within the HTTP proxy route
 // Eventually will be called on each request pulled from the queue
-function processRequest(request, reply, done) {
+export function processRequest(request: FastifyRequest, reply: FastifyReply, done: () => void): void {
     try {
         processors.parseUserAgent(request);
     } catch (error) {
@@ -16,7 +17,7 @@ function processRequest(request, reply, done) {
     done();
 }
 
-function validateRequest(request, reply, done) {
+export function validateRequest(request: FastifyRequest, reply: FastifyReply, done: () => void): void {
     try {
         validators.validateQueryParams(request);
         validators.validateRequestBody(request);
@@ -28,9 +29,4 @@ function validateRequest(request, reply, done) {
     }
 
     done();
-}
-
-module.exports = {
-    processRequest,
-    validateRequest
-};
+} 

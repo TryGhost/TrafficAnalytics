@@ -1,4 +1,5 @@
-const {validateQueryParams, validateRequestBody} = require('../../../src/services/proxy/validators');
+const validators = require('../../../dist/src/services/proxy/validators');
+const {validateQueryParams, validateRequestBody} = validators;
 const assert = require('node:assert').strict;
 
 describe('Validators', function () {

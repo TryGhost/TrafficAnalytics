@@ -1,4 +1,5 @@
-const {parseUserAgent} = require('../../../src/services/proxy/processors');
+const processors = require('../../../dist/src/services/proxy/processors');
+const { parseUserAgent } = processors;
 const assert = require('node:assert').strict;
 
 describe('Processors', function () {

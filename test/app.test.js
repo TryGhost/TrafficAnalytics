@@ -39,7 +39,10 @@ describe('Fastify App', function () {
         // Set the PROXY_TARGET environment variable before requiring the app
         process.env.PROXY_TARGET = targetUrl;
         process.env.LOG_LEVEL = 'silent';
-        app = require('../src/app');
+        
+        // Import the compiled app from the dist directory
+        const appModule = require('../dist/src/app');
+        app = appModule.default;
         await app.ready();
         proxyServer = app.server;
     });
