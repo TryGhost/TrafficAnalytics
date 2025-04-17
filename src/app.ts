@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import {FastifyInstance} from 'fastify';
+import {FastifyInstance, FastifyReply} from 'fastify';
 import fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyHttpProxy from '@fastify/http-proxy';
@@ -66,7 +66,7 @@ app.register(fastifyHttpProxy, {
         return req;
     },
     replyOptions: {
-        onError: (reply, error) => {
+        onError: (reply: FastifyReply, error: Error) => {
             reply.log.error(error);
             reply.status(502).send({error: 'Proxy error'});
         }

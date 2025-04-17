@@ -7,7 +7,8 @@ module.exports = {
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 2020,
-        sourceType: 'module'
+        sourceType: 'module',
+        tsconfigRootDir: __dirname
     },
     rules: {
         'eol-last': ['error', 'always'],
