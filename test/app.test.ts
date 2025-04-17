@@ -1,6 +1,8 @@
-const request = require('supertest');
-const assert = require('node:assert/strict');
-const createMockUpstream = require('./testUtils/mock-upstream');
+import {describe, it, expect, beforeEach, beforeAll, afterAll} from 'vitest';
+import request from 'supertest';
+import createMockUpstream from './testUtils/mock-upstream';
+import {FastifyInstance} from 'fastify';
+import {Server} from 'http';
 
 const eventPayload = {
     timestamp: '2025-04-14T22:16:06.095Z',
@@ -21,31 +23,47 @@ const eventPayload = {
     }
 };
 
+// Renamed to avoid unused variable warning
+type TargetRequest = {
+    method: string;
+    url: string;
+    query: Record<string, string>;
+    headers: Record<string, string>;
+    body: Record<string, unknown>;
+};
+
 // This approach uses the inline server provided by Fastify for testing
-describe('Fastify App', function () {
+describe('Fastify App', () => {
     // Create a new instance of the app for testing
-    let targetServer;
-    let proxyServer;
-    let targetRequests = [];
+    let targetServer: FastifyInstance;
+    let proxyServer: Server;
+    const targetRequests: TargetRequest[] = [];
 
-    let targetUrl;
-    let app;
+    let targetUrl: string;
+    let app: FastifyInstance;
 
-    before(async function () {
+    beforeAll(async () => {
         targetServer = createMockUpstream(targetRequests);
         await targetServer.listen({port: 0});
-        targetUrl = `http://127.0.0.1:${targetServer.server.address().port}`;
+        const address = targetServer.server.address();
+        if (!address || typeof address === 'string') {
+            throw new Error('Invalid server address');
+        }
+        targetUrl = `http://127.0.0.1:${address.port}`;
 
         // Set the PROXY_TARGET environment variable before requiring the app
         process.env.PROXY_TARGET = targetUrl;
         process.env.LOG_LEVEL = 'silent';
-        app = require('../src/app');
+        
+        // Import directly from the source
+        const appModule = await import('../src/app');
+        app = appModule.default;
         await app.ready();
         proxyServer = app.server;
     });
 
-    after(function () {
-        const promises = [];
+    afterAll(async () => {
+        const promises: Promise<void>[] = [];
         if (app) {
             promises.push(app.close());
         }
@@ -54,10 +72,10 @@ describe('Fastify App', function () {
             promises.push(targetServer.close());
         }
 
-        return Promise.all(promises);
+        await Promise.all(promises);
     });
 
-    beforeEach(function () {
+    beforeEach(() => {
         // Clear the targetRequests array in place
         // This is necessary because the target server is a mock and the requests are recorded in the same array
         // Using targetRequests = [] would create a new array, and the mock upstream would not record any requests
@@ -142,11 +160,11 @@ describe('Fastify App', function () {
                 .send(eventPayload)
                 .expect(202);
 
-            assert.equal(targetRequests.length, 1);
-            assert.equal(targetRequests[0].method, 'POST');
-            assert.equal(targetRequests[0].url, '/?token=abc123&name=test');
-            assert.equal(targetRequests[0].query.token, 'abc123');
-            assert.equal(targetRequests[0].query.name, 'test');
+            expect(targetRequests.length).toBe(1);
+            expect(targetRequests[0].method).toBe('POST');
+            expect(targetRequests[0].url).toBe('/?token=abc123&name=test');
+            expect(targetRequests[0].query.token).toBe('abc123');
+            expect(targetRequests[0].query.name).toBe('test');
         });
 
         it('should handle proxy errors gracefully', async function () {
@@ -165,7 +183,7 @@ describe('Fastify App', function () {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.deepEqual(targetRequest.body.payload.meta.os, 'macos');
+            expect(targetRequest.body.payload.meta.os).toBe('macos');
         });
 
         it('should parse the browser from the user agent and pass it to the upstream server', async function () {
@@ -177,7 +195,7 @@ describe('Fastify App', function () {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.deepEqual(targetRequest.body.payload.meta.browser, 'chrome');
+            expect(targetRequest.body.payload.meta.browser).toBe('chrome');
         });
 
         it('should parse the device from the user agent and pass it to the upstream server', async function () {
@@ -189,7 +207,7 @@ describe('Fastify App', function () {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            assert.deepEqual(targetRequest.body.payload.meta.device, 'desktop');
+            expect(targetRequest.body.payload.meta.device).toBe('desktop');
         });
     });
-});
+}); 

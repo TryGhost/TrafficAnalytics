@@ -3,7 +3,7 @@
  * @param {string} url - URL with query parameters
  * @returns {string} - URL with only token and name query parameters
  */
-function filterQueryParams(url) {
+export function filterQueryParams(url: string): string {
     // Get query parameters without creating a full URL object
     const searchParams = new URLSearchParams(url.split('?')[1] || '');
 
@@ -24,7 +24,3 @@ function filterQueryParams(url) {
     const path = url.split('?')[0];
     return path + (newSearchParams.toString() ? `?${newSearchParams.toString()}` : '');
 }
-
-module.exports = {
-    filterQueryParams
-};

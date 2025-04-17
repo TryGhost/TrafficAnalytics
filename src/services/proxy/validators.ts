@@ -1,10 +1,11 @@
-const errors = require('@tryghost/errors');
+import errors from '@tryghost/errors';
+import {FastifyRequest} from '../../types';
 
 // A validator is a function that accepts a request object and throws an error if the request is invalid
 // If an error is thrown, the request is rejected
 // If no error is thrown, the request continues to the next step
 
-function validateQueryParams(request) {
+export function validateQueryParams(request: FastifyRequest): void {
     const token = request.query.token;
     const name = request.query.name;
 
@@ -15,7 +16,7 @@ function validateQueryParams(request) {
     }
 }
 
-function validateRequestBody(request) {
+export function validateRequestBody(request: FastifyRequest): void {
     // Validate the request body
     if (!request.body || Object.keys(request.body).length === 0 || !request.body.payload) {
         // TODO: This should throw an error, not return a reply
@@ -24,8 +25,3 @@ function validateRequestBody(request) {
         });
     }
 }
-
-module.exports = {
-    validateQueryParams,
-    validateRequestBody
-};
