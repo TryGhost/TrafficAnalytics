@@ -32,7 +32,7 @@
     "sinon": "20.0.0",
     "supertest": "6.3.4",
     "typescript": "5.8.3",
-    "vite": "6.3.1",
+    "vite": "6.3.2",
     "vite-plugin-node": "5.0.1",
     "vitest": "3.1.1"
   },
