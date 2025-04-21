@@ -27,7 +27,6 @@ jobs:
           tags: traffic-analytics:latest
           build-args: |
             NODE_VERSION=${{ inputs.node-version }}
-            BUILD_TYPE=development
       
       # Start container
       - name: Start container
