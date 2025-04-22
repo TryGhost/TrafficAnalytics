@@ -54,7 +54,7 @@ describe('Fastify App', () => {
         // Set the PROXY_TARGET environment variable before requiring the app
         process.env.PROXY_TARGET = targetUrl;
         process.env.LOG_LEVEL = 'silent';
-        
+
         // Import directly from the source
         const appModule = await import('../src/app');
         app = appModule.default;
@@ -102,7 +102,7 @@ describe('Fastify App', () => {
             await request(proxyServer)
                 .post('/local-proxy')
                 .expect(200)
-                .expect('Hello World - From the local proxy');
+                .expect('Hello World - From thl proxy');
         });
 
         it('should respond 404 to GET on local-proxy path', async function () {
@@ -210,4 +210,4 @@ describe('Fastify App', () => {
             expect(targetRequest.body.payload.meta.device).toBe('desktop');
         });
     });
-}); 
+});
