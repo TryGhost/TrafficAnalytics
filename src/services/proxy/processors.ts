@@ -1,5 +1,5 @@
 import uap from 'ua-parser-js';
-import {FastifyRequest, PayloadMeta} from '../../types';
+import {FastifyRequest} from '../../types';
 
 function isBot(userAgentString: string): boolean {
     const botPattern = /wget|ahrefsbot|curl|bot|crawler|spider|urllib|bitdiscovery|\+https:\/\/|googlebot/i;
@@ -7,11 +7,13 @@ function isBot(userAgentString: string): boolean {
 }
 
 export function parseUserAgent(request: FastifyRequest): void {
-    if (!request.headers['user-agent']) {
-        return;
-    }
-
     try {
+        if (!request.headers['user-agent']) {
+            // This error won't ever be shown to a user, so we can use a plain Error
+            /* eslint-disable-next-line */
+            throw new Error('User agent not found');
+        }
+
         const userAgent = request.headers['user-agent'];
         const ua = new uap(userAgent);
         const os = ua.getOS();
@@ -39,22 +41,15 @@ export function parseUserAgent(request: FastifyRequest): void {
             deviceType = 'bot';
         }
 
-        const meta: PayloadMeta = {
-            os: osName,
-            browser: browserName,
-            device: deviceType
-        };
-
-        request.body.payload.meta = meta;
+        request.body.payload.os = osName;
+        request.body.payload.browser = browserName;
+        request.body.payload.device = deviceType;
     } catch (error) {
         request.log.error(error);
         // We should fail silently here, because we don't want to break the proxy for non-critical functionality
-        const meta: PayloadMeta = {
-            os: 'unknown',
-            browser: 'unknown',
-            device: 'unknown'
-        };
 
-        request.body.payload.meta = meta;
+        request.body.payload.os = 'unknown';
+        request.body.payload.browser = 'unknown';
+        request.body.payload.device = 'unknown';
     }
 }

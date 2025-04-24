@@ -1,14 +1,7 @@
 import {FastifyRequest as FastifyRequestBase, FastifyReply as FastifyReplyBase} from 'fastify';
 
-export interface PayloadMeta {
-    os: string;
-    browser: string;
-    device: string;
-}
-
 export interface Payload {
     [key: string]: any;
-    meta?: PayloadMeta;
 }
 
 export interface RequestBody {
