@@ -21,7 +21,7 @@ describe('Processors', () => {
             };
             parseUserAgent(request as FastifyRequest);
 
-            expect(request.body?.payload).toEqual({
+            expect(request.body?.payload.meta).toEqual({
                 os: 'macos',
                 browser: 'chrome',
                 device: 'desktop'
@@ -43,7 +43,7 @@ describe('Processors', () => {
             };
             parseUserAgent(request as FastifyRequest);
             // ua-parser-js returns 'Mobile Safari' before normalization
-            expect(request.body?.payload.browser).toBe('safari');
+            expect(request.body?.payload.meta?.browser).toBe('safari');
         });
 
         it('should normalize Mac OS and macOS to macos', () => {
@@ -61,7 +61,7 @@ describe('Processors', () => {
             };
             parseUserAgent(request as FastifyRequest);
 
-            expect(request.body?.payload.os).toBe('macos');
+            expect(request.body?.payload.meta?.os).toBe('macos');
         });
 
         it('should identify obvious bots and set the device to bot', () => {
@@ -79,7 +79,7 @@ describe('Processors', () => {
             };
             parseUserAgent(request as FastifyRequest);
 
-            expect(request.body?.payload.device).toBe('bot');
+            expect(request.body?.payload.meta?.device).toBe('bot');
         });
 
         it('should return early if the user agent is not present', () => {
@@ -95,7 +95,7 @@ describe('Processors', () => {
             };
             parseUserAgent(request as FastifyRequest);
 
-            expect(request.body?.payload).toEqual({});
+            expect(request.body?.payload.meta).toBeUndefined();
         });
     });
-});
+}); 
