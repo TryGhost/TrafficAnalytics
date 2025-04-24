@@ -39,22 +39,11 @@ export function parseUserAgent(request: FastifyRequest): void {
             deviceType = 'bot';
         }
 
-        const meta: PayloadMeta = {
-            os: osName,
-            browser: browserName,
-            device: deviceType
-        };
-
-        request.body.payload.meta = meta;
+        request.body.payload.os = osName;
+        request.body.payload.browser = browserName;
+        request.body.payload.device = deviceType;
     } catch (error) {
         request.log.error(error);
         // We should fail silently here, because we don't want to break the proxy for non-critical functionality
-        const meta: PayloadMeta = {
-            os: 'unknown',
-            browser: 'unknown',
-            device: 'unknown'
-        };
-
-        request.body.payload.meta = meta;
     }
 }
