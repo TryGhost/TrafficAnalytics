@@ -54,7 +54,7 @@ describe('Fastify App', () => {
         // Set the PROXY_TARGET environment variable before requiring the app
         process.env.PROXY_TARGET = targetUrl;
         process.env.LOG_LEVEL = 'silent';
-        
+
         // Import directly from the source
         const appModule = await import('../src/app');
         app = appModule.default;
@@ -183,7 +183,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.meta.os).toBe('macos');
+            expect(targetRequest.body.payload.os).toBe('macos');
         });
 
         it('should parse the browser from the user agent and pass it to the upstream server', async function () {
@@ -195,7 +195,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.meta.browser).toBe('chrome');
+            expect(targetRequest.body.payload.browser).toBe('chrome');
         });
 
         it('should parse the device from the user agent and pass it to the upstream server', async function () {
@@ -207,7 +207,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.meta.device).toBe('desktop');
+            expect(targetRequest.body.payload.device).toBe('desktop');
         });
     });
-}); 
+});
