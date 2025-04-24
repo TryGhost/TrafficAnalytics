@@ -82,7 +82,7 @@ describe('Processors', () => {
             expect(request.body?.payload.device).toBe('bot');
         });
 
-        it('should return early if the user agent is not present', () => {
+        it('should return unknown values if the user agent is not present', () => {
             const request: Partial<HttpProxyRequest> = {
                 headers: {},
                 body: {
@@ -95,7 +95,11 @@ describe('Processors', () => {
             };
             parseUserAgent(request as FastifyRequest);
 
-            expect(request.body?.payload).toBeUndefined();
+            expect(request.body?.payload).toEqual({
+                os: 'unknown',
+                browser: 'unknown',
+                device: 'unknown'
+            });
         });
     });
 });
