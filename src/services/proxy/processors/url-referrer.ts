@@ -1,12 +1,7 @@
 import {FastifyRequest} from '../../../types/index.js';
 import {ReferrerParser} from '@tryghost/referrer-parser';
+import type {ReferrerData} from '@tryghost/referrer-parser';
 
-// Define types locally
-interface ReferrerData {
-    referrerSource: string;
-    referrerMedium: string;
-    referrerUrl: string;
-}
 
 const referrerParser = new ReferrerParser();
 
@@ -25,7 +20,7 @@ export function parseReferrer(request: FastifyRequest): void {
         return;
     }
 
-    const parsedReferrer = referrerParser.parse(referrerData.referrerUrl, referrerData.referrerSource, referrerData.referrerMedium);
+    const parsedReferrer = referrerParser.parse(referrerData.referrerUrl, referrerData.referrerSource, referrerData.referrerMedium ?? undefined);
     request.body.payload.meta = request.body.payload.meta || {};
     request.body.payload.meta.referrerUrl = parsedReferrer.referrerUrl;
     request.body.payload.meta.referrerSource = parsedReferrer.referrerSource;
