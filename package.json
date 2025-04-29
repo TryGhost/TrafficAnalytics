@@ -35,7 +35,7 @@
     "mocha": "11.1.0",
     "sinon": "20.0.0",
     "supertest": "6.3.4",
-    "typescript": "5.8.3",
+    "typescript": "~5.2.0",
     "vite": "6.3.3",
     "vite-plugin-node": "5.0.1",
     "vitest": "3.1.2"
