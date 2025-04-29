@@ -2,7 +2,6 @@ import {FastifyRequest} from '../../../types/index.js';
 import {ReferrerParser} from '@tryghost/referrer-parser';
 import type {ReferrerData} from '@tryghost/referrer-parser';
 
-
 const referrerParser = new ReferrerParser();
 
 export function parseReferrer(request: FastifyRequest): void {
