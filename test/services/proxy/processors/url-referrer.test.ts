@@ -12,7 +12,7 @@ vi.mock('@tryghost/referrer-parser', async () => {
             referrerMedium: medium || 'unknown'
         }))
     }));
-    
+
     return {
         ReferrerParser
     };
@@ -20,10 +20,10 @@ vi.mock('@tryghost/referrer-parser', async () => {
 
 describe('Referrer Parser', () => {
     let request: FastifyRequest;
-    
+
     beforeEach(() => {
         vi.clearAllMocks();
-        
+
         // Create a partial FastifyRequest with the required properties for our tests
         request = {
             headers: {
@@ -34,7 +34,9 @@ describe('Referrer Parser', () => {
                 }
             },
             body: {
-                payload: {}
+                payload: {
+                    meta: {}
+                }
             },
             query: {},
             id: '1',
@@ -52,9 +54,9 @@ describe('Referrer Parser', () => {
     it('should parse referrer data and add it to the payload', () => {
         urlReferrerModule.parseReferrer(request);
 
-        expect(request.body.payload.referrerSource).toBe('Google');
-        expect(request.body.payload.referrerMedium).toBe('search');
-        expect(request.body.payload.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
+        expect(request.body.payload.meta.referrerSource).toBe('Google');
+        expect(request.body.payload.meta.referrerMedium).toBe('search');
+        expect(request.body.payload.meta.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
     });
 
     it('should skip processing if referrer header is missing', () => {
@@ -63,10 +65,10 @@ describe('Referrer Parser', () => {
             delete testRequest.headers.parsedReferrer;
         }
         testRequest.body.payload = {};
-        
+
         urlReferrerModule.parseReferrer(testRequest);
-        
-        expect(testRequest.body.payload.referrerSource).toBeUndefined();
+
+        expect(testRequest.body.payload.meta).toBeUndefined();
     });
 
     it('should handle non-object parsedReferrer headers', () => {
@@ -76,12 +78,12 @@ describe('Referrer Parser', () => {
             testRequest.headers.parsedReferrer = 'not-an-object' as unknown as typeof testRequest.headers.parsedReferrer;
         }
         testRequest.body.payload = {};
-        
+
         urlReferrerModule.parseReferrer(testRequest);
-        
-        expect(testRequest.body.payload.referrerSource).toBeUndefined();
+
+        expect(testRequest.body.payload.meta).toBeUndefined();
     });
-    
+
     it('should handle missing referrer properties', () => {
         const testRequest = structuredClone(request);
         if (testRequest.headers) {
@@ -89,9 +91,9 @@ describe('Referrer Parser', () => {
             testRequest.headers.parsedReferrer = {} as typeof testRequest.headers.parsedReferrer;
         }
         testRequest.body.payload = {};
-        
+
         urlReferrerModule.parseReferrer(testRequest);
-        
-        expect(testRequest.body.payload.referrerSource).toBeUndefined();
+
+        expect(testRequest.body.payload.meta).toBeUndefined();
     });
-}); 
+});
