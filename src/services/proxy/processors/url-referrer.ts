@@ -1,4 +1,5 @@
 import {FastifyRequest} from '../../../types/index.js';
+import {ReferrerParser} from '@tryghost/referrer-parser';
 
 // Define types locally
 interface ReferrerData {
@@ -7,13 +8,7 @@ interface ReferrerData {
     referrerUrl: string;
 }
 
-// Will be initialized asynchronously
-let referrerParser: any;
-
-(async () => {
-    const module = await import('@tryghost/referrer-parser');
-    referrerParser = new module.ReferrerParser();
-})();
+const referrerParser = new ReferrerParser();
 
 export function parseReferrer(request: FastifyRequest): void {
     if (!referrerParser) {
