@@ -5,6 +5,7 @@
   "author": "Ghost Foundation",
   "license": "MIT",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "build": "vite build",
     "docker:build": "docker compose build",
@@ -15,8 +16,8 @@
     "test:unit": "NODE_ENV=testing vitest run --coverage",
     "test": "yarn test:unit",
     "docker:test": "docker compose run --rm -it proxy-server yarn test:unit",
-    "lint:code": "eslint *.js *.ts src/ test/ --ext .js,.ts --cache",
-    "lint:code:fix": "eslint *.js *.ts src/ test/ --ext .js,.ts --cache --fix",
+    "lint:code": "eslint src/ test/ --ext .js,.ts --cache",
+    "lint:code:fix": "eslint src/ test/ --ext .js,.ts --cache --fix",
     "lint": "yarn lint:code",
     "preship": "yarn test",
     "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
