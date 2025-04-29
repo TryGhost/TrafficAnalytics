@@ -1,7 +1,7 @@
 import {FastifyRequest, FastifyReply} from '../../types';
 import * as validators from './validators';
-import * as processors from './processors';
 import {parseReferrer} from './processors/url-referrer';
+import {parseUserAgent} from './processors/parse-user-agent';
 
 // Accepts a request object
 // Does some processing — user agent parsing, geoip lookup, etc.
@@ -10,7 +10,7 @@ import {parseReferrer} from './processors/url-referrer';
 // Eventually will be called on each request pulled from the queue
 export function processRequest(request: FastifyRequest, reply: FastifyReply, done: () => void): void {
     try {
-        processors.parseUserAgent(request);
+        parseUserAgent(request);
         parseReferrer(request);
     } catch (error) {
         reply.code(500).send(error);
