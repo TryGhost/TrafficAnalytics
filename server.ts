@@ -1,9 +1,12 @@
 import app from './src/app';
+import { fileURLToPath } from 'url';
+
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 
 const port: number = parseInt(process.env.PORT || '3000', 10);
 
 // Start the server if this file is run directly
-if (require.main === module) {
+if (isMainModule) {
     const start = async (): Promise<void> => {
         try {
             await app.listen({host: '0.0.0.0', port});

@@ -7,6 +7,7 @@ export default defineConfig({
         port: 3000
     },
     build: {
+        target: 'esnext',
         outDir: 'dist',
         minify: false,
         lib: {
@@ -19,14 +20,15 @@ export default defineConfig({
                 'src/services/proxy/processors': resolve(__dirname, 'src/services/proxy/processors.ts'),
                 'src/services/proxy/validators': resolve(__dirname, 'src/services/proxy/validators.ts')
             },
-            formats: ['cjs']
+            formats: ['es']
         },
         rollupOptions: {
             external: ['fastify', '@fastify/cors', '@fastify/http-proxy', 'dotenv', 'ua-parser-js', '@tryghost/errors'],
             output: {
                 entryFileNames: '[name].js',
                 preserveModules: true,
-                exports: 'named'
+                exports: 'named',
+                format: 'es'
             }
         }
     },
