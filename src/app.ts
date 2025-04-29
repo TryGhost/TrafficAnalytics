@@ -6,8 +6,8 @@ import {FastifyInstance, FastifyReply} from 'fastify';
 import fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyHttpProxy from '@fastify/http-proxy';
-import {filterQueryParams} from './utils/query-params';
-import {processRequest, validateRequest} from './services/proxy';
+import {filterQueryParams} from './utils/query-params.js';
+import {processRequest, validateRequest} from './services/proxy/proxy.js';
 
 // Create Fastify instance
 const app: FastifyInstance = fastify({

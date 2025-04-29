@@ -1,5 +1,5 @@
 import errors from '@tryghost/errors';
-import {FastifyRequest} from '../../types';
+import {FastifyRequest} from '../../types/index.js';
 
 // A validator is a function that accepts a request object and throws an error if the request is invalid
 // If an error is thrown, the request is rejected

@@ -1,6 +1,6 @@
-import {FastifyRequest, FastifyReply} from '../../types';
-import * as validators from './validators';
-import * as processors from './processors';
+import {FastifyRequest, FastifyReply} from '../../types/index.js';
+import * as validators from './validators.js';
+import * as processors from './processors/user-agent.js';
 
 // Accepts a request object
 // Does some processing — user agent parsing, geoip lookup, etc.

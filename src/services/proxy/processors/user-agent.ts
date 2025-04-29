@@ -1,5 +1,5 @@
 import uap from 'ua-parser-js';
-import {FastifyRequest} from '../../types';
+import {FastifyRequest} from '../../../types/index.js';
 
 function isBot(userAgentString: string): boolean {
     const botPattern = /wget|ahrefsbot|curl|bot|crawler|spider|urllib|bitdiscovery|\+https:\/\/|googlebot/i;
