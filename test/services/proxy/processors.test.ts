@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import * as processors from '../../../src/services/proxy/processors';
+import * as processors from '../../../src/services/proxy/processors/user-agent';
 import {FastifyRequest, HttpProxyRequest} from '../../../src/types';
 
 const {parseUserAgent} = processors;
