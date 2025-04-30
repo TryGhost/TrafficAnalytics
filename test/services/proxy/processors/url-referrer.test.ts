@@ -26,16 +26,14 @@ describe('Referrer Parser', () => {
 
         // Create a partial FastifyRequest with the required properties for our tests
         request = {
-            headers: {
-                parsedReferrer: {
-                    referrerSource: 'Google',
-                    referrerMedium: 'search',
-                    referrerUrl: 'https://www.google.com/search?q=ghost+cms'
-                }
-            },
+            headers: {},
             body: {
                 payload: {
-                    meta: {}
+                    parsedReferrer: {
+                        url: 'https://www.google.com/search?q=ghost+cms',
+                        source: 'Google',
+                        medium: 'search'
+                    }
                 }
             },
             query: {},
@@ -57,14 +55,12 @@ describe('Referrer Parser', () => {
         expect(request.body.payload.meta.referrerSource).toBe('Google');
         expect(request.body.payload.meta.referrerMedium).toBe('search');
         expect(request.body.payload.meta.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
+        expect(request.body.payload.parsedReferrer).toBeUndefined();
     });
 
     it('should skip processing if referrer header is missing', () => {
         const testRequest = structuredClone(request);
-        if (testRequest.headers) {
-            delete testRequest.headers.parsedReferrer;
-        }
-        testRequest.body.payload = {};
+        delete testRequest.body.payload.parsedReferrer;
 
         urlReferrerModule.parseReferrer(testRequest);
 
@@ -73,11 +69,8 @@ describe('Referrer Parser', () => {
 
     it('should handle non-object parsedReferrer headers', () => {
         const testRequest = structuredClone(request);
-        if (testRequest.headers) {
-            // Use type assertion to handle the test case
-            testRequest.headers.parsedReferrer = 'not-an-object' as unknown as typeof testRequest.headers.parsedReferrer;
-        }
-        testRequest.body.payload = {};
+        // Use type assertion to handle the test case
+        testRequest.body.payload.parsedReferrer = 'not-an-object' as unknown as Record<string, unknown>;
 
         urlReferrerModule.parseReferrer(testRequest);
 
@@ -86,11 +79,8 @@ describe('Referrer Parser', () => {
 
     it('should handle missing referrer properties', () => {
         const testRequest = structuredClone(request);
-        if (testRequest.headers) {
-            // Use empty object with type assertion
-            testRequest.headers.parsedReferrer = {} as typeof testRequest.headers.parsedReferrer;
-        }
-        testRequest.body.payload = {};
+        // Use empty object with type assertion
+        testRequest.body.payload.parsedReferrer = {} as Record<string, unknown>;
 
         urlReferrerModule.parseReferrer(testRequest);
 
