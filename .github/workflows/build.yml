@@ -26,7 +26,7 @@ jobs:
     uses: ./.github/workflows/lint-and-test.yml
     with:
       node-version: ${{ fromJSON(needs.extract-node-version.outputs.node_version) }}
-  
+
   build-push:
     name: Build and Push
     environment: build
@@ -62,9 +62,8 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.traffic-analytics-docker-metadata.outputs.tags }}
-  
+
   deploy:
-    if: github.ref == 'refs/heads/main'
     name: Deploy
     needs: build-push
     strategy:

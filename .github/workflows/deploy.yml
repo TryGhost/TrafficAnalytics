@@ -19,6 +19,10 @@ on:
       GCP_DEPLOY_SERVICE_ACCOUNT_KEY:
         required: true
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     name: Deploy (${{ inputs.service }})
@@ -28,7 +32,10 @@ jobs:
       - name: "Auth with Google Cloud"
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
+          project_id: ghost-traffic-analytics
+          token_format: access_token
+          workload_identity_provider: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-${{ contains(inputs.environment, 'staging') && 'stg' || 'prd' }}-ta/providers/github-provider-${{ contains(inputs.environment, 'staging') && 'stg' || 'prd' }}-ta
+          service_account: ${{ contains(inputs.environment, 'staging') && 'stg' || 'prd' }}-gh-deploy@ghost-traffic-analytics.iam.gserviceaccount.com
       - name: "Deploy to Cloud Run"
         uses: google-github-actions/deploy-cloudrun@v2
         with:
