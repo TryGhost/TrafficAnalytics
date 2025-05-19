@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   extract-node-version:
     name: Extract Node Version
@@ -36,12 +40,20 @@ jobs:
       version: ${{ steps.traffic-analytics-docker-metadata.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+      - name: "Auth with Google Cloud"
+        id: gcp-auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ghost-traffic-analytics
+          token_format: access_token
+          workload_identity_provider: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
+          service_account: gh-artifact-manager@ghost-traffic-analytics.iam.gserviceaccount.com
       - name: "Login to GCP Artifact Registry"
         uses: docker/login-action@v3
         with:
           registry: europe-docker.pkg.dev
-          username: _json_key
-          password: ${{ secrets.GCP_ARTIFACT_REGISTRY_SERVICE_ACCOUNT_KEY }}
+          username: oauth2accesstoken
+          password: ${{ steps.gcp-auth.outputs.access_token }}
       - name: Traffic Analytics Docker meta
         id: traffic-analytics-docker-metadata
         uses: docker/metadata-action@v5

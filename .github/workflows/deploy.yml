@@ -31,7 +31,7 @@ jobs:
         with:
           project_id: ghost-traffic-analytics
           token_format: access_token
-          workload_identity_provider: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-${{ contains(inputs.environment, 'staging') && 'stg' || 'prd' }}-ta/providers/github-provider-${{ contains(inputs.environment, 'staging') && 'stg' || 'prd' }}-ta
+          workload_identity_provider: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
           service_account: ${{ contains(inputs.environment, 'staging') && 'stg' || 'prd' }}-gh-deploy@ghost-traffic-analytics.iam.gserviceaccount.com
       - name: "Deploy to Cloud Run"
         uses: google-github-actions/deploy-cloudrun@v2
