@@ -6,6 +6,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   id-token: write
   contents: read
@@ -67,6 +71,8 @@ jobs:
             type=semver,pattern={{major}}
             type=sha,priority=1100
             type=sha,format=long
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build Docker image
         id: build-docker-image
         uses: docker/build-push-action@v5
@@ -74,10 +80,13 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.traffic-analytics-docker-metadata.outputs.tags }}
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   deploy:
     name: Deploy
-    needs: build-push
+    needs: [build-push]
     strategy:
       matrix:
         environment: [staging, production]

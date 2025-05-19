@@ -11,7 +11,7 @@ jobs:
   lint-and-test:
     name: Lint and Test (Node ${{ inputs.node-version }})
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
 
@@ -19,6 +19,8 @@ jobs:
         run: echo "UUID=$(uuidgen)" >> $GITHUB_ENV
 
       # Build
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build Docker image
         id: build-docker-image
         uses: docker/build-push-action@v5
@@ -27,19 +29,22 @@ jobs:
           tags: traffic-analytics:latest
           build-args: |
             NODE_VERSION=${{ inputs.node-version }}
-      
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       # Start container
       - name: Start container
         run: docker run -d --label "uuid=${{ env.UUID }}" traffic-analytics:latest
-      
+
       # Get container ID and put in environment variable for later use
       - name: Get container ID
         run: echo "CONTAINER_ID=$(docker ps --filter "label=uuid=${{ env.UUID }}" -q)" >> $GITHUB_ENV
-      
+
       # Lint
       - name: Lint
         run: docker exec ${{ env.CONTAINER_ID }} yarn lint
-      
+
       # Test
       - name: Test
         run: docker exec ${{ env.CONTAINER_ID }} yarn test
@@ -52,7 +57,7 @@ jobs:
         with:
           files: ./cobertura-coverage.xml
           fail_ci_if_error: false
-      
+
       # Shutdown and remove container
       - name: Shutdown and remove container
         if: always()
