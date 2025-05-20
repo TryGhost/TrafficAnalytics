@@ -9,7 +9,28 @@ import fastifyHttpProxy from '@fastify/http-proxy';
 import {filterQueryParams} from './utils/query-params';
 import {processRequest, validateRequest} from './services/proxy';
 
-// Create Fastify instance
+function getProxyConfig(prefix: string): any {
+    return {
+        upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
+        prefix: prefix,
+        rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
+        httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+        preValidation: validateRequest as any,
+        preHandler: processRequest as any,
+        rewriteRequest: (req: any) => {
+            // Filter query parameters to only include token and name
+            req.url = filterQueryParams(req.url);
+            return req;
+        },
+        replyOptions: {
+            onError: (reply: FastifyReply, error: Error) => {
+                reply.log.error(error);
+                reply.status(502).send({error: 'Proxy error'});
+            }
+        }
+    };
+}
+
 const app: FastifyInstance = fastify({
     logger: {
         level: process.env.LOG_LEVEL || 'info',
@@ -53,25 +74,7 @@ app.addHook('onRequest', (request, reply, done) => {
 });
 
 // Register HTTP proxy for /tb/web_analytics
-app.register(fastifyHttpProxy, {
-    upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
-    prefix: '/tb/web_analytics',
-    rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
-    httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-    preValidation: validateRequest as any,
-    preHandler: processRequest as any,
-    rewriteRequest: (req: any) => {
-        // Filter query parameters to only include token and name
-        req.url = filterQueryParams(req.url);
-        return req;
-    },
-    replyOptions: {
-        onError: (reply: FastifyReply, error: Error) => {
-            reply.log.error(error);
-            reply.status(502).send({error: 'Proxy error'});
-        }
-    }
-} as any); // Using type assertion to avoid complex type issues
+app.register(fastifyHttpProxy, getProxyConfig('/tb/web_analytics'));
 
 // Routes
 app.get('/', async () => {
@@ -83,3 +86,4 @@ app.post('/local-proxy*', async () => {
 });
 
 export default app;
+
