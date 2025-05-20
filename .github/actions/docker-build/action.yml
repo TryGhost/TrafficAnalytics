@@ -1,0 +1,29 @@
+name: "Docker build"
+description: "Build docker image of project"
+
+inputs:
+  node-version:
+    description: The node version to build the image on
+    required: true
+  image-name:
+    description: What to tag the built image as
+    required: true
+    default: traffic-analytics:latest
+
+outputs:
+  image-name:
+    description: The tag used for the built image
+    value: ${{ inputs.image-name }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v3
+    - name: Build Docker image
+      id: build-docker-image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        tags: ${{ inputs.image-name }}
+        build-args: |
+          NODE_VERSION=${{ inputs.node-version }}

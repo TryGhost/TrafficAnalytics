@@ -9,9 +9,19 @@ on:
 jobs:
   lint-and-test:
     name: Lint and Test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node: [20, 22]
-    uses: ./.github/workflows/lint-and-test.yml
-    with:
-      node-version: ${{ matrix.node }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker Image
+        id: docker-build
+        uses: ./.github/actions/docker-build
+        with:
+          node-version: ${{ matrix.node }}
+          image-name: traffic-analytics-${{ matrix.node }}:latest
+      - name: Lint & Test
+        uses: ./.github/actions/lint-and-test
+        with:
+          docker-image: ${{ steps.docker-build.outputs.image-name }}
