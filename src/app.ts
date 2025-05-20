@@ -7,7 +7,7 @@ import fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyHttpProxy from '@fastify/http-proxy';
 import {filterQueryParams} from './utils/query-params';
-import {processRequest, validateRequest} from './services/proxy';
+import { processRequest, validateRequest } from './services/proxy';
 
 function getProxyConfig(prefix: string): any {
     return {
