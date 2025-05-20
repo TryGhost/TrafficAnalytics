@@ -1,0 +1,36 @@
+name: "Deploy GCP Cloud Run"
+description: "Deploy a new image to a GCP cloudrun service"
+
+inputs:
+  environment:
+    description: The environment to deploy to
+    required: true
+  region:
+    description: The region of the cloudrun service
+    required: true
+  service:
+    description: The name of the service to deploy to
+    required: true
+  image:
+    description: The image to deploy to the cloudrun service
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: "Auth with Google Cloud"
+      uses: google-github-actions/auth@v2
+      with:
+        project_id: ${{ env.GCP_PROJECT_ID }}
+        token_format: access_token
+        workload_identity_provider: ${{ env.GCP_WORKFLOW_IDENTITY_PROVIDER }}
+        service_account: ${{ contains(inputs.environment, 'staging') && 'stg' || 'prd' }}-gh-deploy@ghost-traffic-analytics.iam.gserviceaccount.com
+    - name: "Deploy to Cloud Run"
+      uses: google-github-actions/deploy-cloudrun@v2
+      with:
+        image: ${{ inputs.image }}
+        region: ${{ inputs.region }}
+        service: ${{ inputs.service }}
+        skip_default_labels: true
+        labels: |-
+          commit-sha=${{ github.sha }}
