@@ -1,40 +1,43 @@
 name: "Lint & Test"
 description: "Lint and test the codebase"
 
+inputs:
+  docker-image:
+    description: Which docker image to run linting and testing on
+    required: true
+
 runs:
   using: composite
   steps:
     - uses: actions/checkout@v3
 
     - name: Generate UUID
+      shell: bash
       run: echo "UUID=$(uuidgen)" >> $GITHUB_ENV
-
-    # Build
-    - name: Build Docker image
-      id: build-docker-image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        tags: traffic-analytics:latest
-        build-args: |
-          NODE_VERSION=${{ env.NODE_VERSION }}
 
     # Start container
     - name: Start container
-      run: docker run -d --label "uuid=${{ env.UUID }}" traffic-analytics:latest
+      shell: bash
+      run: docker run -d --label "uuid=${{ env.UUID }}" ${{ inputs.docker-image }}
 
     # Get container ID and put in environment variable for later use
     - name: Get container ID
+      shell: bash
       run: echo "CONTAINER_ID=$(docker ps --filter "label=uuid=${{ env.UUID }}" -q)" >> $GITHUB_ENV
 
     # Lint
     - name: Lint
+      shell: bash
       run: docker exec ${{ env.CONTAINER_ID }} yarn lint
 
     # Test
     - name: Test
+      shell: bash
       run: docker exec ${{ env.CONTAINER_ID }} yarn test
-    - run: docker cp ${{ env.CONTAINER_ID }}:/app/coverage/cobertura-coverage.xml .
+
+    # Copy coverage report out of container
+    - shell: bash
+      run: docker cp ${{ env.CONTAINER_ID }}:/app/coverage/cobertura-coverage.xml .
 
     # Upload coverage reports
     - name: Upload coverage reports
@@ -46,5 +49,6 @@ runs:
 
     # Shutdown and remove container
     - name: Shutdown and remove container
+      shell: bash
       if: always()
       run: docker rm -f ${{ env.CONTAINER_ID }}

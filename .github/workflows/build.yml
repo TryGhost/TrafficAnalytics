@@ -26,10 +26,19 @@ jobs:
 
   lint-and-test:
     name: Lint and Test
+    runs-on: ubuntu-latest
     needs: [extract-node-version]
-    uses: ./.github/workflows/lint-and-test.yml
-    with:
-      node-version: ${{ fromJSON(needs.extract-node-version.outputs.node_version) }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker Image
+        id: docker-build
+        uses: ./.github/actions/docker-build
+        with:
+          node-version: ${{ fromJSON(needs.extract-node-version.outputs.node_version) }}
+      - name: Lint & Test
+        uses: ./.github/actions/lint-and-test
+        with:
+          docker-image: ${{ steps.docker-build.outputs.image-name }}
 
   build-push:
     name: Build and Push
