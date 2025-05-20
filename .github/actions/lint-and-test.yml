@@ -1,0 +1,50 @@
+name: "Lint & Test"
+description: "Lint and test the codebase"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Generate UUID
+      run: echo "UUID=$(uuidgen)" >> $GITHUB_ENV
+
+    # Build
+    - name: Build Docker image
+      id: build-docker-image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        tags: traffic-analytics:latest
+        build-args: |
+          NODE_VERSION=${{ env.NODE_VERSION }}
+
+    # Start container
+    - name: Start container
+      run: docker run -d --label "uuid=${{ env.UUID }}" traffic-analytics:latest
+
+    # Get container ID and put in environment variable for later use
+    - name: Get container ID
+      run: echo "CONTAINER_ID=$(docker ps --filter "label=uuid=${{ env.UUID }}" -q)" >> $GITHUB_ENV
+
+    # Lint
+    - name: Lint
+      run: docker exec ${{ env.CONTAINER_ID }} yarn lint
+
+    # Test
+    - name: Test
+      run: docker exec ${{ env.CONTAINER_ID }} yarn test
+    - run: docker cp ${{ env.CONTAINER_ID }}:/app/coverage/cobertura-coverage.xml .
+
+    # Upload coverage reports
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      if: success() && inputs.node-version == 20
+      with:
+        files: ./cobertura-coverage.xml
+        fail_ci_if_error: false
+
+    # Shutdown and remove container
+    - name: Shutdown and remove container
+      if: always()
+      run: docker rm -f ${{ env.CONTAINER_ID }}
