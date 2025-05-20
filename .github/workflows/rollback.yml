@@ -16,51 +16,58 @@ on:
         required: true
         type: string
 
-jobs:
-  rollback-staging:
-    if: github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'both'
-    name: Rollback (Staging)
-    runs-on: ubuntu-latest
-    environment: staging
-    strategy:
-      matrix:
-        region: [europe-west4]
-        include:
-          - region: europe-west4
-            region_name: netherlands
-    steps:
-      - name: "Auth with Google Cloud"
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
-      - name: "Deploy to Cloud Run"
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          image: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:${{ github.event.inputs.tag }}
-          region: ${{ matrix.region }}
-          service: stg-${{ matrix.region_name }}-traffic-analytics
-          skip_default_labels: true
+permissions:
+  id-token: write
+  contents: read
 
-  rollback-production:
-    if: github.event.inputs.environment == 'production' || github.event.inputs.environment == 'both'
-    name: Rollback (Production)
+env:
+  GCP_PROJECT_ID: ghost-traffic-analytics
+  GCP_WORKFLOW_IDENTITY_PROVIDER: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
+  DOCKER_IMAGE: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics
+
+jobs:
+  generate-environments:
+    name: "Generate Environments"
     runs-on: ubuntu-latest
-    environment: production
+    outputs:
+      environments: ${{ steps.generate-environments.outputs.environments }}
+    steps:
+      - name: Generate Environments
+        id: generate-environments
+        run: |
+          case ${{ github.event.inputs.environment }} in
+            both)
+              echo 'environments=["staging", "production"]' >> $GITHUB_OUTPUT
+              ;;
+            production)
+              echo 'environments=["production"]' >> $GITHUB_OUTPUT
+              ;;
+            staging)
+              echo 'environments=["staging"]' >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo 'environments=[]' >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+  rollback:
+    name: Rollback
+    needs: generate-environments
+    runs-on: ubuntu-latest
     strategy:
       matrix:
+        environment: ${{ fromJSON(needs.generate-environments.outputs.environments) }}
         region: [europe-west4]
         include:
           - region: europe-west4
             region_name: netherlands
     steps:
-      - name: "Auth with Google Cloud"
-        uses: google-github-actions/auth@v2
+      - uses: actions/checkout@v4
+      - name: "Deploy (${{ matrix.environment }} | ${{ matrix.region }})"
+        uses: "./.github/actions/deploy-gcp-cloud-run"
         with:
-          credentials_json: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT_KEY }}
-      - name: "Deploy to Cloud Run"
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          image: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:${{ github.event.inputs.tag }}
+          environment: ${{ matrix.environment }}
           region: ${{ matrix.region }}
-          service: prd-${{ matrix.region_name }}-traffic-analytics
-          skip_default_labels: true
+          service: >-
+            ${{ contains(matrix.environment, 'staging') && 'stg' || 'prd' }}-${{ matrix.region_name }}-traffic-analytics
+          image: ${{ env.DOCKER_IMAGE }}:${{ inputs.tag }}
