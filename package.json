@@ -19,6 +19,7 @@
     "lint:code": "eslint src/ test/ --ext .js,.ts --cache",
     "lint:code:fix": "eslint src/ test/ --ext .js,.ts --cache --fix",
     "lint": "yarn lint:code",
+    "docker:lint": "docker compose run --rm -it proxy-server yarn lint:code",
     "preship": "yarn test",
     "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
   },

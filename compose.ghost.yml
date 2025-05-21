@@ -1,0 +1,13 @@
+name: traffic-analytics
+
+services:
+  proxy-server:
+    networks:
+      - ghost_default
+
+networks:
+  ghost_default:
+    external: true
+
+volumes:
+  node_modules_volume:
