@@ -1,0 +1,61 @@
+name: Docker Hub Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.traffic-analytics-docker-metadata.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract node version
+        id: extract-node-version
+        uses: ./.github/actions/extract-node-version
+
+      - name: Build Docker Image
+        id: docker-build
+        uses: ./.github/actions/docker-build
+        with:
+          node-version: ${{ fromJSON(steps.extract-node-version.outputs.node-version) }}
+
+      - name: Lint & Test
+        uses: ./.github/actions/lint-and-test
+        with:
+          docker-image: ${{ steps.docker-build.outputs.image-name }}
+
+      - name: "Login to GCP Artifact Registry"
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate Docker Tags
+        id: traffic-analytics-docker-metadata
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ghost/traffic-analytics
+          tags: |
+            ${{ github.ref == 'refs/heads/main' && 'type=edge,branch=main' || '' }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,priority=1100
+            type=sha,format=long
+
+      - name: Retag & Push Docker Image
+        run: |
+          for tag in $(echo "${{ steps.traffic-analytics-docker-metadata.outputs.tags }}"); do
+            echo "Tagging: $tag"
+            docker tag ${{ steps.docker-build.outputs.image-name }} $tag
+          done
+
+          for tag in $(echo "${{ steps.traffic-analytics-docker-metadata.outputs.tags }}"); do
+            echo "Pushing: $tag"
+            docker push $tag
+          done
+
