@@ -1,7 +1,7 @@
 module.exports = {
     plugins: ['ghost', '@typescript-eslint'],
     extends: [
-        'plugin:ghost/node',
+        'plugin:ghost/ts',
         'plugin:@typescript-eslint/recommended'
     ],
     parser: '@typescript-eslint/parser',
