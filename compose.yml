@@ -1,12 +1,12 @@
 name: traffic-analytics
 
 services:
-  proxy-server:
+  server:
+    image: local/traffic-analytics:development
+    pull_policy: never
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        BUILD_TYPE: development
     command: ["yarn", "dev", "--host", "0.0.0.0"]
     ports:
       - 3000:3000
@@ -15,6 +15,31 @@ services:
       - node_modules_volume:/app/node_modules
     env_file:
       - .env
+
+  test:
+    image: local/traffic-analytics:development
+    pull_policy: never
+    command: ["yarn", "test"]
+    volumes:
+      - .:/app
+      - node_modules_volume:/app/node_modules
+    env_file:
+      - .env
+    tty: true
+    profiles: [testing]
+
+  lint:
+    image: local/traffic-analytics:development
+    pull_policy: never
+    command: ["yarn", "lint"]
+    volumes:
+      - .:/app
+      - node_modules_volume:/app/node_modules
+    env_file:
+      - .env
+    tty: true
+    profiles: [testing]
+
 
 volumes:
   node_modules_volume:
