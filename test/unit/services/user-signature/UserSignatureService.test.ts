@@ -1,7 +1,7 @@
 import {describe, it, expect, beforeEach, vi} from 'vitest';
-import {UserSignatureService} from '../../../src/services/user-signature';
-import {MemorySaltStore} from '../../../src/services/salt-store/MemorySaltStore';
-import type {ISaltStore} from '../../../src/services/salt-store';
+import {UserSignatureService} from '../../../../src/services/user-signature';
+import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltStore';
+import type {ISaltStore} from '../../../../src/services/salt-store';
 import crypto from 'crypto';
 
 describe('UserSignatureService', () => {

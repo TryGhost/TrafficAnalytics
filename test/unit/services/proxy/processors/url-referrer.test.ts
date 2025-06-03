@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {FastifyRequest} from '../../../../src/types';
-import * as urlReferrerModule from '../../../../src/services/proxy/processors/url-referrer.js';
+import {FastifyRequest} from '../../../../../src/types';
+import * as urlReferrerModule from '../../../../../src/services/proxy/processors/url-referrer.js';
 import type {FastifyRequest as FastifyOriginalRequest} from 'fastify';
 
 // Mock the @tryghost/referrer-parser module

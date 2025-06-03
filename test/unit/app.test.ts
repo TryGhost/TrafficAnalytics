@@ -1,6 +1,6 @@
 import {describe, it, expect, beforeEach, beforeAll, afterAll} from 'vitest';
 import request from 'supertest';
-import createMockUpstream from './testUtils/mock-upstream';
+import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
 import {Server} from 'http';
 
@@ -56,7 +56,7 @@ describe('Fastify App', () => {
         process.env.LOG_LEVEL = 'silent';
 
         // Import directly from the source
-        const appModule = await import('../src/app');
+        const appModule = await import('../../src/app');
         app = appModule.default;
         await app.ready();
         proxyServer = app.server;

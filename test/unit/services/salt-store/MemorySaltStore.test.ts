@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach} from 'vitest';
-import {MemorySaltStore} from '../../../src/services/salt-store/MemorySaltStore';
+import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltStore';
 
 describe('MemorySaltStore', () => {
     let saltStore: MemorySaltStore;
@@ -42,7 +42,7 @@ describe('MemorySaltStore', () => {
             const newSalt = 'new-salt';
 
             await saltStore.set(key, originalSalt);
-            
+
             await expect(saltStore.set(key, newSalt)).rejects.toThrow(`Salt for key "${key}" already exists`);
 
             // Verify original salt is still there

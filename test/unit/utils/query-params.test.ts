@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import * as queryParams from '../../src/utils/query-params';
+import * as queryParams from '../../../src/utils/query-params';
 
 const {filterQueryParams} = queryParams;
 
@@ -53,25 +53,25 @@ describe('Query Parameter Filtering', () => {
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
-    
+
     it('should reject whitespace-only token values', () => {
         const input = '/tb/web_analytics?token=  &name=test';
         const expected = '/tb/web_analytics?name=test';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
-    
+
     it('should reject whitespace-only name values', () => {
         const input = '/tb/web_analytics?token=abc123&name=  ';
         const expected = '/tb/web_analytics?token=abc123';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
-    
+
     it('should handle mixed valid and invalid values', () => {
         const input = '/tb/web_analytics?token=valid&name=&extra=param';
         const expected = '/tb/web_analytics?token=valid';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
-}); 
+});
