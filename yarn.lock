@@ -340,7 +340,7 @@
     "@glimmer/env" "^0.1.7"
     "@glimmer/global-context" "0.84.3"
 
-"@google-cloud/firestore@^7.11.1":
+"@google-cloud/firestore@7.11.1":
   version "7.11.1"
   resolved "https://registry.yarnpkg.com/@google-cloud/firestore/-/firestore-7.11.1.tgz#fbdb99f1e263889fc1c259986238404e7a480136"
   integrity sha512-ZxOdH8Wr01hBDvKCQfMWqwUcfNcN3JY19k1LtS1fTFhEyorYPLsbWN+VxIRL46pOYGHTPkU3Or5HbT/SLQM5nA==
