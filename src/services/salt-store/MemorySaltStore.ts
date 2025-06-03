@@ -1,5 +1,4 @@
-import type {ISaltStore} from './ISaltStore';
-import {SaltRecord} from '../../types';
+import type {ISaltStore, SaltRecord} from './ISaltStore';
 
 export class MemorySaltStore implements ISaltStore {
     private readonly salts: Record<string, SaltRecord> = {};
@@ -15,8 +14,12 @@ export class MemorySaltStore implements ISaltStore {
         return copy;
     }
 
-    async set(key: string, salt: string): Promise<void> {
+    async set(key: string, salt: string): Promise<SaltRecord> {
+        if (this.salts[key]) {
+            throw new Error(`Salt for key "${key}" already exists`);
+        }
         this.salts[key] = {salt, created_at: new Date()};
+        return this.salts[key];
     }
 
     async get(key: string): Promise<SaltRecord> {
@@ -28,5 +31,9 @@ export class MemorySaltStore implements ISaltStore {
             salt: record.salt,
             created_at: new Date(record.created_at)
         };
+    }
+
+    async delete(key: string): Promise<void> {
+        delete this.salts[key];
     }
 }

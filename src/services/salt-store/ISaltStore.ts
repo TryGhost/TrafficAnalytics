@@ -5,22 +5,29 @@ export interface SaltRecord {
 
 export interface ISaltStore {
     /**
-     * Get the salt for a given site_uuid
-     * @param key - The site_uuid to get the salt for
-     * @returns The salt for the given site_uuid
+     * Get the salt for a given key
+     * @param key - The key to get the salt for
+     * @returns The salt for the given key
      */
     get(key: string): Promise<SaltRecord>;
 
     /**
      * Get all salts
-     * @returns A record of site_uuid to salt
+     * @returns A record of key to salt
      */
     getAll(): Promise<Record<string, SaltRecord>>;
 
     /**
-     * Set the salt for a given site_uuid
-     * @param key - The site_uuid to set the salt for
-     * @param salt - The salt to set for the given site_uuid
+     * Set the salt for a given key
+     * @param key - The key to set the salt for
+     * @param salt - The salt to set for the given key
+     * @throws Error if the key already exists
      */
-    set(key: string, salt: string): Promise<void>;
+    set(key: string, salt: string): Promise<SaltRecord>;
+
+    /**
+     * Delete the salt for a given key
+     * @param key - The key to delete the salt for
+     */
+    delete(key: string): Promise<void>;
 };
