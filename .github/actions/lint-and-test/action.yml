@@ -15,8 +15,8 @@ runs:
       shell: bash
       run: echo "UUID=$(uuidgen)" >> $GITHUB_ENV
 
-    # Start container
-    - name: Start container
+    # Start container for linting (no dependencies needed)
+    - name: Start container for linting
       shell: bash
       run: docker run -d --label "uuid=${{ env.UUID }}" ${{ inputs.docker-image }}
 
@@ -30,14 +30,28 @@ runs:
       shell: bash
       run: docker exec ${{ env.CONTAINER_ID }} yarn lint
 
-    # Test
+    # Shutdown linting container
+    - name: Shutdown linting container
+      shell: bash
+      if: always()
+      run: docker rm -f ${{ env.CONTAINER_ID }}
+
+    # Test with compose (includes Firestore emulator)
     - name: Test
       shell: bash
-      run: docker exec ${{ env.CONTAINER_ID }} yarn test
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f ${{ github.action_path }}/compose.ci.yml run --rm test
 
-    # Copy coverage report out of container
-    - shell: bash
-      run: docker cp ${{ env.CONTAINER_ID }}:/app/coverage/cobertura-coverage.xml .
+    # Copy coverage report from test container
+    - name: Copy coverage report
+      shell: bash
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        CONTAINER_ID=$(docker compose -f ${{ github.action_path }}/compose.ci.yml ps -q test | head -1)
+        if [ ! -z "$CONTAINER_ID" ]; then
+          docker cp $CONTAINER_ID:/app/coverage/cobertura-coverage.xml . || echo "No coverage file found"
+        fi
 
     # Upload coverage reports
     - name: Upload coverage reports
@@ -47,8 +61,10 @@ runs:
         files: ./cobertura-coverage.xml
         fail_ci_if_error: false
 
-    # Shutdown and remove container
-    - name: Shutdown and remove container
+    # Cleanup compose services
+    - name: Cleanup compose services
       shell: bash
       if: always()
-      run: docker rm -f ${{ env.CONTAINER_ID }}
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f ${{ github.action_path }}/compose.ci.yml down

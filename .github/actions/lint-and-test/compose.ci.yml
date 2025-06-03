@@ -1,0 +1,26 @@
+name: traffic-analytics-ci
+
+services:
+  firestore:
+    image: google/cloud-sdk:emulators
+    command: ["gcloud", "emulators", "firestore", "start", "--host-port=0.0.0.0:8080"]
+    ports:
+      - 8080:8080
+    environment:
+      - FIRESTORE_PROJECT_ID=traffic-analytics-ci
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  test:
+    image: ${DOCKER_IMAGE}
+    command: ["yarn", "test"]
+    environment:
+      - NODE_ENV=testing
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - FIRESTORE_PROJECT_ID=traffic-analytics-ci
+    depends_on:
+      firestore:
+        condition: service_healthy
