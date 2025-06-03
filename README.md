@@ -36,7 +36,6 @@ FIRESTORE_PROJECT_ID=traffic-analytics-dev
 - `yarn dev` start development server locally
 - `docker compose up` or `yarn docker:dev` start development server in docker compose (includes Firestore emulator)
 - View: [http://localhost:3000](http://localhost:3000)
-- Firestore Emulator UI: [http://localhost:8080](http://localhost:8080) (when using docker compose)
 
 ## Run locally with Ghost in Docker
 
