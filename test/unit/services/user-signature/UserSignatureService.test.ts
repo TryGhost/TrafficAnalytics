@@ -100,7 +100,6 @@ describe('UserSignatureService', () => {
             const mockDate = '2024-01-01T12:00:00.000Z';
             vi.spyOn(Date.prototype, 'toISOString').mockReturnValue(mockDate);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const salt = await (userSignatureService as any).getOrCreateSaltForSite(testSiteUuid);
 
             const signature = await userSignatureService.generateUserSignature(testSiteUuid, testIp, testUserAgent);
@@ -136,9 +135,7 @@ describe('UserSignatureService', () => {
 
     describe('private methods testing via reflection', () => {
         it('should generate random salt of correct length', () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const salt1 = (userSignatureService as any).generateRandomSalt();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const salt2 = (userSignatureService as any).generateRandomSalt();
 
             expect(typeof salt1).toBe('string');
@@ -150,14 +147,12 @@ describe('UserSignatureService', () => {
         it('should generate key with date and site UUID', () => {
             vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-01T12:00:00.000Z');
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const key = (userSignatureService as any).getKey('550e8400-e29b-41d4-a716-446655440000');
 
             expect(key).toBe('salt:2024-01-01:550e8400-e29b-41d4-a716-446655440000');
         });
 
         it('should create and return new salt when salt does not exist', async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await (userSignatureService as any).getOrCreateSaltForSite('987fcdeb-51d2-43e1-9b45-123456789abc');
 
             expect(typeof result).toBe('string');
@@ -173,7 +168,6 @@ describe('UserSignatureService', () => {
             const testSalt = 'existing-salt';
             await mockSaltStore.set(expectedKey, testSalt);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const result = await (userSignatureService as any).getOrCreateSaltForSite(existingSiteUuid);
 
             expect(result).toBe(testSalt);
