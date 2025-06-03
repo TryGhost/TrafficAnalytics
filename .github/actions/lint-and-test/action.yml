@@ -11,30 +11,12 @@ runs:
   steps:
     - uses: actions/checkout@v4
 
-    - name: Generate UUID
-      shell: bash
-      run: echo "UUID=$(uuidgen)" >> $GITHUB_ENV
-
-    # Start container for linting (no dependencies needed)
-    - name: Start container for linting
-      shell: bash
-      run: docker run -d --label "uuid=${{ env.UUID }}" ${{ inputs.docker-image }}
-
-    # Get container ID and put in environment variable for later use
-    - name: Get container ID
-      shell: bash
-      run: echo "CONTAINER_ID=$(docker ps --filter "label=uuid=${{ env.UUID }}" -q)" >> $GITHUB_ENV
-
     # Lint
     - name: Lint
       shell: bash
-      run: docker exec ${{ env.CONTAINER_ID }} yarn lint
-
-    # Shutdown linting container
-    - name: Shutdown linting container
-      shell: bash
-      if: always()
-      run: docker rm -f ${{ env.CONTAINER_ID }}
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f ${{ github.action_path }}/compose.ci.yml run --rm lint
 
     # Test with compose (includes Firestore emulator)
     - name: Test

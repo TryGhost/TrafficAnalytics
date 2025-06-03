@@ -14,6 +14,12 @@ services:
       timeout: 3s
       retries: 5
 
+  lint:
+    image: ${DOCKER_IMAGE}
+    command: ["yarn", "lint"]
+    environment:
+      - NODE_ENV=testing
+
   test:
     image: ${DOCKER_IMAGE}
     command: ["yarn", "test"]
