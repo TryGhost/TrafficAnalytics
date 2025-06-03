@@ -2,28 +2,22 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import {FastifyInstance, FastifyReply} from 'fastify';
+import {FastifyInstance, FastifyRequest as FastifyRequestBase, RawServerDefault} from 'fastify';
 import fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
-import fastifyHttpProxy from '@fastify/http-proxy';
-import {filterQueryParams} from './utils/query-params';
+import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
 import {processRequest, validateRequest} from './services/proxy';
 
-function getProxyConfig(prefix: string): any {
+function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
     return {
         upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
         prefix: prefix,
         rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
         httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-        preValidation: validateRequest as any,
-        preHandler: processRequest as any,
-        rewriteRequest: (req: any) => {
-            // Filter query parameters to only include token and name
-            req.url = filterQueryParams(req.url);
-            return req;
-        },
+        preValidation: validateRequest as FastifyHttpProxyOptions['preValidation'],
+        preHandler: processRequest as FastifyHttpProxyOptions['preHandler'],
         replyOptions: {
-            onError: (reply: FastifyReply, error: Error) => {
+            onError: (reply, error) => {
                 reply.log.error(error);
                 reply.status(502).send({error: 'Proxy error'});
             }
@@ -31,7 +25,7 @@ function getProxyConfig(prefix: string): any {
     };
 }
 
-const app: FastifyInstance = fastify({
+const app: FastifyInstance<RawServerDefault> = fastify({
     logger: {
         level: process.env.LOG_LEVEL || 'info',
         transport: {
@@ -43,13 +37,13 @@ const app: FastifyInstance = fastify({
             }
         },
         serializers: {
-            req: function (req: any) {
+            req: function (req: FastifyRequestBase) {
                 return {
                     method: req.method,
                     url: req.url
                 };
             },
-            res: function (res: any) {
+            res: function (res) {
                 return {
                     statusCode: res.statusCode
                 };
@@ -66,7 +60,7 @@ app.register(fastifyCors, {
 });
 
 // Request logging hook
-app.addHook('onRequest', (request, reply, done) => {
+app.addHook('onRequest', (request, _reply, done) => {
     if (process.env.NODE_ENV !== 'testing') {
         request.log.info(`${request.method} ${request.url}`);
     }

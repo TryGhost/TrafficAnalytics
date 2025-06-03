@@ -25,7 +25,7 @@ declare module 'ua-parser-js' {
     }
 
     export default class UAParser {
-        constructor(uastring?: string, extensions?: any);
+        constructor(uastring?: string, extensions?: Record<string, unknown>);
 
         getResult(): {
             ua: string;
