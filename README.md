@@ -24,11 +24,11 @@ Traffic Analytics Service
 ## Test
 
 - `yarn test` run all tests locally
-- `yarn docker:test` run all tests in docker compose
+- `docker compose run --rm test` or `yarn docker:test` run all tests in docker compose
 
 ## Lint
 - `yarn lint` run eslint locally
-- `yarn docker:lint` run eslint in docker compose
+- `docker compose run --rm lint` or `yarn docker:lint` run eslint in docker compose
 
 # Copyright & License 
 
