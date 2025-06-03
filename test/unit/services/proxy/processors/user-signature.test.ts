@@ -66,7 +66,7 @@ describe('User Signature Processor', () => {
     });
 
     it('should skip if site_uuid is missing', async () => {
-        delete request.body.payload.site_uuid;
+        (request.body.payload as any).site_uuid = undefined;
 
         await generateUserSignature(request);
 
@@ -86,7 +86,7 @@ describe('User Signature Processor', () => {
 
     it('should skip if IP address is missing', async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        request.ip = undefined as any;
+        (request as any).ip = undefined;
 
         await generateUserSignature(request);
 

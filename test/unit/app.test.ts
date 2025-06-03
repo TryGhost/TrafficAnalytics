@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach, beforeAll, afterAll} from 'vitest';
-import request from 'supertest';
+import request, {Response} from 'supertest';
 import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
 import {Server} from 'http';
@@ -117,7 +117,7 @@ describe('Fastify App', () => {
             await request(proxyServer)
                 .post('/tb/web_analytics?name=test')
                 .expect(400)
-                .expect(function (res) {
+                .expect(function (res: Response) {
                     if (!res.body.error || !res.body.message) {
                         throw new Error('Expected error response with message');
                     }
@@ -183,7 +183,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.os).toBe('macos');
+            expect((targetRequest.body.payload as any).os).toBe('macos');
         });
 
         it('should parse the browser from the user agent and pass it to the upstream server', async function () {
@@ -195,7 +195,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.browser).toBe('chrome');
+            expect((targetRequest.body.payload as any).browser).toBe('chrome');
         });
 
         it('should parse the device from the user agent and pass it to the upstream server', async function () {
@@ -207,7 +207,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.device).toBe('desktop');
+            expect((targetRequest.body.payload as any).device).toBe('desktop');
         });
 
         it('should generate user signature and pass it to the upstream server', async function () {
@@ -219,9 +219,9 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.meta).toBeDefined();
-            expect(targetRequest.body.payload.meta.userSignature).toBeDefined();
-            expect(targetRequest.body.payload.meta.userSignature).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
+            expect((targetRequest.body.payload as any).meta).toBeDefined();
+            expect((targetRequest.body.payload as any).meta.userSignature).toBeDefined();
+            expect((targetRequest.body.payload as any).meta.userSignature).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
         });
     });
 
@@ -296,7 +296,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.os).toBe('macos');
+            expect((targetRequest.body.payload as any).os).toBe('macos');
         });
 
         it('should parse the browser from the user agent and pass it to the upstream server', async function () {
@@ -308,7 +308,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.browser).toBe('chrome');
+            expect((targetRequest.body.payload as any).browser).toBe('chrome');
         });
 
         it('should parse the device from the user agent and pass it to the upstream server', async function () {
@@ -320,7 +320,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.device).toBe('desktop');
+            expect((targetRequest.body.payload as any).device).toBe('desktop');
         });
     });
 });
