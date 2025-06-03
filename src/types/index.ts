@@ -1,12 +1,41 @@
 import {FastifyRequest as FastifyRequestBase, FastifyReply as FastifyReplyBase} from 'fastify';
 
 export interface Payload {
-    [key: string]: any;
+    'user-agent': string;
+    locale: string;
+    location: string;
+    referrer: string | null;
+    parsedReferrer?: {
+        source: string | null;
+        medium: string | null;
+        url: string | null;
+    };
+    pathname: string;
+    href: string;
+    site_uuid: string;
+    post_uuid: string;
+    post_type: string;
+    member_uuid: string;
+    member_status: string;
+    os?: string;
+    browser?: string;
+    device?: string;
+    user_signature?: string;
+    meta?: {
+        referrerUrl?: string;
+        referrerSource?: string;
+        referrerMedium?: string;
+        userSignature?: string;
+        [key: string]: unknown;
+    };
 }
 
 export interface RequestBody {
+    timestamp: string;
+    action: string;
+    version: string;
+    session_id: string;
     payload: Payload;
-    [key: string]: any;
 }
 
 export interface FastifyRequest extends FastifyRequestBase {
