@@ -29,7 +29,16 @@ type TargetRequest = {
     url: string;
     query: Record<string, string>;
     headers: Record<string, string>;
-    body: Record<string, unknown>;
+    body: {
+        payload: {
+            browser: string;
+            device: string;
+            os: string;
+            meta: {
+                userSignature: string;
+            };
+        };
+    };
 };
 
 // This approach uses the inline server provided by Fastify for testing
@@ -183,7 +192,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect((targetRequest.body.payload as any).os).toBe('macos');
+            expect(targetRequest.body.payload.os).toBe('macos');
         });
 
         it('should parse the browser from the user agent and pass it to the upstream server', async function () {
@@ -195,7 +204,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect((targetRequest.body.payload as any).browser).toBe('chrome');
+            expect(targetRequest.body.payload.browser).toBe('chrome');
         });
 
         it('should parse the device from the user agent and pass it to the upstream server', async function () {
@@ -207,7 +216,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect((targetRequest.body.payload as any).device).toBe('desktop');
+            expect(targetRequest.body.payload.device).toBe('desktop');
         });
 
         it('should generate user signature and pass it to the upstream server', async function () {
@@ -219,9 +228,9 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect((targetRequest.body.payload as any).meta).toBeDefined();
-            expect((targetRequest.body.payload as any).meta.userSignature).toBeDefined();
-            expect((targetRequest.body.payload as any).meta.userSignature).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
+            expect(targetRequest.body.payload.meta).toBeDefined();
+            expect(targetRequest.body.payload.meta.userSignature).toBeDefined();
+            expect(targetRequest.body.payload.meta.userSignature).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
         });
     });
 
@@ -296,7 +305,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect((targetRequest.body.payload as any).os).toBe('macos');
+            expect(targetRequest.body.payload.os).toBe('macos');
         });
 
         it('should parse the browser from the user agent and pass it to the upstream server', async function () {
@@ -308,7 +317,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect((targetRequest.body.payload as any).browser).toBe('chrome');
+            expect(targetRequest.body.payload.browser).toBe('chrome');
         });
 
         it('should parse the device from the user agent and pass it to the upstream server', async function () {
@@ -320,7 +329,7 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect((targetRequest.body.payload as any).device).toBe('desktop');
+            expect(targetRequest.body.payload.device).toBe('desktop');
         });
     });
 });
