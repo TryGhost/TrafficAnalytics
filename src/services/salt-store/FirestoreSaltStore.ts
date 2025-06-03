@@ -1,0 +1,169 @@
+import {Firestore} from '@google-cloud/firestore';
+import {ISaltStore, SaltRecord} from './ISaltStore';
+
+/**
+ * Firestore implementation of the salt store.
+ *
+ * Stores salts in a Firestore collection. Salts are keyed by date,
+ * so they naturally rotate daily without needing explicit expiration.
+ */
+export class FirestoreSaltStore implements ISaltStore {
+    private firestore: Firestore;
+    private collectionName: string;
+
+    /**
+     * Creates a new FirestoreSaltStore instance.
+     *
+     * @param projectId - The Google Cloud project ID
+     * @param collectionName - The name of the Firestore collection to use (default: 'salts')
+     */
+    constructor(projectId?: string, collectionName: string = 'salts') {
+        // Initialize Firestore client
+        // If FIRESTORE_EMULATOR_HOST is set, it will automatically connect to the emulator
+        this.firestore = new Firestore({
+            projectId: projectId || process.env.FIRESTORE_PROJECT_ID || 'traffic-analytics'
+        });
+        this.collectionName = collectionName;
+    }
+
+    /**
+     * Retrieves a salt record from Firestore.
+     *
+     * @param key - The unique key for the salt
+     * @returns The salt record if found, undefined if not found
+     */
+    async get(key: string): Promise<SaltRecord | undefined> {
+        try {
+            const doc = await this.firestore
+                .collection(this.collectionName)
+                .doc(key)
+                .get();
+
+            if (!doc.exists) {
+                return undefined;
+            }
+
+            const data = doc.data();
+            if (!data) {
+                return undefined;
+            }
+
+            // Convert Firestore Timestamp to Date
+            const createdAt = data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at);
+
+            return {
+                salt: data.salt,
+                created_at: createdAt
+            };
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Retrieves all salt records from Firestore.
+     *
+     * @returns A record of key to salt record
+     */
+    async getAll(): Promise<Record<string, SaltRecord>> {
+        try {
+            const snapshot = await this.firestore
+                .collection(this.collectionName)
+                .get();
+
+            const records: Record<string, SaltRecord> = {};
+
+            for (const doc of snapshot.docs) {
+                const data = doc.data();
+                if (!data) {
+                    continue;
+                }
+
+                // Convert Firestore Timestamp to Date
+                const createdAt = data.created_at?.toDate ? data.created_at.toDate() : new Date(data.created_at);
+
+                records[doc.id] = {
+                    salt: data.salt,
+                    created_at: createdAt
+                };
+            }
+
+            return records;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Stores a salt record in Firestore.
+     *
+     * @param key - The unique key for the salt
+     * @param salt - The salt value to store
+     * @returns The created salt record
+     * @throws Error if the key already exists
+     */
+    async set(key: string, salt: string): Promise<SaltRecord> {
+        try {
+            const docRef = this.firestore.collection(this.collectionName).doc(key);
+            const now = new Date();
+
+            const record: SaltRecord = {
+                salt,
+                created_at: now
+            };
+
+            // Use create() for atomic operation - fails if document exists
+            await docRef.create(record);
+
+            return {
+                salt,
+                created_at: now
+            };
+        } catch (error) {
+            // Firestore throws a specific error when document already exists
+            if (error instanceof Error && 'code' in error) {
+                const errorWithCode = error as Error & { code: string | number };
+                if (errorWithCode.code === 6 || errorWithCode.code === 'ALREADY_EXISTS') {
+                    throw new Error(`Salt with key ${key} already exists`);
+                }
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Deletes a salt record from Firestore.
+     *
+     * @param key - The unique key for the salt to delete
+     */
+    async delete(key: string): Promise<void> {
+        try {
+            await this.firestore
+                .collection(this.collectionName)
+                .doc(key)
+                .delete();
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    /**
+     * Clears all documents in the collection.
+     * WARNING: This deletes all data! Use with caution, primarily for testing.
+     */
+    async clear(): Promise<void> {
+        const collection = this.firestore.collection(this.collectionName);
+        const snapshot = await collection.get();
+        
+        if (snapshot.size === 0) {
+            return;
+        }
+
+        const batch = this.firestore.batch();
+        snapshot.docs.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+        
+        await batch.commit();
+    }
+}

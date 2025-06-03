@@ -233,6 +233,51 @@ describe('MemorySaltStore', () => {
         });
     });
 
+    describe('clear', () => {
+        it('should remove all salts from the store', async () => {
+            const key1 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const key2 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+            const key3 = '6ba7b812-9dad-11d1-80b4-00c04fd430c8';
+
+            await saltStore.set(key1, 'salt-1');
+            await saltStore.set(key2, 'salt-2');
+            await saltStore.set(key3, 'salt-3');
+
+            let allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(3);
+
+            await saltStore.clear();
+
+            allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(0);
+            expect(allSalts).toEqual({});
+        });
+
+        it('should allow setting new salts after clear', async () => {
+            const key1 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const key2 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+
+            await saltStore.set(key1, 'salt-1');
+            await saltStore.clear();
+
+            // Should be able to set the same key again after clear
+            await expect(saltStore.set(key1, 'new-salt-1')).resolves.toBeDefined();
+            await expect(saltStore.set(key2, 'new-salt-2')).resolves.toBeDefined();
+
+            const allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(2);
+            expect(allSalts[key1].salt).toBe('new-salt-1');
+            expect(allSalts[key2].salt).toBe('new-salt-2');
+        });
+
+        it('should work correctly when called on empty store', async () => {
+            await expect(saltStore.clear()).resolves.toBeUndefined();
+
+            const allSalts = await saltStore.getAll();
+            expect(allSalts).toEqual({});
+        });
+    });
+
     describe('integration tests', () => {
         it('should handle multiple operations correctly', async () => {
             const keys = ['6ba7b810-9dad-11d1-80b4-00c04fd430c8', '6ba7b811-9dad-11d1-80b4-00c04fd430c8', '6ba7b812-9dad-11d1-80b4-00c04fd430c8'];
@@ -248,7 +293,7 @@ describe('MemorySaltStore', () => {
 
             for (let i = 0; i < keys.length; i++) {
                 const salt = await saltStore.get(keys[i]);
-                expect(salt.salt).toBe(salts[i]);
+                expect(salt!.salt).toBe(salts[i]);
             }
 
             await saltStore.delete(keys[1]);
@@ -272,8 +317,8 @@ describe('MemorySaltStore', () => {
             const missing1 = await store1.get('6ba7b810-9dad-11d1-80b4-00c04fd430c8');
             const missing2 = await store2.get('550e8400-e29b-41d4-a716-446655440000');
 
-            expect(result1.salt).toBe('salt1');
-            expect(result2.salt).toBe('salt2');
+            expect(result1!.salt).toBe('salt1');
+            expect(result2!.salt).toBe('salt2');
             expect(missing1).toBeUndefined();
             expect(missing2).toBeUndefined();
         });

@@ -1,10 +1,26 @@
 # Traffic Analytics
 
-Traffic Analytics Service
+Traffic Analytics Service - A web analytics proxy for Ghost that processes and enriches traffic data before forwarding it to Tinybird's analytics API.
 
+## Features
 
-## Usage
+- User agent parsing for OS, browser, and device detection
+- Referrer URL parsing and categorization
+- Privacy-preserving user signatures with daily-rotating salts
+- Configurable salt storage (in-memory or Firestore)
+- Docker-first development with Firestore emulator support
 
+## Configuration
+
+Copy `.env.example` to `.env` and configure as needed:
+
+```bash
+# Salt Store Configuration
+SALT_STORE_TYPE=memory  # Options: memory, firestore
+
+# Firestore Configuration (when SALT_STORE_TYPE=firestore)
+FIRESTORE_PROJECT_ID=traffic-analytics-dev
+```
 
 ## Develop
 
@@ -18,8 +34,9 @@ Traffic Analytics Service
 ## Run
 
 - `yarn dev` start development server locally
-- `docker compose up` or `yarn docker:dev` start development server in docker compose
+- `docker compose up` or `yarn docker:dev` start development server in docker compose (includes Firestore emulator)
 - View: [http://localhost:3000](http://localhost:3000)
+- Firestore Emulator UI: [http://localhost:8080](http://localhost:8080) (when using docker compose)
 
 ## Run locally with Ghost in Docker
 
