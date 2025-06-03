@@ -75,8 +75,7 @@ describe('User Signature Processor', () => {
     });
 
     it('should skip if site_uuid is not a string', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        request.body.payload.site_uuid = 123 as any;
+        (request.body.payload as any).site_uuid = 123;
 
         await generateUserSignature(request);
 
@@ -85,7 +84,6 @@ describe('User Signature Processor', () => {
     });
 
     it('should skip if IP address is missing', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (request as any).ip = undefined;
 
         await generateUserSignature(request);
@@ -117,8 +115,7 @@ describe('User Signature Processor', () => {
     });
 
     it('should handle missing body gracefully', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        request.body = undefined as any;
+        (request.body as any) = undefined;
 
         await generateUserSignature(request);
 
@@ -126,8 +123,7 @@ describe('User Signature Processor', () => {
     });
 
     it('should handle missing payload gracefully', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        request.body.payload = undefined as any;
+        (request.body as any).payload = undefined;
 
         await generateUserSignature(request);
 
