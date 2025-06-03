@@ -209,6 +209,20 @@ describe('Fastify App', () => {
             const targetRequest = targetRequests[0];
             expect(targetRequest.body.payload.device).toBe('desktop');
         });
+
+        it('should generate user signature and pass it to the upstream server', async function () {
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
+                .send(eventPayload)
+                .expect(202);
+
+            const targetRequest = targetRequests[0];
+            expect(targetRequest.body.payload.meta).toBeDefined();
+            expect(targetRequest.body.payload.meta.userSignature).toBeDefined();
+            expect(targetRequest.body.payload.meta.userSignature).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
+        });
     });
 
     describe('/.ghost/analytics/tb/web_analytics', function () {
