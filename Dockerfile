@@ -6,8 +6,7 @@ WORKDIR /app
 
 COPY package.json yarn.lock ./
 
-RUN yarn install --frozen-lockfile && \
-    yarn add typescript@5.2.2 --dev --exact
+RUN yarn install --frozen-lockfile
 
 COPY . .
 
