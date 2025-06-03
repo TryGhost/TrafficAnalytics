@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest';
-import * as validators from '../../../src/services/proxy/validators';
-import {FastifyRequest} from '../../../src/types';
+import * as validators from '../../../../src/services/proxy/validators';
+import {FastifyRequest} from '../../../../src/types';
 
 const {validateQueryParams, validateRequestBody} = validators;
 
@@ -28,4 +28,4 @@ describe('Validators', () => {
             expect(() => validateRequestBody(request)).toThrow();
         });
     });
-}); 
+});

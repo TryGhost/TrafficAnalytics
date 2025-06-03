@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest';
-import {createSaltStore, SaltStoreConfig} from '../../../src/services/salt-store/SaltStoreFactory';
-import {MemorySaltStore} from '../../../src/services/salt-store/MemorySaltStore';
-import type {ISaltStore} from '../../../src/services/salt-store/ISaltStore';
+import {createSaltStore, SaltStoreConfig} from '../../../../src/services/salt-store/SaltStoreFactory';
+import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltStore';
+import type {ISaltStore} from '../../../../src/services/salt-store/ISaltStore';
 
 describe('SaltStoreFactory', () => {
     describe('createSaltStore', () => {

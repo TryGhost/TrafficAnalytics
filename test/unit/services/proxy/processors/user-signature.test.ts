@@ -1,15 +1,15 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {FastifyRequest} from '../../../../src/types';
-import {generateUserSignature} from '../../../../src/services/proxy/processors/user-signature';
+import {FastifyRequest} from '../../../../../src/types';
+import {generateUserSignature} from '../../../../../src/services/proxy/processors/user-signature';
 
 // Mock the user signature service
-vi.mock('../../../../src/services/user-signature', () => ({
+vi.mock('../../../../../src/services/user-signature', () => ({
     userSignatureService: {
         generateUserSignature: vi.fn()
     }
 }));
 
-import {userSignatureService} from '../../../../src/services/user-signature';
+import {userSignatureService} from '../../../../../src/services/user-signature';
 
 describe('User Signature Processor', () => {
     let request: FastifyRequest;
@@ -17,7 +17,7 @@ describe('User Signature Processor', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        
+
         // Create a partial FastifyRequest with the required properties for our tests
         request = {
             headers: {
