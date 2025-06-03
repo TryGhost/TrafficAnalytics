@@ -15,6 +15,9 @@ export class MemorySaltStore implements ISaltStore {
     }
 
     async set(key: string, salt: string): Promise<SaltRecord> {
+        if (this.salts[key]) {
+            throw new Error(`Salt for key "${key}" already exists`);
+        }
         this.salts[key] = {salt, created_at: new Date()};
         return this.salts[key];
     }

@@ -21,6 +21,7 @@ export interface ISaltStore {
      * Set the salt for a given key
      * @param key - The key to set the salt for
      * @param salt - The salt to set for the given key
+     * @throws Error if the key already exists
      */
     set(key: string, salt: string): Promise<SaltRecord>;
 

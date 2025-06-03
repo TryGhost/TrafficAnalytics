@@ -36,19 +36,41 @@ describe('MemorySaltStore', () => {
             expect(result.created_at.getTime()).toBeGreaterThanOrEqual(beforeSet.getTime());
         });
 
-        it('should overwrite existing salt and return new record', async () => {
+        it('should throw error when trying to set existing key', async () => {
             const key = '550e8400-e29b-41d4-a716-446655440000';
             const originalSalt = 'original-salt';
             const newSalt = 'new-salt';
 
             await saltStore.set(key, originalSalt);
-            const returnedRecord = await saltStore.set(key, newSalt);
+            
+            await expect(saltStore.set(key, newSalt)).rejects.toThrow(`Salt for key "${key}" already exists`);
 
-            expect(returnedRecord.salt).toBe(newSalt);
-            expect(returnedRecord.created_at).toBeInstanceOf(Date);
-
+            // Verify original salt is still there
             const result = await saltStore.get(key);
-            expect(result.salt).toBe(newSalt);
+            expect(result.salt).toBe(originalSalt);
+        });
+
+        it('should successfully set salt for new keys', async () => {
+            const key1 = '550e8400-e29b-41d4-a716-446655440000';
+            const key2 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const salt1 = 'salt-1';
+            const salt2 = 'salt-2';
+
+            // First key should succeed
+            const record1 = await saltStore.set(key1, salt1);
+            expect(record1.salt).toBe(salt1);
+            expect(record1.created_at).toBeInstanceOf(Date);
+
+            // Second key should also succeed
+            const record2 = await saltStore.set(key2, salt2);
+            expect(record2.salt).toBe(salt2);
+            expect(record2.created_at).toBeInstanceOf(Date);
+
+            // Verify both are stored
+            const result1 = await saltStore.get(key1);
+            const result2 = await saltStore.get(key2);
+            expect(result1.salt).toBe(salt1);
+            expect(result2.salt).toBe(salt2);
         });
     });
 
