@@ -19,7 +19,7 @@ services:
   test:
     image: local/traffic-analytics:development
     pull_policy: never
-    command: ["yarn", "test"]
+    command: sh -c "yarn test && yarn lint"
     volumes:
       - .:/app
       - node_modules_volume:/app/node_modules

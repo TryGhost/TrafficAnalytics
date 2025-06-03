@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach, beforeAll, afterAll} from 'vitest';
-import request from 'supertest';
+import request, {Response} from 'supertest';
 import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
 import {Server} from 'http';
@@ -29,7 +29,16 @@ type TargetRequest = {
     url: string;
     query: Record<string, string>;
     headers: Record<string, string>;
-    body: Record<string, unknown>;
+    body: {
+        payload: {
+            browser: string;
+            device: string;
+            os: string;
+            meta: {
+                userSignature: string;
+            };
+        };
+    };
 };
 
 // This approach uses the inline server provided by Fastify for testing
@@ -117,7 +126,7 @@ describe('Fastify App', () => {
             await request(proxyServer)
                 .post('/tb/web_analytics?name=test')
                 .expect(400)
-                .expect(function (res) {
+                .expect(function (res: Response) {
                     if (!res.body.error || !res.body.message) {
                         throw new Error('Expected error response with message');
                     }

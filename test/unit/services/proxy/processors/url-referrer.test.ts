@@ -52,9 +52,9 @@ describe('Referrer Parser', () => {
     it('should parse referrer data and add it to the payload', () => {
         urlReferrerModule.parseReferrer(request);
 
-        expect(request.body.payload.meta.referrerSource).toBe('Google');
-        expect(request.body.payload.meta.referrerMedium).toBe('search');
-        expect(request.body.payload.meta.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
+        expect(request.body.payload.meta?.referrerSource).toBe('Google');
+        expect(request.body.payload.meta?.referrerMedium).toBe('search');
+        expect(request.body.payload.meta?.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
         expect(request.body.payload.parsedReferrer).toBeUndefined();
     });
 
@@ -70,7 +70,7 @@ describe('Referrer Parser', () => {
     it('should handle non-object parsedReferrer headers', () => {
         const testRequest = structuredClone(request);
         // Use type assertion to handle the test case
-        testRequest.body.payload.parsedReferrer = 'not-an-object' as unknown as Record<string, unknown>;
+        testRequest.body.payload.parsedReferrer = 'not-an-object' as unknown as { source: string | null; medium: string | null; url: string | null; };
 
         urlReferrerModule.parseReferrer(testRequest);
 
@@ -80,7 +80,7 @@ describe('Referrer Parser', () => {
     it('should handle missing referrer properties', () => {
         const testRequest = structuredClone(request);
         // Use empty object with type assertion
-        testRequest.body.payload.parsedReferrer = {} as Record<string, unknown>;
+        testRequest.body.payload.parsedReferrer = {} as { source: string | null; medium: string | null; url: string | null; };
 
         urlReferrerModule.parseReferrer(testRequest);
 

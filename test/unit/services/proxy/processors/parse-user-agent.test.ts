@@ -12,8 +12,8 @@ describe('Processors', () => {
                     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
                 },
                 body: {
-                    payload: {}
-                },
+                    payload: {} as any
+                } as any,
                 log: {
                     error: () => {},
                     info: () => {}
@@ -34,8 +34,8 @@ describe('Processors', () => {
                     'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Mobile/15E148 Safari/604.1'
                 },
                 body: {
-                    payload: {}
-                },
+                    payload: {} as any
+                } as any,
                 log: {
                     error: () => {},
                     info: () => {}
@@ -52,8 +52,8 @@ describe('Processors', () => {
                     'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
                 },
                 body: {
-                    payload: {}
-                },
+                    payload: {} as any
+                } as any,
                 log: {
                     error: () => {},
                     info: () => {}
@@ -70,8 +70,8 @@ describe('Processors', () => {
                     'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
                 },
                 body: {
-                    payload: {}
-                },
+                    payload: {} as any
+                } as any,
                 log: {
                     error: () => {},
                     info: () => {}
@@ -86,8 +86,8 @@ describe('Processors', () => {
             const request: Partial<HttpProxyRequest> = {
                 headers: {},
                 body: {
-                    payload: {}
-                },
+                    payload: {} as any
+                } as any,
                 log: {
                     error: () => {},
                     info: () => {}
