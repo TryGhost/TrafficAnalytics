@@ -21,6 +21,15 @@ Traffic Analytics Service
 - `docker compose up` or `yarn docker:dev` start development server in docker compose
 - View: [http://localhost:3000](http://localhost:3000)
 
+## Run locally with Ghost in Docker
+
+Sometimes it's useful to test the full setup with Ghost pointing its tracker script to this analytics service running locally. This can be acheived relatively easily with Docker Compose:
+- Set the `tinybird:tracker:endpoint` to `http://localhost/.ghost/analytics/tb/web_analytics` in your Ghost config
+- Run `docker compose --profile=split up` in your Ghost clone
+- If you want to test the full e2e flow to Tinybird, set the `PROXY_TARGET=https://api.tinybird.co/v0/events` value in your `.env` file in this repo. Otherwise the analytics service will use the `/local-proxy` mock endpoint, which does not forward events to Tinybird.
+- Run `yarn docker:dev:ghost` in the root of this repo
+- Visit your Ghost site's homepage at `http://localhost` and you should see a successful request in the network tab.
+
 ## Test
 
 - `yarn test` run all tests locally

@@ -1,7 +1,7 @@
 name: traffic-analytics
 
 services:
-  server:
+  analytics-service:
     image: local/traffic-analytics:development
     pull_policy: never
     build:
