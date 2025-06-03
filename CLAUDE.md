@@ -8,23 +8,18 @@ TrafficAnalytics is a web analytics proxy service for Ghost that processes and e
 
 ## Key Commands
 
+###
+- `yarn build` - build TypeScript code
+- `docker compose build` - Build docker image
+
 ### Development
-- `yarn dev` - Start development server locally (port 3000)
-- `yarn docker:dev` - Start development server in Docker
-- `yarn docker:dev:ghost` - Run with Ghost's Docker compose network
+- `docker compose up` - Start development server in Docker
 
 ### Testing
-- `yarn test` - Run all unit tests with coverage
-- `yarn test:unit:watch` - Run tests in watch mode
-- `yarn docker:test` - Run tests in Docker container
+- `docker compose run --rm test` - Run all unit tests in Docker
 
-### Code Quality
-- `yarn lint` - Run ESLint
-- `yarn lint:fix` - Auto-fix linting issues
-- `yarn build` - Build TypeScript code
-
-### Deployment
-- `yarn ship` - Version bump and push tags (requires clean working directory)
+### Linting
+- `docker compose run --rm lint` - Run linter in Docker
 
 ## Architecture
 
