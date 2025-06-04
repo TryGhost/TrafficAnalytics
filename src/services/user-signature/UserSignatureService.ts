@@ -65,12 +65,13 @@ export class UserSignatureService {
      *
      * Creates a SHA-256 hash of the combination of:
      * - Daily-rotating salt (specific to the site)
+     * - Site UUID
      * - User's IP address
      * - User agent string
-     * - Current timestamp
      *
      * The resulting hash is non-reversible, ensuring user privacy while still
-     * allowing for unique user identification within analytics.
+     * allowing for unique user identification within analytics. The same user
+     * making multiple requests on the same day will have the same signature.
      *
      * @param siteUuid - The unique identifier of the site
      * @param ipAddress - The user's IP address
@@ -79,8 +80,7 @@ export class UserSignatureService {
      */
     async generateUserSignature(siteUuid: string, ipAddress: string, userAgent: string): Promise<string> {
         const salt = await this.getOrCreateSaltForSite(siteUuid);
-        const timestamp = new Date().toISOString();
-        const signature = `${salt}:${ipAddress}:${userAgent}:${timestamp}`;
+        const signature = `${salt}:${siteUuid}:${ipAddress}:${userAgent}`;
         const hashedSignature = crypto.createHash('sha256').update(signature).digest('hex');
         return hashedSignature;
     }

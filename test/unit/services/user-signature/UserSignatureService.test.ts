@@ -72,7 +72,7 @@ describe('UserSignatureService', () => {
             expect(typeof signature).toBe('string');
         });
 
-        it('should generate different signatures for different timestamps on same day', async () => {
+        it('should generate same signatures for different timestamps on same day', async () => {
             const timeStub = vi.spyOn(Date.prototype, 'toISOString');
 
             timeStub.mockReturnValue('2024-01-01T12:00:00.000Z');
@@ -81,7 +81,7 @@ describe('UserSignatureService', () => {
             timeStub.mockReturnValue('2024-01-01T12:00:01.000Z');
             const signature2 = await userSignatureService.generateUserSignature(testSiteUuid, testIp, testUserAgent);
 
-            expect(signature1).not.toBe(signature2);
+            expect(signature1).toBe(signature2);
         });
 
         it('should generate different signatures for different days (UTC)', async () => {
@@ -104,7 +104,7 @@ describe('UserSignatureService', () => {
 
             const signature = await userSignatureService.generateUserSignature(testSiteUuid, testIp, testUserAgent);
 
-            const expectedInput = `${salt}:${testIp}:${testUserAgent}:${mockDate}`;
+            const expectedInput = `${salt}:${testSiteUuid}:${testIp}:${testUserAgent}`;
             const expectedHash = crypto.createHash('sha256').update(expectedInput).digest('hex');
             expect(signature).toBe(expectedHash);
         });
