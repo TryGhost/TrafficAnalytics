@@ -1,26 +1,18 @@
-import {describe, it, expect, beforeEach, afterEach} from 'vitest';
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
 import {createSaltStore, SaltStoreConfig} from '../../../../src/services/salt-store/SaltStoreFactory';
 import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltStore';
 import {FirestoreSaltStore} from '../../../../src/services/salt-store/FirestoreSaltStore';
 import type {ISaltStore} from '../../../../src/services/salt-store/ISaltStore';
 
 describe('SaltStoreFactory', () => {
-    let originalEnv: string | undefined;
-
     beforeEach(() => {
-        // Save original env value
-        originalEnv = process.env.SALT_STORE_TYPE;
-        // Clear it for tests
-        delete process.env.SALT_STORE_TYPE;
+        // Clear any environment variables for tests
+        vi.unstubAllEnvs();
     });
 
     afterEach(() => {
-        // Restore original env value
-        if (originalEnv !== undefined) {
-            process.env.SALT_STORE_TYPE = originalEnv;
-        } else {
-            delete process.env.SALT_STORE_TYPE;
-        }
+        // Clean up after each test
+        vi.unstubAllEnvs();
     });
 
     describe('createSaltStore', () => {
@@ -40,8 +32,32 @@ describe('SaltStoreFactory', () => {
             expect(store).toBeInstanceOf(MemorySaltStore);
         });
 
-        it('should create a firestore salt store with firestore config', () => {
-            const config: SaltStoreConfig = {type: 'firestore'};
+        it('should throw error when creating firestore store without projectId', () => {
+            // Ensure no environment variables are set
+            vi.stubEnv('FIRESTORE_PROJECT_ID', '');
+            vi.stubEnv('FIRESTORE_DATABASE_ID', '');
+            
+            const config: SaltStoreConfig = {type: 'firestore', databaseId: 'test-db'};
+            
+            expect(() => createSaltStore(config)).toThrow('Firestore project ID is required. Provide it via config.projectId or FIRESTORE_PROJECT_ID environment variable');
+        });
+
+        it('should throw error when creating firestore store without databaseId', () => {
+            // Ensure no environment variables are set
+            vi.stubEnv('FIRESTORE_PROJECT_ID', '');
+            vi.stubEnv('FIRESTORE_DATABASE_ID', '');
+            
+            const config: SaltStoreConfig = {type: 'firestore', projectId: 'test-project'};
+            
+            expect(() => createSaltStore(config)).toThrow('Firestore database ID is required. Provide it via config.databaseId or FIRESTORE_DATABASE_ID environment variable');
+        });
+
+        it('should create a firestore salt store with complete config', () => {
+            const config: SaltStoreConfig = {
+                type: 'firestore',
+                projectId: 'test-project',
+                databaseId: 'test-database'
+            };
             const store = createSaltStore(config);
 
             expect(store).toBeInstanceOf(FirestoreSaltStore);
@@ -55,6 +71,7 @@ describe('SaltStoreFactory', () => {
             const config: SaltStoreConfig = {
                 type: 'firestore',
                 projectId: 'custom-project',
+                databaseId: 'custom-database',
                 collectionName: 'custom-salts'
             };
             const store = createSaltStore(config);
@@ -62,9 +79,34 @@ describe('SaltStoreFactory', () => {
             expect(store).toBeInstanceOf(FirestoreSaltStore);
         });
 
-        it('should create firestore store from environment variable', () => {
-            process.env.SALT_STORE_TYPE = 'firestore';
+        it('should create firestore store with custom project, database and collection', () => {
+            const config: SaltStoreConfig = {
+                type: 'firestore',
+                projectId: 'custom-project',
+                databaseId: 'custom-database',
+                collectionName: 'custom-salts'
+            };
+            const store = createSaltStore(config);
+
+            expect(store).toBeInstanceOf(FirestoreSaltStore);
+        });
+
+        it('should create firestore store from environment variables', () => {
+            vi.stubEnv('SALT_STORE_TYPE', 'firestore');
+            vi.stubEnv('FIRESTORE_PROJECT_ID', 'env-project');
+            vi.stubEnv('FIRESTORE_DATABASE_ID', 'env-database');
+            
             const store = createSaltStore();
+
+            expect(store).toBeInstanceOf(FirestoreSaltStore);
+        });
+
+        it('should use environment variables when config values are not provided', () => {
+            vi.stubEnv('FIRESTORE_PROJECT_ID', 'env-project');
+            vi.stubEnv('FIRESTORE_DATABASE_ID', 'env-database');
+            
+            const config: SaltStoreConfig = {type: 'firestore'};
+            const store = createSaltStore(config);
 
             expect(store).toBeInstanceOf(FirestoreSaltStore);
         });

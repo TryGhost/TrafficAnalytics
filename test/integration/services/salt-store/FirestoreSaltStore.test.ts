@@ -7,7 +7,8 @@ describe('FirestoreSaltStore', () => {
 
     beforeEach(async () => {
         // Create a new instance for each test
-        saltStore = new FirestoreSaltStore(undefined, testCollectionName);
+        // Using test project and database IDs
+        saltStore = new FirestoreSaltStore('traffic-analytics-test', '(default)', testCollectionName);
 
         // Clean up any existing test data using the store's clear method
         await saltStore.clear();
