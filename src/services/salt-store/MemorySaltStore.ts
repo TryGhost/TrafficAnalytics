@@ -22,10 +22,10 @@ export class MemorySaltStore implements ISaltStore {
         return this.salts[key];
     }
 
-    async get(key: string): Promise<SaltRecord> {
+    async get(key: string): Promise<SaltRecord | undefined> {
         const record = this.salts[key];
         if (!record) {
-            return record;
+            return undefined;
         }
         return {
             salt: record.salt,
@@ -35,5 +35,11 @@ export class MemorySaltStore implements ISaltStore {
 
     async delete(key: string): Promise<void> {
         delete this.salts[key];
+    }
+
+    async clear(): Promise<void> {
+        for (const key in this.salts) {
+            delete this.salts[key];
+        }
     }
 }
