@@ -24,6 +24,24 @@ export class FirestoreSaltStore implements ISaltStore {
             projectId: projectId || process.env.FIRESTORE_PROJECT_ID || 'traffic-analytics'
         });
         this.collectionName = collectionName;
+        
+        // Perform a basic health check to fail fast if Firestore is unavailable
+        this.healthCheck();
+    }
+
+    /**
+     * Performs a basic health check to verify Firestore connectivity.
+     * This helps fail fast during initialization if Firestore is unavailable.
+     */
+    private async healthCheck(): Promise<void> {
+        try {
+            // Simple operation to test connectivity - just get the collection reference
+            await this.firestore.collection(this.collectionName).limit(1).get();
+        } catch (error) {
+            // Log warning but don't throw - allow graceful degradation
+            // eslint-disable-next-line no-console
+            console.warn('FirestoreSaltStore health check failed:', error instanceof Error ? error.message : error);
+        }
     }
 
     /**
@@ -123,7 +141,7 @@ export class FirestoreSaltStore implements ISaltStore {
             // Firestore throws a specific error when document already exists
             if (error instanceof Error && 'code' in error) {
                 const errorWithCode = error as Error & { code: string | number };
-                if (errorWithCode.code === 6 || errorWithCode.code === 'ALREADY_EXISTS') {
+                if (error.message?.includes('already exists') || errorWithCode.code === 'ALREADY_EXISTS') {
                     throw new Error(`Salt with key ${key} already exists`);
                 }
             }

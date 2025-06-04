@@ -32,7 +32,11 @@ runs:
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         CONTAINER_ID=$(docker compose -f ${{ github.action_path }}/compose.ci.yml ps -q test | head -1)
         if [ ! -z "$CONTAINER_ID" ]; then
-          docker cp $CONTAINER_ID:/app/coverage/cobertura-coverage.xml . || echo "No coverage file found"
+          if docker cp $CONTAINER_ID:/app/coverage/cobertura-coverage.xml .; then
+            echo "Coverage report copied successfully"
+          else
+            echo "Warning: No coverage file found"
+          fi
         fi
 
     # Upload coverage reports
