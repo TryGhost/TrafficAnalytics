@@ -8,6 +8,7 @@ export type SaltStoreConfig = {
     type: SaltStoreType;
     filePath?: string;
     projectId?: string;
+    databaseId?: string;
     collectionName?: string;
 };
 
@@ -17,8 +18,20 @@ export function createSaltStore(config?: SaltStoreConfig): ISaltStore {
     switch (storeType) {
     case 'memory':
         return new MemorySaltStore();
-    case 'firestore':
-        return new FirestoreSaltStore(config?.projectId, config?.collectionName);
+    case 'firestore': {
+        const projectId = config?.projectId || process.env.FIRESTORE_PROJECT_ID;
+        const databaseId = config?.databaseId || process.env.FIRESTORE_DATABASE_ID;
+        
+        if (!projectId) {
+            throw new Error('Firestore project ID is required. Provide it via config.projectId or FIRESTORE_PROJECT_ID environment variable');
+        }
+        
+        if (!databaseId) {
+            throw new Error('Firestore database ID is required. Provide it via config.databaseId or FIRESTORE_DATABASE_ID environment variable');
+        }
+        
+        return new FirestoreSaltStore(projectId, databaseId, config?.collectionName);
+    }
     case 'file':
         throw new Error('File salt store is not implemented yet');
     default:

@@ -15,14 +15,18 @@ export class FirestoreSaltStore implements ISaltStore {
      * Creates a new FirestoreSaltStore instance.
      *
      * @param projectId - The Google Cloud project ID
+     * @param databaseId - The Firestore database ID (for named databases)
      * @param collectionName - The name of the Firestore collection to use (default: 'salts')
      */
-    constructor(projectId?: string, collectionName: string = 'salts') {
+    constructor(projectId: string, databaseId: string, collectionName: string = 'salts') {
         // Initialize Firestore client
         // If FIRESTORE_EMULATOR_HOST is set, it will automatically connect to the emulator
-        this.firestore = new Firestore({
-            projectId: projectId || process.env.FIRESTORE_PROJECT_ID || 'traffic-analytics'
-        });
+        const firestoreConfig: {projectId: string; databaseId: string} = {
+            projectId,
+            databaseId
+        };
+        
+        this.firestore = new Firestore(firestoreConfig);
         this.collectionName = collectionName;
         
         // Perform a basic health check to fail fast if Firestore is unavailable
