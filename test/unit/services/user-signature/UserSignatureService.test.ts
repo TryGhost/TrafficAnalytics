@@ -122,7 +122,8 @@ describe('UserSignatureService', () => {
                 async getAll() {
                     return {};
                 },
-                async delete() {}
+                async delete() {},
+                clear: () => Promise.resolve()
             };
 
             const service = new UserSignatureService(customSaltStore);

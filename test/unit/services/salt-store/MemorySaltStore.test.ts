@@ -19,8 +19,8 @@ describe('MemorySaltStore', () => {
             expect(returnedRecord.created_at).toBeInstanceOf(Date);
 
             const result = await saltStore.get(key);
-            expect(result.salt).toBe(salt);
-            expect(result.created_at).toBeInstanceOf(Date);
+            expect(result?.salt).toBe(salt);
+            expect(result?.created_at).toBeInstanceOf(Date);
         });
 
         it('should create a new date for created_at', async () => {
@@ -33,7 +33,7 @@ describe('MemorySaltStore', () => {
             expect(returnedRecord.created_at.getTime()).toBeGreaterThanOrEqual(beforeSet.getTime());
 
             const result = await saltStore.get(key);
-            expect(result.created_at.getTime()).toBeGreaterThanOrEqual(beforeSet.getTime());
+            expect(result?.created_at.getTime()).toBeGreaterThanOrEqual(beforeSet.getTime());
         });
 
         it('should throw error when trying to set existing key', async () => {
@@ -47,7 +47,7 @@ describe('MemorySaltStore', () => {
 
             // Verify original salt is still there
             const result = await saltStore.get(key);
-            expect(result.salt).toBe(originalSalt);
+            expect(result?.salt).toBe(originalSalt);
         });
 
         it('should successfully set salt for new keys', async () => {
@@ -58,19 +58,19 @@ describe('MemorySaltStore', () => {
 
             // First key should succeed
             const record1 = await saltStore.set(key1, salt1);
-            expect(record1.salt).toBe(salt1);
-            expect(record1.created_at).toBeInstanceOf(Date);
+            expect(record1?.salt).toBe(salt1);
+            expect(record1?.created_at).toBeInstanceOf(Date);
 
             // Second key should also succeed
             const record2 = await saltStore.set(key2, salt2);
-            expect(record2.salt).toBe(salt2);
-            expect(record2.created_at).toBeInstanceOf(Date);
+            expect(record2?.salt).toBe(salt2);
+            expect(record2?.created_at).toBeInstanceOf(Date);
 
             // Verify both are stored
             const result1 = await saltStore.get(key1);
             const result2 = await saltStore.get(key2);
-            expect(result1.salt).toBe(salt1);
-            expect(result2.salt).toBe(salt2);
+            expect(result1?.salt).toBe(salt1);
+            expect(result2?.salt).toBe(salt2);
         });
     });
 
@@ -103,11 +103,11 @@ describe('MemorySaltStore', () => {
 
             expect(result1).toEqual(result2);
             expect(result1).not.toBe(result2);
-            expect(result1.created_at).not.toBe(result2.created_at);
+            expect(result1?.created_at).not.toBe(result2?.created_at);
 
-            result1.salt = 'modified';
+            result1!.salt = 'modified';
             const result3 = await saltStore.get(key);
-            expect(result3.salt).toBe(salt);
+            expect(result3?.salt).toBe(salt);
         });
     });
 
@@ -161,7 +161,7 @@ describe('MemorySaltStore', () => {
 
             const resultBefore = await saltStore.get(key);
             expect(resultBefore).toBeDefined();
-            expect(resultBefore.salt).toBe(salt);
+            expect(resultBefore?.salt).toBe(salt);
 
             await saltStore.delete(key);
 
@@ -227,9 +227,9 @@ describe('MemorySaltStore', () => {
             const result2 = await saltStore.get(key2);
             const result3 = await saltStore.get(key3);
 
-            expect(result1.salt).toBe(salt1);
+            expect(result1?.salt).toBe(salt1);
             expect(result2).toBeUndefined();
-            expect(result3.salt).toBe(salt3);
+            expect(result3?.salt).toBe(salt3);
         });
     });
 
