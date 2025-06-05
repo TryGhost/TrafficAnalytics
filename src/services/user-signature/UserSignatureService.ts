@@ -1,5 +1,6 @@
 import {ISaltStore} from '../salt-store';
 import crypto from 'crypto';
+import logger from '../../utils/logger';
 
 /**
  * Service for generating privacy-preserving user signatures.
@@ -18,8 +19,7 @@ export class UserSignatureService {
      * @param saltStore - The salt store implementation used to persist and retrieve salts
      */
     constructor(saltStore: ISaltStore) {
-        // eslint-disable-next-line no-console
-        console.log('UserSignatureService constructor');
+        logger.info('UserSignatureService constructor');
         this.saltStore = saltStore;
         this.startCleanupScheduler();
     }
@@ -38,11 +38,9 @@ export class UserSignatureService {
         const runCleanup = async () => {
             try {
                 const deletedCount = await this.saltStore.cleanup();
-                // eslint-disable-next-line no-console
-                console.log(`Salt cleanup completed: ${deletedCount} old salts deleted`);
+                logger.info(`Salt cleanup completed: ${deletedCount} old salts deleted`);
             } catch (error) {
-                // eslint-disable-next-line no-console
-                console.error('Salt cleanup failed:', error);
+                logger.error('Salt cleanup failed:', error);
             }
         };
         
@@ -50,8 +48,7 @@ export class UserSignatureService {
         const randomDelayMinutes = Math.floor(Math.random() * 60);
         const randomDelayMs = randomDelayMinutes * 60 * 1000;
         
-        // eslint-disable-next-line no-console
-        console.log(`Salt cleanup scheduler will start in ${randomDelayMinutes} minutes`);
+        logger.info(`Salt cleanup scheduler will start in ${randomDelayMinutes} minutes`);
         
         // Schedule first cleanup with random delay
         setTimeout(async () => {

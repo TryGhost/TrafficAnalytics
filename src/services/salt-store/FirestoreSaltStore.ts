@@ -216,8 +216,7 @@ export class FirestoreSaltStore implements ISaltStore {
             await batch.commit();
             return snapshot.size;
         } catch (error) {
-            // eslint-disable-next-line no-console
-            console.error('FirestoreSaltStore cleanup failed:', error);
+            logger.error('FirestoreSaltStore cleanup failed:', error);
             throw error;
         }
     }
