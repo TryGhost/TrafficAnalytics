@@ -38,6 +38,7 @@
     "@vitest/coverage-v8": "3.2.2",
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.4.3",
+    "pino-pretty": "13.0.0",
     "supertest": "6.3.4",
     "typescript": "5.8.3",
     "vite": "6.3.5",
@@ -52,7 +53,7 @@
     "@tryghost/referrer-parser": "0.1.7",
     "dotenv": "16.5.0",
     "fastify": "5.3.3",
-    "pino-pretty": "10.3.1",
+    "pino": "9.7.0",
     "ua-parser-js": "1.0.40"
   }
 }
