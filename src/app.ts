@@ -18,7 +18,16 @@ function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
         preHandler: processRequest as FastifyHttpProxyOptions['preHandler'],
         replyOptions: {
             onError: (reply, error) => {
-                reply.log.error(error);
+                if (process.env.NODE_ENV === 'production') {
+                    reply.log.error({
+                        err: error,
+                        req: reply.request,
+                        upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
+                        type: 'proxy_error'
+                    }, 'Proxy error occurred');
+                } else {
+                    reply.log.error(error);
+                }
                 reply.status(502).send({error: 'Proxy error'});
             }
         }
@@ -38,13 +47,29 @@ app.register(fastifyCors, {
 });
 
 app.addHook('onRequest', (request, _reply, done) => {
-    request.log.info(`${request.method} ${request.url} - incoming request ${request.id}`);
+    if (process.env.NODE_ENV === 'production') {
+        request.log.info({
+            req: request,
+            type: 'request'
+        }, 'incoming request');
+    } else {
+        request.log.info(`${request.method} ${request.url} - incoming request ${request.id}`);
+    }
     done();
 });
 
 app.addHook('onResponse', (request, reply: FastifyReply, done) => {
     const responseTime = Math.round(reply.elapsedTime);
-    request.log.info(`${request.method} ${request.url} - ${reply.statusCode} - ${responseTime}ms - request completed ${request.id}`);
+    if (process.env.NODE_ENV === 'production') {
+        request.log.info({
+            req: request,
+            res: reply,
+            responseTime,
+            type: 'response'
+        }, 'request completed');
+    } else {
+        request.log.info(`${request.method} ${request.url} - ${reply.statusCode} - ${responseTime}ms - request completed ${request.id}`);
+    }
     done();
 });
 

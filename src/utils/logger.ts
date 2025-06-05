@@ -21,15 +21,26 @@ export function getLoggerConfig(): LoggerOptions | false {
                     return {
                         method: request.method,
                         url: request.url,
-                        headers: request.headers,
+                        params: request.params,
+                        query: request.query,
+                        headers: {
+                            host: request.headers.host,
+                            'user-agent': request.headers['user-agent'],
+                            'content-type': request.headers['content-type'],
+                            'content-length': request.headers['content-length'],
+                            referer: request.headers.referer,
+                            'x-forwarded-for': request.headers['x-forwarded-for']
+                        },
                         hostname: request.hostname,
                         remoteAddress: request.ip,
-                        remotePort: request.socket?.remotePort
+                        remotePort: request.socket?.remotePort,
+                        id: request.id
                     };
                 },
                 res(reply: FastifyReply) {
                     return {
-                        statusCode: reply.statusCode
+                        statusCode: reply.statusCode,
+                        headers: reply.getHeaders()
                     };
                 }
             }
