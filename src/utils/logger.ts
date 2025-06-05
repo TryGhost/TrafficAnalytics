@@ -16,31 +16,10 @@ export function getLoggerConfig(): LoggerOptions | false {
     if (process.env.NODE_ENV === 'production') {
         return {
             level: process.env.LOG_LEVEL || 'info',
-            serializers: {
-                req(request: FastifyRequest) {
+            formatters: {
+                level: (label) => {
                     return {
-                        method: request.method,
-                        url: request.url,
-                        params: request.params,
-                        query: request.query,
-                        headers: {
-                            host: request.headers.host,
-                            'user-agent': request.headers['user-agent'],
-                            'content-type': request.headers['content-type'],
-                            'content-length': request.headers['content-length'],
-                            referer: request.headers.referer,
-                            'x-forwarded-for': request.headers['x-forwarded-for']
-                        },
-                        hostname: request.hostname,
-                        remoteAddress: request.ip,
-                        remotePort: request.socket?.remotePort,
-                        id: request.id
-                    };
-                },
-                res(reply: FastifyReply) {
-                    return {
-                        statusCode: reply.statusCode,
-                        headers: reply.getHeaders()
+                        severity: label.toUpperCase()
                     };
                 }
             }
@@ -54,7 +33,7 @@ export function getLoggerConfig(): LoggerOptions | false {
             target: 'pino-pretty',
             options: {
                 translateTime: 'HH:MM:ss',
-                ignore: 'pid,hostname,reqId,responseTime,req,res', // hides JSON object
+                ignore: 'pid,hostname', // hides JSON object
                 messageFormat: '{msg}',
                 singleLine: true,
                 colorize: true

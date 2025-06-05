@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import fastify, {FastifyReply} from 'fastify';
+import fastify from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
 import {processRequest, validateRequest} from './services/proxy';
@@ -30,13 +30,14 @@ function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
                 }
                 reply.status(502).send({error: 'Proxy error'});
             }
-        }
+        },
+        disableRequestLogging: process.env.LOG_PROXY_REQUESTS === 'false'
     };
 }
 
 const app = fastify({
     logger: getLoggerConfig(),
-    disableRequestLogging: true // we'll use our own logger
+    disableRequestLogging: true
 });
 
 // Register CORS plugin
@@ -47,29 +48,41 @@ app.register(fastifyCors, {
 });
 
 app.addHook('onRequest', (request, _reply, done) => {
-    if (process.env.NODE_ENV === 'production') {
-        request.log.info({
-            req: request,
-            type: 'request'
-        }, 'incoming request');
-    } else {
-        request.log.info(`${request.method} ${request.url} - incoming request ${request.id}`);
-    }
+    request.log.info({
+        httpRequest: {
+            requestMethod: request.method,
+            requestUrl: request.url,
+            userAgent: request.headers['user-agent'],
+            remoteIp: request.ip,
+            referer: request.headers.referer,
+            protocol: request.protocol,
+            httpVersion: request.raw.httpVersion,
+            remotePort: request.socket?.remotePort,
+            id: request.id,
+            requestSize: request.raw.headers['content-length']
+        }
+    }, 'incoming request');
     done();
 });
 
-app.addHook('onResponse', (request, reply: FastifyReply, done) => {
-    const responseTime = Math.round(reply.elapsedTime);
-    if (process.env.NODE_ENV === 'production') {
-        request.log.info({
-            req: request,
-            res: reply,
-            responseTime,
-            type: 'response'
-        }, 'request completed');
-    } else {
-        request.log.info(`${request.method} ${request.url} - ${reply.statusCode} - ${responseTime}ms - request completed ${request.id}`);
-    }
+app.addHook('onResponse', (request, reply, done) => {
+    request.log.info({
+        httpRequest: {
+            requestMethod: request.method,
+            requestUrl: request.url,
+            userAgent: request.headers['user-agent'],
+            remoteIp: request.ip,
+            referer: request.headers.referer,
+            protocol: request.protocol,
+            httpVersion: request.raw.httpVersion,
+            remotePort: request.socket?.remotePort,
+            id: request.id,
+            requestSize: request.raw.headers['content-length'],
+            responseSize: reply.getHeader('content-length'),
+            status: reply.statusCode,
+            latency: reply.elapsedTime
+        }
+    }, 'request completed');
     done();
 });
 
