@@ -19,7 +19,6 @@ export class UserSignatureService {
      * @param saltStore - The salt store implementation used to persist and retrieve salts
      */
     constructor(saltStore: ISaltStore) {
-        logger.info('UserSignatureService constructor');
         this.saltStore = saltStore;
         this.startCleanupScheduler();
     }
