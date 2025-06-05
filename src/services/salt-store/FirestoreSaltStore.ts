@@ -188,4 +188,12 @@ export class FirestoreSaltStore implements ISaltStore {
         
         await batch.commit();
     }
+
+    /**
+     * Closes the Firestore client connection.
+     * Call this during graceful shutdown to immediately close the connection.
+     */
+    async close(): Promise<void> {
+        await this.firestore.terminate();
+    }
 }
