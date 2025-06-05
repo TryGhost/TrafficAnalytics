@@ -3,15 +3,16 @@ import {UserSignatureService} from '../../../../src/services/user-signature';
 import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltStore';
 import type {ISaltStore} from '../../../../src/services/salt-store';
 import crypto from 'crypto';
+import logger from '../../../../src/utils/logger';
 
 describe('UserSignatureService', () => {
     let userSignatureService: UserSignatureService;
     let mockSaltStore: ISaltStore;
 
     beforeEach(() => {
-        // Mock console methods to avoid noise in tests
-        vi.spyOn(console, 'log').mockImplementation(() => {});
-        vi.spyOn(console, 'error').mockImplementation(() => {});
+        // Mock logger methods to avoid noise in tests
+        vi.spyOn(logger, 'info').mockImplementation(() => {});
+        vi.spyOn(logger, 'error').mockImplementation(() => {});
         
         mockSaltStore = new MemorySaltStore();
         userSignatureService = new UserSignatureService(mockSaltStore);
@@ -279,7 +280,7 @@ describe('UserSignatureService', () => {
                 // Set up spies before creating service
                 const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
                 const cleanupSpy = vi.spyOn(mockSaltStore, 'cleanup').mockResolvedValue(5);
-                const consoleLogSpy = vi.spyOn(console, 'log');
+                const loggerInfoSpy = vi.spyOn(logger, 'info');
                 
                 // Create service - this will call setTimeout
                 const service = new UserSignatureService(mockSaltStore);
@@ -293,7 +294,7 @@ describe('UserSignatureService', () => {
                 await timeoutCallback();
                 
                 expect(cleanupSpy).toHaveBeenCalledOnce();
-                expect(consoleLogSpy).toHaveBeenCalledWith('Salt cleanup completed: 5 old salts deleted');
+                expect(loggerInfoSpy).toHaveBeenCalledWith('Salt cleanup completed: 5 old salts deleted');
                 
                 service.stopCleanupScheduler();
                 process.env.NODE_ENV = originalNodeEnv;
@@ -307,7 +308,7 @@ describe('UserSignatureService', () => {
                 const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
                 const error = new Error('Cleanup failed');
                 const cleanupSpy = vi.spyOn(mockSaltStore, 'cleanup').mockRejectedValue(error);
-                const consoleErrorSpy = vi.spyOn(console, 'error');
+                const loggerErrorSpy = vi.spyOn(logger, 'error');
                 
                 const service = new UserSignatureService(mockSaltStore);
                 
@@ -317,7 +318,7 @@ describe('UserSignatureService', () => {
                 await timeoutCallback();
                 
                 expect(cleanupSpy).toHaveBeenCalledOnce();
-                expect(consoleErrorSpy).toHaveBeenCalledWith('Salt cleanup failed:', error);
+                expect(loggerErrorSpy).toHaveBeenCalledWith('Salt cleanup failed:', error);
                 
                 service.stopCleanupScheduler();
                 process.env.NODE_ENV = originalNodeEnv;
