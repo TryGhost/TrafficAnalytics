@@ -2,11 +2,11 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import {FastifyInstance, FastifyRequest as FastifyRequestBase, RawServerDefault} from 'fastify';
-import fastify from 'fastify';
+import fastify, {FastifyReply} from 'fastify';
 import fastifyCors from '@fastify/cors';
 import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
 import {processRequest, validateRequest} from './services/proxy';
+import {getLoggerConfig} from './utils/logger';
 
 function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
     return {
@@ -25,31 +25,9 @@ function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
     };
 }
 
-const app: FastifyInstance<RawServerDefault> = fastify({
-    logger: {
-        level: process.env.LOG_LEVEL || 'info',
-        transport: {
-            target: 'pino-pretty',
-            options: {
-                translateTime: 'HH:MM:ss',
-                ignore: 'pid,hostname,reqId,responseTime,req,res',
-                messageFormat: '{msg} {url}'
-            }
-        },
-        serializers: {
-            req: function (req: FastifyRequestBase) {
-                return {
-                    method: req.method,
-                    url: req.url
-                };
-            },
-            res: function (res) {
-                return {
-                    statusCode: res.statusCode
-                };
-            }
-        }
-    }
+const app = fastify({
+    logger: getLoggerConfig(),
+    disableRequestLogging: true // we'll use our own logger
 });
 
 // Register CORS plugin
@@ -59,11 +37,14 @@ app.register(fastifyCors, {
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
 });
 
-// Request logging hook
 app.addHook('onRequest', (request, _reply, done) => {
-    if (process.env.NODE_ENV !== 'testing') {
-        request.log.info(`${request.method} ${request.url}`);
-    }
+    request.log.info(`${request.method} ${request.url} - incoming request ${request.id}`);
+    done();
+});
+
+app.addHook('onResponse', (request, reply: FastifyReply, done) => {
+    const responseTime = Math.round(reply.elapsedTime);
+    request.log.info(`${request.method} ${request.url} - ${reply.statusCode} - ${responseTime}ms - request completed ${request.id}`);
     done();
 });
 

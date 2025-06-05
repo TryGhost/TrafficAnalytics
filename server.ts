@@ -1,5 +1,5 @@
 import app from './src/app';
-import { fileURLToPath } from 'url';
+import {fileURLToPath} from 'url';
 
 const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 
@@ -10,8 +10,6 @@ if (isMainModule) {
     const start = async (): Promise<void> => {
         try {
             await app.listen({host: '0.0.0.0', port});
-            // eslint-disable-next-line no-console
-            console.log(`Server running on port ${port}`);
         } catch (err) {
             app.log.error(err);
             process.exit(1);
