@@ -36,4 +36,10 @@ export interface ISaltStore {
      * WARNING: This deletes all data! Use with caution, primarily for testing.
      */
     clear(): Promise<void>;
+
+    /**
+     * Delete all salts from days before today (UTC)
+     * @returns Number of salts deleted
+     */
+    cleanup(): Promise<number>;
 };

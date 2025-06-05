@@ -1,4 +1,4 @@
-import {describe, it, expect, beforeEach} from 'vitest';
+import {describe, it, expect, beforeEach, vi} from 'vitest';
 import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltStore';
 
 describe('MemorySaltStore', () => {
@@ -321,6 +321,106 @@ describe('MemorySaltStore', () => {
             expect(result2!.salt).toBe('salt2');
             expect(missing1).toBeUndefined();
             expect(missing2).toBeUndefined();
+        });
+    });
+
+    describe('cleanup', () => {
+        it('should delete salts from before today UTC', async () => {
+            // Mock today as 2024-01-15 in UTC
+            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
+            
+            const key1 = '550e8400-e29b-41d4-a716-446655440001';
+            const key2 = '550e8400-e29b-41d4-a716-446655440002';
+            const key3 = '550e8400-e29b-41d4-a716-446655440003';
+            
+            await saltStore.set(key1, 'yesterday-salt');
+            await saltStore.set(key2, 'today-salt');
+            await saltStore.set(key3, 'old-salt');
+
+            // Manually set the created_at dates
+            (saltStore as any).salts[key1].created_at = new Date('2024-01-14T23:59:59.999Z'); // Yesterday
+            (saltStore as any).salts[key2].created_at = new Date('2024-01-15T00:00:00.000Z'); // Today at midnight
+            (saltStore as any).salts[key3].created_at = new Date('2024-01-10T12:00:00.000Z'); // 5 days ago
+
+            const deletedCount = await saltStore.cleanup();
+
+            expect(deletedCount).toBe(2); // Yesterday and old salt deleted
+            
+            const result1 = await saltStore.get(key1);
+            const result2 = await saltStore.get(key2);
+            const result3 = await saltStore.get(key3);
+            
+            expect(result1).toBeUndefined();
+            expect(result2?.salt).toBe('today-salt');
+            expect(result3).toBeUndefined();
+        });
+
+        it('should keep salts created at exactly midnight UTC today', async () => {
+            // Mock today as 2024-01-15
+            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
+
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            await saltStore.set(key, 'midnight-salt');
+            (saltStore as any).salts[key].created_at = new Date('2024-01-15T00:00:00.000Z');
+
+            const deletedCount = await saltStore.cleanup();
+
+            // Should NOT be deleted because it's from today
+            expect(deletedCount).toBe(0);
+            
+            const result = await saltStore.get(key);
+            expect(result?.salt).toBe('midnight-salt');
+        });
+
+        it('should return 0 when all salts are from today', async () => {
+            await saltStore.set('key1', 'salt1');
+            await saltStore.set('key2', 'salt2');
+
+            const deletedCount = await saltStore.cleanup();
+
+            expect(deletedCount).toBe(0);
+            
+            const all = await saltStore.getAll();
+            expect(Object.keys(all)).toHaveLength(2);
+        });
+
+        it('should handle empty store', async () => {
+            const deletedCount = await saltStore.cleanup();
+            
+            expect(deletedCount).toBe(0);
+        });
+
+        it('should handle salts from different dates correctly', async () => {
+            // Mock today as 2024-01-15
+            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T08:00:00.000Z');
+            
+            const keys = [
+                'salt:2024-01-10:old1',
+                'salt:2024-01-14:yesterday',
+                'salt:2024-01-15:today1',
+                'salt:2024-01-15:today2',
+                'salt:2024-01-13:old2'
+            ];
+            
+            for (const key of keys) {
+                await saltStore.set(key, `value-${key}`);
+            }
+            
+            // Set created_at based on the date in the key
+            (saltStore as any).salts[keys[0]].created_at = new Date('2024-01-10T12:00:00.000Z');
+            (saltStore as any).salts[keys[1]].created_at = new Date('2024-01-14T12:00:00.000Z');
+            (saltStore as any).salts[keys[2]].created_at = new Date('2024-01-15T01:00:00.000Z');
+            (saltStore as any).salts[keys[3]].created_at = new Date('2024-01-15T23:59:59.999Z');
+            (saltStore as any).salts[keys[4]].created_at = new Date('2024-01-13T12:00:00.000Z');
+
+            const deletedCount = await saltStore.cleanup();
+
+            expect(deletedCount).toBe(3); // 3 salts from before today
+            
+            const all = await saltStore.getAll();
+            expect(Object.keys(all)).toHaveLength(2); // Only today's salts remain
+            expect(all[keys[2]]).toBeDefined();
+            expect(all[keys[3]]).toBeDefined();
         });
     });
 });
