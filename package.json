@@ -7,9 +7,9 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "tsc",
     "docker:build": "docker compose build",
-    "dev": "vite",
+    "dev": "tsx --watch server.ts",
     "docker:dev": "docker compose up",
     "docker:dev:ghost": "docker compose -f compose.yml -f compose.ghost.yml up",
     "start": "node dist/server.js",
@@ -41,8 +41,7 @@
     "pino-pretty": "13.0.0",
     "supertest": "6.3.4",
     "typescript": "5.8.3",
-    "vite": "6.3.5",
-    "vite-plugin-node": "5.0.1",
+    "tsx": "4.0.0",
     "vitest": "3.2.2"
   },
   "dependencies": {
