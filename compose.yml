@@ -3,9 +3,11 @@ name: traffic-analytics
 services:
   firestore:
     image: google/cloud-sdk:emulators
-    command: ["gcloud", "emulators", "firestore", "start", "--host-port=0.0.0.0:8080"]
+    command: ["/app/firestore-wrapper.sh"]
     ports:
       - 8080:8080
+    volumes:
+      - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
     environment:
       - FIRESTORE_PROJECT_ID=traffic-analytics-dev
     healthcheck:
@@ -13,6 +15,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    stop_grace_period: 5s
 
   analytics-service:
     image: local/traffic-analytics:development
