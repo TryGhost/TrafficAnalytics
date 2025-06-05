@@ -21,7 +21,6 @@ export function getLoggerConfig(): LoggerOptions | false {
                     return {
                         method: request.method,
                         url: request.url,
-                        path: request.routerPath,
                         params: request.params,
                         query: request.query,
                         headers: {
