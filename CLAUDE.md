@@ -51,6 +51,7 @@ The service follows a modular architecture:
 - `PROXY_TARGET` - Upstream URL to forward requests
 - `LOG_LEVEL` - Logging level (default: info)
 - `SALT_STORE_TYPE` - Salt store implementation (default: memory)
+- `ENABLE_SALT_CLEANUP_SCHEDULER` - Enable automatic daily salt cleanup (default: true, set to 'false' to disable)
 
 ## Testing Approach
 
