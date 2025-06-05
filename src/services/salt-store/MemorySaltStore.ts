@@ -42,4 +42,19 @@ export class MemorySaltStore implements ISaltStore {
             delete this.salts[key];
         }
     }
+
+    async cleanup(): Promise<number> {
+        // Get today's date in UTC (same logic as UserSignatureService)
+        const today = new Date().toISOString().split('T')[0];
+        const cutoffDate = new Date(today); // This will be midnight UTC of today
+        
+        let deletedCount = 0;
+        for (const [key, record] of Object.entries(this.salts)) {
+            if (record.created_at < cutoffDate) {
+                delete this.salts[key];
+                deletedCount += 1;
+            }
+        }
+        return deletedCount;
+    }
 }

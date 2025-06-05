@@ -188,4 +188,36 @@ export class FirestoreSaltStore implements ISaltStore {
         
         await batch.commit();
     }
+
+    /**
+     * Delete all salts from before today (UTC)
+     * @returns Number of salts deleted
+     */
+    async cleanup(): Promise<number> {
+        try {
+            // Get today's date in UTC (same logic as UserSignatureService)
+            const today = new Date().toISOString().split('T')[0];
+            const cutoffDate = new Date(today); // This will be midnight UTC of today
+            
+            const snapshot = await this.firestore
+                .collection(this.collectionName)
+                .where('created_at', '<', cutoffDate)
+                .get();
+
+            if (snapshot.size === 0) {
+                return 0;
+            }
+
+            const batch = this.firestore.batch();
+            snapshot.docs.forEach((doc) => {
+                batch.delete(doc.ref);
+            });
+            
+            await batch.commit();
+            return snapshot.size;
+        } catch (error) {
+            logger.error('FirestoreSaltStore cleanup failed:', error);
+            throw error;
+        }
+    }
 }

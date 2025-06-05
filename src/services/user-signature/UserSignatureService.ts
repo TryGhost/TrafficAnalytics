@@ -1,5 +1,6 @@
 import {ISaltStore} from '../salt-store';
 import crypto from 'crypto';
+import logger from '../../utils/logger';
 
 /**
  * Service for generating privacy-preserving user signatures.
@@ -10,6 +11,7 @@ import crypto from 'crypto';
  */
 export class UserSignatureService {
     private saltStore: ISaltStore;
+    private cleanupInterval: NodeJS.Timeout | null = null;
 
     /**
      * Creates a new UserSignatureService instance.
@@ -18,6 +20,52 @@ export class UserSignatureService {
      */
     constructor(saltStore: ISaltStore) {
         this.saltStore = saltStore;
+        this.startCleanupScheduler();
+    }
+
+    /**
+     * Start the salt cleanup scheduler
+     */
+    private startCleanupScheduler() {
+        // Only start scheduler in production (not during testing)
+        if (process.env.NODE_ENV === 'testing' || process.env.ENABLE_SALT_CLEANUP_SCHEDULER === 'false') {
+            return;
+        }
+
+        const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+        
+        const runCleanup = async () => {
+            try {
+                const deletedCount = await this.saltStore.cleanup();
+                logger.info(`Salt cleanup completed: ${deletedCount} old salts deleted`);
+            } catch (error) {
+                logger.error('Salt cleanup failed:', error);
+            }
+        };
+        
+        // Add random delay (0-60 minutes) to prevent multiple instances from running simultaneously
+        const randomDelayMinutes = Math.floor(Math.random() * 60);
+        const randomDelayMs = randomDelayMinutes * 60 * 1000;
+        
+        logger.info(`Salt cleanup scheduler will start in ${randomDelayMinutes} minutes`);
+        
+        // Schedule first cleanup with random delay
+        setTimeout(async () => {
+            await runCleanup();
+            
+            // Schedule subsequent cleanups every 24 hours
+            this.cleanupInterval = setInterval(runCleanup, CLEANUP_INTERVAL);
+        }, randomDelayMs);
+    }
+
+    /**
+     * Stop the salt cleanup scheduler (useful for testing or graceful shutdown)
+     */
+    public stopCleanupScheduler() {
+        if (this.cleanupInterval) {
+            clearInterval(this.cleanupInterval);
+            this.cleanupInterval = null;
+        }
     }
 
     /**
