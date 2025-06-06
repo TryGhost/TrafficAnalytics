@@ -12,44 +12,44 @@ export function getLoggerConfig(): LoggerOptions | false {
         return false;
     }
 
-    // Production configuration - full JSON logs
-    if (process.env.NODE_ENV === 'production') {
+    // Development configuration - simple pretty logs
+    if (process.env.NODE_ENV === 'development') {
         return {
             level: process.env.LOG_LEVEL || 'info',
-            messageKey: 'message',
-            formatters: {
-                level: (label) => {
+            transport: {
+                target: 'pino-pretty',
+                options: {
+                    translateTime: 'HH:MM:ss',
+                    ignore: 'pid,hostname', // hides JSON object
+                    messageFormat: '{msg}',
+                    singleLine: true,
+                    colorize: true
+                } as PrettyOptions
+            },
+            serializers: {
+                req(request: FastifyRequest) {
                     return {
-                        severity: label.toUpperCase()
+                        method: request.method,
+                        url: request.url
+                    };
+                },
+                res(reply: FastifyReply) {
+                    return {
+                        statusCode: reply.statusCode
                     };
                 }
             }
         };
     }
 
-    // Development configuration - simple pretty logs
+    // Production / staging configuration - full JSON logs
     return {
         level: process.env.LOG_LEVEL || 'info',
-        transport: {
-            target: 'pino-pretty',
-            options: {
-                translateTime: 'HH:MM:ss',
-                ignore: 'pid,hostname', // hides JSON object
-                messageFormat: '{msg}',
-                singleLine: true,
-                colorize: true
-            } as PrettyOptions
-        },
-        serializers: {
-            req(request: FastifyRequest) {
+        messageKey: 'message',
+        formatters: {
+            level: (label) => {
                 return {
-                    method: request.method,
-                    url: request.url
-                };
-            },
-            res(reply: FastifyReply) {
-                return {
-                    statusCode: reply.statusCode
+                    severity: label.toUpperCase()
                 };
             }
         }
