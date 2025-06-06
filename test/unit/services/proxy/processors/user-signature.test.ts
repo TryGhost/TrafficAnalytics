@@ -65,31 +65,28 @@ describe('User Signature Processor', () => {
         });
     });
 
-    it('should skip if site_uuid is missing', async () => {
+    it('should throw error if site_uuid is missing', async () => {
         (request.body.payload as any).site_uuid = undefined;
 
-        await generateUserSignature(request);
+        await expect(generateUserSignature(request)).rejects.toThrow('Bad Request: site_uuid is required and must be a string');
 
         expect(userSignatureService.generateUserSignature).not.toHaveBeenCalled();
-        expect(request.body.payload.meta).toBeUndefined();
     });
 
-    it('should skip if site_uuid is not a string', async () => {
+    it('should throw error if site_uuid is not a string', async () => {
         (request.body.payload as any).site_uuid = 123;
 
-        await generateUserSignature(request);
+        await expect(generateUserSignature(request)).rejects.toThrow('Bad Request: site_uuid is required and must be a string');
 
         expect(userSignatureService.generateUserSignature).not.toHaveBeenCalled();
-        expect(request.body.payload.meta).toBeUndefined();
     });
 
-    it('should skip if IP address is missing', async () => {
+    it('should throw error if IP address is missing', async () => {
         (request as any).ip = undefined;
 
-        await generateUserSignature(request);
+        await expect(generateUserSignature(request)).rejects.toThrow('Bad Request: IP address is required');
 
         expect(userSignatureService.generateUserSignature).not.toHaveBeenCalled();
-        expect(request.body.payload.meta).toBeUndefined();
     });
 
     it('should use empty string if user agent is missing', async () => {
@@ -104,28 +101,27 @@ describe('User Signature Processor', () => {
         );
     });
 
-    it('should handle errors gracefully', async () => {
+    it('should log and re-throw errors from userSignatureService', async () => {
         const error = new Error('Test error');
         vi.mocked(userSignatureService.generateUserSignature).mockRejectedValue(error);
 
-        await generateUserSignature(request);
+        await expect(generateUserSignature(request)).rejects.toThrow('Test error');
 
         expect(request.log.error).toHaveBeenCalledWith('Failed to generate user signature:', error);
-        expect(request.body.payload.meta).toBeUndefined();
     });
 
-    it('should handle missing body gracefully', async () => {
+    it('should throw error if body is missing', async () => {
         (request.body as any) = undefined;
 
-        await generateUserSignature(request);
+        await expect(generateUserSignature(request)).rejects.toThrow('Bad Request: site_uuid is required and must be a string');
 
         expect(userSignatureService.generateUserSignature).not.toHaveBeenCalled();
     });
 
-    it('should handle missing payload gracefully', async () => {
+    it('should throw error if payload is missing', async () => {
         (request.body as any).payload = undefined;
 
-        await generateUserSignature(request);
+        await expect(generateUserSignature(request)).rejects.toThrow('Bad Request: site_uuid is required and must be a string');
 
         expect(userSignatureService.generateUserSignature).not.toHaveBeenCalled();
     });
