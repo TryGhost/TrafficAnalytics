@@ -16,6 +16,7 @@ export function getLoggerConfig(): LoggerOptions | false {
     if (process.env.NODE_ENV === 'production') {
         return {
             level: process.env.LOG_LEVEL || 'info',
+            messageKey: 'message',
             formatters: {
                 level: (label) => {
                     return {
