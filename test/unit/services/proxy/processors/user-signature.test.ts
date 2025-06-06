@@ -38,7 +38,7 @@ describe('User Signature Processor', () => {
         vi.mocked(userSignatureService.generateUserSignature).mockResolvedValue(mockUserSignature);
     });
 
-    it('should generate user signature and add it to meta', async () => {
+    it('should generate user signature and set it as session_id', async () => {
         await generateUserSignature(request);
 
         expect(userSignatureService.generateUserSignature).toHaveBeenCalledWith(
@@ -47,22 +47,15 @@ describe('User Signature Processor', () => {
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
         );
 
-        expect(request.body.payload.meta).toEqual({
-            userSignature: mockUserSignature
-        });
+        expect(request.body.session_id).toEqual(mockUserSignature);
     });
 
-    it('should add user signature to existing meta object', async () => {
-        request.body.payload.meta = {
-            existingField: 'value'
-        };
+    it('should overwrite existing session_id', async () => {
+        request.body.session_id = 'existing-session-id';
 
         await generateUserSignature(request);
 
-        expect(request.body.payload.meta).toEqual({
-            existingField: 'value',
-            userSignature: mockUserSignature
-        });
+        expect(request.body.session_id).toEqual(mockUserSignature);
     });
 
     it('should throw error if site_uuid is missing', async () => {
@@ -99,6 +92,19 @@ describe('User Signature Processor', () => {
             '192.168.1.1',
             ''
         );
+    });
+
+    it('should preserve existing meta object', async () => {
+        request.body.payload.meta = {
+            existingField: 'value'
+        };
+
+        await generateUserSignature(request);
+
+        expect(request.body.payload.meta).toEqual({
+            existingField: 'value'
+        });
+        expect(request.body.session_id).toEqual(mockUserSignature);
     });
 
     it('should log and re-throw errors from userSignatureService', async () => {

@@ -6,8 +6,7 @@ import {userSignatureService} from '../../user-signature';
  *
  * Extracts the site UUID from the request payload, IP address from the request,
  * and user agent from headers to generate a privacy-preserving user signature.
- * The signature is added to the request payload as meta.userSignature.
- * 
+ * The signature overwrites the session_id in the request payload.
  * Throws an error if site_uuid or IP address is missing/invalid.
  *
  * @param request - The Fastify request object
@@ -38,13 +37,8 @@ export async function generateUserSignature(request: FastifyRequest): Promise<vo
             userAgent
         );
 
-        // Ensure meta object exists
-        if (!request.body.payload.meta) {
-            request.body.payload.meta = {};
-        }
-
-        // Add user signature to payload
-        request.body.payload.meta.userSignature = userSignature;
+        // Overwrite session_id with user signature
+        request.body.session_id = userSignature;
     } catch (error) {
         // Log error and re-throw to fail the request
         request.log.error('Failed to generate user signature:', error);

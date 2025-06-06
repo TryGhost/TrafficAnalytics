@@ -30,12 +30,13 @@ type TargetRequest = {
     query: Record<string, string>;
     headers: Record<string, string>;
     body: {
+        session_id: string;
         payload: {
             browser: string;
             device: string;
             os: string;
-            meta: {
-                userSignature: string;
+            meta?: {
+                [key: string]: unknown;
             };
         };
     };
@@ -228,9 +229,8 @@ describe('Fastify App', () => {
                 .expect(202);
 
             const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.meta).toBeDefined();
-            expect(targetRequest.body.payload.meta.userSignature).toBeDefined();
-            expect(targetRequest.body.payload.meta.userSignature).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
+            expect(targetRequest.body.session_id).toBeDefined();
+            expect(targetRequest.body.session_id).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
         });
     });
 
