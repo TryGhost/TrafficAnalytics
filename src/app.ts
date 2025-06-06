@@ -74,7 +74,7 @@ app.addHook('onResponse', (request, reply, done) => {
             requestSize: String(request.raw.headers['content-length'] || 0),
             responseSize: String(reply.getHeader('content-length') || 0),
             status: reply.statusCode,
-            latency: `${reply.elapsedTime.toFixed(1)}ms`
+            latency: `${(reply.elapsedTime / 1000).toFixed(9)}s`
         }
     }, 'request completed');
     done();
