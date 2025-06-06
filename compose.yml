@@ -32,6 +32,7 @@ services:
     env_file:
       - .env
     environment:
+      - NODE_ENV=${NODE_ENV:-development}
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - FIRESTORE_PROJECT_ID=traffic-analytics-dev
     depends_on:
