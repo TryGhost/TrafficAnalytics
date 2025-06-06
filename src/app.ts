@@ -48,6 +48,17 @@ app.register(fastifyCors, {
 });
 
 app.addHook('onRequest', (request, _reply, done) => {
+    const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT;
+    const traceHeader = request.headers['x-cloud-trace-context'] as string;
+    if (traceHeader && PROJECT_ID) {
+        const traceId = traceHeader.split('/')[0];
+        const traceContext = {
+            'logging.googleapis.com/trace': `projects/${PROJECT_ID}/traces/${traceId}`
+        };
+
+        request.log = request.log.child(traceContext);
+    }
+
     request.log.info({
         httpRequest: {
             requestMethod: request.method,
