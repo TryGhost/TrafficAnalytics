@@ -55,11 +55,8 @@ app.addHook('onRequest', (request, _reply, done) => {
             userAgent: request.headers['user-agent'],
             remoteIp: request.ip,
             referer: request.headers.referer,
-            protocol: request.protocol,
-            httpVersion: request.raw.httpVersion,
-            remotePort: request.socket?.remotePort,
-            id: request.id,
-            requestSize: request.raw.headers['content-length']
+            protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
+            requestSize: String(request.raw.headers['content-length'] || 0)
         }
     }, 'incoming request');
     done();
@@ -73,14 +70,11 @@ app.addHook('onResponse', (request, reply, done) => {
             userAgent: request.headers['user-agent'],
             remoteIp: request.ip,
             referer: request.headers.referer,
-            protocol: request.protocol,
-            httpVersion: request.raw.httpVersion,
-            remotePort: request.socket?.remotePort,
-            id: request.id,
-            requestSize: request.raw.headers['content-length'],
-            responseSize: reply.getHeader('content-length'),
+            protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
+            requestSize: String(request.raw.headers['content-length'] || 0),
+            responseSize: String(reply.getHeader('content-length') || 0),
             status: reply.statusCode,
-            latency: reply.elapsedTime
+            latency: `${reply.elapsedTime.toFixed(1)}ms`
         }
     }, 'request completed');
     done();
