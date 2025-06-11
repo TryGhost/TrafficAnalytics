@@ -52,6 +52,7 @@ The service follows a modular architecture:
 - `LOG_LEVEL` - Logging level (default: info)
 - `SALT_STORE_TYPE` - Salt store implementation (default: memory)
 - `ENABLE_SALT_CLEANUP_SCHEDULER` - Enable automatic daily salt cleanup (default: true, set to 'false' to disable)
+- `TRUST_PROXY` - Enable trust proxy to resolve client IPs from X-Forwarded-For headers (default: true, set to 'false' to disable)
 
 ## Testing Approach
 
