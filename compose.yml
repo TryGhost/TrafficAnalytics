@@ -1,11 +1,9 @@
-name: traffic-analytics
-
 services:
   firestore:
     image: google/cloud-sdk:emulators
     command: ["/app/firestore-wrapper.sh"]
     ports:
-      - 8080:8080
+      - ${FIRESTORE_PORT:-8080}:8080
     volumes:
       - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
     environment:
@@ -25,7 +23,7 @@ services:
       dockerfile: Dockerfile
     command: ["yarn", "dev"]
     ports:
-      - 3000:3000
+      - ${ANALYTICS_PORT:-3000}:3000
     volumes:
       - .:/app
       - node_modules_volume:/app/node_modules

@@ -20,6 +20,56 @@ SALT_STORE_TYPE=memory  # Options: memory, firestore
 
 # Firestore Configuration (when SALT_STORE_TYPE=firestore)
 FIRESTORE_PROJECT_ID=traffic-analytics-dev
+
+# Multi-worktree Configuration (optional)
+COMPOSE_PROJECT_NAME=traffic-analytics-main  # Default project name
+ANALYTICS_PORT=3000                           # Analytics service port (default: 3000)  
+FIRESTORE_PORT=8080                          # Firestore emulator port (default: 8080)
+```
+
+## Multi-Worktree Development
+
+This project supports running multiple worktrees simultaneously using Docker Compose. Each worktree can run its own isolated development environment with unique ports and container names.
+
+### Setup
+
+1. **Create worktrees** as usual with git worktree
+2. **Configure each worktree** with a unique `.env` file:
+
+```bash
+# main worktree (.env) - uses defaults
+NODE_ENV=development
+
+# work worktree (.env)  
+NODE_ENV=development
+COMPOSE_PROJECT_NAME=traffic-analytics-work
+ANALYTICS_PORT=3001
+FIRESTORE_PORT=8081
+
+# scratch worktree (.env)
+NODE_ENV=development  
+COMPOSE_PROJECT_NAME=traffic-analytics-scratch
+ANALYTICS_PORT=3002
+FIRESTORE_PORT=8082
+```
+
+### Usage
+
+Each worktree runs completely isolated:
+- **Unique ports**: No conflicts between worktrees
+- **Isolated containers**: Auto-generated names like `traffic-analytics-work-analytics-service-1`
+- **Separate volumes**: Each worktree has its own `node_modules` volume
+- **Independent projects**: Services can run simultaneously
+
+```bash
+# Start development in any worktree
+cd /path/to/worktree
+docker compose up
+
+# Each worktree accessible on its configured port
+# main: http://localhost:3000
+# work: http://localhost:3001  
+# scratch: http://localhost:3002
 ```
 
 ## Develop
