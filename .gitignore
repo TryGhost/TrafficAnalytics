@@ -74,3 +74,5 @@ dist*
 
 # Traffic Analytics Custom
 .actsecrets
+
+scratch/
