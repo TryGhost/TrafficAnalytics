@@ -1,3 +1,4 @@
+name: traffic-analytics
 services:
   firestore:
     image: google/cloud-sdk:emulators
