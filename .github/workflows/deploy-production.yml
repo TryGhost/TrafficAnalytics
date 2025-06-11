@@ -1,0 +1,58 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version to deploy (e.g., v1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  GCP_PROJECT_ID: ghost-traffic-analytics
+  GCP_WORKFLOW_IDENTITY_PROVIDER: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
+  DOCKER_IMAGE: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [production]
+        region: [europe-west4]
+        include:
+          - region: europe-west4
+            region_name: netherlands
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.version }}
+
+      - name: Validate version format
+        run: |
+          if [[ ! "${{ inputs.version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version must be in format v1.2.3"
+            exit 1
+          fi
+
+      - name: Check if release exists
+        run: |
+          if ! git tag -l | grep -q "^${{ inputs.version }}$"; then
+            echo "Error: Release ${{ inputs.version }} does not exist"
+            exit 1
+          fi
+
+      - name: "Deploy (${{ matrix.environment }} | ${{ matrix.region }})"
+        uses: "./.github/actions/deploy-gcp-cloud-run"
+        with:
+          environment: ${{ matrix.environment }}
+          region: ${{ matrix.region }}
+          service: >-
+            ${{ contains(matrix.environment, 'staging') && 'stg' || 'prd' }}-${{ matrix.region_name }}-traffic-analytics
+          image: ${{ env.DOCKER_IMAGE }}:${{ inputs.version }}

@@ -55,6 +55,33 @@ Sometimes it's useful to test the full setup with Ghost pointing its tracker scr
 - `yarn lint` run eslint locally
 - `docker compose run --rm lint` or `yarn docker:lint` run eslint in docker compose
 
+## Deployment
+
+### Staging
+- **Automatic**: Merging to `main` branch automatically deploys to staging environment
+- **Manual**: Use "Run workflow" on the [Build & Deploy](../../actions/workflows/build.yml) action
+
+### Production
+
+#### Creating a Release
+1. Go to [Actions > Create Release](../../actions/workflows/release.yml)
+2. Click "Run workflow"
+3. Select the bump type: `patch`, `minor`, or `major`
+4. This will:
+   - Calculate the new version based on current package.json
+   - Create a release branch with the version bump
+   - Tag the release and create GitHub release
+   - Create PR to merge version bump back to main
+
+#### Deploying to Production
+1. Go to [Actions > Deploy to Production](../../actions/workflows/deploy-production.yml)
+2. Click "Run workflow"
+3. Enter the release version to deploy (e.g., `v1.2.3`)
+4. This deploys the specified release to production
+
+### Rollback
+- Use the [Rollback](../../actions/workflows/rollback.yml) workflow to rollback to a previous version
+
 # Copyright & License 
 
 Copyright (c) 2013-2025 Ghost Foundation - Released under the [MIT license](LICENSE).

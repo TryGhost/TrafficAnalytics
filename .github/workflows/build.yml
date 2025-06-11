@@ -81,12 +81,12 @@ jobs:
           done
 
   deploy:
-    name: Deploy
+    name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: build
     strategy:
       matrix:
-        environment: [staging, production]
+        environment: [staging]
         region: [europe-west4]
         include:
           - region: europe-west4

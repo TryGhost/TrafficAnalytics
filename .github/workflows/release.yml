@@ -1,0 +1,118 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump_type:
+        description: 'Version bump type'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get current version
+        id: current-version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "current=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Calculate new version
+        id: new-version
+        run: |
+          CURRENT_VERSION="${{ steps.current-version.outputs.current }}"
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          
+          case "${{ inputs.bump_type }}" in
+            "major")
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            "minor")
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            "patch")
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create release branch
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git checkout -b release/${{ steps.new-version.outputs.version }}
+
+      - name: Update package.json version
+        run: |
+          npm version ${{ steps.new-version.outputs.version }} --no-git-tag-version
+
+      - name: Commit version bump
+        run: |
+          git add package.json
+          git commit -m "Bump version to ${{ steps.new-version.outputs.version }}"
+
+      - name: Push release branch
+        run: |
+          git push origin release/${{ steps.new-version.outputs.version }}
+
+      - name: Create tag
+        run: |
+          git tag ${{ steps.new-version.outputs.tag }}
+          git push origin ${{ steps.new-version.outputs.tag }}
+
+      - name: Create GitHub release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.new-version.outputs.tag }}
+          release_name: Release ${{ steps.new-version.outputs.tag }}
+          body: |
+            Release ${{ steps.new-version.outputs.tag }}
+            
+            This release was created automatically from the release workflow.
+          draft: false
+          prerelease: false
+
+      - name: Create pull request to merge release back to main
+        uses: actions/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: release/${{ steps.new-version.outputs.version }}
+          base: main
+          title: "Release ${{ steps.new-version.outputs.tag }} - Merge back to main"
+          body: |
+            Automatic PR to merge release ${{ steps.new-version.outputs.tag }} back to main.
+            
+            This updates the version in package.json on the main branch.
+          commit-message: "Merge release ${{ steps.new-version.outputs.tag }} back to main"
