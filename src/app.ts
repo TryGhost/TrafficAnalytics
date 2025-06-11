@@ -37,7 +37,8 @@ function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
 
 const app = fastify({
     logger: getLoggerConfig(),
-    disableRequestLogging: true
+    disableRequestLogging: true,
+    trustProxy: process.env.TRUST_PROXY !== 'false' // defaults to true, can be disabled by setting to 'false'
 });
 
 // Register CORS plugin
