@@ -40,7 +40,7 @@
     "eslint-plugin-ghost": "3.4.3",
     "pino-pretty": "13.0.0",
     "supertest": "6.3.4",
-    "tsx": "4.19.4",
+    "tsx": "4.20.0",
     "typescript": "5.8.3",
     "vite": "6.3.5",
     "vite-plugin-node": "5.0.1",
