@@ -16,6 +16,20 @@ services:
       retries: 5
     stop_grace_period: 5s
 
+  pubsub:
+    image: google/cloud-sdk:emulators
+    command: ["gcloud", "beta", "emulators", "pubsub", "start", "--host-port=0.0.0.0:8085", "--project=traffic-analytics-dev"]
+    ports:
+      - ${PUBSUB_PORT:-8085}:8085
+    environment:
+      - PUBSUB_PROJECT_ID=traffic-analytics-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    stop_grace_period: 5s
+
   analytics-service:
     image: local/traffic-analytics:development
     pull_policy: never
@@ -34,8 +48,12 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - FIRESTORE_PROJECT_ID=traffic-analytics-dev
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_PROJECT_ID=traffic-analytics-dev
     depends_on:
       firestore:
+        condition: service_healthy
+      pubsub:
         condition: service_healthy
 
   test:
@@ -50,10 +68,14 @@ services:
     environment:
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - FIRESTORE_PROJECT_ID=traffic-analytics-dev
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_PROJECT_ID=traffic-analytics-dev
     tty: true
     profiles: [testing]
     depends_on:
       firestore:
+        condition: service_healthy
+      pubsub:
         condition: service_healthy
 
   lint:
