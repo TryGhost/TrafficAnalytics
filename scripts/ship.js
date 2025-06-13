@@ -139,7 +139,7 @@ async function main() {
     // 7. Commit the version bump
     console.log('💾 Committing version bump...');
     exec('git add package.json');
-    exec(`git commit -m "Bump version to ${newVersion}"`);
+    exec(`git commit -m "v${newVersion}"`);
 
     // 8. Push the branch
     console.log('⬆️  Pushing release branch...');
