@@ -143,7 +143,7 @@ jobs:
           - region: europe-west4
             region_name: netherlands
     # Skip production deployment if version hasn't changed
-    if: matrix.environment == 'staging' || needs.check-version-change.outputs.version-changed == 'true'
+    if: matrix.environment != 'production' || needs.check-version-change.outputs.version-changed == 'true'
     steps:
       - uses: actions/checkout@v4
 
