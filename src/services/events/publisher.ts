@@ -40,8 +40,9 @@ class EventPublisher {
 
             return messageId;
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             logger.error({
-                error: error.message,
+                error: errorMessage,
                 topic,
                 payload
             }, 'Failed to publish event');
