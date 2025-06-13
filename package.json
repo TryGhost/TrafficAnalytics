@@ -21,8 +21,8 @@
     "test:types": "tsc --noEmit",
     "test": "yarn test:types && yarn test:unit && yarn test:integration",
     "docker:test": "docker compose run --rm test",
-    "lint": "eslint src/ test/ --ext .js,.ts --cache",
-    "lint:fix": "eslint src/ test/ --ext .js,.ts --cache --fix",
+    "lint": "eslint src/ test/ scripts/ --ext .js,.ts --cache",
+    "lint:fix": "eslint src/ test/ scripts/ --ext .js,.ts --cache --fix",
     "docker:lint": "docker compose run --rm lint",
     "ship": "node scripts/ship.js"
   },
