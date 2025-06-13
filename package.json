@@ -25,7 +25,7 @@
     "lint:fix": "eslint src/ test/ --ext .js,.ts --cache --fix",
     "docker:lint": "docker compose run --rm lint",
     "preship": "yarn test",
-    "ship": "STATUS=$(git status --porcelain); echo $STATUS; if [ -z \"$STATUS\" ]; then yarn version && git push --follow-tags; fi"
+    "ship": "node scripts/ship.js"
   },
   "files": [
     "dist"
