@@ -19,14 +19,6 @@ function exec(command, options = {}) {
     }
 }
 
-function execSafe(command, options = {}) {
-    try {
-        return execSync(command, {encoding: 'utf8', stdio: 'pipe', ...options}).trim();
-    } catch (error) {
-        return null;
-    }
-}
-
 function getCurrentBranch() {
     return exec('git branch --show-current');
 }
@@ -107,17 +99,10 @@ async function main() {
     console.log('✅ On main branch');
 
     // 2. Ensure main is up to date
-    console.log('📡 Fetching latest changes...');
-    exec(`git fetch ${remoteName}`);
-  
-    // Ensure we have the remote main branch reference
-    if (!execSafe(`git rev-parse ${remoteName}/main`)) {
-    // If the remote branch reference doesn't exist, create it explicitly
-        exec(`git fetch ${remoteName} main:refs/remotes/${remoteName}/main`);
-    }
-  
+    console.log('📡 Checking latest changes...');
+    
     const localCommit = exec('git rev-parse HEAD');
-    const remoteCommit = exec(`git rev-parse ${remoteName}/main`);
+    const remoteCommit = exec(`git ls-remote ${remoteName} refs/heads/main`).split('\t')[0];
   
     if (localCommit !== remoteCommit) {
         console.error(`❌ Your main branch is not up to date with ${remoteName}/main`);
