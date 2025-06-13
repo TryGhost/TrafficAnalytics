@@ -19,14 +19,6 @@ function exec(command, options = {}) {
     }
 }
 
-function execSafe(command, options = {}) {
-    try {
-        return execSync(command, {encoding: 'utf8', stdio: 'pipe', ...options}).trim();
-    } catch (error) {
-        return null;
-    }
-}
-
 function getCurrentBranch() {
     return exec('git branch --show-current');
 }
