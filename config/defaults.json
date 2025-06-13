@@ -1,0 +1,10 @@
+{
+  "PORT": 3000,
+  "PROXY_TARGET": "http://localhost:3000/local-proxy",
+  "LOG_LEVEL": "info",
+  "NODE_ENV": "development",
+  "SALT_STORE_TYPE": "memory",
+  "ENABLE_SALT_CLEANUP_SCHEDULER": true,
+  "TRUST_PROXY": true,
+  "LOG_PROXY_REQUESTS": true
+}

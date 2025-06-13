@@ -1,18 +1,37 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
-import {createSaltStore, SaltStoreConfig} from '../../../../src/services/salt-store/SaltStoreFactory';
 import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltStore';
 import {FirestoreSaltStore} from '../../../../src/services/salt-store/FirestoreSaltStore';
 import type {ISaltStore} from '../../../../src/services/salt-store/ISaltStore';
 
+// Mock the config module
+vi.mock('@tryghost/config', () => ({
+    default: {
+        get: vi.fn()
+    }
+}));
+
+import {createSaltStore, SaltStoreConfig} from '../../../../src/services/salt-store/SaltStoreFactory';
+import config from '@tryghost/config';
+
+const mockConfig = vi.mocked(config);
+
 describe('SaltStoreFactory', () => {
     beforeEach(() => {
-        // Clear any environment variables for tests
-        vi.unstubAllEnvs();
+        // Reset all mocks before each test
+        vi.clearAllMocks();
+        // Set default config values
+        mockConfig.get.mockImplementation((key: string) => {
+            const defaults: Record<string, any> = {
+                SALT_STORE_TYPE: 'memory',
+                FIRESTORE_PROJECT_ID: undefined,
+                FIRESTORE_DATABASE_ID: undefined
+            };
+            return defaults[key];
+        });
     });
 
     afterEach(() => {
-        // Clean up after each test
-        vi.unstubAllEnvs();
+        vi.clearAllMocks();
     });
 
     describe('createSaltStore', () => {
@@ -26,39 +45,53 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should create a memory salt store with explicit memory config', () => {
-            const config: SaltStoreConfig = {type: 'memory'};
-            const store = createSaltStore(config);
+            const saltStoreConfig: SaltStoreConfig = {type: 'memory'};
+            const store = createSaltStore(saltStoreConfig);
 
             expect(store).toBeInstanceOf(MemorySaltStore);
         });
 
         it('should throw error when creating firestore store without projectId', () => {
-            // Ensure no environment variables are set
-            vi.stubEnv('FIRESTORE_PROJECT_ID', '');
-            vi.stubEnv('FIRESTORE_DATABASE_ID', '');
+            // Mock config to return undefined for FIRESTORE_PROJECT_ID
+            mockConfig.get.mockImplementation((key: string) => {
+                if (key === 'FIRESTORE_PROJECT_ID') {
+                    return undefined;
+                }
+                if (key === 'FIRESTORE_DATABASE_ID') {
+                    return undefined;
+                }
+                return undefined;
+            });
             
-            const config: SaltStoreConfig = {type: 'firestore', databaseId: 'test-db'};
+            const saltStoreConfig: SaltStoreConfig = {type: 'firestore', databaseId: 'test-db'};
             
-            expect(() => createSaltStore(config)).toThrow('Firestore project ID is required. Provide it via config.projectId or FIRESTORE_PROJECT_ID environment variable');
+            expect(() => createSaltStore(saltStoreConfig)).toThrow('Firestore project ID is required. Provide it via config.projectId or FIRESTORE_PROJECT_ID environment variable');
         });
 
         it('should throw error when creating firestore store without databaseId', () => {
-            // Ensure no environment variables are set
-            vi.stubEnv('FIRESTORE_PROJECT_ID', '');
-            vi.stubEnv('FIRESTORE_DATABASE_ID', '');
+            // Mock config to return undefined for FIRESTORE_DATABASE_ID
+            mockConfig.get.mockImplementation((key: string) => {
+                if (key === 'FIRESTORE_PROJECT_ID') {
+                    return undefined;
+                }
+                if (key === 'FIRESTORE_DATABASE_ID') {
+                    return undefined;
+                }
+                return undefined;
+            });
             
-            const config: SaltStoreConfig = {type: 'firestore', projectId: 'test-project'};
+            const saltStoreConfig: SaltStoreConfig = {type: 'firestore', projectId: 'test-project'};
             
-            expect(() => createSaltStore(config)).toThrow('Firestore database ID is required. Provide it via config.databaseId or FIRESTORE_DATABASE_ID environment variable');
+            expect(() => createSaltStore(saltStoreConfig)).toThrow('Firestore database ID is required. Provide it via config.databaseId or FIRESTORE_DATABASE_ID environment variable');
         });
 
         it('should create a firestore salt store with complete config', () => {
-            const config: SaltStoreConfig = {
+            const saltStoreConfig: SaltStoreConfig = {
                 type: 'firestore',
                 projectId: 'test-project',
                 databaseId: 'test-database'
             };
-            const store = createSaltStore(config);
+            const store = createSaltStore(saltStoreConfig);
 
             expect(store).toBeInstanceOf(FirestoreSaltStore);
             expect(store).toHaveProperty('get');
@@ -68,33 +101,43 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should create firestore store with custom project and collection', () => {
-            const config: SaltStoreConfig = {
+            const saltStoreConfig: SaltStoreConfig = {
                 type: 'firestore',
                 projectId: 'custom-project',
                 databaseId: 'custom-database',
                 collectionName: 'custom-salts'
             };
-            const store = createSaltStore(config);
+            const store = createSaltStore(saltStoreConfig);
 
             expect(store).toBeInstanceOf(FirestoreSaltStore);
         });
 
         it('should create firestore store with custom project, database and collection', () => {
-            const config: SaltStoreConfig = {
+            const saltStoreConfig: SaltStoreConfig = {
                 type: 'firestore',
                 projectId: 'custom-project',
                 databaseId: 'custom-database',
                 collectionName: 'custom-salts'
             };
-            const store = createSaltStore(config);
+            const store = createSaltStore(saltStoreConfig);
 
             expect(store).toBeInstanceOf(FirestoreSaltStore);
         });
 
         it('should create firestore store from environment variables', () => {
-            vi.stubEnv('SALT_STORE_TYPE', 'firestore');
-            vi.stubEnv('FIRESTORE_PROJECT_ID', 'env-project');
-            vi.stubEnv('FIRESTORE_DATABASE_ID', 'env-database');
+            // Mock config to return firestore configuration
+            mockConfig.get.mockImplementation((key: string) => {
+                if (key === 'SALT_STORE_TYPE') {
+                    return 'firestore';
+                }
+                if (key === 'FIRESTORE_PROJECT_ID') {
+                    return 'env-project';
+                }
+                if (key === 'FIRESTORE_DATABASE_ID') {
+                    return 'env-database';
+                }
+                return undefined;
+            });
             
             const store = createSaltStore();
 
@@ -102,25 +145,33 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should use environment variables when config values are not provided', () => {
-            vi.stubEnv('FIRESTORE_PROJECT_ID', 'env-project');
-            vi.stubEnv('FIRESTORE_DATABASE_ID', 'env-database');
+            // Mock config to return environment values
+            mockConfig.get.mockImplementation((key: string) => {
+                if (key === 'FIRESTORE_PROJECT_ID') {
+                    return 'env-project';
+                }
+                if (key === 'FIRESTORE_DATABASE_ID') {
+                    return 'env-database';
+                }
+                return undefined;
+            });
             
-            const config: SaltStoreConfig = {type: 'firestore'};
-            const store = createSaltStore(config);
+            const saltStoreConfig: SaltStoreConfig = {type: 'firestore'};
+            const store = createSaltStore(saltStoreConfig);
 
             expect(store).toBeInstanceOf(FirestoreSaltStore);
         });
 
         it('should throw error for file store type', () => {
-            const config: SaltStoreConfig = {type: 'file'};
+            const saltStoreConfig: SaltStoreConfig = {type: 'file'};
 
-            expect(() => createSaltStore(config)).toThrow('File salt store is not implemented yet');
+            expect(() => createSaltStore(saltStoreConfig)).toThrow('File salt store is not implemented yet');
         });
 
         it('should throw error for unknown store type', () => {
-            const config = {type: 'unknown' as 'memory'};
+            const saltStoreConfig = {type: 'unknown' as 'memory'};
 
-            expect(() => createSaltStore(config)).toThrow('Unknown salt store type: unknown');
+            expect(() => createSaltStore(saltStoreConfig)).toThrow('Unknown salt store type: unknown');
         });
 
         it('should handle undefined config gracefully', () => {
@@ -130,8 +181,8 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should handle empty config object', () => {
-            const config = {} as SaltStoreConfig;
-            const store = createSaltStore(config);
+            const saltStoreConfig = {} as SaltStoreConfig;
+            const store = createSaltStore(saltStoreConfig);
 
             expect(store).toBeInstanceOf(MemorySaltStore);
         });

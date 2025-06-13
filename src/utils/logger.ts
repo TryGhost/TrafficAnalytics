@@ -2,20 +2,21 @@ import pino from 'pino';
 import type {LoggerOptions} from 'pino';
 import type {PrettyOptions} from 'pino-pretty';
 import type {FastifyRequest, FastifyReply} from 'fastify';
+import config from '@tryghost/config';
 
 /**
  * Get logger configuration based on environment
  */
 export function getLoggerConfig(): LoggerOptions | false {
     // Disable logging in test environment
-    if (process.env.NODE_ENV === 'testing') {
+    if (config.get('NODE_ENV') as string === 'testing') {
         return false;
     }
 
     // Development configuration - simple pretty logs
-    if (process.env.NODE_ENV === 'development') {
+    if (config.get('NODE_ENV') as string === 'development') {
         return {
-            level: process.env.LOG_LEVEL || 'info',
+            level: config.get('LOG_LEVEL') as string,
             transport: {
                 target: 'pino-pretty',
                 options: {

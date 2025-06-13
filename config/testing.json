@@ -1,0 +1,4 @@
+{
+  "NODE_ENV": "testing",
+  "ENABLE_SALT_CLEANUP_SCHEDULER": false
+}
