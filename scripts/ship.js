@@ -158,7 +158,7 @@ async function main() {
 
     // 8. Push the branch
     console.log('⬆️  Pushing release branch...');
-    exec(`git push origin ${branchName}`);
+    exec(`git push ${remoteName} ${branchName}`);
 
     // 9. Switch back to main
     exec('git checkout main');
