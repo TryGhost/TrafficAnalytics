@@ -14,6 +14,19 @@ services:
       timeout: 3s
       retries: 5
 
+  pubsub:
+    image: google/cloud-sdk:emulators
+    command: ["gcloud", "beta", "emulators", "pubsub", "start", "--host-port=0.0.0.0:8085", "--project=traffic-analytics-ci"]
+    ports:
+      - 8085:8085
+    environment:
+      - PUBSUB_PROJECT_ID=traffic-analytics-ci
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   lint:
     image: ${DOCKER_IMAGE}
     command: ["yarn", "lint"]
@@ -27,6 +40,10 @@ services:
       - NODE_ENV=testing
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - FIRESTORE_PROJECT_ID=traffic-analytics-ci
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_PROJECT_ID=traffic-analytics-ci
     depends_on:
       firestore:
+        condition: service_healthy
+      pubsub:
         condition: service_healthy
