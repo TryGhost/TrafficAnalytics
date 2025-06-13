@@ -105,6 +105,15 @@ docker compose up
 # scratch: http://localhost:3002
 ```
 
+## Deployment
+
+Merging to `main` automatically deploys to staging. Production deployments only happen when the version in `package.json` changes.
+
+To ship to production:
+1. `yarn ship` - creates a release branch with version bump
+2. Create PR using the provided link
+3. Merge the PR - this triggers production deployment
+
 # Copyright & License 
 
 Copyright (c) 2013-2025 Ghost Foundation - Released under the [MIT license](LICENSE).
