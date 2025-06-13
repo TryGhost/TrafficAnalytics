@@ -14,7 +14,7 @@ export async function processRequest(request: FastifyRequest, reply: FastifyRepl
     try {
         // Publish raw event data before enrichment (if enabled)
         if (process.env.ENABLE_PUBSUB_PUBLISHING === 'true') {
-            const topicName = process.env.PUBSUB_TOPIC_NAME;
+            const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW;
             if (topicName) {
                 const rawEventData = {
                     body: JSON.parse(JSON.stringify(request.body)),

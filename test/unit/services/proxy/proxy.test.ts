@@ -144,7 +144,7 @@ describe('Proxy Service - processRequest', () => {
 
     it('should not publish to Pub/Sub when feature flag is disabled', async () => {
         process.env.ENABLE_PUBSUB_PUBLISHING = 'false';
-        process.env.PUBSUB_TOPIC_NAME = 'test-topic';
+        process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'test-topic';
 
         await processRequest(request, reply);
 
@@ -153,7 +153,7 @@ describe('Proxy Service - processRequest', () => {
 
     it('should publish to Pub/Sub when feature flag is enabled', async () => {
         process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-        process.env.PUBSUB_TOPIC_NAME = 'test-topic';
+        process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'test-topic';
 
         await processRequest(request, reply);
 
@@ -170,7 +170,7 @@ describe('Proxy Service - processRequest', () => {
 
     it('should handle Pub/Sub errors and continue with direct mode', async () => {
         process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-        process.env.PUBSUB_TOPIC_NAME = 'test-topic';
+        process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'test-topic';
         
         vi.mocked(publishEvent).mockRejectedValue(new Error('Pub/Sub failed'));
 

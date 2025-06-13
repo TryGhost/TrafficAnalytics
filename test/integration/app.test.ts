@@ -376,7 +376,7 @@ describe('Fastify App', () => {
 
         it('should publish to PubSub when feature flag is enabled', async function () {
             process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-            process.env.PUBSUB_TOPIC_NAME = 'test-topic';
+            process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'test-topic';
             vi.clearAllMocks(); // Clear previous calls
 
             await request(proxyServer)
@@ -396,7 +396,7 @@ describe('Fastify App', () => {
             // Verify PubSub was called with topic name and raw event data
             const pubsubCall = vi.mocked(publishEvent).mock.calls[0];
             const [topicName, rawEventData] = pubsubCall;
-            expect(topicName).toBe(process.env.PUBSUB_TOPIC_NAME);
+            expect(topicName).toBe(process.env.PUBSUB_TOPIC_PAGE_HITS_RAW);
             expect((rawEventData as any).body).toEqual(eventPayload);
             expect((rawEventData as any).query).toEqual({token: 'abc123', name: 'test'});
             expect((rawEventData as any).headers['user-agent']).toBe('Mozilla/5.0 Test Browser');
@@ -421,7 +421,7 @@ describe('Fastify App', () => {
 
         it('should continue direct mode even if PubSub publishing fails', async function () {
             process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-            process.env.PUBSUB_TOPIC_NAME = 'test-topic';
+            process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'test-topic';
             
             // Make PubSub publishing fail on both attempts
             vi.mocked(publishEvent).mockRejectedValue(new Error('PubSub connection failed'));
@@ -443,7 +443,7 @@ describe('Fastify App', () => {
 
         it('should publish raw event data without enrichment to PubSub', async function () {
             process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-            process.env.PUBSUB_TOPIC_NAME = 'test-topic';
+            process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'test-topic';
             vi.clearAllMocks(); // Clear previous calls
 
             const testPayload = {
