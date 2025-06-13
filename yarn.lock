@@ -373,7 +373,7 @@
   resolved "https://registry.yarnpkg.com/@google-cloud/promisify/-/promisify-5.0.0.tgz#94e44ba4e5ea410d3c82a03fcb37ca34dbc5d1d5"
   integrity sha512-N8qS6dlORGHwk7WjGXKOSsLjIjNINCPicsOX6gyyLiYk7mq3MtII96NZ9N2ahwA2vnkLmZODOIH9rlNniYWvCQ==
 
-"@google-cloud/pubsub@^5.1.0":
+"@google-cloud/pubsub@5.1.0":
   version "5.1.0"
   resolved "https://registry.yarnpkg.com/@google-cloud/pubsub/-/pubsub-5.1.0.tgz#d5e65400375df6ecd1a61f66eb0ff24f4c1549d7"
   integrity sha512-C98EM8+ThNHcfH75U1tIJhBN9WYorBuu3zACuctRhK3fG/bBmUBXVyH4B4PitQFreZX/qpPBnHDi8gnqzzsdkQ==
