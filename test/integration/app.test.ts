@@ -1,4 +1,4 @@
-import {describe, it, expect, beforeEach, beforeAll, afterAll, vi} from 'vitest';
+import {describe, it, expect, beforeEach, beforeAll, afterAll, afterEach, vi} from 'vitest';
 import request, {Response} from 'supertest';
 import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
@@ -11,8 +11,14 @@ vi.mock('../../src/services/user-signature', () => ({
     }
 }));
 
-// Import the mocked service
+// Mock the PubSub publisher service
+vi.mock('../../src/services/pubsub', () => ({
+    publishRawEventToPubSub: vi.fn().mockResolvedValue(undefined)
+}));
+
+// Import the mocked services
 import {userSignatureService} from '../../src/services/user-signature';
+import {publishRawEventToPubSub} from '../../src/services/pubsub';
 
 const eventPayload = {
     timestamp: '2025-04-14T22:16:06.095Z',
@@ -330,6 +336,145 @@ describe('Fastify App', () => {
             // Verify the IP is not empty
             const callArgs = vi.mocked(userSignatureService.generateUserSignature).mock.calls[0];
             expect(callArgs[1]).toBeTruthy();
+        });
+    });
+
+    describe('PubSub Integration', function () {
+        let originalEnv: string | undefined;
+
+        beforeEach(() => {
+            // Store original environment variable
+            originalEnv = process.env.ENABLE_PUBSUB_PUBLISHING;
+        });
+
+        afterEach(() => {
+            // Restore original environment variable
+            if (originalEnv === undefined) {
+                delete process.env.ENABLE_PUBSUB_PUBLISHING;
+            } else {
+                process.env.ENABLE_PUBSUB_PUBLISHING = originalEnv;
+            }
+        });
+
+        it('should not publish to PubSub when feature flag is disabled', async function () {
+            process.env.ENABLE_PUBSUB_PUBLISHING = 'false';
+            vi.clearAllMocks(); // Clear previous calls
+
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .send(eventPayload)
+                .expect(202);
+
+            // Verify direct mode still works
+            expect(targetRequests.length).toBe(1);
+            expect(targetRequests[0].method).toBe('POST');
+
+            // Verify PubSub publishing was NOT called
+            expect(vi.mocked(publishRawEventToPubSub)).not.toHaveBeenCalled();
+        });
+
+        it('should publish to PubSub when feature flag is enabled', async function () {
+            process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
+            vi.clearAllMocks(); // Clear previous calls
+
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                .send(eventPayload)
+                .expect(202);
+
+            // Verify direct mode still works
+            expect(targetRequests.length).toBe(1);
+            expect(targetRequests[0].method).toBe('POST');
+
+            // Verify PubSub publishing was called
+            expect(vi.mocked(publishRawEventToPubSub)).toHaveBeenCalledOnce();
+
+            // Verify PubSub was called with the raw request data
+            const pubsubCall = vi.mocked(publishRawEventToPubSub).mock.calls[0];
+            const pubsubRequest = pubsubCall[0];
+            expect(pubsubRequest.body).toEqual(eventPayload);
+            expect(pubsubRequest.query).toEqual({token: 'abc123', name: 'test'});
+            expect(pubsubRequest.headers['user-agent']).toBe('Mozilla/5.0 Test Browser');
+        });
+
+        it('should not publish to PubSub when feature flag is undefined', async function () {
+            delete process.env.ENABLE_PUBSUB_PUBLISHING;
+            vi.clearAllMocks(); // Clear previous calls
+
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .send(eventPayload)
+                .expect(202);
+
+            // Verify direct mode still works
+            expect(targetRequests.length).toBe(1);
+
+            // Verify PubSub publishing was NOT called
+            expect(vi.mocked(publishRawEventToPubSub)).not.toHaveBeenCalled();
+        });
+
+        it('should continue direct mode even if PubSub publishing fails', async function () {
+            process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
+            
+            // Make PubSub publishing fail on both attempts
+            vi.mocked(publishRawEventToPubSub).mockRejectedValue(new Error('PubSub connection failed'));
+            vi.clearAllMocks(); // Clear previous calls - but keep the rejection
+
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .send(eventPayload)
+                .expect(202);
+
+            // Verify direct mode still works despite PubSub failure
+            expect(targetRequests.length).toBe(1);
+            expect(targetRequests[0].method).toBe('POST');
+
+            // Verify PubSub publishing was attempted twice (original + retry)
+            expect(vi.mocked(publishRawEventToPubSub)).toHaveBeenCalledTimes(2);
+        });
+
+        it('should publish raw event data without enrichment to PubSub', async function () {
+            process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
+            vi.clearAllMocks(); // Clear previous calls
+
+            const testPayload = {
+                ...eventPayload,
+                payload: {
+                    ...eventPayload.payload
+                    // These should NOT be in the PubSub data initially
+                    // (they get added during enrichment AFTER PubSub publishing)
+                }
+            };
+
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'test123', name: 'pubsub_test'})
+                .set('User-Agent', 'Mozilla/5.0 PubSub Test')
+                .set('X-Forwarded-For', '203.0.113.42')
+                .send(testPayload)
+                .expect(202);
+
+            // Verify direct mode received enriched data
+            expect(targetRequests.length).toBe(1);
+            const targetRequest = targetRequests[0];
+            expect(targetRequest.body.payload.os).toBeDefined(); // Should be enriched
+            expect(targetRequest.body.payload.browser).toBeDefined(); // Should be enriched
+
+            // Verify PubSub was called (could be once or twice depending on success/retry)
+            expect(vi.mocked(publishRawEventToPubSub)).toHaveBeenCalled();
+            const pubsubCall = vi.mocked(publishRawEventToPubSub).mock.calls[0];
+            const pubsubRequest = pubsubCall[0];
+            
+            // PubSub should get the original payload without enrichment fields
+            expect(pubsubRequest.body.payload).toEqual(testPayload.payload);
+            expect(pubsubRequest.query).toEqual({token: 'test123', name: 'pubsub_test'});
+            expect(pubsubRequest.headers['user-agent']).toBe('Mozilla/5.0 PubSub Test');
+            expect(pubsubRequest.ip).toBe('203.0.113.42'); // From X-Forwarded-For
         });
     });
 });
