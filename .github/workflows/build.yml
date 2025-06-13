@@ -142,12 +142,12 @@ jobs:
         include:
           - region: europe-west4
             region_name: netherlands
-    # Skip production deployment if version hasn't changed
-    if: matrix.environment != 'production' || needs.check-version-change.outputs.version-changed == 'true'
     steps:
       - uses: actions/checkout@v4
 
       - name: "Deploy (${{ matrix.environment }} | ${{ matrix.region }})"
+        # Skip production deployment if version hasn't changed
+        if: matrix.environment != 'production' || needs.check-version-change.outputs.version-changed == 'true'
         uses: "./.github/actions/deploy-gcp-cloud-run"
         with:
           environment: ${{ matrix.environment }}
