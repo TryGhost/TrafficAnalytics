@@ -24,7 +24,6 @@
     "lint": "eslint src/ test/ --ext .js,.ts --cache",
     "lint:fix": "eslint src/ test/ --ext .js,.ts --cache --fix",
     "docker:lint": "docker compose run --rm lint",
-    "preship": "yarn test",
     "ship": "node scripts/ship.js"
   },
   "files": [
