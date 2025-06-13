@@ -1,6 +1,7 @@
 import type {ISaltStore} from './ISaltStore';
 import {MemorySaltStore} from './MemorySaltStore';
 import {FirestoreSaltStore} from './FirestoreSaltStore';
+import config from '@tryghost/config';
 
 export type SaltStoreType = 'memory' | 'file' | 'firestore';
 
@@ -12,15 +13,15 @@ export type SaltStoreConfig = {
     collectionName?: string;
 };
 
-export function createSaltStore(config?: SaltStoreConfig): ISaltStore {
-    const storeType = config?.type || (process.env.SALT_STORE_TYPE as SaltStoreType) || 'memory';
+export function createSaltStore(saltStoreConfig?: SaltStoreConfig): ISaltStore {
+    const storeType = saltStoreConfig?.type || (config.get('SALT_STORE_TYPE') as string as SaltStoreType);
 
     switch (storeType) {
     case 'memory':
         return new MemorySaltStore();
     case 'firestore': {
-        const projectId = config?.projectId || process.env.FIRESTORE_PROJECT_ID;
-        const databaseId = config?.databaseId || process.env.FIRESTORE_DATABASE_ID;
+        const projectId = saltStoreConfig?.projectId || config.get('FIRESTORE_PROJECT_ID') as string;
+        const databaseId = saltStoreConfig?.databaseId || config.get('FIRESTORE_DATABASE_ID') as string;
         
         if (!projectId) {
             throw new Error('Firestore project ID is required. Provide it via config.projectId or FIRESTORE_PROJECT_ID environment variable');
@@ -30,7 +31,7 @@ export function createSaltStore(config?: SaltStoreConfig): ISaltStore {
             throw new Error('Firestore database ID is required. Provide it via config.databaseId or FIRESTORE_DATABASE_ID environment variable');
         }
         
-        return new FirestoreSaltStore(projectId, databaseId, config?.collectionName);
+        return new FirestoreSaltStore(projectId, databaseId, saltStoreConfig?.collectionName);
     }
     case 'file':
         throw new Error('File salt store is not implemented yet');
