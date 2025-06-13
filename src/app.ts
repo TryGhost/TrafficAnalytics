@@ -93,7 +93,6 @@ app.addHook('onResponse', (request, reply, done) => {
 });
 
 app.register(fastifyHttpProxy, getProxyConfig('/tb/web_analytics'));
-app.register(fastifyHttpProxy, getProxyConfig('/.ghost/analytics/tb/web_analytics'));
 
 // Routes
 app.get('/', async () => {
