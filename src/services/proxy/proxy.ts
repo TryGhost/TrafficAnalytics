@@ -3,7 +3,7 @@ import * as validators from './validators';
 import {parseReferrer} from './processors/url-referrer';
 import {parseUserAgent} from './processors/parse-user-agent';
 import {generateUserSignature} from './processors/user-signature';
-import {publishRawEventToPubSub} from '../pubsub';
+import {publishEvent} from '../pubsub';
 
 // Accepts a request object
 // Does some processing — user agent parsing, geoip lookup, etc.
@@ -12,35 +12,29 @@ import {publishRawEventToPubSub} from '../pubsub';
 // Eventually will be called on each request pulled from the queue
 export async function processRequest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
-        // NEW: Capture RAW event data BEFORE any enrichment
+        // Publish raw event data before enrichment (if enabled)
         if (process.env.ENABLE_PUBSUB_PUBLISHING === 'true') {
-            // Create a deep copy of the request data before any modifications
-            const rawRequestData = {
-                body: JSON.parse(JSON.stringify(request.body)),
-                query: {...request.query},
-                headers: {
-                    'user-agent': request.headers['user-agent'],
-                    referer: request.headers.referer
-                },
-                ip: request.ip
-            };
-            
-            // Wait-and-retry pattern for better reliability
-            try {
-                await publishRawEventToPubSub(rawRequestData as FastifyRequest);
-            } catch (error) {
-                // Retry once, then log and continue
+            const topicName = process.env.PUBSUB_TOPIC_NAME;
+            if (topicName) {
+                const rawEventData = {
+                    body: JSON.parse(JSON.stringify(request.body)),
+                    query: {...request.query},
+                    headers: {
+                        'user-agent': request.headers['user-agent'],
+                        referer: request.headers.referer
+                    },
+                    ip: request.ip
+                };
+
                 try {
-                    await publishRawEventToPubSub(rawRequestData as FastifyRequest);
-                    request.log.warn('Pub/Sub publishing succeeded on retry');
-                } catch (retryError) {
+                    await publishEvent(topicName, rawEventData);
+                } catch (error) {
                     request.log.error({
-                        originalError: error,
-                        retryError: retryError,
+                        error: error,
                         eventId: request.body.session_id,
                         timestamp: request.body.timestamp
                     }, 'Pub/Sub publishing failed after retry');
-                    // Don't fail the request - direct mode continues
+                    // Continue with direct mode regardless of Pub/Sub failure
                 }
             }
         }

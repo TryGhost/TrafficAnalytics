@@ -1,142 +1,89 @@
-import {describe, it, expect, beforeEach, vi} from 'vitest';
-import {publishRawEventToPubSub, setPubSubClient} from '../../../../src/services/pubsub/publisher';
-import {FastifyRequest} from '../../../../src/types';
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
+import {publishEvent, setPubSubClient} from '../../../../src/services/pubsub/publisher';
 
-// Mock the PubSub client
+// Mock @google-cloud/pubsub
 const mockPublishMessage = vi.fn();
 const mockTopic = vi.fn(() => ({
     publishMessage: mockPublishMessage
 }));
 const mockPubSubClient = {
     topic: mockTopic
-} as any;
+};
 
-const mockRequest = {
-    body: {
-        timestamp: '2025-04-14T22:16:06.095Z',
-        action: 'page_hit',
-        version: '1',
-        session_id: '9017be4c-3065-484b-b117-9719ad1e3977',
-        payload: {
-            user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-            locale: 'en-US',
-            location: 'US',
-            referrer: null,
-            pathname: '/',
-            href: 'https://www.example.com/',
-            site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
-            post_uuid: 'undefined',
-            post_type: 'post',
-            member_uuid: 'undefined',
-            member_status: 'undefined'
-        }
-    },
-    query: {
-        token: 'abc123',
-        name: 'test'
-    },
-    headers: {
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        referer: 'https://www.example.com/previous-page'
-    },
-    ip: '192.168.1.100'
-} as unknown as FastifyRequest;
+vi.mock('@google-cloud/pubsub', () => ({
+    PubSub: vi.fn(() => mockPubSubClient)
+}));
 
 describe('PubSub Publisher', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        process.env.PUBSUB_TOPIC_NAME = 'test-topic';
-        setPubSubClient(mockPubSubClient);
+        setPubSubClient(null); // Reset client
+        mockPublishMessage.mockResolvedValue(undefined);
     });
 
-    it('should publish raw event data to PubSub topic', async () => {
-        await publishRawEventToPubSub(mockRequest);
+    afterEach(() => {
+        setPubSubClient(null); // Clean up
+    });
 
-        expect(mockTopic).toHaveBeenCalledWith('test-topic');
-        expect(mockPublishMessage).toHaveBeenCalledOnce();
+    describe('publishEvent', () => {
+        const topicName = 'test-topic';
+        const payload = {
+            body: {action: 'page_hit', session_id: 'test-123'},
+            query: {token: 'abc'},
+            headers: {'user-agent': 'test-browser'},
+            ip: '192.168.1.1'
+        };
 
-        const publishedData = mockPublishMessage.mock.calls[0][0];
-        const messageData = JSON.parse(publishedData.data.toString());
+        it('should publish event successfully on first attempt', async () => {
+            await publishEvent(topicName, payload);
 
-        expect(messageData).toEqual({
-            timestamp: '2025-04-14T22:16:06.095Z',
-            action: 'page_hit',
-            version: '1',
-            session_id: '9017be4c-3065-484b-b117-9719ad1e3977',
-            payload: mockRequest.body.payload,
-            query: {
-                token: 'abc123',
-                name: 'test'
-            },
-            headers: {
-                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-                referer: 'https://www.example.com/previous-page'
-            },
-            ip: '192.168.1.100'
+            expect(mockTopic).toHaveBeenCalledWith(topicName);
+            expect(mockPublishMessage).toHaveBeenCalledOnce();
+            expect(mockPublishMessage).toHaveBeenCalledWith({
+                data: Buffer.from(JSON.stringify(payload))
+            });
         });
-    });
 
-    it('should throw error when PUBSUB_TOPIC_NAME is not set', async () => {
-        delete process.env.PUBSUB_TOPIC_NAME;
+        it('should retry once on failure and succeed', async () => {
+            mockPublishMessage
+                .mockRejectedValueOnce(new Error('Network error'))
+                .mockResolvedValueOnce(undefined);
 
-        await expect(publishRawEventToPubSub(mockRequest)).rejects.toThrow(
-            'PUBSUB_TOPIC_NAME environment variable is required'
-        );
-    });
+            await publishEvent(topicName, payload);
 
-    it('should publish raw payload without enrichment', async () => {
-        // Simulate a request with enriched data that should NOT be published
-        const enrichedRequest = {
-            ...mockRequest,
-            body: {
-                ...mockRequest.body,
-                payload: {
-                    ...mockRequest.body.payload,
-                    os: 'macos',
-                    browser: 'chrome',
-                    device: 'desktop'
-                }
-            }
-        };
-
-        await publishRawEventToPubSub(enrichedRequest);
-
-        const publishedData = mockPublishMessage.mock.calls[0][0];
-        const messageData = JSON.parse(publishedData.data.toString());
-
-        // Should include the enriched data since we're capturing whatever is in the request
-        // at the time of publishing (this test verifies current behavior)
-        expect(messageData.payload).toEqual(enrichedRequest.body.payload);
-    });
-
-    it('should handle missing headers gracefully', async () => {
-        const requestWithoutHeaders = {
-            ...mockRequest,
-            headers: {}
-        };
-
-        await publishRawEventToPubSub(requestWithoutHeaders);
-
-        const publishedData = mockPublishMessage.mock.calls[0][0];
-        const messageData = JSON.parse(publishedData.data.toString());
-
-        expect(messageData.headers).toEqual({
-            'user-agent': undefined,
-            referer: undefined
+            expect(mockPublishMessage).toHaveBeenCalledTimes(2);
+            expect(mockPublishMessage).toHaveBeenCalledWith({
+                data: Buffer.from(JSON.stringify(payload))
+            });
         });
-    });
 
-    it('should handle empty query parameters', async () => {
-        const requestWithoutQuery = {
-            ...mockRequest,
-            query: {}
-        };
+        it('should throw error when both attempts fail', async () => {
+            const error1 = new Error('Network error');
+            const error2 = new Error('Still failing');
+            
+            mockPublishMessage
+                .mockRejectedValueOnce(error1)
+                .mockRejectedValueOnce(error2);
 
-        await publishRawEventToPubSub(requestWithoutQuery);
+            await expect(publishEvent(topicName, payload)).rejects.toThrow('Still failing');
+            expect(mockPublishMessage).toHaveBeenCalledTimes(2);
+        });
 
-        const publishedData = mockPublishMessage.mock.calls[0][0];
-        const messageData = JSON.parse(publishedData.data.toString());
+        it('should handle complex payload data correctly', async () => {
+            const complexPayload = {
+                nested: {
+                    data: ['array', 'values'],
+                    number: 42,
+                    boolean: true
+                },
+                timestamp: '2025-01-06T20:00:00.000Z'
+            };
 
-        expect(messageData.query).toEqual({});
+            await publishEvent(topicName, complexPayload);
+
+            expect(mockPublishMessage).toHaveBeenCalledWith({
+                data: Buffer.from(JSON.stringify(complexPayload))
+            });
+        });
     });
 });

@@ -16,13 +16,13 @@ vi.mock('../../../../src/services/proxy/processors/user-signature', () => ({
 }));
 
 vi.mock('../../../../src/services/pubsub', () => ({
-    publishRawEventToPubSub: vi.fn()
+    publishEvent: vi.fn()
 }));
 
 import {parseUserAgent} from '../../../../src/services/proxy/processors/parse-user-agent';
 import {parseReferrer} from '../../../../src/services/proxy/processors/url-referrer';
 import {generateUserSignature} from '../../../../src/services/proxy/processors/user-signature';
-import {publishRawEventToPubSub} from '../../../../src/services/pubsub';
+import {publishEvent} from '../../../../src/services/pubsub';
 
 describe('Proxy Service - processRequest', () => {
     let request: FastifyRequest;
@@ -79,7 +79,7 @@ describe('Proxy Service - processRequest', () => {
         vi.mocked(parseUserAgent).mockImplementation(() => {});
         vi.mocked(parseReferrer).mockImplementation(() => {});
         vi.mocked(generateUserSignature).mockResolvedValue(undefined);
-        vi.mocked(publishRawEventToPubSub).mockResolvedValue(undefined);
+        vi.mocked(publishEvent).mockResolvedValue(undefined);
     });
 
     afterEach(() => {
@@ -91,96 +91,16 @@ describe('Proxy Service - processRequest', () => {
         }
     });
 
-    it('should process request with existing enrichment flow when PubSub is disabled', async () => {
-        process.env.ENABLE_PUBSUB_PUBLISHING = 'false';
-
+    it('should process request with enrichment flow', async () => {
         await processRequest(request, reply);
 
         // Verify existing processors are called
         expect(parseUserAgent).toHaveBeenCalledWith(request);
         expect(parseReferrer).toHaveBeenCalledWith(request);
         expect(generateUserSignature).toHaveBeenCalledWith(request);
-
-        // Verify PubSub publishing is NOT called
-        expect(publishRawEventToPubSub).not.toHaveBeenCalled();
-    });
-
-    it('should publish raw event to PubSub when feature flag is enabled', async () => {
-        process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-
-        await processRequest(request, reply);
-
-        // Verify PubSub publishing is called with raw data copy
-        expect(publishRawEventToPubSub).toHaveBeenCalledWith(
-            expect.objectContaining({
-                body: request.body,
-                query: request.query,
-                headers: expect.objectContaining({
-                    'user-agent': request.headers['user-agent']
-                }),
-                ip: request.ip
-            })
-        );
-
-        // Verify existing processors are still called
-        expect(parseUserAgent).toHaveBeenCalledWith(request);
-        expect(parseReferrer).toHaveBeenCalledWith(request);
-        expect(generateUserSignature).toHaveBeenCalledWith(request);
-    });
-
-    it('should not publish to PubSub when feature flag is undefined', async () => {
-        delete process.env.ENABLE_PUBSUB_PUBLISHING;
-
-        await processRequest(request, reply);
-
-        // Verify PubSub publishing is NOT called
-        expect(publishRawEventToPubSub).not.toHaveBeenCalled();
-
-        // Verify existing processors are still called
-        expect(parseUserAgent).toHaveBeenCalledWith(request);
-        expect(parseReferrer).toHaveBeenCalledWith(request);
-        expect(generateUserSignature).toHaveBeenCalledWith(request);
-    });
-
-    it('should continue processing even if PubSub publishing fails', async () => {
-        process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-        
-        // Make PubSub publishing fail on both attempts
-        const pubsubError = new Error('PubSub connection failed');
-        vi.mocked(publishRawEventToPubSub).mockRejectedValue(pubsubError);
-
-        await processRequest(request, reply);
-
-        // Verify PubSub publishing was attempted twice (original + retry)
-        expect(publishRawEventToPubSub).toHaveBeenCalledTimes(2);
-        expect(publishRawEventToPubSub).toHaveBeenCalledWith(
-            expect.objectContaining({
-                body: request.body,
-                query: request.query,
-                headers: expect.objectContaining({
-                    'user-agent': request.headers['user-agent']
-                }),
-                ip: request.ip
-            })
-        );
-
-        // Verify error was logged with both errors
-        expect(request.log.error).toHaveBeenCalledWith({
-            originalError: pubsubError,
-            retryError: pubsubError,
-            eventId: request.body.session_id,
-            timestamp: request.body.timestamp
-        }, 'Pub/Sub publishing failed after retry');
-
-        // Verify existing processors are still called (processing continues)
-        expect(parseUserAgent).toHaveBeenCalledWith(request);
-        expect(parseReferrer).toHaveBeenCalledWith(request);
-        expect(generateUserSignature).toHaveBeenCalledWith(request);
     });
 
     it('should handle enrichment processor errors and respond with 500', async () => {
-        process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-        
         const processingError = new Error('User agent parsing failed');
         vi.mocked(parseUserAgent).mockImplementation(() => {
             throw processingError;
@@ -191,23 +111,9 @@ describe('Proxy Service - processRequest', () => {
         // Verify error response
         expect(reply.code).toHaveBeenCalledWith(500);
         expect(reply.send).toHaveBeenCalledWith(processingError);
-
-        // Verify PubSub publishing still happened before the error with raw data copy
-        expect(publishRawEventToPubSub).toHaveBeenCalledWith(
-            expect.objectContaining({
-                body: request.body,
-                query: request.query,
-                headers: expect.objectContaining({
-                    'user-agent': request.headers['user-agent']
-                }),
-                ip: request.ip
-            })
-        );
     });
 
     it('should handle async user signature generation errors', async () => {
-        process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-        
         const signatureError = new Error('User signature generation failed');
         vi.mocked(generateUserSignature).mockRejectedValue(signatureError);
 
@@ -216,30 +122,10 @@ describe('Proxy Service - processRequest', () => {
         // Verify error response
         expect(reply.code).toHaveBeenCalledWith(500);
         expect(reply.send).toHaveBeenCalledWith(signatureError);
-
-        // Verify PubSub publishing was called with raw data copy
-        expect(publishRawEventToPubSub).toHaveBeenCalledWith(
-            expect.objectContaining({
-                body: request.body,
-                query: request.query,
-                headers: expect.objectContaining({
-                    'user-agent': request.headers['user-agent']
-                }),
-                ip: request.ip
-            })
-        );
-        expect(parseUserAgent).toHaveBeenCalledWith(request);
-        expect(parseReferrer).toHaveBeenCalledWith(request);
     });
 
-    it('should call processors in correct order: PubSub first, then enrichment', async () => {
-        process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-        
+    it('should call enrichment processors in correct order', async () => {
         const callOrder: string[] = [];
-        
-        vi.mocked(publishRawEventToPubSub).mockImplementation(async () => {
-            callOrder.push('pubsub');
-        });
         
         vi.mocked(parseUserAgent).mockImplementation(() => {
             callOrder.push('userAgent');
@@ -252,47 +138,54 @@ describe('Proxy Service - processRequest', () => {
         vi.mocked(generateUserSignature).mockImplementation(async () => {
             callOrder.push('signature');
         });
-
         await processRequest(request, reply);
-
-        // Note: PubSub is fire-and-forget, so it may not complete before other processors
-        // But it should be initiated first with raw data copy
-        expect(publishRawEventToPubSub).toHaveBeenCalledWith(
-            expect.objectContaining({
-                body: request.body,
-                query: request.query,
-                headers: expect.objectContaining({
-                    'user-agent': request.headers['user-agent']
-                }),
-                ip: request.ip
-            })
-        );
-        expect(callOrder.slice(1)).toEqual(['userAgent', 'referrer', 'signature']);
+        expect(callOrder).toEqual(['userAgent', 'referrer', 'signature']);
     });
 
-    it('should retry PubSub publishing on failure and succeed on retry', async () => {
-        process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
-        
-        // Make PubSub publishing fail first time, succeed on retry
-        const pubsubError = new Error('Temporary PubSub failure');
-        vi.mocked(publishRawEventToPubSub)
-            .mockRejectedValueOnce(pubsubError)
-            .mockResolvedValueOnce(undefined);
+    it('should not publish to Pub/Sub when feature flag is disabled', async () => {
+        process.env.ENABLE_PUBSUB_PUBLISHING = 'false';
+        process.env.PUBSUB_TOPIC_NAME = 'test-topic';
 
         await processRequest(request, reply);
 
-        // Verify PubSub publishing was attempted twice
-        expect(publishRawEventToPubSub).toHaveBeenCalledTimes(2);
+        expect(publishEvent).not.toHaveBeenCalled();
+    });
 
-        // Verify success warning was logged
-        expect(request.log.warn).toHaveBeenCalledWith('Pub/Sub publishing succeeded on retry');
+    it('should publish to Pub/Sub when feature flag is enabled', async () => {
+        process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
+        process.env.PUBSUB_TOPIC_NAME = 'test-topic';
 
-        // Verify no error was logged since retry succeeded
-        expect(request.log.error).not.toHaveBeenCalled();
+        await processRequest(request, reply);
 
-        // Verify existing processors are still called
+        expect(publishEvent).toHaveBeenCalledWith('test-topic', {
+            body: request.body,
+            query: request.query,
+            headers: {
+                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+                referer: undefined
+            },
+            ip: '192.168.1.100'
+        });
+    });
+
+    it('should handle Pub/Sub errors and continue with direct mode', async () => {
+        process.env.ENABLE_PUBSUB_PUBLISHING = 'true';
+        process.env.PUBSUB_TOPIC_NAME = 'test-topic';
+        
+        vi.mocked(publishEvent).mockRejectedValue(new Error('Pub/Sub failed'));
+
+        await processRequest(request, reply);
+
+        // Should still process enrichment even if Pub/Sub fails
         expect(parseUserAgent).toHaveBeenCalledWith(request);
         expect(parseReferrer).toHaveBeenCalledWith(request);
         expect(generateUserSignature).toHaveBeenCalledWith(request);
+        
+        // Should log the error
+        expect(request.log.error).toHaveBeenCalledWith({
+            error: expect.any(Error),
+            eventId: request.body.session_id,
+            timestamp: request.body.timestamp
+        }, 'Pub/Sub publishing failed after retry');
     });
 });
