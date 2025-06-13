@@ -8,7 +8,7 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 env:
   GCP_PROJECT_ID: ghost-traffic-analytics
@@ -80,10 +80,61 @@ jobs:
             docker push $tag
           done
 
+  check-version-change:
+    name: Check Version Change
+    runs-on: ubuntu-latest
+    outputs:
+      version-changed: ${{ steps.check-version.outputs.changed }}
+      current-version: ${{ steps.check-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check if version changed
+        id: check-version
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          
+          # Get previous commit's version (if it exists)
+          if git show HEAD~1:package.json > /dev/null 2>&1; then
+            PREVIOUS_VERSION=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version")
+            echo "Previous version: $PREVIOUS_VERSION"
+            echo "Current version: $CURRENT_VERSION"
+            
+            if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+              echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "Version unchanged: $CURRENT_VERSION"
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "No previous commit found, assuming version change"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+  create-release-tag:
+    name: Create Release Tag
+    runs-on: ubuntu-latest
+    needs: check-version-change
+    if: needs.check-version-change.outputs.version-changed == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Create Release Tag"
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag "v${{ needs.check-version-change.outputs.current-version }}"
+          git push origin "v${{ needs.check-version-change.outputs.current-version }}"
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, check-version-change]
     strategy:
       matrix:
         environment: [staging, production]
@@ -91,6 +142,8 @@ jobs:
         include:
           - region: europe-west4
             region_name: netherlands
+    # Skip production deployment if version hasn't changed
+    if: matrix.environment != 'production' || needs.check-version-change.outputs.version-changed == 'true'
     steps:
       - uses: actions/checkout@v4
 
