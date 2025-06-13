@@ -65,20 +65,20 @@ function updatePackageVersion(newVersion) {
 function promptVersion() {
     return new Promise((resolve) => {
         console.log('\nSelect version bump type:');
-        console.log('1) patch (0.0.X)');
-        console.log('2) minor (0.X.0)');
-        console.log('3) major (X.0.0)');
+        console.log('  - patch (0.0.X)');
+        console.log('  - minor (0.X.0)');
+        console.log('  - major (X.0.0)');
     
-        rl.question('Enter your choice (1-3): ', (answer) => {
-            const choices = {1: 'patch', 2: 'minor', 3: 'major'};
-            const bumpType = choices[answer];
+        rl.question('Enter bump type (patch/minor/major) [patch]: ', (answer) => {
+            const normalizedAnswer = answer.toLowerCase().trim() || 'patch';
+            const validTypes = ['patch', 'minor', 'major'];
       
-            if (!bumpType) {
-                console.log('❌ Invalid choice. Please enter 1, 2, or 3.');
+            if (!validTypes.includes(normalizedAnswer)) {
+                console.log('❌ Invalid choice. Please enter "patch", "minor", or "major".');
                 resolve(promptVersion());
             } else {
                 rl.close();
-                resolve(bumpType);
+                resolve(normalizedAnswer);
             }
         });
     });
@@ -155,7 +155,7 @@ async function main() {
     console.log('   - Deploy to staging');
     console.log('   - Create a tag and GitHub release');
     console.log('   - Deploy to production');
-    console.log(`\nPR URL: https://github.com/TryGhost/TrafficAnalytics/compare/main...${branchName}`);
+    console.log(`\nPR URL: https://github.com/TryGhost/TrafficAnalytics/pull/new/${branchName}`);
 }
 
 main().catch(console.error);
