@@ -6,10 +6,10 @@ import type {FastifyRequest, FastifyReply} from 'fastify';
 /**
  * Get logger configuration based on environment
  */
-export function getLoggerConfig(): LoggerOptions | false {
+export function getLoggerConfig(): LoggerOptions {
     // Disable logging in test environment
     if (process.env.NODE_ENV === 'testing') {
-        return false;
+        return {level: 'silent'};
     }
 
     // Development configuration - simple pretty logs
@@ -57,6 +57,6 @@ export function getLoggerConfig(): LoggerOptions | false {
 }
 
 // Create the default logger instance
-const logger = pino(getLoggerConfig() || {});
+const logger = pino(getLoggerConfig());
 
 export default logger;

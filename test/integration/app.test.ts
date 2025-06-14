@@ -3,6 +3,7 @@ import request, {Response} from 'supertest';
 import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
 import {Server} from 'http';
+import {PubSub} from '@google-cloud/pubsub';
 
 // Mock the user signature service before importing the app
 vi.mock('../../src/services/user-signature', () => ({
@@ -73,7 +74,6 @@ describe('Fastify App', () => {
 
         // Set the PROXY_TARGET environment variable before requiring the app
         process.env.PROXY_TARGET = targetUrl;
-        process.env.LOG_LEVEL = 'silent';
 
         // Import directly from the source
         const appModule = await import('../../src/app');
@@ -330,6 +330,71 @@ describe('Fastify App', () => {
             // Verify the IP is not empty
             const callArgs = vi.mocked(userSignatureService.generateUserSignature).mock.calls[0];
             expect(callArgs[1]).toBeTruthy();
+        });
+
+        it('should publish page hit events to Pub/Sub topic', async () => {
+            const pubsub = new PubSub({
+                projectId: process.env.PUBSUB_PROJECT_ID || 'traffic-analytics-dev'
+            });
+
+            const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'traffic-analytics-page-hits-raw';
+            const subscriptionName = `test-page-hits-subscription-${Date.now()}`;
+            const uniqueUserAgent = `Test-Pub-Sub-Browser/${Date.now()}`;
+            
+            // Create a subscription to capture messages
+            const [subscription] = await pubsub.topic(topic).createSubscription(subscriptionName);
+
+            const receivedMessages: any[] = [];
+            const messageHandler = (message: any) => {
+                const data = JSON.parse(message.data.toString());
+                // Only capture messages from our specific test
+                if (data.headers && data.headers['user-agent'] === uniqueUserAgent) {
+                    receivedMessages.push(data);
+                }
+                message.ack();
+            };
+
+            subscription.on('message', messageHandler);
+
+            // Make the request
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({token: 'abc123', name: 'test'})
+                .set('User-Agent', uniqueUserAgent)
+                .send(eventPayload)
+                .expect(202);
+
+            // Wait for message to be received
+            await new Promise<void>((resolve) => {
+                setTimeout(() => resolve(), 2000);
+            });
+
+            // Verify we received the published message
+            expect(receivedMessages.length).toBe(1);
+            
+            const publishedMessage = receivedMessages[0];
+            expect(publishedMessage.method).toBe('POST');
+            expect(publishedMessage.url).toContain('/tb/web_analytics');
+            expect(publishedMessage.headers['user-agent']).toBe(uniqueUserAgent);
+            expect(publishedMessage.ip).toBeDefined();
+            expect(publishedMessage.timestamp).toBeDefined();
+            
+            // Verify the body contains the original payload structure
+            expect(publishedMessage.body.action).toBe(eventPayload.action);
+            expect(publishedMessage.body.version).toBe(eventPayload.version);
+            expect(publishedMessage.body.payload.site_uuid).toBe(eventPayload.payload.site_uuid);
+            expect(publishedMessage.body.payload.href).toBe(eventPayload.payload.href);
+            
+            // Verify processed fields were added
+            expect(publishedMessage.body.session_id).toBeDefined();
+            expect(publishedMessage.body.payload.os).toBeDefined();
+            expect(publishedMessage.body.payload.browser).toBeDefined();
+            expect(publishedMessage.body.payload.device).toBeDefined();
+
+            // Clean up
+            subscription.removeListener('message', messageHandler);
+            await subscription.close();
+            await subscription.delete().catch(() => {}); // Ignore errors during cleanup
         });
     });
 });
