@@ -18,16 +18,19 @@ services:
 
   pubsub:
     image: google/cloud-sdk:emulators
-    command: ["gcloud", "beta", "emulators", "pubsub", "start", "--host-port=0.0.0.0:8085", "--project=traffic-analytics-dev"]
+    command: ["/app/start-pubsub.sh"]
     ports:
       - ${PUBSUB_PORT:-8085}:8085
+    volumes:
+      - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
     environment:
       - PUBSUB_PROJECT_ID=traffic-analytics-dev
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8085"]
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
       interval: 5s
       timeout: 3s
-      retries: 5
+      retries: 10
     stop_grace_period: 5s
 
   analytics-service:
@@ -50,6 +53,7 @@ services:
       - FIRESTORE_PROJECT_ID=traffic-analytics-dev
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_PROJECT_ID=traffic-analytics-dev
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
     depends_on:
       firestore:
         condition: service_healthy
@@ -66,10 +70,12 @@ services:
     env_file:
       - .env
     environment:
+      - NODE_ENV=testing
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - FIRESTORE_PROJECT_ID=traffic-analytics-dev
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_PROJECT_ID=traffic-analytics-dev
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
     tty: true
     profiles: [testing]
     depends_on:
