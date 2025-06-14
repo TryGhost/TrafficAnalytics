@@ -34,17 +34,17 @@ describe('SaltStoreFactory', () => {
 
         it('should throw error when creating firestore store without projectId', () => {
             // Ensure no environment variables are set
-            vi.stubEnv('FIRESTORE_PROJECT_ID', '');
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
             vi.stubEnv('FIRESTORE_DATABASE_ID', '');
             
             const config: SaltStoreConfig = {type: 'firestore', databaseId: 'test-db'};
             
-            expect(() => createSaltStore(config)).toThrow('Firestore project ID is required. Provide it via config.projectId or FIRESTORE_PROJECT_ID environment variable');
+            expect(() => createSaltStore(config)).toThrow('Firestore project ID is required. Provide it via config.projectId or GOOGLE_CLOUD_PROJECT environment variable');
         });
 
         it('should throw error when creating firestore store without databaseId', () => {
             // Ensure no environment variables are set
-            vi.stubEnv('FIRESTORE_PROJECT_ID', '');
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
             vi.stubEnv('FIRESTORE_DATABASE_ID', '');
             
             const config: SaltStoreConfig = {type: 'firestore', projectId: 'test-project'};
@@ -93,7 +93,7 @@ describe('SaltStoreFactory', () => {
 
         it('should create firestore store from environment variables', () => {
             vi.stubEnv('SALT_STORE_TYPE', 'firestore');
-            vi.stubEnv('FIRESTORE_PROJECT_ID', 'env-project');
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', 'env-project');
             vi.stubEnv('FIRESTORE_DATABASE_ID', 'env-database');
             
             const store = createSaltStore();
@@ -102,7 +102,7 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should use environment variables when config values are not provided', () => {
-            vi.stubEnv('FIRESTORE_PROJECT_ID', 'env-project');
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', 'env-project');
             vi.stubEnv('FIRESTORE_DATABASE_ID', 'env-database');
             
             const config: SaltStoreConfig = {type: 'firestore'};

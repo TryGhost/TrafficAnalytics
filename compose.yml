@@ -8,7 +8,7 @@ services:
     volumes:
       - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
     environment:
-      - FIRESTORE_PROJECT_ID=traffic-analytics-dev
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]
       interval: 5s
@@ -24,7 +24,7 @@ services:
     volumes:
       - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
     environment:
-      - PUBSUB_PROJECT_ID=traffic-analytics-dev
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
@@ -49,10 +49,9 @@ services:
       - .env
     environment:
       - NODE_ENV=${NODE_ENV:-development}
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
       - FIRESTORE_EMULATOR_HOST=firestore:8080
-      - FIRESTORE_PROJECT_ID=traffic-analytics-dev
       - PUBSUB_EMULATOR_HOST=pubsub:8085
-      - PUBSUB_PROJECT_ID=traffic-analytics-dev
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
     depends_on:
@@ -72,10 +71,9 @@ services:
       - .env
     environment:
       - NODE_ENV=testing
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
       - FIRESTORE_EMULATOR_HOST=firestore:8080
-      - FIRESTORE_PROJECT_ID=traffic-analytics-dev
       - PUBSUB_EMULATOR_HOST=pubsub:8085
-      - PUBSUB_PROJECT_ID=traffic-analytics-dev
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
     tty: true

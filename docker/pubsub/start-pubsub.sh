@@ -9,7 +9,7 @@
 
 # Set defaults
 HOST=0.0.0.0:8085
-PROJECT_ID=${PUBSUB_PROJECT_ID:-traffic-analytics-dev}
+PROJECT_ID=${GOOGLE_CLOUD_PROJECT:-traffic-analytics-dev}
 TOPIC_NAME=${PUBSUB_TOPIC_PAGE_HITS_RAW:-traffic-analytics-page-hits-raw}
 
 echo "Starting Pub/Sub emulator..."

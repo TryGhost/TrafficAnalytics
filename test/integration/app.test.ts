@@ -334,7 +334,7 @@ describe('Fastify App', () => {
 
         it('should publish page hit events to Pub/Sub topic', async () => {
             const pubsub = new PubSub({
-                projectId: process.env.PUBSUB_PROJECT_ID || 'traffic-analytics-dev'
+                projectId: process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-dev'
             });
 
             const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'traffic-analytics-page-hits-raw';

@@ -20,7 +20,7 @@ describe('Publisher Integration Tests', () => {
 
         // Initialize PubSub client for testing
         pubsub = new PubSub({
-            projectId: process.env.PUBSUB_PROJECT_ID || 'traffic-analytics-dev'
+            projectId: process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-dev'
         });
 
         // Create the test topic

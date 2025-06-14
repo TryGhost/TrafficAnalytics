@@ -7,7 +7,7 @@ services:
     ports:
       - 8080:8080
     environment:
-      - FIRESTORE_PROJECT_ID=traffic-analytics-ci
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]
       interval: 5s
@@ -22,7 +22,7 @@ services:
     volumes:
       - ../../../docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
     environment:
-      - PUBSUB_PROJECT_ID=traffic-analytics-ci
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
       - PUBSUB_PORT=8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
     healthcheck:
@@ -42,10 +42,9 @@ services:
     command: ["yarn", "test"]
     environment:
       - NODE_ENV=testing
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
       - FIRESTORE_EMULATOR_HOST=firestore:8080
-      - FIRESTORE_PROJECT_ID=traffic-analytics-ci
       - PUBSUB_EMULATOR_HOST=pubsub:8085
-      - PUBSUB_PROJECT_ID=traffic-analytics-ci
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
     depends_on:
