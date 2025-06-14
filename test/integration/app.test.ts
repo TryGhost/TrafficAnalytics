@@ -395,5 +395,32 @@ describe('Fastify App', () => {
             await subscription.close();
             await subscription.delete().catch(() => {}); // Ignore errors during cleanup
         });
+
+        it('should still proxy requests when Pub/Sub publishing fails', async () => {
+            // Temporarily set an invalid topic to cause publishing to fail
+            const originalTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW;
+            process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'invalid-topic-that-does-not-exist';
+
+            try {
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'test'})
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayload)
+                    .expect(202);
+
+                // Verify the request was still proxied to the target server
+                expect(targetRequests.length).toBe(1);
+                const targetRequest = targetRequests[0];
+                // The proxy should still process the request and add fields
+                expect(targetRequest.body.session_id).toBeDefined();
+                expect(targetRequest.body.payload.os).toBeDefined();
+                expect(targetRequest.body.payload.browser).toBeDefined();
+                expect(targetRequest.body.payload.device).toBeDefined();
+            } finally {
+                // Restore original topic
+                process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = originalTopic;
+            }
+        });
     });
 });
