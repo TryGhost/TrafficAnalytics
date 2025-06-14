@@ -20,7 +20,7 @@ services:
     ports:
       - 8085:8085
     volumes:
-      - ../../docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
+      - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
     environment:
       - PUBSUB_PROJECT_ID=traffic-analytics-ci
       - PUBSUB_PORT=8085
