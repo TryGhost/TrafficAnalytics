@@ -19,11 +19,11 @@ export function createSaltStore(config?: SaltStoreConfig): ISaltStore {
     case 'memory':
         return new MemorySaltStore();
     case 'firestore': {
-        const projectId = config?.projectId || process.env.FIRESTORE_PROJECT_ID;
+        const projectId = config?.projectId || process.env.GOOGLE_CLOUD_PROJECT;
         const databaseId = config?.databaseId || process.env.FIRESTORE_DATABASE_ID;
         
         if (!projectId) {
-            throw new Error('Firestore project ID is required. Provide it via config.projectId or FIRESTORE_PROJECT_ID environment variable');
+            throw new Error('Firestore project ID is required. Provide it via config.projectId or GOOGLE_CLOUD_PROJECT environment variable');
         }
         
         if (!databaseId) {

@@ -18,8 +18,8 @@ Copy `.env.example` to `.env` and configure as needed:
 # Salt Store Configuration
 SALT_STORE_TYPE=memory  # Options: memory, firestore
 
-# Firestore Configuration (when SALT_STORE_TYPE=firestore)
-FIRESTORE_PROJECT_ID=traffic-analytics-dev
+# Google Cloud Project Configuration
+GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
 
 # Multi-worktree Configuration (optional)
 COMPOSE_PROJECT_NAME=traffic-analytics-main  # Default project name
