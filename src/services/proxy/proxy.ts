@@ -12,32 +12,34 @@ import {publishEvent} from '../events/publisher.js';
 // Eventually will be called on each request pulled from the queue
 export async function processRequest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
-        parseUserAgent(request);
-        parseReferrer(request);
-        await generateUserSignature(request);
-
-        // Publish raw page hit event to Pub/Sub (if topic is configured)
+        // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
         // This is fire-and-forget - don't let Pub/Sub errors break the proxy
         const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW;
         if (topic) {
-            publishEvent({
-                topic,
-                payload: {
-                    timestamp: new Date().toISOString(),
-                    method: request.method,
-                    url: request.url,
-                    headers: request.headers,
-                    body: request.body,
-                    ip: request.ip
-                }
-            }).catch((error) => {
+            try {
+                await publishEvent({
+                    topic,
+                    payload: {
+                        timestamp: new Date().toISOString(),
+                        method: request.method,
+                        url: request.url,
+                        headers: request.headers,
+                        body: request.body,
+                        ip: request.ip
+                    }
+                });
+            } catch (error) {
                 // Log the error but don't let it affect the request
                 request.log.warn({
-                    error: error.message,
+                    error: error instanceof Error ? error.message : String(error),
                     topic
                 }, 'Failed to publish page hit event - continuing with request');
-            });
+            }
         }
+
+        parseUserAgent(request);
+        parseReferrer(request);
+        await generateUserSignature(request);
     } catch (error) {
         reply.code(500).send(error);
         throw error; // Re-throw to let Fastify handle it

@@ -379,17 +379,16 @@ describe('Fastify App', () => {
             expect(publishedMessage.ip).toBeDefined();
             expect(publishedMessage.timestamp).toBeDefined();
             
-            // Verify the body contains the original payload structure
-            expect(publishedMessage.body.action).toBe(eventPayload.action);
-            expect(publishedMessage.body.version).toBe(eventPayload.version);
-            expect(publishedMessage.body.payload.site_uuid).toBe(eventPayload.payload.site_uuid);
-            expect(publishedMessage.body.payload.href).toBe(eventPayload.payload.href);
+            // Verify the body contains the RAW payload (no processing)
+            expect(publishedMessage.body).toEqual(eventPayload);
             
-            // Verify processed fields were added
-            expect(publishedMessage.body.session_id).toBeDefined();
-            expect(publishedMessage.body.payload.os).toBeDefined();
-            expect(publishedMessage.body.payload.browser).toBeDefined();
-            expect(publishedMessage.body.payload.device).toBeDefined();
+            // The session_id is part of the original raw payload, not added by processing
+            expect(publishedMessage.body.session_id).toBe(eventPayload.session_id);
+            
+            // Verify NO processed fields were added to the payload
+            expect(publishedMessage.body.payload.os).toBeUndefined();
+            expect(publishedMessage.body.payload.browser).toBeUndefined();
+            expect(publishedMessage.body.payload.device).toBeUndefined();
 
             // Clean up
             subscription.removeListener('message', messageHandler);
