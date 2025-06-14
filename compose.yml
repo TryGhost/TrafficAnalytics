@@ -54,6 +54,7 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_PROJECT_ID=traffic-analytics-dev
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
     depends_on:
       firestore:
         condition: service_healthy
@@ -76,6 +77,7 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_PROJECT_ID=traffic-analytics-dev
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
     tty: true
     profiles: [testing]
     depends_on:
