@@ -379,22 +379,48 @@ describe('Fastify App', () => {
             expect(publishedMessage.ip).toBeDefined();
             expect(publishedMessage.timestamp).toBeDefined();
             
-            // Verify the body contains the original payload structure
-            expect(publishedMessage.body.action).toBe(eventPayload.action);
-            expect(publishedMessage.body.version).toBe(eventPayload.version);
-            expect(publishedMessage.body.payload.site_uuid).toBe(eventPayload.payload.site_uuid);
-            expect(publishedMessage.body.payload.href).toBe(eventPayload.payload.href);
+            // Verify the body contains the RAW payload (no processing)
+            expect(publishedMessage.body).toEqual(eventPayload);
             
-            // Verify processed fields were added
-            expect(publishedMessage.body.session_id).toBeDefined();
-            expect(publishedMessage.body.payload.os).toBeDefined();
-            expect(publishedMessage.body.payload.browser).toBeDefined();
-            expect(publishedMessage.body.payload.device).toBeDefined();
+            // The session_id is part of the original raw payload, not added by processing
+            expect(publishedMessage.body.session_id).toBe(eventPayload.session_id);
+            
+            // Verify NO processed fields were added to the payload
+            expect(publishedMessage.body.payload.os).toBeUndefined();
+            expect(publishedMessage.body.payload.browser).toBeUndefined();
+            expect(publishedMessage.body.payload.device).toBeUndefined();
 
             // Clean up
             subscription.removeListener('message', messageHandler);
             await subscription.close();
             await subscription.delete().catch(() => {}); // Ignore errors during cleanup
+        });
+
+        it('should still proxy requests when Pub/Sub publishing fails', async () => {
+            // Temporarily set an invalid topic to cause publishing to fail
+            const originalTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW;
+            process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'invalid-topic-that-does-not-exist';
+
+            try {
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'test'})
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayload)
+                    .expect(202);
+
+                // Verify the request was still proxied to the target server
+                expect(targetRequests.length).toBe(1);
+                const targetRequest = targetRequests[0];
+                // The proxy should still process the request and add fields
+                expect(targetRequest.body.session_id).toBeDefined();
+                expect(targetRequest.body.payload.os).toBeDefined();
+                expect(targetRequest.body.payload.browser).toBeDefined();
+                expect(targetRequest.body.payload.device).toBeDefined();
+            } finally {
+                // Restore original topic
+                process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = originalTopic;
+            }
         });
     });
 });
