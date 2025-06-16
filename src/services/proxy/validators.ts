@@ -5,6 +5,32 @@ import {FastifyRequest} from '../../types';
 // If an error is thrown, the request is rejected
 // If no error is thrown, the request continues to the next step
 
+export function validateSiteUUID(request: FastifyRequest): void {
+    let siteUUID = request.headers['x-site-uuid'];
+
+    if (typeof siteUUID !== 'string' && siteUUID !== undefined) {
+        throw new errors.BadRequestError({
+            message: 'x-site-uuid header should be a single value'
+        });
+    }
+
+    if (typeof siteUUID !== 'string') {
+        siteUUID = '';
+    }
+
+    siteUUID = siteUUID.trim();
+
+    if (siteUUID === '') {
+        siteUUID = request.body?.payload?.site_uuid;
+    }
+
+    if (siteUUID === '') {
+        throw new errors.BadRequestError({
+            message: 'x-site-uuid header is required'
+        });
+    }
+}
+
 export function validateQueryParams(request: FastifyRequest): void {
     const token = request.query.token;
     const name = request.query.name;
