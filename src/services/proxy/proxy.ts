@@ -1,5 +1,6 @@
 import {FastifyRequest, FastifyReply} from '../../types';
 import * as validators from './validators';
+import {handleSiteUUIDHeader} from './processors/handle-site-uuid-header';
 import {parseReferrer} from './processors/url-referrer';
 import {parseUserAgent} from './processors/parse-user-agent';
 import {generateUserSignature} from './processors/user-signature';
@@ -11,6 +12,8 @@ import {publishEvent} from '../events/publisher.js';
 // Called within the HTTP proxy route
 // Eventually will be called on each request pulled from the queue
 export async function processRequest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    handleSiteUUIDHeader(request);
+
     try {
         // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
         // This is fire-and-forget - don't let Pub/Sub errors break the proxy
@@ -48,6 +51,7 @@ export async function processRequest(request: FastifyRequest, reply: FastifyRepl
 
 export function validateRequest(request: FastifyRequest, reply: FastifyReply, done: () => void): void {
     try {
+        validators.validateSiteUUID(request);
         validators.validateQueryParams(request);
         validators.validateRequestBody(request);
     } catch (error) {
