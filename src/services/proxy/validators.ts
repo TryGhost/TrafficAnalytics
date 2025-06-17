@@ -5,7 +5,7 @@ import {FastifyRequest} from '../../types';
 // If an error is thrown, the request is rejected
 // If no error is thrown, the request continues to the next step
 
-export function validateSiteUUID(request: FastifyRequest): void {
+export function validateSiteUUID(request: FastifyRequest): string {
     let siteUUID = request.headers['x-site-uuid'];
 
     if (typeof siteUUID !== 'string' && siteUUID !== undefined) {
@@ -24,11 +24,13 @@ export function validateSiteUUID(request: FastifyRequest): void {
         siteUUID = request.body?.payload?.site_uuid;
     }
 
-    if (siteUUID === '') {
+    if (!siteUUID || siteUUID === '') {
         throw new errors.BadRequestError({
             message: 'x-site-uuid header is required'
         });
     }
+    // Return the validated siteUUID for testing purposes
+    return siteUUID;
 }
 
 export function validateQueryParams(request: FastifyRequest): void {
