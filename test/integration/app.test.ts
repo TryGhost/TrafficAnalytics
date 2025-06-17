@@ -422,5 +422,21 @@ describe('Fastify App', () => {
                 process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = originalTopic;
             }
         });
+
+        it('should allow x-site-uuid header in CORS preflight requests', async function () {
+            await request(proxyServer)
+                .options('/tb/web_analytics')
+                .set('Origin', 'https://main.ghost.org')
+                .set('Access-Control-Request-Method', 'POST')
+                .set('Access-Control-Request-Headers', 'x-site-uuid, content-type')
+                .expect(204)
+                .expect('Access-Control-Allow-Origin', '*')
+                .expect(function (res: Response) {
+                    const allowedHeaders = res.headers['access-control-allow-headers'];
+                    if (!allowedHeaders || !allowedHeaders.toLowerCase().includes('x-site-uuid')) {
+                        throw new Error('x-site-uuid header should be allowed in CORS');
+                    }
+                });
+        });
     });
 });
