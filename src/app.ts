@@ -7,6 +7,7 @@ import fastifyCors from '@fastify/cors';
 import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
 import {processRequest, validateRequest} from './services/proxy';
 import {getLoggerConfig} from './utils/logger';
+import loggingPlugin from './plugins/logging';
 
 function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
     return {
@@ -48,49 +49,8 @@ app.register(fastifyCors, {
     allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'x-site-uuid']
 });
 
-app.addHook('onRequest', (request, _reply, done) => {
-    const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT;
-    const traceHeader = request.headers['x-cloud-trace-context'] as string;
-    if (traceHeader && PROJECT_ID) {
-        const traceId = traceHeader.split('/')[0];
-        const traceContext = {
-            'logging.googleapis.com/trace': `projects/${PROJECT_ID}/traces/${traceId}`
-        };
-
-        request.log = request.log.child(traceContext);
-    }
-
-    request.log.info({
-        httpRequest: {
-            requestMethod: request.method,
-            requestUrl: request.url,
-            userAgent: request.headers['user-agent'],
-            remoteIp: request.ip,
-            referer: request.headers.referer,
-            protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
-            requestSize: String(request.raw.headers['content-length'] || 0)
-        }
-    }, 'incoming request');
-    done();
-});
-
-app.addHook('onResponse', (request, reply, done) => {
-    request.log.info({
-        httpRequest: {
-            requestMethod: request.method,
-            requestUrl: request.url,
-            userAgent: request.headers['user-agent'],
-            remoteIp: request.ip,
-            referer: request.headers.referer,
-            protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
-            requestSize: String(request.raw.headers['content-length'] || 0),
-            responseSize: String(reply.getHeader('content-length') || 0),
-            status: reply.statusCode,
-            latency: `${(reply.elapsedTime / 1000).toFixed(9)}s`
-        }
-    }, 'request completed');
-    done();
-});
+// Register logging plugin
+app.register(loggingPlugin);
 
 app.register(fastifyHttpProxy, getProxyConfig('/tb/web_analytics'));
 
