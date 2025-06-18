@@ -403,7 +403,7 @@
   dependencies:
     extend "^3.0.2"
 
-"@google-cloud/pino-logging-gcp-config@^1.0.4":
+"@google-cloud/pino-logging-gcp-config@1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@google-cloud/pino-logging-gcp-config/-/pino-logging-gcp-config-1.0.4.tgz#70170c23e65c0593f5fc3db3bbbcb892dfb5161e"
   integrity sha512-EZ2cVRbJUJyzimAHyR+FCy2+xRw0+aBgPS5ZncvoLuVHB3LqQcdtZsfGV/omRPllD9ge9MXMS/3vRGvi2Xz2uQ==
