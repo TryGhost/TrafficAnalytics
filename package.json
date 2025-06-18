@@ -7,7 +7,9 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "yarn build:server && yarn build:worker",
+    "build:server": "vite build --config vite.config.server.ts",
+    "build:worker": "vite build --config vite.config.worker.ts",
     "docker:build": "docker compose build",
     "dev": "tsx watch server.ts",
     "dev:worker": "tsx watch worker.ts",
