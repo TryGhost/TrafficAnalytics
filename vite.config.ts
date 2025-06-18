@@ -23,7 +23,7 @@ export default defineConfig({
             formats: ['es']
         },
         rollupOptions: {
-            external: ['fastify', '@fastify/cors', '@fastify/http-proxy', 'dotenv', 'ua-parser-js', '@tryghost/errors'],
+            external: ['fastify', '@fastify/cors', '@fastify/http-proxy', 'dotenv', 'ua-parser-js', '@tryghost/errors', '@google-cloud/pino-logging-gcp-config', 'pino'],
             output: {
                 entryFileNames: '[name].js',
                 preserveModules: true,
