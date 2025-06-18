@@ -17,6 +17,8 @@ jobs:
         environment:
           - name: main
             base_url: https://main.ghost.org
+          - name: chris
+            base_url: https://www.chrisraible.com
     
     steps:
       - name: Checkout code
@@ -55,6 +57,7 @@ jobs:
           name: test-results-${{ matrix.environment.name }}
           path: test-results/
           retention-days: 30
+
       - name: Post a message in a channel
         uses: slackapi/slack-github-action@v2.1.0
         if: failure()
