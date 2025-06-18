@@ -9,6 +9,32 @@ describe('Worker Process', () => {
         vi.clearAllMocks();
     });
 
+    const waitForWorkerStartup = (process: ChildProcess): Promise<void> => {
+        return new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Worker startup timeout')), 5000);
+            
+            const checkStartupMessage = (data: Buffer) => {
+                if (data.toString().includes('Worker process started')) {
+                    clearTimeout(timeout);
+                    resolve();
+                }
+            };
+
+            process.stdout?.on('data', checkStartupMessage);
+            process.stderr?.on('data', checkStartupMessage);
+            
+            process.on('error', (err) => {
+                clearTimeout(timeout);
+                reject(err);
+            });
+            
+            process.on('exit', (code) => {
+                clearTimeout(timeout);
+                reject(new Error(`Worker exited unexpectedly with code ${code}`));
+            });
+        });
+    };
+
     afterEach(async () => {
         if (workerProcess && !workerProcess.killed) {
             workerProcess.kill('SIGTERM');
@@ -30,10 +56,8 @@ describe('Worker Process', () => {
             }
         });
 
-        // Wait for worker to start
-        await new Promise((resolve) => {
-            setTimeout(resolve, 500);
-        });
+        // Wait for startup message
+        await waitForWorkerStartup(workerProcess);
 
         // Check that process is running and hasn't exited with error
         expect(workerProcess.killed).toBe(false);
@@ -52,9 +76,7 @@ describe('Worker Process', () => {
         });
 
         // Wait for worker to start and initialize signal handlers
-        await new Promise((resolve) => {
-            setTimeout(resolve, 1500);
-        });
+        await waitForWorkerStartup(workerProcess);
 
         // Send SIGTERM
         workerProcess.kill('SIGTERM');
@@ -68,5 +90,5 @@ describe('Worker Process', () => {
 
         // Accept both 0 and null as valid exit codes for graceful shutdown
         expect(exitCode === 0 || exitCode === null).toBe(true);
-    }, 15000);
+    }, 10000);
 });
