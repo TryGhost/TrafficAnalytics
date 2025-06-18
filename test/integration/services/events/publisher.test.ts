@@ -1,13 +1,28 @@
 import {describe, it, expect, beforeAll, afterAll} from 'vitest';
 import {PubSub} from '@google-cloud/pubsub';
 import {publishEvent} from '../../../../src/services/events/publisher.js';
+import type {FastifyBaseLogger} from 'fastify';
 
 describe('Publisher Integration Tests', () => {
     let pubsub: PubSub;
     const testTopic = 'test-topic';
     let testPayload: Record<string, unknown>;
+    let mockLogger: FastifyBaseLogger;
 
     beforeAll(async () => {
+        // Initialize mock logger
+        mockLogger = {
+            info: () => {},
+            error: () => {},
+            warn: () => {},
+            debug: () => {},
+            trace: () => {},
+            fatal: () => {},
+            level: 'info',
+            silent: false,
+            child: () => mockLogger
+        } as unknown as FastifyBaseLogger;
+
         // Initialize test payload
         testPayload = {
             action: 'page_hit',
@@ -46,7 +61,8 @@ describe('Publisher Integration Tests', () => {
     it('should successfully publish a message to Pub/Sub', async () => {
         const messageId = await publishEvent({
             topic: testTopic,
-            payload: testPayload
+            payload: testPayload,
+            logger: mockLogger
         });
 
         expect(messageId).toBeDefined();
@@ -82,7 +98,8 @@ describe('Publisher Integration Tests', () => {
         // Publish the message
         await publishEvent({
             topic: testTopic,
-            payload: testPayload
+            payload: testPayload,
+            logger: mockLogger
         });
 
         // Wait for message to be received
@@ -108,7 +125,7 @@ describe('Publisher Integration Tests', () => {
         ];
 
         const messageIds = await Promise.all(
-            messages.map(payload => publishEvent({topic: testTopic, payload})
+            messages.map(payload => publishEvent({topic: testTopic, payload, logger: mockLogger})
             )
         );
 
@@ -129,7 +146,8 @@ describe('Publisher Integration Tests', () => {
         await expect(
             publishEvent({
                 topic: nonExistentTopic,
-                payload: testPayload
+                payload: testPayload,
+                logger: mockLogger
             })
         ).rejects.toThrow();
     });
