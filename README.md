@@ -12,19 +12,21 @@ Traffic Analytics Service - A web analytics proxy for Ghost that processes and e
 
 ## Configuration
 
-Copy `.env.example` to `.env` and configure as needed:
+Copy `config.example.json` to `config.development.json` and configure as needed:
 
-```bash
-# Salt Store Configuration
-SALT_STORE_TYPE=memory  # Options: memory, firestore
-
-# Google Cloud Project Configuration
-GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
-
-# Multi-worktree Configuration (optional)
-COMPOSE_PROJECT_NAME=traffic-analytics-main  # Default project name
-ANALYTICS_PORT=3000                           # Analytics service port (default: 3000)  
-FIRESTORE_PORT=8080                          # Firestore emulator port (default: 8080)
+```json
+{
+  "SALT_STORE_TYPE": "memory",
+  "GOOGLE_CLOUD_PROJECT": "traffic-analytics-dev",
+  "PORT": 3000,
+  "LOG_LEVEL": "info",
+  "PROXY_TARGET": "http://localhost:3000/local-proxy",
+  "LOG_PROXY_REQUESTS": "true",
+  "ENABLE_SALT_CLEANUP_SCHEDULER": "true",
+  "FIRESTORE_DATABASE_ID": "",
+  "PUBSUB_TOPIC_PAGE_HITS_RAW": "",
+  "TRUST_PROXY": "true"
+}
 ```
 
 ## Develop

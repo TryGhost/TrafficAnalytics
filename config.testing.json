@@ -1,0 +1,12 @@
+{
+    "PORT": 3000,
+    "LOG_LEVEL": "silent",
+    "PROXY_TARGET": "http://localhost:3000/local-proxy",
+    "TRUST_PROXY": "true",
+    "LOG_PROXY_REQUESTS": "false",
+    "SALT_STORE_TYPE": "memory",
+    "ENABLE_SALT_CLEANUP_SCHEDULER": "false",
+    "GOOGLE_CLOUD_PROJECT": "traffic-analytics-test",
+    "FIRESTORE_DATABASE_ID": "",
+    "PUBSUB_TOPIC_PAGE_HITS_RAW": ""
+}
