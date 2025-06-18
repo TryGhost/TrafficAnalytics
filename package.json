@@ -16,7 +16,7 @@
     "docker:dev": "docker compose up",
     "docker:dev:ghost": "docker compose -f compose.yml -f compose.ghost.yml up",
     "start": "node dist/server/server.js",
-    "start:worker": "node dist/worker.js",
+    "start:worker": "node dist/worker/worker.js",
     "pretest": "yarn build",
     "test:unit": "NODE_ENV=testing vitest run test/unit --coverage",
     "test:unit:watch": "NODE_ENV=testing vitest watch test/unit",
