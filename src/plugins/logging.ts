@@ -1,16 +1,12 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
+import {extractTraceContext} from '../utils/logger';
 
 async function loggingPlugin(fastify: FastifyInstance) {
     fastify.addHook('onRequest', async (request) => {
-        const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT;
-        const traceHeader = request.headers['x-cloud-trace-context'] as string;
-        if (traceHeader && PROJECT_ID) {
-            const traceId = traceHeader.split('/')[0];
-            const traceContext = {
-                'logging.googleapis.com/trace': `projects/${PROJECT_ID}/traces/${traceId}`
-            };
-
+        // Extract trace context for GCP log correlation
+        const traceContext = extractTraceContext(request);
+        if (Object.keys(traceContext).length > 0) {
             request.log = request.log.child(traceContext);
         }
 
