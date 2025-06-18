@@ -46,7 +46,8 @@ services:
       - .:/app
       - node_modules_volume:/app/node_modules
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
