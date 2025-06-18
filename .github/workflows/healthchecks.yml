@@ -35,6 +35,7 @@ jobs:
         run: yarn playwright install --with-deps
 
       - name: Run health checks
+        id: healthchecks
         env:
           TEST_BASE_URL: ${{ github.event.inputs.target_url || matrix.environment.base_url }}
         run: yarn playwright test
@@ -54,3 +55,16 @@ jobs:
           name: test-results-${{ matrix.environment.name }}
           path: test-results/
           retention-days: 30
+      - name: Post a message in a channel
+        uses: slackapi/slack-github-action@v2.1.0
+        if: failure()
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Analytics Service Health Check Failed*: ${{ job.status }}\n${{ github.event.inputs.target_url || matrix.environment.base_url }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "Analytics Service Health Check Failed: ${{ job.status }}\n${{ github.event.inputs.target_url || matrix.environment.base_url }}"
