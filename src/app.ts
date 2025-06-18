@@ -1,17 +1,15 @@
 // Main module file
-import dotenv from 'dotenv';
-dotenv.config();
-
 import fastify from 'fastify';
 import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
 import {processRequest, validateRequest} from './services/proxy';
 import {getLoggerConfig} from './utils/logger';
 import loggingPlugin from './plugins/logging';
 import corsPlugin from './plugins/cors';
+import config from '@tryghost/config';
 
 function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
     return {
-        upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
+        upstream: config.get('PROXY_TARGET'),
         prefix: prefix,
         rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
         httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -23,7 +21,7 @@ function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
                     reply.log.error({
                         err: error,
                         req: reply.request,
-                        upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
+                        upstream: config.get('PROXY_TARGET'),
                         type: 'proxy_error'
                     }, 'Proxy error occurred');
                 } else {
@@ -32,14 +30,14 @@ function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
                 reply.status(502).send({error: 'Proxy error'});
             }
         },
-        disableRequestLogging: process.env.LOG_PROXY_REQUESTS === 'false'
+        disableRequestLogging: config.get('LOG_PROXY_REQUESTS') === 'false'
     };
 }
 
 const app = fastify({
     logger: getLoggerConfig(),
     disableRequestLogging: true,
-    trustProxy: process.env.TRUST_PROXY !== 'false' // defaults to true, can be disabled by setting to 'false'
+    trustProxy: config.get('TRUST_PROXY') !== 'false'
 });
 
 // Register CORS plugin

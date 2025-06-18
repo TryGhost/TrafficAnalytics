@@ -1,5 +1,6 @@
 import {PubSub} from '@google-cloud/pubsub';
 import logger from '../../utils/logger.js';
+import config from '@tryghost/config';
 
 export interface PublishEventOptions {
     topic: string;
@@ -12,7 +13,7 @@ class EventPublisher {
 
     private constructor() {
         this.pubsub = new PubSub({
-            projectId: process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-dev'
+            projectId: config.get('GOOGLE_CLOUD_PROJECT')
         });
     }
 

@@ -1,9 +1,10 @@
 import app from './src/app';
 import {fileURLToPath} from 'url';
+import config from '@tryghost/config';
 
 const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 
-const port: number = parseInt(process.env.PORT || '3000', 10);
+const port: number = config.get('PORT');
 
 // Start the server if this file is run directly
 if (isMainModule) {
