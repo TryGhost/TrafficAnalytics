@@ -1,10 +1,11 @@
 import {PubSub} from '@google-cloud/pubsub';
-import logger from '../../utils/logger.js';
 import config from '@tryghost/config';
+import type {FastifyBaseLogger} from 'fastify';
 
 export interface PublishEventOptions {
     topic: string;
     payload: Record<string, unknown>;
+    logger: FastifyBaseLogger;
 }
 
 class EventPublisher {
@@ -24,7 +25,7 @@ class EventPublisher {
         return EventPublisher.instance;
     }
 
-    async publishEvent({topic, payload}: PublishEventOptions): Promise<string> {
+    async publishEvent({topic, payload, logger}: PublishEventOptions): Promise<string> {
         try {
             const message = {
                 data: Buffer.from(JSON.stringify(payload)),
@@ -52,7 +53,7 @@ class EventPublisher {
     }
 }
 
-export const publishEvent = async ({topic, payload}: PublishEventOptions): Promise<string> => {
+export const publishEvent = async ({topic, payload, logger}: PublishEventOptions): Promise<string> => {
     const publisher = EventPublisher.getInstance();
-    return publisher.publishEvent({topic, payload});
+    return publisher.publishEvent({topic, payload, logger});
 };

@@ -30,7 +30,8 @@ export async function processRequest(request: FastifyRequest, reply: FastifyRepl
                         headers: request.headers,
                         body: request.body,
                         ip: request.ip
-                    }
+                    },
+                    logger: request.log
                 });
             } catch (error) {
                 // Log the error but don't let it affect the request
