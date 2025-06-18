@@ -10,10 +10,13 @@ async function loggingPlugin(fastify: FastifyInstance) {
             request.log = request.log.child(traceContext);
         }
 
+        // Construct full URL to match GCP request logs
+        const fullUrl = `${request.protocol}://${request.hostname}${request.url}`;
+        
         request.log.info({
             httpRequest: {
                 requestMethod: request.method,
-                requestUrl: request.url,
+                requestUrl: fullUrl,
                 userAgent: request.headers['user-agent'],
                 remoteIp: request.ip,
                 referer: request.headers.referer,
@@ -24,10 +27,13 @@ async function loggingPlugin(fastify: FastifyInstance) {
     });
 
     fastify.addHook('onResponse', async (request, reply) => {
+        // Construct full URL to match GCP request logs
+        const fullUrl = `${request.protocol}://${request.hostname}${request.url}`;
+        
         request.log.info({
             httpRequest: {
                 requestMethod: request.method,
-                requestUrl: request.url,
+                requestUrl: fullUrl,
                 userAgent: request.headers['user-agent'],
                 remoteIp: request.ip,
                 referer: request.headers.referer,
