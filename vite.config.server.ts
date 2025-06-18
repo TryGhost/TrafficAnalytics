@@ -1,5 +1,4 @@
 import {defineConfig} from 'vite';
-import {VitePluginNode} from 'vite-plugin-node';
 
 export default defineConfig({
     server: {
@@ -9,20 +8,23 @@ export default defineConfig({
         target: 'esnext',
         outDir: 'dist/server',
         minify: false,
+        ssr: true,
         rollupOptions: {
+            input: 'server.ts',
             output: {
                 entryFileNames: '[name].js',
-                preserveModules: true,
-                exports: 'named',
                 format: 'es'
-            }
+            },
+            external: [
+                // External dependencies that should not be bundled
+                /^@fastify/,
+                /^@google-cloud/,
+                /^@tryghost/,
+                'fastify',
+                'fastify-plugin',
+                'pino',
+                'ua-parser-js'
+            ]
         }
-    },
-    plugins: [
-        ...VitePluginNode({
-            adapter: 'fastify',
-            appPath: './server.ts',
-            exportName: 'default'
-        })
-    ]
+    }
 });

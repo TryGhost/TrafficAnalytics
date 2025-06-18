@@ -1,5 +1,4 @@
 import {defineConfig} from 'vite';
-import {resolve} from 'path';
 
 export default defineConfig({
     server: {
@@ -9,17 +8,19 @@ export default defineConfig({
         target: 'esnext',
         outDir: 'dist/worker',
         minify: false,
-        lib: {
-            entry: resolve(__dirname, 'worker.ts'),
-            formats: ['es']
-        },
+        ssr: true,
         rollupOptions: {
+            input: 'worker.ts',
             output: {
                 entryFileNames: '[name].js',
-                preserveModules: true,
-                exports: 'named',
                 format: 'es'
-            }
+            },
+            external: [
+                // External dependencies that should not be bundled
+                /^@google-cloud/,
+                /^@tryghost/,
+                'pino'
+            ]
         }
     }
 });
