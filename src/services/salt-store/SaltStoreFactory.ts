@@ -14,7 +14,7 @@ export type SaltStoreConfig = {
 };
 
 export function createSaltStore(saltStoreConfig?: SaltStoreConfig): ISaltStore {
-    const storeType = saltStoreConfig?.type || (config.get('SALT_STORE_TYPE') as SaltStoreType);
+    const storeType = saltStoreConfig?.type || (config.get('SALT_STORE_TYPE') as SaltStoreType) || 'memory';
 
     switch (storeType) {
     case 'memory':

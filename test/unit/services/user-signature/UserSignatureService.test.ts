@@ -4,12 +4,16 @@ import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltSto
 import type {ISaltStore} from '../../../../src/services/salt-store';
 import crypto from 'crypto';
 import logger from '../../../../src/utils/logger';
+import config from '@tryghost/config';
+
+vi.mock('@tryghost/config');
 
 describe('UserSignatureService', () => {
     let userSignatureService: UserSignatureService;
     let mockSaltStore: ISaltStore;
 
     beforeEach(() => {
+        vi.clearAllMocks();
         // Mock logger methods to avoid noise in tests
         vi.spyOn(logger, 'info').mockImplementation(() => {});
         vi.spyOn(logger, 'error').mockImplementation(() => {});
@@ -21,7 +25,7 @@ describe('UserSignatureService', () => {
     afterEach(() => {
         // Clean up any running schedulers
         userSignatureService.stopCleanupScheduler();
-        vi.restoreAllMocks();
+        vi.clearAllMocks();
         vi.clearAllTimers();
     });
 
@@ -204,9 +208,17 @@ describe('UserSignatureService', () => {
             });
 
             it('should not start scheduler when ENABLE_SALT_CLEANUP_SCHEDULER is false', () => {
-                const originalEnv = process.env.ENABLE_SALT_CLEANUP_SCHEDULER;
+                vi.mocked(config.get).mockImplementation((key) => {
+                    if (key === 'ENABLE_SALT_CLEANUP_SCHEDULER') {
+                        return 'false';
+                    }
+                    if (key === 'SALT_STORE_TYPE') {
+                        return 'memory';
+                    }
+                    return undefined;
+                });
+                
                 const originalNodeEnv = process.env.NODE_ENV;
-                process.env.ENABLE_SALT_CLEANUP_SCHEDULER = 'false';
                 process.env.NODE_ENV = 'production';
                 
                 const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
@@ -215,14 +227,18 @@ describe('UserSignatureService', () => {
                 expect(setTimeoutSpy).not.toHaveBeenCalled();
                 
                 service.stopCleanupScheduler();
-                process.env.ENABLE_SALT_CLEANUP_SCHEDULER = originalEnv;
                 process.env.NODE_ENV = originalNodeEnv;
             });
 
             it('should start scheduler when environment allows', () => {
-                const originalEnv = process.env.ENABLE_SALT_CLEANUP_SCHEDULER;
+                vi.mocked(config.get).mockImplementation((key) => {
+                    if (key === 'ENABLE_SALT_CLEANUP_SCHEDULER') {
+                        return 'true';
+                    }
+                    return undefined;
+                });
+                
                 const originalNodeEnv = process.env.NODE_ENV;
-                process.env.ENABLE_SALT_CLEANUP_SCHEDULER = 'true';
                 process.env.NODE_ENV = 'production';
                 
                 const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
@@ -239,7 +255,6 @@ describe('UserSignatureService', () => {
                 expect(delayMs).toBeLessThan(60 * 60 * 1000); // Less than 60 minutes
                 
                 service.stopCleanupScheduler();
-                process.env.ENABLE_SALT_CLEANUP_SCHEDULER = originalEnv;
                 process.env.NODE_ENV = originalNodeEnv;
             });
         });
