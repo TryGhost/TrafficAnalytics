@@ -4,7 +4,7 @@ import config from '@tryghost/config';
 
 const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 
-const port: number = config.get('PORT');
+const port: number = parseInt(config.get('PORT'), 10);
 
 // Start the server if this file is run directly
 if (isMainModule) {
