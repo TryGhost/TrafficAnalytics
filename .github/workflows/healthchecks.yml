@@ -17,8 +17,6 @@ jobs:
         environment:
           - name: main
             base_url: https://main.ghost.org
-          - name: chris
-            base_url: https://www.chrisraible.com
     
     steps:
       - name: Wake up site
