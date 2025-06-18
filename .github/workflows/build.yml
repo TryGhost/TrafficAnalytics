@@ -145,12 +145,27 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: "Deploy to Staging (${{ matrix.region }})"
+        id: deploy-staging
         uses: "./.github/actions/deploy-gcp-cloud-run"
         with:
           environment: staging
           region: ${{ matrix.region }}
           service: stg-${{ matrix.region_name }}-traffic-analytics
           image: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
+
+      - name: Send slack notification for staging deployment
+        uses: slackapi/slack-github-action@v2.1.0
+        if: always()
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Traffic Analytics Staging Deployment*: ${{ job.status }} (${{ matrix.region_name }})\nImage: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Traffic Analytics Staging Deployment*: ${{ job.status }} (${{ matrix.region_name }})\nImage: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}"
 
   deploy-production:
     name: Deploy to Production
@@ -167,9 +182,24 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: "Deploy to Production (${{ matrix.region }})"
+        id: deploy-production
         uses: "./.github/actions/deploy-gcp-cloud-run"
         with:
           environment: production
           region: ${{ matrix.region }}
           service: prd-${{ matrix.region_name }}-traffic-analytics
           image: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
+
+      - name: Send slack notification for production deployment
+        uses: slackapi/slack-github-action@v2.1.0
+        if: always()
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Traffic Analytics Production Deployment*: ${{ job.status }} (${{ matrix.region_name }})\nImage: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*Traffic Analytics Production Deployment*: ${{ job.status }} (${{ matrix.region_name }})\nImage: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}"
