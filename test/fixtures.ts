@@ -1,7 +1,7 @@
-import { test as base } from '@playwright/test';
+import {test as base} from '@playwright/test';
 
 export const test = base.extend({
-    page: async ({ page }, use) => {
+    page: async ({page}, use) => {
         // Set synthetic monitoring flag before each test
         await page.addInitScript(() => {
             window.__GHOST_SYNTHETIC_MONITORING__ = true;
@@ -11,4 +11,4 @@ export const test = base.extend({
     }
 });
 
-export { expect } from '@playwright/test';
+export {expect} from '@playwright/test';
