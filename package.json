@@ -21,6 +21,7 @@
     "test:types": "tsc --noEmit",
     "test": "yarn test:types && yarn test:unit && yarn test:integration",
     "docker:test": "docker compose run --rm test",
+    "test:healthchecks": "playwright test",
     "lint": "eslint src/ test/ scripts/ --ext .js,.ts --cache",
     "lint:fix": "eslint src/ test/ scripts/ --ext .js,.ts --cache --fix",
     "docker:lint": "docker compose run --rm lint",
@@ -30,6 +31,7 @@
     "dist"
   ],
   "devDependencies": {
+    "@playwright/test": "1.53.0",
     "@types/dotenv": "8.2.3",
     "@types/node": "22.15.32",
     "@types/supertest": "6.0.3",
@@ -38,6 +40,7 @@
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.4.3",
     "pino-pretty": "13.0.0",
+    "playwright": "1.53.0",
     "supertest": "6.3.4",
     "tsx": "4.20.3",
     "typescript": "5.8.3",
