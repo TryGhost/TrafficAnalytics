@@ -3,11 +3,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import fastify from 'fastify';
-import fastifyCors from '@fastify/cors';
 import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
 import {processRequest, validateRequest} from './services/proxy';
 import {getLoggerConfig} from './utils/logger';
 import loggingPlugin from './plugins/logging';
+import corsPlugin from './plugins/cors';
 
 function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
     return {
@@ -43,11 +43,7 @@ const app = fastify({
 });
 
 // Register CORS plugin
-app.register(fastifyCors, {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'x-site-uuid']
-});
+app.register(corsPlugin);
 
 // Register logging plugin
 app.register(loggingPlugin);
