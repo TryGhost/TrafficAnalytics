@@ -5,6 +5,7 @@ import type {ISaltStore} from '../../../../src/services/salt-store';
 import crypto from 'crypto';
 import logger from '../../../../src/utils/logger';
 import config from '@tryghost/config';
+import {mockConfigGet} from '../../../utils/config-mock';
 
 vi.mock('@tryghost/config');
 
@@ -208,14 +209,8 @@ describe('UserSignatureService', () => {
             });
 
             it('should not start scheduler when ENABLE_SALT_CLEANUP_SCHEDULER is false', () => {
-                vi.mocked(config.get).mockImplementation((key) => {
-                    if (key === 'ENABLE_SALT_CLEANUP_SCHEDULER') {
-                        return 'false';
-                    }
-                    if (key === 'SALT_STORE_TYPE') {
-                        return 'memory';
-                    }
-                    return undefined;
+                config.get = mockConfigGet({
+                    ENABLE_SALT_CLEANUP_SCHEDULER: 'false'
                 });
                 
                 const originalNodeEnv = process.env.NODE_ENV;
@@ -231,11 +226,8 @@ describe('UserSignatureService', () => {
             });
 
             it('should start scheduler when environment allows', () => {
-                vi.mocked(config.get).mockImplementation((key) => {
-                    if (key === 'ENABLE_SALT_CLEANUP_SCHEDULER') {
-                        return 'true';
-                    }
-                    return undefined;
+                config.get = mockConfigGet({
+                    ENABLE_SALT_CLEANUP_SCHEDULER: 'true'
                 });
                 
                 const originalNodeEnv = process.env.NODE_ENV;

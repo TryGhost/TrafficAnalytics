@@ -4,6 +4,7 @@ import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltSto
 import {FirestoreSaltStore} from '../../../../src/services/salt-store/FirestoreSaltStore';
 import type {ISaltStore} from '../../../../src/services/salt-store/ISaltStore';
 import config from '@tryghost/config';
+import {mockConfigGet} from '../../../utils/config-mock';
 
 vi.mock('@tryghost/config');
 
@@ -18,12 +19,7 @@ describe('SaltStoreFactory', () => {
 
     describe('createSaltStore', () => {
         it('should create a memory salt store by default', () => {
-            vi.mocked(config.get).mockImplementation((key) => {
-                if (key === 'SALT_STORE_TYPE') {
-                    return 'memory';
-                }
-                return undefined;
-            });
+            config.get = mockConfigGet();
 
             const store = createSaltStore();
 
@@ -34,6 +30,8 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should create a memory salt store with explicit memory config', () => {
+            config.get = mockConfigGet();
+            
             const saltStoreConfig: SaltStoreConfig = {type: 'memory'};
             const store = createSaltStore(saltStoreConfig);
 
@@ -41,14 +39,9 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should throw error when creating firestore store without projectId', () => {
-            vi.mocked(config.get).mockImplementation((key) => {
-                if (key === 'GOOGLE_CLOUD_PROJECT') {
-                    return '';
-                }
-                if (key === 'FIRESTORE_DATABASE_ID') {
-                    return '';
-                }
-                return undefined;
+            config.get = mockConfigGet({
+                GOOGLE_CLOUD_PROJECT: '',
+                FIRESTORE_DATABASE_ID: ''
             });
             
             const saltStoreConfig: SaltStoreConfig = {type: 'firestore', databaseId: 'test-db'};
@@ -57,9 +50,10 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should throw error when creating firestore store without databaseId', () => {
-            // Ensure no environment variables are set
-            // vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
-            // vi.stubEnv('FIRESTORE_DATABASE_ID', '');
+            config.get = mockConfigGet({
+                GOOGLE_CLOUD_PROJECT: '',
+                FIRESTORE_DATABASE_ID: ''
+            });
             
             const saltStoreConfig: SaltStoreConfig = {type: 'firestore', projectId: 'test-project'};
             
@@ -106,17 +100,10 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should create firestore store from config', () => {
-            vi.mocked(config.get).mockImplementation((key) => {
-                if (key === 'SALT_STORE_TYPE') {
-                    return 'firestore';
-                }
-                if (key === 'GOOGLE_CLOUD_PROJECT') {
-                    return 'env-project';
-                }
-                if (key === 'FIRESTORE_DATABASE_ID') {
-                    return 'env-database';
-                }
-                return undefined;
+            config.get = mockConfigGet({
+                SALT_STORE_TYPE: 'firestore',
+                GOOGLE_CLOUD_PROJECT: 'env-project',
+                FIRESTORE_DATABASE_ID: 'env-database'
             });
 
             const store = createSaltStore();
@@ -125,14 +112,9 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should use global config values when saltStoreConfig is not provided', () => {
-            vi.mocked(config.get).mockImplementation((key) => {
-                if (key === 'GOOGLE_CLOUD_PROJECT') {
-                    return 'env-project';
-                }
-                if (key === 'FIRESTORE_DATABASE_ID') {
-                    return 'env-database';
-                }
-                return undefined;
+            config.get = mockConfigGet({
+                GOOGLE_CLOUD_PROJECT: 'env-project',
+                FIRESTORE_DATABASE_ID: 'env-database'
             });
             
             const saltStoreConfig: SaltStoreConfig = {type: 'firestore'};
