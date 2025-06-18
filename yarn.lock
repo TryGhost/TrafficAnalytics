@@ -340,6 +340,21 @@
     "@glimmer/env" "^0.1.7"
     "@glimmer/global-context" "0.84.3"
 
+"@google-cloud/common@^5.0.0":
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/@google-cloud/common/-/common-5.0.2.tgz#423ad94b125d44263cbed2b5eb1ce1d4d53dc038"
+  integrity sha512-V7bmBKYQyu0eVG2BFejuUjlBt+zrya6vtsKdY+JxMM/dNntPF41vZ9+LhOshEUH01zOHEqBSvI7Dad7ZS6aUeA==
+  dependencies:
+    "@google-cloud/projectify" "^4.0.0"
+    "@google-cloud/promisify" "^4.0.0"
+    arrify "^2.0.1"
+    duplexify "^4.1.1"
+    extend "^3.0.2"
+    google-auth-library "^9.0.0"
+    html-entities "^2.5.2"
+    retry-request "^7.0.0"
+    teeny-request "^9.0.0"
+
 "@google-cloud/firestore@7.11.1":
   version "7.11.1"
   resolved "https://registry.yarnpkg.com/@google-cloud/firestore/-/firestore-7.11.1.tgz#fbdb99f1e263889fc1c259986238404e7a480136"
@@ -351,6 +366,36 @@
     google-gax "^4.3.3"
     protobufjs "^7.2.6"
 
+"@google-cloud/logging@^11.2.0":
+  version "11.2.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/logging/-/logging-11.2.0.tgz#d282f136467cc4500932f1fa6d4fe58325eb2db2"
+  integrity sha512-Ma94jvuoMpbgNniwtelOt8w82hxK62FuOXZonEv0Hyk3B+/YVuLG/SWNyY9yMso/RXnPEc1fP2qo9kDrjf/b2w==
+  dependencies:
+    "@google-cloud/common" "^5.0.0"
+    "@google-cloud/paginator" "^5.0.0"
+    "@google-cloud/projectify" "^4.0.0"
+    "@google-cloud/promisify" "^4.0.0"
+    "@opentelemetry/api" "^1.7.0"
+    arrify "^2.0.1"
+    dot-prop "^6.0.0"
+    eventid "^2.0.0"
+    extend "^3.0.2"
+    gcp-metadata "^6.0.0"
+    google-auth-library "^9.0.0"
+    google-gax "^4.0.3"
+    on-finished "^2.3.0"
+    pumpify "^2.0.1"
+    stream-events "^1.0.5"
+    uuid "^9.0.0"
+
+"@google-cloud/paginator@^5.0.0":
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/@google-cloud/paginator/-/paginator-5.0.2.tgz#86ad773266ce9f3b82955a8f75e22cd012ccc889"
+  integrity sha512-DJS3s0OVH4zFDB1PzjxAsHqJT6sKVbRwwML0ZBP9PbU7Yebtu/7SWMRzvO2J3nUi9pRNITCfu4LJeooM2w4pjg==
+  dependencies:
+    arrify "^2.0.0"
+    extend "^3.0.2"
+
 "@google-cloud/paginator@^6.0.0":
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/@google-cloud/paginator/-/paginator-6.0.0.tgz#27d477c2e75f7839da13ca681f6427e015ad75d1"
@@ -358,15 +403,35 @@
   dependencies:
     extend "^3.0.2"
 
+"@google-cloud/pino-logging-gcp-config@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@google-cloud/pino-logging-gcp-config/-/pino-logging-gcp-config-1.0.4.tgz#70170c23e65c0593f5fc3db3bbbcb892dfb5161e"
+  integrity sha512-EZ2cVRbJUJyzimAHyR+FCy2+xRw0+aBgPS5ZncvoLuVHB3LqQcdtZsfGV/omRPllD9ge9MXMS/3vRGvi2Xz2uQ==
+  dependencies:
+    "@google-cloud/logging" "^11.2.0"
+    eventid "^2.0.1"
+    google-gax "^4.6.1"
+    pino "^9.6.0"
+
 "@google-cloud/precise-date@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@google-cloud/precise-date/-/precise-date-5.0.0.tgz#31891974143ecdcacce0a6835c285a77b0968477"
   integrity sha512-9h0Gvw92EvPdE8AK8AgZPbMnH5ftDyPtKm7/KUfcJVaPEPjwGDsJd1QV0H8esBDV4II41R/2lDWH1epBqIoKUw==
 
+"@google-cloud/projectify@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/projectify/-/projectify-4.0.0.tgz#d600e0433daf51b88c1fa95ac7f02e38e80a07be"
+  integrity sha512-MmaX6HeSvyPbWGwFq7mXdo0uQZLGBYCwziiLIGq5JVX+/bdI3SAq6bP98trV5eTWfLuvsMcIC1YJOF2vfteLFA==
+
 "@google-cloud/projectify@^5.0.0":
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@google-cloud/projectify/-/projectify-5.0.0.tgz#9e8ab37e8826fb6678019879111759ab3ca64548"
   integrity sha512-XXQLaIcLrOAMWvRrzz+mlUGtN6vlVNja3XQbMqRi/V7XJTAVwib3VcKd7oRwyZPkp7rBVlHGcaqdyGRrcnkhlA==
+
+"@google-cloud/promisify@^4.0.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/promisify/-/promisify-4.1.0.tgz#df8b060f0121c6462233f5420738dcda09c6df4a"
+  integrity sha512-G/FQx5cE/+DqBbOpA5jKsegGwdPniU6PuIEMt+qxWgFxvxuFOzVmp6zYchtYuwAWV5/8Dgs0yAmjvNZv3uXLQg==
 
 "@google-cloud/promisify@^5.0.0":
   version "5.0.0"
@@ -521,7 +586,7 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@opentelemetry/api@^1.3.0", "@opentelemetry/api@~1.9.0":
+"@opentelemetry/api@^1.3.0", "@opentelemetry/api@^1.7.0", "@opentelemetry/api@~1.9.0":
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/@opentelemetry/api/-/api-1.9.0.tgz#d03eba68273dc0f7509e2a3d5cba21eae10379fe"
   integrity sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==
@@ -2017,7 +2082,7 @@ arraybuffer.prototype.slice@^1.0.4:
     get-intrinsic "^1.2.6"
     is-array-buffer "^3.0.4"
 
-arrify@^2.0.0:
+arrify@^2.0.0, arrify@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/arrify/-/arrify-2.0.1.tgz#c9655e9331e0abcd588d2a7cad7e9956f66701fa"
   integrity sha512-3duEwti880xqi4eAMN8AyR4a0ByT90zoYdLlevfrvU43vb0YZwZVfxOgxWrLXXXpyugL0hNZc9G6BiB5B3nUug==
@@ -2639,6 +2704,13 @@ dot-case@^3.0.4:
     no-case "^3.0.4"
     tslib "^2.0.3"
 
+dot-prop@^6.0.0:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/dot-prop/-/dot-prop-6.0.1.tgz#fc26b3cf142b9e59b74dbd39ed66ce620c681083"
+  integrity sha512-tE7ztYzXHIeyvc7N+hR3oi7FIbf/NIjVP9hmAt3yMXzrQ072/fpjGLx2GxNxGxUl5V73MEqYzioOMoVhGMJ5cA==
+  dependencies:
+    is-obj "^2.0.0"
+
 dotenv@*:
   version "16.5.0"
   resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.5.0.tgz#092b49f25f808f020050051d1ff258e404c78692"
@@ -2653,7 +2725,7 @@ dunder-proto@^1.0.0, dunder-proto@^1.0.1:
     es-errors "^1.3.0"
     gopd "^1.2.0"
 
-duplexify@^4.0.0, duplexify@^4.1.3:
+duplexify@^4.0.0, duplexify@^4.1.1, duplexify@^4.1.3:
   version "4.1.3"
   resolved "https://registry.yarnpkg.com/duplexify/-/duplexify-4.1.3.tgz#a07e1c0d0a2c001158563d32592ba58bddb0236f"
   integrity sha512-M3BmBhwJRZsSx38lZyhE53Csddgzl5R7xGJNk7CVddZD6CcmwMCH8J+7AprIrQKH7TonKxaCjcv27Qmf+sQ+oA==
@@ -2679,6 +2751,11 @@ editions@^1.1.1:
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/editions/-/editions-1.3.4.tgz#3662cb592347c3168eb8e498a0ff73271d67f50b"
   integrity sha512-gzao+mxnYDzIysXKMQi/+M1mjy/rjestjg6OPoYTtI+3Izp23oiGZitsl9lPDPiTGXbcSIk1iJWhliSaglxnUg==
+
+ee-first@1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
+  integrity sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==
 
 ember-cli-babel-plugin-helpers@^1.1.1:
   version "1.1.1"
@@ -3147,6 +3224,13 @@ event-target-shim@^5.0.0:
   resolved "https://registry.yarnpkg.com/event-target-shim/-/event-target-shim-5.0.1.tgz#5d4d3ebdf9583d63a5333ce2deb7480ab2b05789"
   integrity sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==
 
+eventid@^2.0.0, eventid@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/eventid/-/eventid-2.0.1.tgz#574e860149457a79a2efe788c459f0c3062d02ec"
+  integrity sha512-sPNTqiMokAvV048P2c9+foqVJzk49o6d4e0D/sq5jog3pw+4kBgyR0gaM1FM7Mx6Kzd9dztesh9oYz1LWWOpzw==
+  dependencies:
+    uuid "^8.0.0"
+
 expect-type@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/expect-type/-/expect-type-1.2.1.tgz#af76d8b357cf5fa76c41c09dafb79c549e75f71f"
@@ -3495,7 +3579,7 @@ gaxios@^7.0.0:
     https-proxy-agent "^7.0.1"
     node-fetch "^3.3.2"
 
-gcp-metadata@^6.1.0:
+gcp-metadata@^6.0.0, gcp-metadata@^6.1.0:
   version "6.1.1"
   resolved "https://registry.yarnpkg.com/gcp-metadata/-/gcp-metadata-6.1.1.tgz#f65aa69f546bc56e116061d137d3f5f90bdec494"
   integrity sha512-a4tiq7E0/5fTjxPAaH4jpjkSv/uCaU2p5KC6HVGrvl0cDjA8iBZv4vv1gyzlmK0ZUKqwpOyQMKzZQe3lTit77A==
@@ -3647,7 +3731,7 @@ google-auth-library@^10.0.0-rc.1:
     gtoken "^8.0.0"
     jws "^4.0.0"
 
-google-auth-library@^9.3.0:
+google-auth-library@^9.0.0, google-auth-library@^9.3.0:
   version "9.15.1"
   resolved "https://registry.yarnpkg.com/google-auth-library/-/google-auth-library-9.15.1.tgz#0c5d84ed1890b2375f1cd74f03ac7b806b392928"
   integrity sha512-Jb6Z0+nvECVz+2lzSMt9u98UsoakXxA2HGHMCxh+so3n90XgYWkq5dur19JAJV7ONiJY22yBTyJB1TSkvPq9Ng==
@@ -3659,7 +3743,7 @@ google-auth-library@^9.3.0:
     gtoken "^7.0.0"
     jws "^4.0.0"
 
-google-gax@^4.3.3:
+google-gax@^4.0.3, google-gax@^4.3.3, google-gax@^4.6.1:
   version "4.6.1"
   resolved "https://registry.yarnpkg.com/google-gax/-/google-gax-4.6.1.tgz#57f8e3d893d4c708a71167cdcf47eb3afab95929"
   integrity sha512-V6eky/xz2mcKfAd1Ioxyd6nmA61gao3n01C+YeuIwu3vzM9EDR6wcVzMSIbLMDXWeoi9SHYctXuKYC5uJUT3eQ==
@@ -3825,6 +3909,11 @@ hosted-git-info@^2.1.4:
   version "2.8.9"
   resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.8.9.tgz#dffc0bf9a21c02209090f2aa69429e1414daf3f9"
   integrity sha512-mxIDAb9Lsm6DoOJ7xH+5+X4y1LU/4Hi50L9C5sIswK3JzULS4bwk1FvjdBgvYR4bzT4tuUQiC15FE2f5HbLvYw==
+
+html-entities@^2.5.2:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/html-entities/-/html-entities-2.6.0.tgz#7c64f1ea3b36818ccae3d3fb48b6974208e984f8"
+  integrity sha512-kig+rMn/QOVRvr7c86gQ8lWXq+Hkv6CbAH1hLu+RG338StTpE8Z0b44SDVaqVu7HGKf27frdmUYEs9hTUX/cLQ==
 
 html-escaper@^2.0.0:
   version "2.0.2"
@@ -4053,6 +4142,11 @@ is-number@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/is-number/-/is-number-7.0.0.tgz#7535345b896734d5f80c4d06c50955527a14f12b"
   integrity sha512-41Cifkg6e8TylSpdtTpeLVMqvSBEVzTttHvERD741+pnZ8ANv0004MRL43QKPDlK9cGvNp6NZWZUBlbGXYxxng==
+
+is-obj@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/is-obj/-/is-obj-2.0.0.tgz#473fb05d973705e3fd9620545018ca8e22ef4982"
+  integrity sha512-drqDG3cbczxxEJRoOXcOjtdp1J/lyp1mNn0xaznRs8+muBhgQcrnbspox5X5fOw0HnMnbfDzvnEMEtqDEJEo8w==
 
 is-path-inside@^3.0.3:
   version "3.0.3"
@@ -4649,6 +4743,13 @@ on-exit-leak-free@^2.1.0:
   resolved "https://registry.yarnpkg.com/on-exit-leak-free/-/on-exit-leak-free-2.1.2.tgz#fed195c9ebddb7d9e4c3842f93f281ac8dadd3b8"
   integrity sha512-0eJJY6hXLGf1udHwfNftBqH+g73EU4B504nZeKpz1sYRKafAghwxEJunB2O7rDZkL4PGfsMVnTXZ2EjibbqcsA==
 
+on-finished@^2.3.0:
+  version "2.4.1"
+  resolved "https://registry.yarnpkg.com/on-finished/-/on-finished-2.4.1.tgz#58c8c44116e54845ad57f14ab10b03533184ac3f"
+  integrity sha512-oVlzkg3ENAhCk2zdv7IJwd/QUD4z2RxRwpkcGY8psCVcCYZNq4wYnVWALHM+brtuJjePWiYF/ClmuDr8Ch5+kg==
+  dependencies:
+    ee-first "1.1.1"
+
 once@^1.3.0, once@^1.3.1, once@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/once/-/once-1.4.0.tgz#583b1aa775961d4b113ac17d9c50baef9dd76bd1"
@@ -4875,7 +4976,7 @@ pino-std-serializers@^7.0.0:
   resolved "https://registry.yarnpkg.com/pino-std-serializers/-/pino-std-serializers-7.0.0.tgz#7c625038b13718dbbd84ab446bd673dc52259e3b"
   integrity sha512-e906FRY0+tV27iq4juKzSYPbUj2do2X2JX4EzSca1631EB2QJQUqGbDuERal7LCtOpxl6x3+nvo9NPZcmjkiFA==
 
-pino@9.7.0, pino@^9.0.0:
+pino@9.7.0, pino@^9.0.0, pino@^9.6.0:
   version "9.7.0"
   resolved "https://registry.yarnpkg.com/pino/-/pino-9.7.0.tgz#ff7cd86eb3103ee620204dbd5ca6ffda8b53f645"
   integrity sha512-vnMCM6xZTb1WDmLvtG2lE/2p+t9hDEIvTWJsu6FejkE62vB7gDhvzrpFR4Cw2to+9JNQxVnkAKVPA1KPB98vWg==
@@ -4972,6 +5073,15 @@ pump@^3.0.0:
   dependencies:
     end-of-stream "^1.1.0"
     once "^1.3.1"
+
+pumpify@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/pumpify/-/pumpify-2.0.1.tgz#abfc7b5a621307c728b551decbbefb51f0e4aa1e"
+  integrity sha512-m7KOje7jZxrmutanlkS1daj1dS6z6BgslzOXmcSEpIlCxM3VJH7lG5QLeck/6hgF6F4crFf01UtQmNsJfweTAw==
+  dependencies:
+    duplexify "^4.1.1"
+    inherits "^2.0.3"
+    pump "^3.0.0"
 
 punycode@^2.1.0:
   version "2.3.1"
@@ -5982,6 +6092,11 @@ util-deprecate@^1.0.1, util-deprecate@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
   integrity sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==
+
+uuid@^8.0.0:
+  version "8.3.2"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-8.3.2.tgz#80d5b5ced271bb9af6c445f21a1a04c606cefbe2"
+  integrity sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==
 
 uuid@^9.0.0, uuid@^9.0.1:
   version "9.0.1"
