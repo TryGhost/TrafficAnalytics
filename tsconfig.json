@@ -11,6 +11,6 @@
       "moduleResolution": "bundler",
       "resolveJsonModule": true
     },
-    "include": ["src/**/*", "server.ts", "test/**/*"],
-    "exclude": ["node_modules", "dist"]
+    "include": ["src/**/*", "server.ts", "test/unit/**/*"],
+    "exclude": ["node_modules", "dist", "test/healthchecks/**/*"]
   }

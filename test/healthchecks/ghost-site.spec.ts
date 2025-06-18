@@ -1,4 +1,4 @@
-import {test, expect} from '../fixtures';
+import {test, expect} from './fixtures';
 
 test.describe('Ghost site healthcheck', () => {
     test('should make analytics request with 202 response', async ({page}) => {
