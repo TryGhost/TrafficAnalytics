@@ -61,6 +61,29 @@ services:
       pubsub:
         condition: service_healthy
 
+  worker:
+    image: local/traffic-analytics:development
+    pull_policy: never
+    command: ["yarn", "dev:worker"]
+    volumes:
+      - .:/app
+      - node_modules_volume:/app/node_modules
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+    depends_on:
+      firestore:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+
   test:
     image: local/traffic-analytics:development
     pull_policy: never
