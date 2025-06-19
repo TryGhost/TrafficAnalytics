@@ -88,15 +88,9 @@ jobs:
               - type: "section"
                 fields:
                   - type: "mrkdwn"
-                    text: "*Status:*\n${{ job.status == 'success' && ':large_green_circle: Success' || ':red_circle: Failed' }}"
-                  - type: "mrkdwn"
                     text: "*Environment:*\n:gear: ${{ matrix.environment }}"
                   - type: "mrkdwn"
-                    text: "*Region:*\n:earth_americas: ${{ matrix.region_name }}"
-                  - type: "mrkdwn"
-                    text: "*Rolled back to:*\n:whale: `${{ env.DOCKER_IMAGE }}:${{ inputs.tag }}`"
-                  - type: "mrkdwn"
-                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                    text: "*Workflow:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
             attachments:
               - color: "${{ job.status == 'success' && 'warning' || 'danger' }}"
                 fallback: "Traffic Analytics Rollback: ${{ job.status }}"

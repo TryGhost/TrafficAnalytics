@@ -76,8 +76,6 @@ jobs:
               - type: "section"
                 fields:
                   - type: "mrkdwn"
-                    text: "*Status:*\n:red_circle: Failed"
-                  - type: "mrkdwn"
                     text: "*Environment:*\n:computer: ${{ matrix.environment.name }}"
                   - type: "mrkdwn"
                     text: "*Target URL:*\n:globe_with_meridians: ${{ github.event.inputs.target_url || matrix.environment.base_url }}"

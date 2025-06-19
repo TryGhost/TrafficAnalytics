@@ -196,13 +196,7 @@ jobs:
               - type: "section"
                 fields:
                   - type: "mrkdwn"
-                    text: "*Status:*\n${{ job.status == 'success' && ':large_green_circle: Success' || ':red_circle: Failed' }}"
-                  - type: "mrkdwn"
-                    text: "*Region:*\n:earth_americas: ${{ matrix.region_name }}"
-                  - type: "mrkdwn"
-                    text: "*Image:*\n:whale: `${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}`"
-                  - type: "mrkdwn"
-                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                    text: "*Workflow:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
             attachments:
               - color: "${{ job.status == 'success' && 'good' || 'danger' }}"
                 fallback: "Traffic Analytics Staging Deployment: ${{ job.status }}"
@@ -246,13 +240,7 @@ jobs:
               - type: "section"
                 fields:
                   - type: "mrkdwn"
-                    text: "*Status:*\n${{ job.status == 'success' && ':large_green_circle: Success' || ':red_circle: Failed' }}"
-                  - type: "mrkdwn"
-                    text: "*Region:*\n:earth_americas: ${{ matrix.region_name }}"
-                  - type: "mrkdwn"
-                    text: "*Image:*\n:whale: `${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}`"
-                  - type: "mrkdwn"
-                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+                    text: "*Workflow:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
             attachments:
               - color: "${{ job.status == 'success' && 'good' || 'danger' }}"
                 fallback: "Traffic Analytics Production Deployment: ${{ job.status }}"
