@@ -21,6 +21,12 @@ jobs:
             base_url: https://traffic-analytics.ghst.pro/
           - name: staging-subdirectory
             base_url: https://traffic-analytics-subdirectory.ghost.is/blog/
+          - name: production-subdomain
+            base_url: https://traffic-analytics-subdomain.ghost.io/
+          - name: production-custom-domain
+            base_url: https://traffic-analytics.ghost.org/
+          - name: production-subdirectory
+            base_url: https://traffic-analytics-subdirectory.ghost.io/blog/
     
     steps:
       - name: Wake up site
