@@ -242,7 +242,7 @@ jobs:
     name: Notify Production Deployment Complete
     runs-on: ubuntu-latest
     needs: [deploy-production]
-    if: always()
+    if: always() && needs.deploy-production.result != 'skipped'
     steps:
       - name: Send consolidated slack notification for production
         uses: slackapi/slack-github-action@v2.1.0
