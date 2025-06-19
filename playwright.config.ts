@@ -11,7 +11,7 @@ export default defineConfig({
   
     use: {
         baseURL: process.env.TEST_BASE_URL || 'https://main.ghost.org',
-        trace: 'on-first-retry'
+        trace: 'retain-on-failure'
     },
 
     projects: [
