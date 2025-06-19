@@ -15,8 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          - name: main
-            base_url: https://main.ghost.org
+          - name: staging-subdomain
+            base_url: https://traffic-analytics-subdomain.ghost.is/
+          - name: staging-custom-domain
+            base_url: https://traffic-analytics.ghst.pro/
+          - name: staging-subdirectory
+            base_url: https://traffic-analytics-subdirectory.ghost.is/blog/
     
     steps:
       - name: Wake up site
@@ -34,6 +38,12 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Disable man-db trigger refreshes (https://github.com/actions/runner-images/issues/10977)
+        shell: bash
+        run: |
+          echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
+          sudo dpkg-reconfigure man-db
 
       - name: Get Playwright version
         id: playwright-version
