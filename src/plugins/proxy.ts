@@ -44,6 +44,11 @@ function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
 async function proxyPlugin(fastify: FastifyInstance) {
     // Register the analytics proxy
     fastify.register(fastifyHttpProxy, getProxyConfig('/tb/web_analytics'));
+    
+    // Register local proxy endpoint for development/testing
+    fastify.post('/local-proxy*', async () => {
+        return 'Hello World - From the local proxy';
+    });
 }
 
 export default fp(proxyPlugin);
