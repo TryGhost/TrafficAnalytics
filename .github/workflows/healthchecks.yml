@@ -15,8 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         environment:
-          - name: main
-            base_url: https://main.ghost.org
+          - name: staging-subdomain
+            base_url: https://traffic-analytics-subdomain.ghost.is/
+          - name: staging-custom-domain
+            base_url: https://traffic-analytics.ghst.pro/
+          - name: staging-subdirectory
+            base_url: https://traffic-analytics-subdirectory.ghost.is/blog/
     
     steps:
       - name: Wake up site
