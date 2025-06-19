@@ -131,6 +131,33 @@ jobs:
           git tag "v${{ needs.check-version-change.outputs.current-version }}"
           git push origin "v${{ needs.check-version-change.outputs.current-version }}"
 
+      - name: Send slack notification for new version release
+        uses: slackapi/slack-github-action@v2.1.0
+        if: success()
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "New Traffic Analytics Version Released: v${{ needs.check-version-change.outputs.current-version }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: ":tada: *New Traffic Analytics Version Released*"
+              - type: "section"
+                fields:
+                  - type: "mrkdwn"
+                    text: "*Version:*\n:label: v${{ needs.check-version-change.outputs.current-version }}"
+                  - type: "mrkdwn"
+                    text: "*Status:*\n:large_green_circle: Released"
+                  - type: "mrkdwn"
+                    text: "*Tag:*\n:bookmark: <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.check-version-change.outputs.current-version }}|v${{ needs.check-version-change.outputs.current-version }}>"
+                  - type: "mrkdwn"
+                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+            attachments:
+              - color: "good"
+                fallback: "New Traffic Analytics Version Released: v${{ needs.check-version-change.outputs.current-version }}"
+
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
@@ -160,12 +187,25 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Traffic Analytics Staging Deployment*: ${{ job.status }} (${{ matrix.region_name }})\nImage: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}"
+            text: "Traffic Analytics Staging Deployment: ${{ job.status }} (${{ matrix.region_name }})"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "*Traffic Analytics Staging Deployment*: ${{ job.status }} (${{ matrix.region_name }})\nImage: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}"
+                  text: "${{ job.status == 'success' && ':white_check_mark: *Traffic Analytics Staging Deployment*' || ':x: *Traffic Analytics Staging Deployment*' }}"
+              - type: "section"
+                fields:
+                  - type: "mrkdwn"
+                    text: "*Status:*\n${{ job.status == 'success' && ':large_green_circle: Success' || ':red_circle: Failed' }}"
+                  - type: "mrkdwn"
+                    text: "*Region:*\n:earth_americas: ${{ matrix.region_name }}"
+                  - type: "mrkdwn"
+                    text: "*Image:*\n:whale: `${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}`"
+                  - type: "mrkdwn"
+                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+            attachments:
+              - color: "${{ job.status == 'success' && 'good' || 'danger' }}"
+                fallback: "Traffic Analytics Staging Deployment: ${{ job.status }}"
 
   deploy-production:
     name: Deploy to Production
@@ -197,9 +237,22 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Traffic Analytics Production Deployment*: ${{ job.status }} (${{ matrix.region_name }})\nImage: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}"
+            text: "Traffic Analytics Production Deployment: ${{ job.status }} (${{ matrix.region_name }})"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "*Traffic Analytics Production Deployment*: ${{ job.status }} (${{ matrix.region_name }})\nImage: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}"
+                  text: "${{ job.status == 'success' && ':rocket: *Traffic Analytics Production Deployment*' || ':x: *Traffic Analytics Production Deployment*' }}"
+              - type: "section"
+                fields:
+                  - type: "mrkdwn"
+                    text: "*Status:*\n${{ job.status == 'success' && ':large_green_circle: Success' || ':red_circle: Failed' }}"
+                  - type: "mrkdwn"
+                    text: "*Region:*\n:earth_americas: ${{ matrix.region_name }}"
+                  - type: "mrkdwn"
+                    text: "*Image:*\n:whale: `${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}`"
+                  - type: "mrkdwn"
+                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+            attachments:
+              - color: "${{ job.status == 'success' && 'good' || 'danger' }}"
+                fallback: "Traffic Analytics Production Deployment: ${{ job.status }}"
