@@ -26,9 +26,5 @@ app.get('/', async () => {
     return 'Hello World - Github Actions Deployment Test';
 });
 
-app.post('/local-proxy*', async () => {
-    return 'Hello World - From the local proxy';
-});
-
 export default app;
 
