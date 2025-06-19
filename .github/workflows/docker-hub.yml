@@ -2,6 +2,9 @@ name: Docker Hub Release
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -58,4 +61,3 @@ jobs:
             echo "Pushing: $tag"
             docker push $tag
           done
-
