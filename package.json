@@ -22,11 +22,13 @@
     "test:e2e": "NODE_ENV=testing vitest run test/e2e",
     "test:types": "tsc --noEmit",
     "test": "yarn test:types && yarn test:unit && yarn test:integration",
-    "docker:test": "docker compose run --rm test",
+    "docker:test": "docker compose --profile testing run --rm test",
+    "docker:test:unit": "docker compose --profile testing run --rm test yarn test:unit",
+    "docker:test:integration": "docker compose --profile testing run --rm test yarn test:integration",
     "test:healthchecks": "playwright test",
     "lint": "eslint src/ test/ scripts/ *.ts --ext .js,.ts --cache",
     "lint:fix": "eslint src/ test/ scripts/ *.ts --ext .js,.ts --cache --fix",
-    "docker:lint": "docker compose run --rm lint",
+    "docker:lint": "docker compose --profile testing run --rm lint",
     "ship": "node scripts/ship.js"
   },
   "files": [

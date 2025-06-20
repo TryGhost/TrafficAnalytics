@@ -3,12 +3,16 @@ import {FirestoreSaltStore} from '../../../../src/services/salt-store/FirestoreS
 
 describe('FirestoreSaltStore', () => {
     let saltStore: FirestoreSaltStore;
-    const testCollectionName = 'test-salts';
+    let testCollectionName: string;
 
     beforeEach(async () => {
         // Create a new instance for each test
-        // Using test project and database IDs
-        saltStore = new FirestoreSaltStore('traffic-analytics-test', '(default)', testCollectionName);
+        // Using environment-configured project and database IDs
+        testCollectionName = process.env.FIRESTORE_SALT_COLLECTION || 'salts';
+        const projectId = process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-test';
+        const databaseId = process.env.FIRESTORE_DATABASE_ID || '(default)';
+        
+        saltStore = new FirestoreSaltStore(projectId, databaseId, testCollectionName);
 
         // Clean up any existing test data using the store's clear method
         await saltStore.clear();
