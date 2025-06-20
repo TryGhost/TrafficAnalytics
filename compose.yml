@@ -31,7 +31,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    stop_grace_period: 5s
+    stop_grace_period: 2s
 
   analytics-service:
     image: local/traffic-analytics:development
