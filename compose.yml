@@ -165,8 +165,6 @@ services:
       - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
     environment:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-test
-      - PUBSUB_TOPIC_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw
-      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw-sub
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
       interval: 5s
