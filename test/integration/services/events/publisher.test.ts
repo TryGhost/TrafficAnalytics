@@ -1,29 +1,20 @@
-import {describe, it, expect, beforeAll} from 'vitest';
-import {PubSub} from '@google-cloud/pubsub';
+import {describe, it, expect, beforeAll, afterAll} from 'vitest';
 import {publishEvent} from '../../../../src/services/events/publisher.js';
-import type {FastifyBaseLogger} from 'fastify';
+import {createMockLogger} from '../../../utils/mock-logger.js';
+import {createTopic, deleteTopic} from '../../../utils/pubsub.js';
 
 describe('Publisher Integration Tests', () => {
-    let pubsub: PubSub;
     let testTopic: string;
     let testPayload: Record<string, unknown>;
-    let mockLogger: FastifyBaseLogger;
+    let mockLogger: ReturnType<typeof createMockLogger>;
 
     beforeAll(async () => {
         // Use the same topic as the application for consistency
         testTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
+        await createTopic(testTopic);
+
         // Initialize mock logger
-        mockLogger = {
-            info: () => {},
-            error: () => {},
-            warn: () => {},
-            debug: () => {},
-            trace: () => {},
-            fatal: () => {},
-            level: 'info',
-            silent: false,
-            child: () => mockLogger
-        } as unknown as FastifyBaseLogger;
+        mockLogger = createMockLogger();
 
         // Initialize test payload
         testPayload = {
@@ -34,18 +25,10 @@ describe('Publisher Integration Tests', () => {
                 user_agent: 'test-agent'
             }
         };
+    });
 
-        // Initialize PubSub client for testing
-        pubsub = new PubSub({
-            projectId: process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-test'
-        });
-
-        // Ensure the topic exists (create if needed, but don't delete it)
-        const topic = pubsub.topic(testTopic);
-        const [exists] = await topic.exists();
-        if (!exists) {
-            throw new Error(`Topic ${testTopic} does not exist. Ensure the PubSub emulator is properly initialized.`);
-        }
+    afterAll(async function () {
+        await deleteTopic(testTopic);
     });
 
     it('should successfully publish a message to Pub/Sub', async () => {

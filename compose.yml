@@ -28,6 +28,7 @@ services:
     environment:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
       interval: 5s
@@ -86,6 +87,7 @@ services:
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
     networks:
       - dev-network
@@ -110,6 +112,7 @@ services:
       - FIRESTORE_EMULATOR_HOST=firestore-test:8080
       - PUBSUB_EMULATOR_HOST=pubsub-test:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw
+      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw-sub
       - FIRESTORE_DATABASE_ID=(default)
       - FIRESTORE_SALT_COLLECTION=salts
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
@@ -141,8 +144,6 @@ services:
   firestore-test:
     image: google/cloud-sdk:emulators
     command: ["/app/firestore-wrapper.sh"]
-    ports:
-      - ${FIRESTORE_TEST_PORT:-8081}:8080
     volumes:
       - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
     environment:
@@ -160,13 +161,10 @@ services:
   pubsub-test:
     image: google/cloud-sdk:emulators
     command: ["/app/start-pubsub.sh"]
-    ports:
-      - ${PUBSUB_TEST_PORT:-8086}:8085
     volumes:
       - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
     environment:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-test
-      - PUBSUB_TOPIC_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
       interval: 5s

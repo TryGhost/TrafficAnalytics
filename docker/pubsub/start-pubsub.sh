@@ -11,11 +11,13 @@
 HOST=0.0.0.0:8085
 PROJECT_ID=${GOOGLE_CLOUD_PROJECT:-traffic-analytics-dev}
 TOPIC_NAME=${PUBSUB_TOPIC_PAGE_HITS_RAW:-traffic-analytics-page-hits-raw}
+SUBSCRIPTION_NAME=${PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW:-traffic-analytics-page-hits-raw-subscription}
 
 echo "Starting Pub/Sub emulator..."
 echo "Host: $HOST"
 echo "Project: $PROJECT_ID"
 echo "Topic: $TOPIC_NAME"
+echo "Subscription: $SUBSCRIPTION_NAME"
 
 # Start the emulator in the background
 gcloud beta emulators pubsub start --host-port=${HOST} --project=${PROJECT_ID} &
@@ -29,20 +31,41 @@ done
 
 echo "Pub/Sub emulator is ready!"
 
-# Create the topic via REST API
-echo "Creating topic: $TOPIC_NAME"
-if curl -s -o /dev/null -w "%{http_code}" -X PUT http://localhost:8085/v1/projects/${PROJECT_ID}/topics/${TOPIC_NAME} | grep -q "200"; then
-    echo "Topic created successfully: $TOPIC_NAME"
+# Check if running in test mode - if so, skip topic/subscription creation
+# Tests will manage their own topics and subscriptions programmatically
+if [[ "$PROJECT_ID" == *"test"* ]]; then
+    echo "Test environment detected - skipping automatic topic/subscription creation"
+    echo "Tests will manage their own Pub/Sub resources"
 else
-    echo "Failed to create topic: $TOPIC_NAME"
-    exit 1
+    # Create the topic via REST API
+    echo "Creating topic: $TOPIC_NAME"
+    if curl -s -o /dev/null -w "%{http_code}" -X PUT http://localhost:8085/v1/projects/${PROJECT_ID}/topics/${TOPIC_NAME} | grep -q "200"; then
+        echo "Topic created successfully: $TOPIC_NAME"
+    else
+        echo "Failed to create topic: $TOPIC_NAME"
+        exit 1
+    fi
+
+    # Create the subscription via REST API
+    echo "Creating subscription: $SUBSCRIPTION_NAME"
+    SUBSCRIPTION_DATA='{"topic": "projects/'${PROJECT_ID}'/topics/'${TOPIC_NAME}'"}'
+    if curl -s -o /dev/null -w "%{http_code}" -X PUT \
+        -H "Content-Type: application/json" \
+        -d "$SUBSCRIPTION_DATA" \
+        http://localhost:8085/v1/projects/${PROJECT_ID}/subscriptions/${SUBSCRIPTION_NAME} | grep -q "200"; then
+        echo "Subscription created successfully: $SUBSCRIPTION_NAME"
+    else
+        echo "Failed to create subscription: $SUBSCRIPTION_NAME"
+        exit 1
+    fi
+
+    # Verify topic and subscription were created
+    echo "Verifying topic and subscription creation..."
+    curl -s http://localhost:8085/v1/projects/${PROJECT_ID}/topics
+    curl -s http://localhost:8085/v1/projects/${PROJECT_ID}/subscriptions
 fi
 
-# Verify topic was created by listing topics
-echo "Verifying topic creation..."
-curl -s http://localhost:8085/v1/projects/${PROJECT_ID}/topics
-
-echo "Topic creation complete!"
+echo "Setup complete!"
 
 # Create a file to signal that setup is complete
 touch /tmp/pubsub-ready
