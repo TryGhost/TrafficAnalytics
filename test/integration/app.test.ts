@@ -62,8 +62,10 @@ describe('Fastify App', () => {
 
     let targetUrl: string;
     let app: FastifyInstance;
+    let topicName: string;
 
     beforeAll(async () => {
+        topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
         targetServer = createMockUpstream(targetRequests);
         await targetServer.listen({port: 0});
         const address = targetServer.server.address();
@@ -100,27 +102,14 @@ describe('Fastify App', () => {
         // This is necessary because the target server is a mock and the requests are recorded in the same array
         // Using targetRequests = [] would create a new array, and the mock upstream would not record any requests
         targetRequests.length = 0;
-        
-        // Clear mock calls
+
         vi.clearAllMocks();
-        
-        // Create fresh topic for this test
-        const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
-        try {
-            await createTopic(topicName);
-        } catch (error) {
-            // Ignore errors - Pub/Sub might not be available
-        }
+        await createTopic(topicName);
     });
 
     afterEach(async () => {
         // Delete topic to clear all messages
-        const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
-        try {
-            await deleteTopic(topicName);
-        } catch (error) {
-            // Ignore errors - Pub/Sub might not be available
-        }
+        await deleteTopic(topicName);
     });
 
     describe('/', function () {
