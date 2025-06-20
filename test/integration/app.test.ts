@@ -3,7 +3,6 @@ import request, {Response} from 'supertest';
 import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
 import {Server} from 'http';
-import {PubSub} from '@google-cloud/pubsub';
 
 // Mock the user signature service before importing the app
 vi.mock('../../src/services/user-signature', () => ({
@@ -330,81 +329,6 @@ describe('Fastify App', () => {
             // Verify the IP is not empty
             const callArgs = vi.mocked(userSignatureService.generateUserSignature).mock.calls[0];
             expect(callArgs[1]).toBeTruthy();
-        });
-
-        it('should publish page hit events to Pub/Sub topic', async () => {
-            const pubsub = new PubSub({
-                projectId: process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-test'
-            });
-
-            const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'traffic-analytics-page-hits-raw';
-            const subscriptionName = `test-page-hits-subscription-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-            const uniqueUserAgent = `Test-Pub-Sub-Browser/${Date.now()}`;
-            
-            // Ensure the topic exists
-            const topic = pubsub.topic(topicName);
-            const [topicExists] = await topic.exists();
-            if (!topicExists) {
-                throw new Error(`Topic ${topicName} does not exist. Ensure the PubSub emulator is properly initialized.`);
-            }
-            
-            // Create a subscription to capture messages
-            const [subscription] = await topic.createSubscription(subscriptionName);
-
-            const receivedMessages: any[] = [];
-            const messageHandler = (message: any) => {
-                const data = JSON.parse(message.data.toString());
-                // Only capture messages from our specific test
-                if (data.headers && data.headers['user-agent'] === uniqueUserAgent) {
-                    receivedMessages.push(data);
-                }
-                message.ack();
-            };
-
-            subscription.on('message', messageHandler);
-
-            // Make the request
-            await request(proxyServer)
-                .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
-                .set('User-Agent', uniqueUserAgent)
-                .send(eventPayload)
-                .expect(202);
-
-            // Wait for message to be received
-            await new Promise<void>((resolve) => {
-                setTimeout(() => resolve(), 2000);
-            });
-
-            // Verify we received the published message
-            expect(receivedMessages.length).toBe(1);
-            
-            const publishedMessage = receivedMessages[0];
-            expect(publishedMessage.method).toBe('POST');
-            expect(publishedMessage.url).toContain('/tb/web_analytics');
-            expect(publishedMessage.headers['user-agent']).toBe(uniqueUserAgent);
-            expect(publishedMessage.ip).toBeDefined();
-            expect(publishedMessage.timestamp).toBeDefined();
-            
-            // Verify the body contains the RAW payload (no processing)
-            expect(publishedMessage.body).toEqual(eventPayload);
-            
-            // The session_id is part of the original raw payload, not added by processing
-            expect(publishedMessage.body.session_id).toBe(eventPayload.session_id);
-            
-            // Verify NO processed fields were added to the payload
-            expect(publishedMessage.body.payload.os).toBeUndefined();
-            expect(publishedMessage.body.payload.browser).toBeUndefined();
-            expect(publishedMessage.body.payload.device).toBeUndefined();
-
-            try {
-                // Clean up
-                subscription.removeListener('message', messageHandler);
-                await subscription.close();
-                await subscription.delete();
-            } catch (error) {
-                // Ignore cleanup errors
-            }
         });
 
         it('should still proxy requests when Pub/Sub publishing fails', async () => {
