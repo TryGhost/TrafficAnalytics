@@ -1,8 +1,9 @@
-import {describe, it, expect, beforeEach, beforeAll, afterAll, vi} from 'vitest';
+import {describe, it, expect, beforeEach, beforeAll, afterAll, afterEach, vi} from 'vitest';
 import request, {Response} from 'supertest';
 import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
 import {Server} from 'http';
+import {createTopic, deleteTopic} from '../utils/pubsub.js';
 
 // Mock the user signature service before importing the app
 vi.mock('../../src/services/user-signature', () => ({
@@ -94,7 +95,7 @@ describe('Fastify App', () => {
         await Promise.all(promises);
     });
 
-    beforeEach(() => {
+    beforeEach(async () => {
         // Clear the targetRequests array in place
         // This is necessary because the target server is a mock and the requests are recorded in the same array
         // Using targetRequests = [] would create a new array, and the mock upstream would not record any requests
@@ -102,6 +103,24 @@ describe('Fastify App', () => {
         
         // Clear mock calls
         vi.clearAllMocks();
+        
+        // Create fresh topic for this test
+        const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
+        try {
+            await createTopic(topicName);
+        } catch (error) {
+            // Ignore errors - Pub/Sub might not be available
+        }
+    });
+
+    afterEach(async () => {
+        // Delete topic to clear all messages
+        const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
+        try {
+            await deleteTopic(topicName);
+        } catch (error) {
+            // Ignore errors - Pub/Sub might not be available
+        }
     });
 
     describe('/', function () {
