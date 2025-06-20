@@ -144,8 +144,6 @@ services:
   firestore-test:
     image: google/cloud-sdk:emulators
     command: ["/app/firestore-wrapper.sh"]
-    ports:
-      - ${FIRESTORE_TEST_PORT:-8081}:8080
     volumes:
       - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
     environment:
@@ -163,8 +161,6 @@ services:
   pubsub-test:
     image: google/cloud-sdk:emulators
     command: ["/app/start-pubsub.sh"]
-    ports:
-      - ${PUBSUB_TEST_PORT:-8086}:8085
     volumes:
       - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
     environment:
