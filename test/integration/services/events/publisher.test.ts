@@ -1,15 +1,18 @@
-import {describe, it, expect, beforeAll, afterAll} from 'vitest';
+import {describe, it, expect, beforeAll} from 'vitest';
 import {PubSub} from '@google-cloud/pubsub';
 import {publishEvent} from '../../../../src/services/events/publisher.js';
 import type {FastifyBaseLogger} from 'fastify';
 
 describe('Publisher Integration Tests', () => {
     let pubsub: PubSub;
-    const testTopic = 'test-topic';
+    let testTopic: string;
     let testPayload: Record<string, unknown>;
     let mockLogger: FastifyBaseLogger;
 
     beforeAll(async () => {
+        // Initialize topic name
+        testTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'traffic-analytics-page-hits-raw';
+        
         // Initialize mock logger
         mockLogger = {
             info: () => {},
@@ -38,24 +41,8 @@ describe('Publisher Integration Tests', () => {
             projectId: process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-dev'
         });
 
-        // Create the test topic
-        try {
-            await pubsub.createTopic(testTopic);
-        } catch (error: any) {
-            // Topic might already exist, ignore AlreadyExists error
-            if (error.code !== 6) { // 6 is AlreadyExists
-                throw error;
-            }
-        }
-    });
-
-    afterAll(async () => {
-        // Clean up the test topic
-        try {
-            await pubsub.topic(testTopic).delete();
-        } catch (error) {
-            // Ignore errors during cleanup
-        }
+        // Note: Using existing topic created by the emulator setup
+        // No need to create/delete topic as it's managed by the emulator
     });
 
     it('should successfully publish a message to Pub/Sub', async () => {
@@ -72,7 +59,7 @@ describe('Publisher Integration Tests', () => {
 
     it('should publish messages with correct data format', async () => {
         // Create a subscription to verify the message content
-        const subscriptionName = 'test-subscription';
+        const subscriptionName = `test-publisher-subscription-${Date.now()}`;
         
         try {
             await pubsub.topic(testTopic).createSubscription(subscriptionName);
