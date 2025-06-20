@@ -168,7 +168,7 @@ services:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-test
       - PUBSUB_TOPIC_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw
     healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready && curl -s http://localhost:8085/v1/projects/traffic-analytics-test/topics/test-traffic-analytics-page-hits-raw | grep -q 'test-traffic-analytics-page-hits-raw'"]
       interval: 5s
       timeout: 3s
       retries: 10

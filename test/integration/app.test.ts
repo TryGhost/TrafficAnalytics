@@ -337,12 +337,19 @@ describe('Fastify App', () => {
                 projectId: process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-test'
             });
 
-            const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'traffic-analytics-page-hits-raw';
+            const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'traffic-analytics-page-hits-raw';
             const subscriptionName = `test-page-hits-subscription-${Date.now()}`;
             const uniqueUserAgent = `Test-Pub-Sub-Browser/${Date.now()}`;
             
+            // Ensure the topic exists before creating subscription
+            const topic = pubsub.topic(topicName);
+            const [topicExists] = await topic.exists();
+            if (!topicExists) {
+                await topic.create();
+            }
+            
             // Create a subscription to capture messages
-            const [subscription] = await pubsub.topic(topic).createSubscription(subscriptionName);
+            const [subscription] = await topic.createSubscription(subscriptionName);
 
             const receivedMessages: any[] = [];
             const messageHandler = (message: any) => {
