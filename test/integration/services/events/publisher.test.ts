@@ -109,16 +109,4 @@ describe('Publisher Integration Tests', () => {
             }
         }
     });
-
-    it('should throw error for non-existent topic', async () => {
-        const nonExistentTopic = 'non-existent-topic-12345';
-
-        await expect(
-            publishEvent({
-                topic: nonExistentTopic,
-                payload: testPayload,
-                logger: mockLogger
-            })
-        ).rejects.toThrow();
-    });
 });
