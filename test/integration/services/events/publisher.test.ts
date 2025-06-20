@@ -10,8 +10,8 @@ describe('Publisher Integration Tests', () => {
     let mockLogger: FastifyBaseLogger;
 
     beforeAll(async () => {
-        // Configure test topic from environment
-        testTopic = process.env.PUBSUB_TEST_TOPIC || 'test-topic';
+        // Use the same topic as the application for consistency
+        testTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
         // Initialize mock logger
         mockLogger = {
             info: () => {},

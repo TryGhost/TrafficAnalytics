@@ -15,6 +15,8 @@ services:
       timeout: 3s
       retries: 5
     stop_grace_period: 5s
+    networks:
+      - dev-network
 
   pubsub:
     image: google/cloud-sdk:emulators
@@ -32,6 +34,8 @@ services:
       timeout: 3s
       retries: 10
     stop_grace_period: 2s
+    networks:
+      - dev-network
 
   analytics-service:
     image: local/traffic-analytics:development
@@ -55,6 +59,8 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+    networks:
+      - dev-network
     depends_on:
       firestore:
         condition: service_healthy
@@ -81,6 +87,8 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+    networks:
+      - dev-network
     depends_on:
       firestore:
         condition: service_healthy
@@ -98,17 +106,21 @@ services:
       - .env
     environment:
       - NODE_ENV=testing
-      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
-      - FIRESTORE_EMULATOR_HOST=firestore:8080
-      - PUBSUB_EMULATOR_HOST=pubsub:8085
-      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-test
+      - FIRESTORE_EMULATOR_HOST=firestore-test:8080
+      - PUBSUB_EMULATOR_HOST=pubsub-test:8085
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw
+      - FIRESTORE_DATABASE_ID=(default)
+      - FIRESTORE_SALT_COLLECTION=salts
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
     tty: true
+    networks:
+      - test-network
     profiles: [testing]
     depends_on:
-      firestore:
+      firestore-test:
         condition: service_healthy
-      pubsub:
+      pubsub-test:
         condition: service_healthy
 
   lint:
@@ -121,8 +133,56 @@ services:
     env_file:
       - .env
     tty: true
+    networks:
+      - test-network
+    profiles: [testing]
+
+  # Test-specific emulator services (isolated from dev)
+  firestore-test:
+    image: google/cloud-sdk:emulators
+    command: ["/app/firestore-wrapper.sh"]
+    ports:
+      - ${FIRESTORE_TEST_PORT:-8081}:8080
+    volumes:
+      - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    stop_grace_period: 5s
+    networks:
+      - test-network
+    profiles: [testing]
+
+  pubsub-test:
+    image: google/cloud-sdk:emulators
+    command: ["/app/start-pubsub.sh"]
+    ports:
+      - ${PUBSUB_TEST_PORT:-8086}:8085
+    volumes:
+      - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-test
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    stop_grace_period: 2s
+    networks:
+      - test-network
     profiles: [testing]
 
 
 volumes:
   node_modules_volume:
+
+networks:
+  dev-network:
+    name: ${COMPOSE_PROJECT_NAME:-traffic-analytics}-dev
+  test-network:
+    name: ${COMPOSE_PROJECT_NAME:-traffic-analytics}-test
