@@ -135,46 +135,6 @@ describe('Fastify App', () => {
     });
 
     describe('/tb/web_analytics', function () {
-        it('should reject requests without token parameter', async function () {
-            await request(proxyServer)
-                .post('/tb/web_analytics?name=test')
-                .expect(400)
-                .expect(function (res: Response) {
-                    if (!res.body.error || !res.body.message) {
-                        throw new Error('Expected error response with message');
-                    }
-                });
-        });
-
-        it('should reject requests without name parameter', async function () {
-            await request(proxyServer)
-                .post('/tb/web_analytics?token=abc123')
-                .expect(400)
-                .expect(function (res) {
-                    if (!res.body.error || !res.body.message) {
-                        throw new Error('Expected error response with message');
-                    }
-                });
-        });
-
-        it('should reject requests with empty parameters', async function () {
-            await request(proxyServer)
-                .post('/tb/web_analytics?token=&name=test')
-                .expect(400)
-                .expect(function (res) {
-                    if (!res.body.error || !res.body.message) {
-                        throw new Error('Expected error response with message');
-                    }
-                });
-        });
-
-        it('should reject requests with empty body', async function () {
-            await request(proxyServer)
-                .post('/tb/web_analytics?token=abc123&name=test')
-                .send({})
-                .expect(400);
-        });
-
         it('should proxy requests to the target server', async function () {
             await request(proxyServer)
                 .post('/tb/web_analytics')
@@ -195,183 +155,225 @@ describe('Fastify App', () => {
                 .set('x-test-header-400', 'true')
                 .expect(400);
         });
+        
+        describe('request validation', function () { 
+            it('should reject requests without token parameter', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics?name=test')
+                    .expect(400)
+                    .expect(function (res: Response) {
+                        if (!res.body.error || !res.body.message) {
+                            throw new Error('Expected error response with message');
+                        }
+                    });
+            });
+    
+            it('should reject requests without name parameter', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics?token=abc123')
+                    .expect(400)
+                    .expect(function (res) {
+                        if (!res.body.error || !res.body.message) {
+                            throw new Error('Expected error response with message');
+                        }
+                    });
+            });
+    
+            it('should reject requests with empty parameters', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics?token=&name=test')
+                    .expect(400)
+                    .expect(function (res) {
+                        if (!res.body.error || !res.body.message) {
+                            throw new Error('Expected error response with message');
+                        }
+                    });
+            });
+    
+            it('should reject requests with empty body', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics?token=abc123&name=test')
+                    .send({})
+                    .expect(400);
+            });
 
-        it('should parse the OS from the user agent and pass it to the upstream server under the meta key', async function () {
-            await request(proxyServer)
-                .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
-                .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
-                .send(eventPayload)
-                .expect(202);
-
-            const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.os).toBe('macos');
+            it('should allow x-site-uuid header in CORS preflight requests', async function () {
+                await request(proxyServer)
+                    .options('/tb/web_analytics')
+                    .set('Origin', 'https://main.ghost.org')
+                    .set('Access-Control-Request-Method', 'POST')
+                    .set('Access-Control-Request-Headers', 'x-site-uuid, content-type')
+                    .expect(204)
+                    .expect('Access-Control-Allow-Origin', '*')
+                    .expect(function (res: Response) {
+                        const allowedHeaders = res.headers['access-control-allow-headers'];
+                        if (!allowedHeaders || !allowedHeaders.toLowerCase().includes('x-site-uuid')) {
+                            throw new Error('x-site-uuid header should be allowed in CORS');
+                        }
+                    });
+            });
         });
 
-        it('should parse the browser from the user agent and pass it to the upstream server', async function () {
-            await request(proxyServer)
-                .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
-                .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
-                .send(eventPayload)
-                .expect(202);
-
-            const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.browser).toBe('chrome');
-        });
-
-        it('should parse the device from the user agent and pass it to the upstream server', async function () {
-            await request(proxyServer)
-                .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
-                .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
-                .send(eventPayload)
-                .expect(202);
-
-            const targetRequest = targetRequests[0];
-            expect(targetRequest.body.payload.device).toBe('desktop');
-        });
-
-        it('should generate user signature and pass it to the upstream server', async function () {
-            await request(proxyServer)
-                .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
-                .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
-                .send(eventPayload)
-                .expect(202);
-
-            const targetRequest = targetRequests[0];
-            expect(targetRequest.body.session_id).toBeDefined();
-            expect(targetRequest.body.session_id).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
-        });
-
-        it('should use client IP from X-Forwarded-For header when present', async function () {
-            const clientIp = '203.0.113.42';
-            const proxyIp = '192.168.1.1';
-            const userAgent = 'Mozilla/5.0 Test Browser';
-            
-            await request(proxyServer)
-                .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
-                .set('User-Agent', userAgent)
-                .set('X-Forwarded-For', `${clientIp}, ${proxyIp}`)
-                .send(eventPayload)
-                .expect(202);
-
-            // Verify that the user signature service was called with the client IP, not the proxy IP
-            expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
-                eventPayload.payload.site_uuid,
-                clientIp, // Should use the client IP from X-Forwarded-For
-                userAgent
-            );
-        });
-
-        it('should handle multiple proxies in X-Forwarded-For header', async function () {
-            const clientIp = '203.0.113.42';
-            const proxy1 = '192.168.1.1';
-            const proxy2 = '10.0.0.1';
-            const userAgent = 'Mozilla/5.0 Test Browser';
-            
-            await request(proxyServer)
-                .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
-                .set('User-Agent', userAgent)
-                .set('X-Forwarded-For', `${clientIp}, ${proxy1}, ${proxy2}`)
-                .send(eventPayload)
-                .expect(202);
-
-            // Verify that the user signature service was called with the first IP (client IP)
-            expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
-                eventPayload.payload.site_uuid,
-                clientIp, // Should use the first IP from X-Forwarded-For (the client IP)
-                userAgent
-            );
-        });
-
-        it('should handle single IP in X-Forwarded-For header', async function () {
-            const clientIp = '203.0.113.42';
-            const userAgent = 'Mozilla/5.0 Test Browser';
-            
-            await request(proxyServer)
-                .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
-                .set('User-Agent', userAgent)
-                .set('X-Forwarded-For', clientIp)
-                .send(eventPayload)
-                .expect(202);
-
-            // Verify that the user signature service was called with the client IP from X-Forwarded-For
-            expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
-                eventPayload.payload.site_uuid,
-                clientIp, // Should use the client IP from X-Forwarded-For
-                userAgent
-            );
-        });
-
-        it('should use connection IP when no proxy headers are present', async function () {
-            const userAgent = 'Mozilla/5.0 Direct Connection';
-            
-            await request(proxyServer)
-                .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
-                .set('User-Agent', userAgent)
-                .send(eventPayload)
-                .expect(202);
-
-            // Verify that the user signature service was called with some IP
-            // (we can't predict the exact IP for direct connections in test environment)
-            expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
-                eventPayload.payload.site_uuid,
-                expect.any(String), // Should use the connection IP
-                userAgent
-            );
-            
-            // Verify the IP is not empty
-            const callArgs = vi.mocked(userSignatureService.generateUserSignature).mock.calls[0];
-            expect(callArgs[1]).toBeTruthy();
-        });
-
-        it('should still proxy requests when Pub/Sub publishing fails', async () => {
-            // Temporarily set an invalid topic to cause publishing to fail
-            const originalTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW;
-            process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'invalid-topic-that-does-not-exist';
-
-            try {
+        describe('user agent parsing', function () {
+            it('should parse the OS from the user agent and pass it to the upstream server under the meta key', async function () {
                 await request(proxyServer)
                     .post('/tb/web_analytics')
                     .query({token: 'abc123', name: 'test'})
-                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                     .send(eventPayload)
                     .expect(202);
-
-                // Verify the request was still proxied to the target server
-                expect(targetRequests.length).toBe(1);
+    
                 const targetRequest = targetRequests[0];
-                // The proxy should still process the request and add fields
-                expect(targetRequest.body.session_id).toBeDefined();
-                expect(targetRequest.body.payload.os).toBeDefined();
-                expect(targetRequest.body.payload.browser).toBeDefined();
-                expect(targetRequest.body.payload.device).toBeDefined();
-            } finally {
-                // Restore original topic
-                process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = originalTopic;
-            }
+                expect(targetRequest.body.payload.os).toBe('macos');
+            });
+    
+            it('should parse the browser from the user agent and pass it to the upstream server', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'test'})
+                    .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
+                    .send(eventPayload)
+                    .expect(202);
+    
+                const targetRequest = targetRequests[0];
+                expect(targetRequest.body.payload.browser).toBe('chrome');
+            });
+    
+            it('should parse the device from the user agent and pass it to the upstream server', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'test'})
+                    .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
+                    .send(eventPayload)
+                    .expect(202);
+    
+                const targetRequest = targetRequests[0];
+                expect(targetRequest.body.payload.device).toBe('desktop');
+            });
         });
 
-        it('should allow x-site-uuid header in CORS preflight requests', async function () {
-            await request(proxyServer)
-                .options('/tb/web_analytics')
-                .set('Origin', 'https://main.ghost.org')
-                .set('Access-Control-Request-Method', 'POST')
-                .set('Access-Control-Request-Headers', 'x-site-uuid, content-type')
-                .expect(204)
-                .expect('Access-Control-Allow-Origin', '*')
-                .expect(function (res: Response) {
-                    const allowedHeaders = res.headers['access-control-allow-headers'];
-                    if (!allowedHeaders || !allowedHeaders.toLowerCase().includes('x-site-uuid')) {
-                        throw new Error('x-site-uuid header should be allowed in CORS');
-                    }
-                });
+        describe('user signature generation', function () {
+            it('should generate user signature and pass it to the upstream server', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'test'})
+                    .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
+                    .send(eventPayload)
+                    .expect(202);
+    
+                const targetRequest = targetRequests[0];
+                expect(targetRequest.body.session_id).toBeDefined();
+                expect(targetRequest.body.session_id).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
+            });
+    
+            it('should use client IP from X-Forwarded-For header when present', async function () {
+                const clientIp = '203.0.113.42';
+                const proxyIp = '192.168.1.1';
+                const userAgent = 'Mozilla/5.0 Test Browser';
+                
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'test'})
+                    .set('User-Agent', userAgent)
+                    .set('X-Forwarded-For', `${clientIp}, ${proxyIp}`)
+                    .send(eventPayload)
+                    .expect(202);
+    
+                // Verify that the user signature service was called with the client IP, not the proxy IP
+                expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
+                    eventPayload.payload.site_uuid,
+                    clientIp, // Should use the client IP from X-Forwarded-For
+                    userAgent
+                );
+            });
+    
+            it('should handle multiple proxies in X-Forwarded-For header', async function () {
+                const clientIp = '203.0.113.42';
+                const proxy1 = '192.168.1.1';
+                const proxy2 = '10.0.0.1';
+                const userAgent = 'Mozilla/5.0 Test Browser';
+                
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'test'})
+                    .set('User-Agent', userAgent)
+                    .set('X-Forwarded-For', `${clientIp}, ${proxy1}, ${proxy2}`)
+                    .send(eventPayload)
+                    .expect(202);
+    
+                // Verify that the user signature service was called with the first IP (client IP)
+                expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
+                    eventPayload.payload.site_uuid,
+                    clientIp, // Should use the first IP from X-Forwarded-For (the client IP)
+                    userAgent
+                );
+            });
+    
+            it('should handle single IP in X-Forwarded-For header', async function () {
+                const clientIp = '203.0.113.42';
+                const userAgent = 'Mozilla/5.0 Test Browser';
+                
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'test'})
+                    .set('User-Agent', userAgent)
+                    .set('X-Forwarded-For', clientIp)
+                    .send(eventPayload)
+                    .expect(202);
+    
+                // Verify that the user signature service was called with the client IP from X-Forwarded-For
+                expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
+                    eventPayload.payload.site_uuid,
+                    clientIp, // Should use the client IP from X-Forwarded-For
+                    userAgent
+                );
+            });
+    
+            it('should use connection IP when no proxy headers are present', async function () {
+                const userAgent = 'Mozilla/5.0 Direct Connection';
+                
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'test'})
+                    .set('User-Agent', userAgent)
+                    .send(eventPayload)
+                    .expect(202);
+    
+                // Verify that the user signature service was called with some IP
+                // (we can't predict the exact IP for direct connections in test environment)
+                expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
+                    eventPayload.payload.site_uuid,
+                    expect.any(String), // Should use the connection IP
+                    userAgent
+                );
+                
+                // Verify the IP is not empty
+                const callArgs = vi.mocked(userSignatureService.generateUserSignature).mock.calls[0];
+                expect(callArgs[1]).toBeTruthy();
+            });
+        });
+
+        describe('pubsub publishing', function () {
+            it('should still proxy requests when Pub/Sub publishing fails', async () => {
+                // Temporarily set an invalid topic to cause publishing to fail
+                const originalTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW;
+                process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'invalid-topic-that-does-not-exist';
+    
+                try {
+                    await request(proxyServer)
+                        .post('/tb/web_analytics')
+                        .query({token: 'abc123', name: 'test'})
+                        .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                        .send(eventPayload)
+                        .expect(202);
+    
+                    // Verify the request was still proxied to the target server
+                    expect(targetRequests.length).toBe(1);
+                } finally {
+                    // Restore original topic
+                    process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = originalTopic;
+                }
+            });
         });
     });
 });
