@@ -43,6 +43,24 @@ curl -s http://localhost:8085/v1/projects/${PROJECT_ID}/topics
 
 echo "Topic creation complete!"
 
+# Create the subscription
+SUBSCRIPTION_NAME=${PUBSUB_SUBSCRIPTION_NAME:-page-hits-raw-subscription}
+echo "Creating subscription: $SUBSCRIPTION_NAME"
+
+if curl -s -o /dev/null -w "%{http_code}" -X PUT \
+  "http://localhost:8085/v1/projects/${PROJECT_ID}/subscriptions/${SUBSCRIPTION_NAME}" \
+  -H "Content-Type: application/json" \
+  -d "{\"topic\": \"projects/${PROJECT_ID}/topics/${TOPIC_NAME}\"}" | grep -q "200"; then
+    echo "Subscription created successfully: $SUBSCRIPTION_NAME"
+else
+    echo "Failed to create subscription: $SUBSCRIPTION_NAME"
+    exit 1
+fi
+
+# Verify subscription was created
+echo "Verifying subscription creation..."
+curl -s "http://localhost:8085/v1/projects/${PROJECT_ID}/subscriptions"
+
 # Create a file to signal that setup is complete
 touch /tmp/pubsub-ready
 
