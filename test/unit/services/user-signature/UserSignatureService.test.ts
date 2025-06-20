@@ -4,10 +4,6 @@ import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltSto
 import type {ISaltStore} from '../../../../src/services/salt-store';
 import crypto from 'crypto';
 import logger from '../../../../src/utils/logger';
-import config from '@tryghost/config';
-import {mockConfigGet} from '../../../utils/config-mock';
-
-vi.mock('@tryghost/config');
 
 describe('UserSignatureService', () => {
     let userSignatureService: UserSignatureService;
@@ -209,9 +205,7 @@ describe('UserSignatureService', () => {
             });
 
             it('should not start scheduler when ENABLE_SALT_CLEANUP_SCHEDULER is false', () => {
-                config.get = mockConfigGet({
-                    ENABLE_SALT_CLEANUP_SCHEDULER: 'false'
-                });
+                vi.stubEnv('ENABLE_SALT_CLEANUP_SCHEDULER', 'false');
                 
                 const originalNodeEnv = process.env.NODE_ENV;
                 process.env.NODE_ENV = 'production';
@@ -226,12 +220,8 @@ describe('UserSignatureService', () => {
             });
 
             it('should start scheduler when environment allows', () => {
-                config.get = mockConfigGet({
-                    ENABLE_SALT_CLEANUP_SCHEDULER: 'true'
-                });
-                
-                const originalNodeEnv = process.env.NODE_ENV;
-                process.env.NODE_ENV = 'production';
+                vi.stubEnv('ENABLE_SALT_CLEANUP_SCHEDULER', 'true');
+                vi.stubEnv('NODE_ENV', 'production');
                 
                 const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
                 const service = new UserSignatureService(mockSaltStore);
@@ -247,15 +237,12 @@ describe('UserSignatureService', () => {
                 expect(delayMs).toBeLessThan(60 * 60 * 1000); // Less than 60 minutes
                 
                 service.stopCleanupScheduler();
-                process.env.NODE_ENV = originalNodeEnv;
             });
         });
 
         describe('scheduler lifecycle', () => {
             it('should stop cleanup scheduler', () => {
-                const originalNodeEnv = process.env.NODE_ENV;
-                process.env.NODE_ENV = 'production';
-                
+                vi.stubEnv('NODE_ENV', 'production');
                 const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
                 const service = new UserSignatureService(mockSaltStore);
                 
@@ -266,8 +253,6 @@ describe('UserSignatureService', () => {
                 
                 expect(clearIntervalSpy).toHaveBeenCalledWith(123);
                 expect((service as any).cleanupInterval).toBeNull();
-                
-                process.env.NODE_ENV = originalNodeEnv;
             });
 
             it('should handle stopping scheduler when no interval is set', () => {
@@ -281,9 +266,7 @@ describe('UserSignatureService', () => {
 
         describe('cleanup execution', () => {
             it('should execute cleanup and log success', async () => {
-                const originalNodeEnv = process.env.NODE_ENV;
-                process.env.NODE_ENV = 'production';
-                
+                vi.stubEnv('NODE_ENV', 'production');
                 // Set up spies before creating service
                 const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
                 const cleanupSpy = vi.spyOn(mockSaltStore, 'cleanup').mockResolvedValue(5);
@@ -304,13 +287,10 @@ describe('UserSignatureService', () => {
                 expect(loggerInfoSpy).toHaveBeenCalledWith('Salt cleanup completed: 5 old salts deleted');
                 
                 service.stopCleanupScheduler();
-                process.env.NODE_ENV = originalNodeEnv;
             });
 
             it('should handle cleanup errors gracefully', async () => {
-                const originalNodeEnv = process.env.NODE_ENV;
-                process.env.NODE_ENV = 'production';
-                
+                vi.stubEnv('NODE_ENV', 'production');
                 // Set up spies before creating service
                 const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
                 const error = new Error('Cleanup failed');
@@ -328,13 +308,10 @@ describe('UserSignatureService', () => {
                 expect(loggerErrorSpy).toHaveBeenCalledWith('Salt cleanup failed:', error);
                 
                 service.stopCleanupScheduler();
-                process.env.NODE_ENV = originalNodeEnv;
             });
 
             it('should set up recurring cleanup after initial run', async () => {
-                const originalNodeEnv = process.env.NODE_ENV;
-                process.env.NODE_ENV = 'production';
-                
+                vi.stubEnv('NODE_ENV', 'production');
                 // Set up spies before creating service
                 const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
                 const setIntervalSpy = vi.spyOn(global, 'setInterval');
@@ -355,15 +332,12 @@ describe('UserSignatureService', () => {
                 );
                 
                 service.stopCleanupScheduler();
-                process.env.NODE_ENV = originalNodeEnv;
             });
         });
 
         describe('random delay', () => {
             it('should use different random delays for multiple instances', () => {
-                const originalNodeEnv = process.env.NODE_ENV;
-                process.env.NODE_ENV = 'production';
-                
+                vi.stubEnv('NODE_ENV', 'production');
                 const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
                 
                 // Create multiple services
@@ -383,7 +357,6 @@ describe('UserSignatureService', () => {
                 
                 service1.stopCleanupScheduler();
                 service2.stopCleanupScheduler();
-                process.env.NODE_ENV = originalNodeEnv;
             });
         });
     });

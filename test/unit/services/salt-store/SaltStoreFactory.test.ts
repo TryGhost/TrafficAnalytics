@@ -3,10 +3,6 @@ import {createSaltStore, SaltStoreConfig} from '../../../../src/services/salt-st
 import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltStore';
 import {FirestoreSaltStore} from '../../../../src/services/salt-store/FirestoreSaltStore';
 import type {ISaltStore} from '../../../../src/services/salt-store/ISaltStore';
-import config from '@tryghost/config';
-import {mockConfigGet} from '../../../utils/config-mock';
-
-vi.mock('@tryghost/config');
 
 describe('SaltStoreFactory', () => {
     beforeEach(() => {
@@ -19,8 +15,6 @@ describe('SaltStoreFactory', () => {
 
     describe('createSaltStore', () => {
         it('should create a memory salt store by default', () => {
-            config.get = mockConfigGet();
-
             const store = createSaltStore();
 
             expect(store).toBeInstanceOf(MemorySaltStore);
@@ -30,8 +24,6 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should create a memory salt store with explicit memory config', () => {
-            config.get = mockConfigGet();
-            
             const saltStoreConfig: SaltStoreConfig = {type: 'memory'};
             const store = createSaltStore(saltStoreConfig);
 
@@ -39,10 +31,8 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should throw error when creating firestore store without projectId', () => {
-            config.get = mockConfigGet({
-                GOOGLE_CLOUD_PROJECT: '',
-                FIRESTORE_DATABASE_ID: ''
-            });
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
+            vi.stubEnv('FIRESTORE_DATABASE_ID', '');
             
             const saltStoreConfig: SaltStoreConfig = {type: 'firestore', databaseId: 'test-db'};
             
@@ -50,10 +40,8 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should throw error when creating firestore store without databaseId', () => {
-            config.get = mockConfigGet({
-                GOOGLE_CLOUD_PROJECT: '',
-                FIRESTORE_DATABASE_ID: ''
-            });
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
+            vi.stubEnv('FIRESTORE_DATABASE_ID', '');
             
             const saltStoreConfig: SaltStoreConfig = {type: 'firestore', projectId: 'test-project'};
             
@@ -100,22 +88,18 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should create firestore store from config', () => {
-            config.get = mockConfigGet({
-                SALT_STORE_TYPE: 'firestore',
-                GOOGLE_CLOUD_PROJECT: 'env-project',
-                FIRESTORE_DATABASE_ID: 'env-database'
-            });
-
+            vi.stubEnv('SALT_STORE_TYPE', 'firestore');
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', 'env-project');
+            vi.stubEnv('FIRESTORE_DATABASE_ID', 'env-database');
+            
             const store = createSaltStore();
 
             expect(store).toBeInstanceOf(FirestoreSaltStore);
         });
 
         it('should use global config values when saltStoreConfig is not provided', () => {
-            config.get = mockConfigGet({
-                GOOGLE_CLOUD_PROJECT: 'env-project',
-                FIRESTORE_DATABASE_ID: 'env-database'
-            });
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', 'env-project');
+            vi.stubEnv('FIRESTORE_DATABASE_ID', 'env-database');
             
             const saltStoreConfig: SaltStoreConfig = {type: 'firestore'};
             const store = createSaltStore(saltStoreConfig);
@@ -136,12 +120,7 @@ describe('SaltStoreFactory', () => {
         });
 
         it('should handle undefined config gracefully', () => {
-            vi.mocked(config.get).mockImplementation((key) => {
-                if (key === 'SALT_STORE_TYPE') {
-                    return 'memory';
-                }
-                return undefined;
-            });
+            vi.stubEnv('SALT_STORE_TYPE', 'memory');
 
             const store = createSaltStore(undefined);
 

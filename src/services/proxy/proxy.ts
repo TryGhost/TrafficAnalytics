@@ -5,7 +5,6 @@ import {parseReferrer} from './processors/url-referrer';
 import {parseUserAgent} from './processors/parse-user-agent';
 import {generateUserSignature} from './processors/user-signature';
 import {publishEvent} from '../events/publisher.js';
-import config from '@tryghost/config';
 
 // Accepts a request object
 // Does some processing — user agent parsing, geoip lookup, etc.
@@ -18,7 +17,7 @@ export async function processRequest(request: FastifyRequest, reply: FastifyRepl
     try {
         // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
         // This is fire-and-forget - don't let Pub/Sub errors break the proxy
-        const topic = config.get('PUBSUB_TOPIC_PAGE_HITS_RAW') as string;
+        const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
         if (topic) {
             try {
                 await publishEvent({

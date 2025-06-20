@@ -12,22 +12,18 @@ Traffic Analytics Service - A web analytics proxy for Ghost that processes and e
 
 ## Configuration
 
-Copy `config.example.json` to `config.development.json` and configure as needed:
+Copy `.env.example` to `.env` and configure as needed:
 
-```json
-{
-  "SALT_STORE_TYPE": "memory",
-  "GOOGLE_CLOUD_PROJECT": "traffic-analytics-dev",
-  "PORT": 3000,
-  "LOG_LEVEL": "info",
-  "PROXY_TARGET": "http://localhost:3000/local-proxy",
-  "LOG_PROXY_REQUESTS": "true",
-  "ENABLE_SALT_CLEANUP_SCHEDULER": "true",
-  "FIRESTORE_DATABASE_ID": "",
-  "PUBSUB_TOPIC_PAGE_HITS_RAW": "",
-  "TRUST_PROXY": "true"
-}
-```
+- `PORT` - Server port (default: 3000)
+- `LOG_LEVEL` - Logging level (default: info)
+- `PROXY_TARGET` - Upstream URL to forward requests (default: http://localhost:3000/local-proxy)
+- `SALT_STORE_TYPE` - Salt store implementation: memory or firestore (default: memory)
+- `GOOGLE_CLOUD_PROJECT` - Google Cloud project ID for Firestore (required when using firestore salt store)
+- `LOG_PROXY_REQUESTS` - Enable logging of proxy requests (default: true)
+- `ENABLE_SALT_CLEANUP_SCHEDULER` - Enable automatic daily salt cleanup (default: true)
+- `FIRESTORE_DATABASE_ID` - Firestore database ID (required when using firestore salt store)
+- `PUBSUB_TOPIC_PAGE_HITS_RAW` - Pub/Sub topic for raw page hits (required for pub/sub functionality)
+- `TRUST_PROXY` - Enable trust proxy to resolve client IPs from X-Forwarded-For headers (default: true)
 
 ## Develop
 

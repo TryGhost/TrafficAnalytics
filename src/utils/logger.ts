@@ -2,7 +2,6 @@ import pino from 'pino';
 import type {LoggerOptions} from 'pino';
 import type {PrettyOptions} from 'pino-pretty';
 import type {FastifyRequest, FastifyReply} from 'fastify';
-import config from '@tryghost/config';
 import {createGcpLoggingPinoConfig} from '@google-cloud/pino-logging-gcp-config';
 
 /**
@@ -17,7 +16,7 @@ export function getLoggerConfig(): LoggerOptions {
     // Development configuration - simple pretty logs
     if (process.env.NODE_ENV === 'development') {
         return {
-            level: config.get('LOG_LEVEL'),
+            level: process.env.LOG_LEVEL || 'info',
             transport: {
                 target: 'pino-pretty',
                 options: {
@@ -48,7 +47,7 @@ export function getLoggerConfig(): LoggerOptions {
     const gcpConfig = createGcpLoggingPinoConfig();
     return {
         ...gcpConfig,
-        level: config.get('LOG_LEVEL')
+        level: process.env.LOG_LEVEL || 'info'
     };
 }
 
