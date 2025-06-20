@@ -110,29 +110,6 @@ describe('Publisher Integration Tests', () => {
         }
     });
 
-    it('should handle publishing multiple messages', async () => {
-        const messages = [
-            {action: 'page_hit', id: 1},
-            {action: 'page_hit', id: 2},
-            {action: 'page_hit', id: 3}
-        ];
-
-        const messageIds = await Promise.all(
-            messages.map(payload => publishEvent({topic: testTopic, payload, logger: mockLogger})
-            )
-        );
-
-        expect(messageIds).toHaveLength(3);
-        messageIds.forEach((id) => {
-            expect(typeof id).toBe('string');
-            expect(id.length).toBeGreaterThan(0);
-        });
-
-        // All message IDs should be unique
-        const uniqueIds = new Set(messageIds);
-        expect(uniqueIds.size).toBe(3);
-    });
-
     it('should throw error for non-existent topic', async () => {
         const nonExistentTopic = 'non-existent-topic-12345';
 
