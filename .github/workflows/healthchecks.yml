@@ -29,62 +29,13 @@ jobs:
             base_url: https://traffic-analytics-subdirectory.ghost.io/blog/
     
     steps:
-      - name: Wake up site
-        run: |
-          curl -s -o /dev/null "${{ github.event.inputs.target_url || matrix.environment.base_url }}" &
-          
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Disable man-db trigger refreshes (https://github.com/actions/runner-images/issues/10977)
-        shell: bash
-        run: |
-          echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
-          sudo dpkg-reconfigure man-db
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(node -p "require('./package.json').devDependencies['@playwright/test']")" >> $GITHUB_OUTPUT
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: yarn playwright install --with-deps
-        
-      - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: yarn playwright install-deps
-
+      - uses: actions/checkout@v4
+      
       - name: Run health checks
-        id: healthchecks
-        env:
-          TEST_BASE_URL: ${{ github.event.inputs.target_url || matrix.environment.base_url }}
-        run: yarn playwright test
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
+        uses: ./.github/actions/run-healthchecks
         with:
-          name: playwright-results-${{ matrix.environment.name }}
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 30
+          base_url: ${{ github.event.inputs.target_url || matrix.environment.base_url }}
+          environment_name: ${{ matrix.environment.name }}
 
       - name: Send slack notification if health checks fail
         uses: slackapi/slack-github-action@v2.1.0
