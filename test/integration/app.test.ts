@@ -338,14 +338,14 @@ describe('Fastify App', () => {
             });
 
             const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'traffic-analytics-page-hits-raw';
-            const subscriptionName = `test-page-hits-subscription-${Date.now()}`;
+            const subscriptionName = `test-page-hits-subscription-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
             const uniqueUserAgent = `Test-Pub-Sub-Browser/${Date.now()}`;
             
-            // Ensure the topic exists before creating subscription
+            // Ensure the topic exists
             const topic = pubsub.topic(topicName);
             const [topicExists] = await topic.exists();
             if (!topicExists) {
-                await topic.create();
+                throw new Error(`Topic ${topicName} does not exist. Ensure the PubSub emulator is properly initialized.`);
             }
             
             // Create a subscription to capture messages
@@ -397,10 +397,14 @@ describe('Fastify App', () => {
             expect(publishedMessage.body.payload.browser).toBeUndefined();
             expect(publishedMessage.body.payload.device).toBeUndefined();
 
-            // Clean up
-            subscription.removeListener('message', messageHandler);
-            await subscription.close();
-            await subscription.delete().catch(() => {}); // Ignore errors during cleanup
+            try {
+                // Clean up
+                subscription.removeListener('message', messageHandler);
+                await subscription.close();
+                await subscription.delete();
+            } catch (error) {
+                // Ignore cleanup errors
+            }
         });
 
         it('should still proxy requests when Pub/Sub publishing fails', async () => {
