@@ -5,11 +5,13 @@ import type {FastifyBaseLogger} from 'fastify';
 
 describe('Publisher Integration Tests', () => {
     let pubsub: PubSub;
-    const testTopic = 'test-topic';
+    let testTopic: string;
     let testPayload: Record<string, unknown>;
     let mockLogger: FastifyBaseLogger;
 
     beforeAll(async () => {
+        // Configure test topic from environment
+        testTopic = process.env.PUBSUB_TEST_TOPIC || 'test-topic';
         // Initialize mock logger
         mockLogger = {
             info: () => {},
@@ -35,7 +37,7 @@ describe('Publisher Integration Tests', () => {
 
         // Initialize PubSub client for testing
         pubsub = new PubSub({
-            projectId: process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-dev'
+            projectId: process.env.GOOGLE_CLOUD_PROJECT || 'traffic-analytics-test'
         });
 
         // Create the test topic
