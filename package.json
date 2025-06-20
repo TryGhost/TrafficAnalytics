@@ -19,6 +19,7 @@
     "test:unit:watch": "NODE_ENV=testing vitest watch test/unit",
     "test:integration": "NODE_ENV=testing vitest run --config vitest.config.integration.ts",
     "test:integration:watch": "NODE_ENV=testing vitest watch --config vitest.config.integration.ts",
+    "test:e2e": "NODE_ENV=testing vitest run test/e2e",
     "test:types": "tsc --noEmit",
     "test": "yarn test:types && yarn test:unit && yarn test:integration",
     "docker:test": "docker compose run --rm test",
