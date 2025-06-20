@@ -3,13 +3,12 @@ import fastify from 'fastify';
 import loggingPlugin from './plugins/logging';
 import corsPlugin from './plugins/cors';
 import proxyPlugin from './plugins/proxy';
-import config from '@tryghost/config';
 import {getLoggerConfig} from './utils/logger';
 
 const app = fastify({
     logger: getLoggerConfig(),
     disableRequestLogging: true,
-    trustProxy: config.get('TRUST_PROXY') !== 'false'
+    trustProxy: process.env.TRUST_PROXY !== 'false'
 });
 
 // Register CORS plugin

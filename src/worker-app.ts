@@ -1,13 +1,12 @@
 // Worker module file
 import fastify from 'fastify';
 import loggingPlugin from './plugins/logging';
-import config from '@tryghost/config';
 import {getLoggerConfig} from './utils/logger';
 
 const app = fastify({
     logger: getLoggerConfig(),
     disableRequestLogging: true,
-    trustProxy: config.get('TRUST_PROXY') !== 'false'
+    trustProxy: process.env.TRUST_PROXY !== 'false'
 });
 
 // Register logging plugin for consistent log formatting

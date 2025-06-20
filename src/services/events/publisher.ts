@@ -1,5 +1,4 @@
 import {PubSub} from '@google-cloud/pubsub';
-import config from '@tryghost/config';
 import type {FastifyBaseLogger} from 'fastify';
 
 export interface PublishEventOptions {
@@ -14,7 +13,7 @@ class EventPublisher {
 
     private constructor() {
         this.pubsub = new PubSub({
-            projectId: config.get('GOOGLE_CLOUD_PROJECT')
+            projectId: process.env.GOOGLE_CLOUD_PROJECT
         });
     }
 

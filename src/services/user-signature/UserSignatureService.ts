@@ -1,7 +1,6 @@
 import {ISaltStore} from '../salt-store';
 import crypto from 'crypto';
 import logger from '../../utils/logger';
-import config from '@tryghost/config';
 
 /**
  * Service for generating privacy-preserving user signatures.
@@ -29,7 +28,7 @@ export class UserSignatureService {
      */
     private startCleanupScheduler() {
         // Only start scheduler in production (not during testing)
-        if (process.env.NODE_ENV === 'testing' || config.get('ENABLE_SALT_CLEANUP_SCHEDULER') === 'false') {
+        if (process.env.NODE_ENV === 'testing' || process.env.ENABLE_SALT_CLEANUP_SCHEDULER === 'false') {
             return;
         }
 

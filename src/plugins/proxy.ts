@@ -2,11 +2,10 @@ import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
 import {processRequest, validateRequest} from '../services/proxy';
-import config from '@tryghost/config';
 
 function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
     return {
-        upstream: config.get('PROXY_TARGET'),
+        upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
         prefix: prefix,
         rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
         httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -37,7 +36,7 @@ function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
                 reply.status(502).send({error: 'Proxy error'});
             }
         },
-        disableRequestLogging: config.get('LOG_PROXY_REQUESTS') === 'false'
+        disableRequestLogging: process.env.LOG_PROXY_REQUESTS === 'false'
     };
 }
 

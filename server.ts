@@ -1,8 +1,7 @@
 import {fileURLToPath} from 'url';
-import config from '@tryghost/config';
 
 const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
-const port: number = parseInt(config.get('PORT'), 10);
+const port: number = parseInt(process.env.PORT || '3000', 10);
 const isWorkerMode = process.env.WORKER_MODE === 'true';
 
 // Load the appropriate app once

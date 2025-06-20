@@ -1,7 +1,6 @@
 import type {ISaltStore} from './ISaltStore';
 import {MemorySaltStore} from './MemorySaltStore';
 import {FirestoreSaltStore} from './FirestoreSaltStore';
-import config from '@tryghost/config';
 
 export type SaltStoreType = 'memory' | 'file' | 'firestore';
 
@@ -14,14 +13,14 @@ export type SaltStoreConfig = {
 };
 
 export function createSaltStore(saltStoreConfig?: SaltStoreConfig): ISaltStore {
-    const storeType = saltStoreConfig?.type || (config.get('SALT_STORE_TYPE') as SaltStoreType) || 'memory';
+    const storeType = saltStoreConfig?.type || (process.env.SALT_STORE_TYPE as SaltStoreType) || 'memory';
 
     switch (storeType) {
     case 'memory':
         return new MemorySaltStore();
     case 'firestore': {
-        const projectId = saltStoreConfig?.projectId || config.get('GOOGLE_CLOUD_PROJECT');
-        const databaseId = saltStoreConfig?.databaseId || config.get('FIRESTORE_DATABASE_ID');
+        const projectId = saltStoreConfig?.projectId || process.env.GOOGLE_CLOUD_PROJECT;
+        const databaseId = saltStoreConfig?.databaseId || process.env.FIRESTORE_DATABASE_ID;
         
         if (!projectId) {
             throw new Error('Firestore project ID is required. Provide it via config.projectId or GOOGLE_CLOUD_PROJECT environment variable');
