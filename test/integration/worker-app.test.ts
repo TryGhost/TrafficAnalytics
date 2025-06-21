@@ -4,7 +4,6 @@ import {FastifyInstance} from 'fastify';
 
 describe('Worker App', () => {
     let app: FastifyInstance;
-
     beforeEach(async () => {
         // Clear environment variables to ensure clean state
         delete process.env.WORKER_MODE;
@@ -24,6 +23,7 @@ describe('Worker App', () => {
         if (app) {
             await app.close();
         }
+        // Note: Global setup handles resource cleanup
     });
 
     describe('Health Endpoints', () => {

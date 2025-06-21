@@ -1,7 +1,6 @@
-import {describe, it, expect, beforeAll, afterAll} from 'vitest';
+import {describe, it, expect, beforeAll} from 'vitest';
 import {publishEvent} from '../../../../src/services/events/publisher.js';
 import {createMockLogger} from '../../../utils/mock-logger.js';
-import {createTopic, deleteTopic} from '../../../utils/pubsub.js';
 
 describe('Publisher Integration Tests', () => {
     let testTopic: string;
@@ -10,8 +9,7 @@ describe('Publisher Integration Tests', () => {
 
     beforeAll(async () => {
         // Use the same topic as the application for consistency
-        testTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
-        await createTopic(testTopic);
+        testTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW!;
 
         // Initialize mock logger
         mockLogger = createMockLogger();
@@ -25,10 +23,6 @@ describe('Publisher Integration Tests', () => {
                 user_agent: 'test-agent'
             }
         };
-    });
-
-    afterAll(async function () {
-        await deleteTopic(testTopic);
     });
 
     it('should successfully publish a message to Pub/Sub', async () => {
