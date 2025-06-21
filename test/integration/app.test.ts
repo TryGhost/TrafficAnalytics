@@ -3,7 +3,6 @@ import request, {Response} from 'supertest';
 import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
 import {Server} from 'http';
-import {createTopic, deleteTopic} from '../utils/pubsub.js';
 
 // Mock the user signature service before importing the app
 vi.mock('../../src/services/user-signature', () => ({
@@ -62,10 +61,8 @@ describe('Fastify App', () => {
 
     let targetUrl: string;
     let app: FastifyInstance;
-    let topicName: string;
 
     beforeAll(async () => {
-        topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
         targetServer = createMockUpstream(targetRequests);
         await targetServer.listen({port: 0});
         const address = targetServer.server.address();
@@ -104,12 +101,10 @@ describe('Fastify App', () => {
         targetRequests.length = 0;
 
         vi.clearAllMocks();
-        await createTopic(topicName);
     });
 
     afterEach(async () => {
-        // Delete topic to clear all messages
-        await deleteTopic(topicName);
+        // Note: Global setup handles topic cleanup
     });
 
     describe('/', function () {

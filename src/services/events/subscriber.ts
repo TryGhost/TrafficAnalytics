@@ -1,4 +1,5 @@
 import {PubSub, type Subscription} from '@google-cloud/pubsub';
+import type {Message} from '@google-cloud/pubsub';
 import errors from '@tryghost/errors';
 import logger from '../../utils/logger.js';
 
@@ -24,7 +25,7 @@ export class EventSubscriber {
         try {
             this.subscription = this.pubsub.subscription(subscriptionName);
             logger.info({
-                subscriptionName
+                subscriptionName: this.subscription.name
             }, 'Event subscriber created successfully');
         } catch (error) {
             throw new errors.IncorrectUsageError({
@@ -33,10 +34,10 @@ export class EventSubscriber {
         }
     }
 
-    subscribe(handler: (message: unknown) => void): void {
+    subscribe(handler: (message: Message) => void): void {
         logger.info({
             subscriptionName: this.subscription.name
-        }, 'Subscribing to event');
+        }, `Subscribing to event`);
         this.subscription.on('message', handler);
     }
 

@@ -12,6 +12,7 @@ describe('Server Conditional Loading', () => {
         // Clean up environment
         delete process.env.WORKER_MODE;
         vi.resetModules();
+        // Note: Global setup handles resource cleanup
     });
 
     describe('Main App Loading (WORKER_MODE=false)', () => {

@@ -2,7 +2,6 @@ import {describe, it, expect, beforeAll, vi, afterAll} from 'vitest';
 import EventSubscriber from '../../../../src/services/events/subscriber.js';
 import {publishEvent} from '../../../../src/services/events/publisher.js';
 import {createMockLogger} from '../../../utils/mock-logger.js';
-import {createTopic, createSubscription, deleteSubscription, deleteTopic} from '../../../utils/pubsub.js';
 
 describe('EventSubscriber Integration Tests', () => {
     let subscriber: EventSubscriber;
@@ -11,10 +10,8 @@ describe('EventSubscriber Integration Tests', () => {
     let mockLogger: ReturnType<typeof createMockLogger>;
 
     beforeAll(async () => {
-        topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
-        subscriptionName = process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW || 'test-subscription';
-        await createTopic(topicName);
-        await createSubscription(topicName, subscriptionName);
+        topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW!;
+        subscriptionName = process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW!;
         
         subscriber = new EventSubscriber(subscriptionName);
         mockLogger = createMockLogger();
@@ -22,8 +19,6 @@ describe('EventSubscriber Integration Tests', () => {
 
     afterAll(async function () {
         await subscriber.close();
-        await deleteSubscription(subscriptionName);
-        await deleteTopic(topicName);
     });
 
     it('should subscribe to a Pub/Sub topic', async () => {
