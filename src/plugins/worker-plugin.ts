@@ -1,6 +1,7 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import {EventSubscriber} from '../services/events/subscriber';
+import type {Message} from '@google-cloud/pubsub';
 
 async function workerPlugin(fastify: FastifyInstance) {
     let subscriber: EventSubscriber | null = null;
@@ -16,8 +17,9 @@ async function workerPlugin(fastify: FastifyInstance) {
         }, 10000);
 
         subscriber = new EventSubscriber(process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW as string);
-        subscriber.subscribe((message) => {
-            fastify.log.info('Worker received message:', message);
+        subscriber.subscribe((message: Message) => {
+            const messageData = message.data.toString();
+            fastify.log.info({messageData}, 'Worker received message');
         });
     });
 
