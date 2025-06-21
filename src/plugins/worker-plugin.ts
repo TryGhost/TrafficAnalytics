@@ -20,6 +20,7 @@ async function workerPlugin(fastify: FastifyInstance) {
         subscriber.subscribe((message: Message) => {
             const messageData = message.data.toString();
             fastify.log.info({messageData}, 'Worker received message');
+            message.ack();
         });
     });
 
