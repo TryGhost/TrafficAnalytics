@@ -129,26 +129,26 @@ describe('E2E /tb/web_analytics', () => {
     it('should accept real healthcheck request with null location and undefined member_status', async () => {
         // This is the exact request body that was causing 400 responses in healthchecks
         const healthcheckBody = {
-            "timestamp": "2025-06-23T23:23:55.030Z",
-            "action": "page_hit",
-            "version": "1",
-            "payload": {
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.23 Safari/537.36",
-                "locale": "en-US",
-                "location": null,
-                "referrer": null,
-                "parsedReferrer": {
-                    "source": null,
-                    "medium": null,
-                    "url": null
+            timestamp: '2025-06-23T23:23:55.030Z',
+            action: 'page_hit',
+            version: '1',
+            payload: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.23 Safari/537.36',
+                locale: 'en-US',
+                location: null,
+                referrer: null,
+                parsedReferrer: {
+                    source: null,
+                    medium: null,
+                    url: null
                 },
-                "pathname": "/",
-                "href": "https://traffic-analytics.ghst.pro/",
-                "site_uuid": "c7929de8-27d7-404e-b714-0fc774f701e6",
-                "post_uuid": "undefined",
-                "post_type": "null",
-                "member_uuid": "undefined",
-                "member_status": "undefined"
+                pathname: '/',
+                href: 'https://traffic-analytics.ghst.pro/',
+                site_uuid: 'c7929de8-27d7-404e-b714-0fc774f701e6',
+                post_uuid: 'undefined',
+                post_type: 'null',
+                member_uuid: 'undefined',
+                member_status: 'undefined'
             }
         };
 
