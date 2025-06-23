@@ -1661,7 +1661,7 @@
   dependencies:
     lodash.template "^4.5.0"
 
-"@tryghost/validator@^0.2.17":
+"@tryghost/validator@0.2.17":
   version "0.2.17"
   resolved "https://registry.yarnpkg.com/@tryghost/validator/-/validator-0.2.17.tgz#51732e93677f3ee10e9c641c5d2cc93f8e038934"
   integrity sha512-MsiF8tkZmsUmWmtDCr8oMua/Lyk0b16zJrT/tDHaERi2eKKgOqf0RwLRdIS/droqX1uOZCX+cLX3xSYbKhh4cA==
