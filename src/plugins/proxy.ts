@@ -1,7 +1,7 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
-import {processRequest, validateRequest} from '../services/proxy';
+import {processRequest, validateRequestWithSchema} from '../services/proxy';
 
 async function proxyPlugin(fastify: FastifyInstance) {
     // Register the analytics proxy using fastify-http-proxy with custom hooks
@@ -10,7 +10,7 @@ async function proxyPlugin(fastify: FastifyInstance) {
         prefix: '/tb/web_analytics',
         rewritePrefix: '', // Remove the prefix when forwarding
         httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-        preValidation: validateRequest as FastifyHttpProxyOptions['preValidation'],
+        preValidation: validateRequestWithSchema as FastifyHttpProxyOptions['preValidation'],
         preHandler: processRequest as FastifyHttpProxyOptions['preHandler'],
         replyOptions: {
             onError: (reply, error) => {
