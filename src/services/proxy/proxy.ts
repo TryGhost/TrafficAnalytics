@@ -1,5 +1,4 @@
 import {FastifyRequest, FastifyReply} from '../../types';
-import * as validators from './validators';
 import {handleSiteUUIDHeader} from './processors/handle-site-uuid-header';
 import {parseReferrer} from './processors/url-referrer';
 import {parseUserAgent} from './processors/parse-user-agent';
@@ -55,21 +54,6 @@ export async function processRequest(request: FastifyRequest, reply: FastifyRepl
         reply.code(500).send(error);
         throw error; // Re-throw to let Fastify handle it
     }
-}
-
-export function validateRequest(request: FastifyRequest, reply: FastifyReply, done: () => void): void {
-    try {
-        validators.validateSiteUUID(request);
-        validators.validateQueryParams(request);
-        validators.validateRequestBody(request);
-    } catch (error) {
-        // TODO: This should just throw an error, not return a reply
-        // This should be decoupled from the HTTP proxy route
-        reply.code(400).send(error);
-        return;
-    }
-
-    done();
 }
 
 export function validateRequestWithSchema(request: FastifyRequest, reply: FastifyReply, done: () => void): void {
