@@ -17,6 +17,7 @@ TrafficAnalytics is a web analytics proxy service for Ghost that processes and e
 
 ### Testing
 - `docker compose run --rm test` - Run all unit tests in Docker
+- Always run the tests using the `yarn docker:*` commands, i.e. `yarn docker:test`, `yarn docker:test:unit`, `yarn docker:test:integration`
 
 ### Linting
 - `docker compose run --rm lint` - Run linter in Docker

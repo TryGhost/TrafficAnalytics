@@ -225,6 +225,7 @@ describe('PageHitRawRequestSchema v1', () => {
             timestamp: '2024-01-01T00:00:00.000Z',
             action: 'page_hit',
             version: '1.0.0',
+            session_id: 'test-session-id',
             payload: {
                 'user-agent': 'Mozilla/5.0',
                 locale: 'en-US',
@@ -242,6 +243,18 @@ describe('PageHitRawRequestSchema v1', () => {
 
         it('should validate valid body', () => {
             expect(Value.Check(BodySchema, validBody)).toBe(true);
+        });
+
+        it('should validate body without session_id (optional)', () => {
+            const bodyWithoutSessionId = {
+                timestamp: validBody.timestamp,
+                action: validBody.action,
+                version: validBody.version,
+                payload: validBody.payload
+                // session_id omitted
+            };
+            
+            expect(Value.Check(BodySchema, bodyWithoutSessionId)).toBe(true);
         });
 
         it('should reject invalid timestamp format', () => {
@@ -277,6 +290,7 @@ describe('PageHitRawRequestSchema v1', () => {
                 timestamp: '2024-01-01T00:00:00.000Z',
                 action: 'page_hit',
                 version: '1.0.0',
+                session_id: 'test-session-id',
                 payload: {
                     'user-agent': 'Mozilla/5.0',
                     locale: 'en-US',

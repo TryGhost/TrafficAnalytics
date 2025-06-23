@@ -72,6 +72,8 @@ export const PayloadSchema = Type.Object({
     post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
     member_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
     member_status: NonEmptyStringSchema
+}, {
+    additionalProperties: true // Allow processors to add os, browser, device, etc.
 });
 
 // Request body schema
@@ -79,6 +81,7 @@ export const BodySchema = Type.Object({
     timestamp: ISO8601DateTimeSchema,
     action: ActionSchema,
     version: StringSchema,
+    session_id: Type.Optional(StringSchema),
     payload: PayloadSchema
 });
 
