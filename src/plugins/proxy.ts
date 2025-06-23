@@ -1,20 +1,21 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
-import {processRequest, validateRequest} from '../services/proxy';
+import {processRequest, validateRequestWithSchema} from '../services/proxy';
 
-function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
-    return {
+async function proxyPlugin(fastify: FastifyInstance) {
+    // Register the analytics proxy using fastify-http-proxy with custom hooks
+    await fastify.register(fastifyHttpProxy, {
         upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
-        prefix: prefix,
-        rewritePrefix: '', // we'll hardcode this in PROXY_TARGET
+        prefix: '/tb/web_analytics',
+        rewritePrefix: '', // Remove the prefix when forwarding
         httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-        preValidation: validateRequest as FastifyHttpProxyOptions['preValidation'],
+        preValidation: validateRequestWithSchema as FastifyHttpProxyOptions['preValidation'],
         preHandler: processRequest as FastifyHttpProxyOptions['preHandler'],
         replyOptions: {
             onError: (reply, error) => {
                 // Log proxy errors with proper structure for GCP
-                const unwrappedError = error.error || error;
+                const unwrappedError = 'error' in error ? error.error : error;
                 reply.log.error({
                     err: {
                         message: unwrappedError.message,
@@ -37,12 +38,7 @@ function getProxyConfig(prefix: string): FastifyHttpProxyOptions {
             }
         },
         disableRequestLogging: process.env.LOG_PROXY_REQUESTS === 'false'
-    };
-}
-
-async function proxyPlugin(fastify: FastifyInstance) {
-    // Register the analytics proxy
-    fastify.register(fastifyHttpProxy, getProxyConfig('/tb/web_analytics'));
+    });
     
     // Register local proxy endpoint for development/testing
     fastify.post('/local-proxy*', async () => {

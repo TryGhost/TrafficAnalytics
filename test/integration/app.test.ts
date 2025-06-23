@@ -20,7 +20,7 @@ const eventPayload = {
     version: '1',
     session_id: '9017be4c-3065-484b-b117-9719ad1e3977',
     payload: {
-        user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36',
         locale: 'en-US',
         location: 'US',
         referrer: null,
@@ -28,8 +28,9 @@ const eventPayload = {
         href: 'https://www.chrisraible.com/',
         site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
         post_uuid: 'undefined',
+        post_type: 'null',
         member_uuid: 'undefined',
-        member_status: 'undefined'
+        member_status: 'free'
     }
 };
 
@@ -141,15 +142,18 @@ describe('Fastify App', () => {
         it('should proxy requests to the target server', async function () {
             await request(proxyServer)
                 .post('/tb/web_analytics')
-                .query({token: 'abc123', name: 'test'})
+                .query({token: 'abc123', name: 'analytics_events_test'})
+                .set('Content-Type', 'application/json')
+                .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                .set('User-Agent', 'Mozilla/5.0 Test Browser')
                 .send(eventPayload)
                 .expect(202);
 
             expect(targetRequests.length).toBe(1);
             expect(targetRequests[0].method).toBe('POST');
-            expect(targetRequests[0].url).toBe('/?token=abc123&name=test');
+            expect(targetRequests[0].url).toBe('/?token=abc123&name=analytics_events_test');
             expect(targetRequests[0].query.token).toBe('abc123');
-            expect(targetRequests[0].query.name).toBe('test');
+            expect(targetRequests[0].query.name).toBe('analytics_events_test');
         });
 
         it('should handle proxy errors gracefully', async function () {
@@ -221,7 +225,9 @@ describe('Fastify App', () => {
             it('should parse the OS from the user agent and pass it to the upstream server under the meta key', async function () {
                 await request(proxyServer)
                     .post('/tb/web_analytics')
-                    .query({token: 'abc123', name: 'test'})
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                     .send(eventPayload)
                     .expect(202);
@@ -233,7 +239,9 @@ describe('Fastify App', () => {
             it('should parse the browser from the user agent and pass it to the upstream server', async function () {
                 await request(proxyServer)
                     .post('/tb/web_analytics')
-                    .query({token: 'abc123', name: 'test'})
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                     .send(eventPayload)
                     .expect(202);
@@ -245,7 +253,9 @@ describe('Fastify App', () => {
             it('should parse the device from the user agent and pass it to the upstream server', async function () {
                 await request(proxyServer)
                     .post('/tb/web_analytics')
-                    .query({token: 'abc123', name: 'test'})
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                     .send(eventPayload)
                     .expect(202);
@@ -259,7 +269,9 @@ describe('Fastify App', () => {
             it('should generate user signature and pass it to the upstream server', async function () {
                 await request(proxyServer)
                     .post('/tb/web_analytics')
-                    .query({token: 'abc123', name: 'test'})
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
                     .send(eventPayload)
                     .expect(202);
@@ -276,7 +288,9 @@ describe('Fastify App', () => {
                 
                 await request(proxyServer)
                     .post('/tb/web_analytics')
-                    .query({token: 'abc123', name: 'test'})
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', userAgent)
                     .set('X-Forwarded-For', `${clientIp}, ${proxyIp}`)
                     .send(eventPayload)
@@ -298,7 +312,9 @@ describe('Fastify App', () => {
                 
                 await request(proxyServer)
                     .post('/tb/web_analytics')
-                    .query({token: 'abc123', name: 'test'})
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', userAgent)
                     .set('X-Forwarded-For', `${clientIp}, ${proxy1}, ${proxy2}`)
                     .send(eventPayload)
@@ -318,7 +334,9 @@ describe('Fastify App', () => {
                 
                 await request(proxyServer)
                     .post('/tb/web_analytics')
-                    .query({token: 'abc123', name: 'test'})
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', userAgent)
                     .set('X-Forwarded-For', clientIp)
                     .send(eventPayload)
@@ -337,7 +355,9 @@ describe('Fastify App', () => {
                 
                 await request(proxyServer)
                     .post('/tb/web_analytics')
-                    .query({token: 'abc123', name: 'test'})
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', userAgent)
                     .send(eventPayload)
                     .expect(202);
@@ -365,7 +385,9 @@ describe('Fastify App', () => {
                 try {
                     await request(proxyServer)
                         .post('/tb/web_analytics')
-                        .query({token: 'abc123', name: 'test'})
+                        .query({token: 'abc123', name: 'analytics_events_test'})
+                        .set('Content-Type', 'application/json')
+                        .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                         .set('User-Agent', 'Mozilla/5.0 Test Browser')
                         .send(eventPayload)
                         .expect(202);

@@ -34,7 +34,7 @@ export interface RequestBody {
     timestamp: string;
     action: string;
     version: string;
-    session_id: string;
+    session_id?: string;
     payload: Payload;
 }
 

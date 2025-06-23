@@ -1,5 +1,6 @@
 // Main module file
 import fastify from 'fastify';
+import {TypeBoxTypeProvider} from '@fastify/type-provider-typebox';
 import loggingPlugin from './plugins/logging';
 import corsPlugin from './plugins/cors';
 import proxyPlugin from './plugins/proxy';
@@ -9,7 +10,7 @@ const app = fastify({
     logger: getLoggerConfig(),
     disableRequestLogging: true,
     trustProxy: process.env.TRUST_PROXY !== 'false'
-});
+}).withTypeProvider<TypeBoxTypeProvider>();
 
 // Register CORS plugin
 app.register(corsPlugin);
