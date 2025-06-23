@@ -44,9 +44,9 @@ interface WebAnalyticsRequestOptions {
  * Uses sensible defaults that pass schema validation, allows overrides for testing edge cases
  */
 async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {}) {
-    const queryParams = { ...DEFAULT_QUERY_PARAMS, ...options.queryParams };
-    const headers = { ...DEFAULT_HEADERS, ...options.headers };
-    const body = { ...DEFAULT_BODY, ...options.body };
+    const queryParams = {...DEFAULT_QUERY_PARAMS, ...options.queryParams};
+    const headers = {...DEFAULT_HEADERS, ...options.headers};
+    const body = {...DEFAULT_BODY, ...options.body};
     const method = options.method || 'POST';
 
     // Build query string
@@ -73,7 +73,7 @@ describe('E2E /tb/web_analytics', () => {
     describe('validation failures', () => {
         it('should reject requests with invalid name parameter', async () => {
             const response = await makeWebAnalyticsRequest({
-                queryParams: { name: 'invalid_name' }
+                queryParams: {name: 'invalid_name'}
             });
 
             expect(response.status).toBe(400);
@@ -81,7 +81,7 @@ describe('E2E /tb/web_analytics', () => {
 
         it('should reject requests without required token parameter', async () => {
             const response = await makeWebAnalyticsRequest({
-                queryParams: { token: '' }
+                queryParams: {token: ''}
             });
 
             expect(response.status).toBe(400);
@@ -89,7 +89,7 @@ describe('E2E /tb/web_analytics', () => {
 
         it('should reject requests without x-site-uuid header', async () => {
             const response = await makeWebAnalyticsRequest({
-                headers: { 'x-site-uuid': '' }
+                headers: {'x-site-uuid': ''}
             });
 
             expect(response.status).toBe(400);
@@ -97,7 +97,7 @@ describe('E2E /tb/web_analytics', () => {
 
         it('should reject requests with invalid x-site-uuid format', async () => {
             const response = await makeWebAnalyticsRequest({
-                headers: { 'x-site-uuid': 'not-a-uuid' }
+                headers: {'x-site-uuid': 'not-a-uuid'}
             });
 
             expect(response.status).toBe(400);
@@ -111,7 +111,7 @@ describe('E2E /tb/web_analytics', () => {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: DEFAULT_HEADERS,
-                body: JSON.stringify({ timestamp: '2025-04-14T22:16:06.095Z' }) // Missing action, version, payload, etc.
+                body: JSON.stringify({timestamp: '2025-04-14T22:16:06.095Z'}) // Missing action, version, payload, etc.
             });
 
             expect(response.status).toBe(400);
@@ -119,7 +119,7 @@ describe('E2E /tb/web_analytics', () => {
 
         it('should reject requests with invalid timestamp format', async () => {
             const response = await makeWebAnalyticsRequest({
-                body: { timestamp: 'not-a-timestamp' }
+                body: {timestamp: 'not-a-timestamp'}
             });
 
             expect(response.status).toBe(400);
