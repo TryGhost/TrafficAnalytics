@@ -1,27 +1,19 @@
 import {Type, FormatRegistry} from '@sinclair/typebox';
+import validator from '@tryghost/validator';
 
-// Register format validators for runtime validation
+// Register format validators for runtime validation using @tryghost/validator
 FormatRegistry.Set('uuid', (value) => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(value);
+    return validator.isUUID(value);
 });
 
 FormatRegistry.Set('uri', (value) => {
-    try {
-        new URL(value);
-        return true;
-    } catch {
-        return false;
-    }
+    return validator.isURL(value);
 });
 
 FormatRegistry.Set('date-time', (value) => {
-    const iso8601Regex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
-    if (!iso8601Regex.test(value)) {
-        return false;
-    }
+    // Use native Date parsing which handles ISO8601 formats properly
     const date = new Date(value);
-    return !isNaN(date.getTime());
+    return !isNaN(date.getTime()) && date.toISOString() === value;
 });
 
 // Common types
