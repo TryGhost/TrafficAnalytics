@@ -55,7 +55,7 @@ export const HeadersSchema = Type.Object({
 export const PayloadSchema = Type.Object({
     'user-agent': NonEmptyStringSchema,
     locale: NonEmptyStringSchema,
-    location: NonEmptyStringSchema,
+    location: Type.Union([NonEmptyStringSchema, Type.Null()]),
     referrer: Type.Union([URLSchema, Type.Null()]),
     pathname: NonEmptyStringSchema,
     href: URLSchema,
@@ -63,7 +63,7 @@ export const PayloadSchema = Type.Object({
     post_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
     post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
     member_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
-    member_status: NonEmptyStringSchema
+    member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')])
 }, {
     additionalProperties: true // Allow processors to add os, browser, device, etc.
 });
