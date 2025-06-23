@@ -3,7 +3,7 @@ import {FastifyRequest as FastifyRequestBase, FastifyReply as FastifyReplyBase} 
 export interface Payload {
     'user-agent': string;
     locale: string;
-    location: string;
+    location: string | null;
     referrer: string | null;
     parsedReferrer?: {
         source: string | null;

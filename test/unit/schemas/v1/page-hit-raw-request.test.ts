@@ -218,6 +218,29 @@ describe('PageHitRawRequestSchema v1', () => {
         
             expect(Value.Check(PayloadSchema, invalidPayload)).toBe(false);
         });
+
+        it('should validate real healthcheck payload with null location and undefined member_status', () => {
+            const healthcheckPayload = {
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.23 Safari/537.36',
+                locale: 'en-US',
+                location: null,
+                referrer: null,
+                parsedReferrer: {
+                    source: null,
+                    medium: null,
+                    url: null
+                },
+                pathname: '/',
+                href: 'https://traffic-analytics.ghst.pro/',
+                site_uuid: 'c7929de8-27d7-404e-b714-0fc774f701e6',
+                post_uuid: 'undefined',
+                post_type: 'null',
+                member_uuid: 'undefined',
+                member_status: 'undefined'
+            };
+            
+            expect(Value.Check(PayloadSchema, healthcheckPayload)).toBe(true);
+        });
     });
 
     describe('BodySchema', () => {
