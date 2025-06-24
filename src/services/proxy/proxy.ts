@@ -57,50 +57,54 @@ export async function processRequest(request: FastifyRequest, reply: FastifyRepl
 }
 
 export function validateRequestWithSchema(request: FastifyRequest, reply: FastifyReply, done: () => void): void {
+    const allErrors: Array<{section: string, path: string, message: string, value: unknown}> = [];
+
     // Validate query parameters
     if (!queryValidator.Check(request.query)) {
-        const errors = [...queryValidator.Errors(request.query)];
-        reply.code(400).send({
-            statusCode: 400,
-            error: 'Bad Request',
-            message: 'Validation failed',
-            details: errors.map(error => ({
-                path: error.path,
-                message: error.message,
-                value: error.value
-            }))
-        });
-        return;
+        const queryErrors = [...queryValidator.Errors(request.query)];
+        allErrors.push(...queryErrors.map(error => ({
+            section: 'query',
+            path: error.path,
+            message: error.message,
+            value: error.value
+        })));
     }
 
     // Validate headers
     if (!headersValidator.Check(request.headers)) {
-        const errors = [...headersValidator.Errors(request.headers)];
-        reply.code(400).send({
-            statusCode: 400,
-            error: 'Bad Request',
-            message: 'Header validation failed',
-            details: errors.map(error => ({
-                path: error.path,
-                message: error.message,
-                value: error.value
-            }))
-        });
-        return;
+        const headerErrors = [...headersValidator.Errors(request.headers)];
+        allErrors.push(...headerErrors.map(error => ({
+            section: 'headers',
+            path: error.path,
+            message: error.message,
+            value: error.value
+        })));
     }
 
     // Validate body
     if (!bodyValidator.Check(request.body)) {
-        const errors = [...bodyValidator.Errors(request.body)];
+        const bodyErrors = [...bodyValidator.Errors(request.body)];
+        allErrors.push(...bodyErrors.map(error => ({
+            section: 'body',
+            path: error.path,
+            message: error.message,
+            value: error.value
+        })));
+    }
+
+    // If there are any validation errors, log them and return 400
+    if (allErrors.length > 0) {
+        request.log.warn({
+            validationErrors: allErrors,
+            url: request.url,
+            method: request.method
+        }, 'Request validation failed');
+
         reply.code(400).send({
             statusCode: 400,
             error: 'Bad Request',
-            message: 'Body validation failed',
-            details: errors.map(error => ({
-                path: error.path,
-                message: error.message,
-                value: error.value
-            }))
+            message: 'Validation failed',
+            details: allErrors
         });
         return;
     }
