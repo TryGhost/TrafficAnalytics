@@ -16,6 +16,7 @@ services:
   # Override lint service to use pre-built image
   lint:
     image: ${DOCKER_IMAGE}
+    build: null
     environment:
       - NODE_ENV=testing
     networks:
@@ -25,6 +26,7 @@ services:
   # Override test service to use pre-built image and CI configuration
   test:
     image: ${DOCKER_IMAGE}
+    build: null
     command: ["yarn", "test"]
     environment:
       - NODE_ENV=testing
@@ -48,6 +50,7 @@ services:
   # Override analytics-service to use pre-built image
   analytics-service:
     image: ${DOCKER_IMAGE}
+    build: null
     command: ["yarn", "dev"]
     environment:
       - NODE_ENV=testing
@@ -77,6 +80,7 @@ services:
   # Override worker to use pre-built image
   worker:
     image: ${DOCKER_IMAGE}
+    build: null
     command: ["yarn", "dev"]
     environment:
       - NODE_ENV=testing
@@ -105,6 +109,7 @@ services:
   # Override e2e-test service to use pre-built image and CI configuration
   e2e-test:
     image: ${DOCKER_IMAGE}
+    build: null
     command: ["yarn", "test:e2e"]
     environment:
       - NODE_ENV=testing
