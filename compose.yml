@@ -107,6 +107,27 @@ services:
     networks:
       - dev-network
 
+  e2e-test:
+    image: local/traffic-analytics:development
+    pull_policy: never
+    command: ["yarn", "test:e2e"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - NODE_ENV=testing
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3000
+      - WIREMOCK_URL=http://fake-tinybird:8080
+    tty: true
+    networks:
+      - dev-network
+    profiles: [e2e]
+    depends_on:
+      analytics-service:
+        condition: service_started
+      fake-tinybird:
+        condition: service_healthy
+
   test:
     image: local/traffic-analytics:development
     pull_policy: never

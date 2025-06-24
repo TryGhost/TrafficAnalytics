@@ -25,6 +25,19 @@ runs:
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test
 
+    # E2E Test
+    - name: Start services for E2E tests
+      shell: bash
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml up -d
+        
+    - name: Run E2E tests
+      shell: bash
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm e2e-test
+
     # Copy coverage report from test container
     - name: Copy coverage report
       shell: bash
