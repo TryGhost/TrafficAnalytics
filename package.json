@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@fastify/cors": "11.0.1",
-    "@fastify/reply-from": "12.1.0",
+    "@fastify/http-proxy": "11.2.0",
     "@fastify/type-provider-typebox": "5.1.0",
     "@google-cloud/firestore": "7.11.1",
     "@google-cloud/pino-logging-gcp-config": "1.0.6",

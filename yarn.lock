@@ -245,6 +245,16 @@
   resolved "https://registry.yarnpkg.com/@fastify/forwarded/-/forwarded-3.0.0.tgz#0fc96cdbbb5a38ad453d2d5533a34f09b4949b37"
   integrity sha512-kJExsp4JCms7ipzg7SJ3y8DwmePaELHxKYtg+tZow+k0znUTf3cb+npgyqm8+ATZOdmfgfydIebPDWM172wfyA==
 
+"@fastify/http-proxy@11.2.0":
+  version "11.2.0"
+  resolved "https://registry.yarnpkg.com/@fastify/http-proxy/-/http-proxy-11.2.0.tgz#d58122383ab59dcb78344e8a02fdf3ac2429730e"
+  integrity sha512-sHhAJEGnVefw3P4N/HDyo2lGagBwYUePXE8kXflKnNF+4vYxNItPMoNjETpIEYbuBeqoV7lHOgAKu0+y9K7SUA==
+  dependencies:
+    "@fastify/reply-from" "^12.0.2"
+    fast-querystring "^1.1.2"
+    fastify-plugin "^5.0.1"
+    ws "^8.18.0"
+
 "@fastify/merge-json-schemas@^0.2.0":
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/@fastify/merge-json-schemas/-/merge-json-schemas-0.2.1.tgz#3aa30d2f0c81a8ac5995b6d94ed4eaa2c3055824"
@@ -260,7 +270,7 @@
     "@fastify/forwarded" "^3.0.0"
     ipaddr.js "^2.1.0"
 
-"@fastify/reply-from@12.1.0":
+"@fastify/reply-from@^12.0.2":
   version "12.1.0"
   resolved "https://registry.yarnpkg.com/@fastify/reply-from/-/reply-from-12.1.0.tgz#e376a2119e4465a84f399e6b2092454268ed1fdb"
   integrity sha512-5SvMj0NnAAhno/MIv+bErCfzYxcqTueqUxCyub/i+68/CqYWroYg0/p8D0ZhrSQcDigowaKk+MEQSoLjbGwZ+g==
@@ -6342,6 +6352,11 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
   integrity sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==
+
+ws@^8.18.0:
+  version "8.18.2"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.18.2.tgz#42738b2be57ced85f46154320aabb51ab003705a"
+  integrity sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==
 
 y18n@^5.0.5:
   version "5.0.8"
