@@ -326,26 +326,20 @@ describe('PageHitRawSchema v1', () => {
 
     describe('missing required fields', () => {
         it('should reject missing timestamp', () => {
-            const invalidData = {
-                ...validPageHitRaw
-            };
-            delete invalidData.timestamp;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const {timestamp, ...invalidData} = validPageHitRaw;
             expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
         });
 
         it('should reject missing payload', () => {
-            const invalidData = {
-                ...validPageHitRaw
-            };
-            delete invalidData.payload;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const {payload, ...invalidData} = validPageHitRaw;
             expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
         });
 
         it('should reject missing meta', () => {
-            const invalidData = {
-                ...validPageHitRaw
-            };
-            delete invalidData.meta;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const {meta, ...invalidData} = validPageHitRaw;
             expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
         });
     });
