@@ -1,47 +1,38 @@
-import {FastifyInstance} from 'fastify';
+import {FastifyInstance, FastifyReply as FastifyReplyBase} from 'fastify';
 import fp from 'fastify-plugin';
-import fastifyHttpProxy, {FastifyHttpProxyOptions} from '@fastify/http-proxy';
-import {processRequest, validateRequestWithSchema} from '../services/proxy';
+import {processRequest} from '../services/proxy';
+import {FastifyRequest, FastifyReply} from '../types';
+import {AnalyticsRouteSchema, ValidatedAnalyticsRequest} from '../schemas/v1/page-hit-raw-request';
 
 async function proxyPlugin(fastify: FastifyInstance) {
-    // Register the analytics proxy using fastify-http-proxy with custom hooks
-    await fastify.register(fastifyHttpProxy, {
-        upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
-        prefix: '/tb/web_analytics',
-        rewritePrefix: '', // Remove the prefix when forwarding
-        httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
-        preValidation: validateRequestWithSchema as FastifyHttpProxyOptions['preValidation'],
-        preHandler: processRequest as FastifyHttpProxyOptions['preHandler'],
-        replyOptions: {
-            onError: (reply, error) => {
-                // Log proxy errors with proper structure for GCP
-                const unwrappedError = 'error' in error ? error.error : error;
-                reply.log.error({
-                    err: {
-                        message: unwrappedError.message,
-                        stack: unwrappedError.stack,
-                        name: unwrappedError.name
-                    },
-                    httpRequest: {
-                        requestMethod: reply.request.method,
-                        requestUrl: reply.request.url,
-                        userAgent: reply.request.headers['user-agent'],
-                        remoteIp: reply.request.ip,
-                        referer: reply.request.headers.referer,
-                        protocol: `${reply.request.protocol.toUpperCase()}/${reply.request.raw.httpVersion}`,
-                        status: 502
-                    },
-                    upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
-                    type: 'proxy_error'
-                }, 'Proxy error occurred');
-                reply.status(502).send({error: 'Proxy error'});
-            }
-        },
+    await fastify.register(import('@fastify/reply-from'), {
         disableRequestLogging: process.env.LOG_PROXY_REQUESTS === 'false'
     });
+
+    // Main analytics proxy route
+    fastify.post('/tb/web_analytics', {
+        schema: AnalyticsRouteSchema,
+        preHandler: async (request: ValidatedAnalyticsRequest, reply: FastifyReplyBase) => {
+            await processRequest(request as FastifyRequest, reply as FastifyReply);
+        }
+    }, async (request, reply) => {
+        try {
+            const targetUrl = process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy';
+            const url = new URL(request.url, 'http://localhost');
+            await reply.from(targetUrl + url.search);
+        } catch (error) {
+            // Log proxy errors and let Fastify handle the response
+            request.log.error({
+                error: error instanceof Error ? error.message : String(error),
+                targetUrl: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
+                url: request.url
+            }, 'Proxy forwarding failed');
+            throw error; // Re-throw to let Fastify handle the error response
+        }
+    });
     
-    // Register local proxy endpoint for development/testing
-    fastify.post('/local-proxy*', async () => {
+    // Local proxy endpoint for development/testing
+    fastify.post('/local-proxy', async () => {
         return 'Hello World - From the local proxy';
     });
 }
