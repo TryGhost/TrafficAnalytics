@@ -16,6 +16,7 @@ services:
   # Override lint service to use pre-built development image
   lint:
     image: ${DOCKER_IMAGE_DEVELOPMENT}
+    build: null
     environment:
       - NODE_ENV=testing
     networks:
@@ -25,6 +26,7 @@ services:
   # Override test service to use pre-built development image and CI configuration
   test:
     image: ${DOCKER_IMAGE_DEVELOPMENT}
+    build: null
     command: ["yarn", "test"]
     environment:
       - NODE_ENV=testing
@@ -48,6 +50,8 @@ services:
   # Override analytics-service to use production image for E2E tests
   analytics-service:
     image: ${DOCKER_IMAGE_PRODUCTION}
+    build: null
+    command: ["yarn", "start"]
     environment:
       - NODE_ENV=production
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
@@ -69,6 +73,7 @@ services:
   # Override e2e-test service to use development image (needs vitest) but test against production services
   e2e-test:
     image: ${DOCKER_IMAGE_DEVELOPMENT}
+    build: null
     command: ["yarn", "test:e2e"]
     environment:
       - NODE_ENV=testing
