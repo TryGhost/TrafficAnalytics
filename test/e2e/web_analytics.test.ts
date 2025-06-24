@@ -1,4 +1,5 @@
-import {describe, it, expect} from 'vitest';
+import {describe, it, expect, beforeAll, afterEach} from 'vitest';
+import {WireMock} from '../utils/wiremock';
 
 // Default test data that passes schema validation
 const DEFAULT_QUERY_PARAMS = {
@@ -51,7 +52,9 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
 
     // Build query string
     const queryString = new URLSearchParams(queryParams).toString();
-    const url = `http://localhost:3000/tb/web_analytics?${queryString}`;
+    
+    const baseUrl = 'http://localhost:3000';
+    const url = `${baseUrl}/tb/web_analytics?${queryString}`;
 
     return fetch(url, {
         method,
@@ -61,13 +64,67 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
 }
 
 describe('E2E /tb/web_analytics', () => {
-    it('should process analytics request successfully', async () => {
+    const wiremockUrl = 'http://localhost:8089';
+    const wireMock = new WireMock(wiremockUrl);
+
+    beforeAll(async () => {
+        // Wait for WireMock to be ready
+        await wireMock.waitForHealthy();
+        
+        // Setup default stub for Tinybird endpoint
+        await wireMock.setupTinybirdStub({
+            status: 200,
+            responseBody: JSON.stringify({success: true}),
+            responseHeaders: {'Content-Type': 'application/json'}
+        });
+    });
+
+    afterEach(async () => {
+        // Reset WireMock after each test to clean up stubs and request logs
+        await wireMock.resetAll();
+        
+        // Re-setup the default stub
+        await wireMock.setupTinybirdStub({
+            status: 200,
+            responseBody: JSON.stringify({success: true}),
+            responseHeaders: {'Content-Type': 'application/json'}
+        });
+    });
+    it('should process analytics request successfully and forward to Tinybird', async () => {
         const response = await makeWebAnalyticsRequest();
 
         expect(response.status).toBe(200);
         
         const responseText = await response.text();
-        expect(responseText).toBe('Hello World - From the local proxy');
+        expect(responseText).toBe('{"success":true}');
+
+        // Verify the request was forwarded to Tinybird
+        const tinybirdRequests = await wireMock.verifyTinybirdRequest({
+            token: 'test-token',
+            name: 'analytics_events_test'
+        });
+
+        expect(tinybirdRequests).toHaveLength(1);
+
+        // Verify the request body was processed and enriched  
+        const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
+
+        expect(requestBody).toMatchObject({
+            timestamp: DEFAULT_BODY.timestamp,
+            action: 'page_hit',
+            version: '1',
+            // Should have session_id added by processing
+            session_id: expect.any(String),
+            payload: expect.objectContaining({
+                site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
+                pathname: '/test-page',
+                href: 'https://example.com/test-page',
+                // Should have parsed user agent info
+                browser: expect.any(String),
+                os: expect.any(String),
+                device: expect.any(String)
+            })
+        });
     });
 
     describe('validation failures', () => {
@@ -106,7 +163,8 @@ describe('E2E /tb/web_analytics', () => {
         it('should reject requests with missing required body fields', async () => {
             // Send incomplete body directly without merging with defaults
             const queryString = new URLSearchParams(DEFAULT_QUERY_PARAMS).toString();
-            const url = `http://localhost:3000/tb/web_analytics?${queryString}`;
+            const baseUrl = 'http://localhost:3000';
+            const url = `${baseUrl}/tb/web_analytics?${queryString}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -153,7 +211,8 @@ describe('E2E /tb/web_analytics', () => {
         };
 
         const queryString = new URLSearchParams(DEFAULT_QUERY_PARAMS).toString();
-        const url = `http://localhost:3000/tb/web_analytics?${queryString}`;
+        const baseUrl = 'http://localhost:3000';
+        const url = `${baseUrl}/tb/web_analytics?${queryString}`;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -167,6 +226,32 @@ describe('E2E /tb/web_analytics', () => {
         expect(response.status).toBe(200);
         
         const responseText = await response.text();
-        expect(responseText).toBe('Hello World - From the local proxy');
+        expect(responseText).toBe('{"success":true}');
+
+        // Verify the request was forwarded to Tinybird with processed data
+        const tinybirdRequests = await wireMock.verifyTinybirdRequest({
+            token: 'test-token',
+            name: 'analytics_events_test'
+        });
+
+        expect(tinybirdRequests).toHaveLength(1);
+
+        // Verify healthcheck request body was processed correctly
+        const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
+        expect(requestBody).toMatchObject({
+            timestamp: healthcheckBody.timestamp,
+            action: 'page_hit',
+            version: '1',
+            // Should have session_id added by processing  
+            session_id: expect.any(String),
+            payload: expect.objectContaining({
+                site_uuid: 'c7929de8-27d7-404e-b714-0fc774f701e6',
+                location: null,
+                member_status: 'undefined',
+                // Should have parsed user agent info
+                browser: expect.any(String),
+                os: expect.any(String)
+            })
+        });
     });
 });

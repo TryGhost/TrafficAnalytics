@@ -60,12 +60,15 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+      - PROXY_TARGET=http://fake-tinybird:8080/v0/events
     networks:
       - dev-network
     depends_on:
       firestore:
         condition: service_healthy
       pubsub:
+        condition: service_healthy
+      fake-tinybird:
         condition: service_healthy
 
   worker:
@@ -96,6 +99,19 @@ services:
         condition: service_healthy
       pubsub:
         condition: service_healthy
+
+  fake-tinybird:
+    image: wiremock/wiremock:3.9.1
+    ports:
+      - ${FAKE_TINYBIRD_PORT:-8089}:8080
+    command: ["--global-response-templating", "--verbose"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/__admin/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - dev-network
 
   test:
     image: local/traffic-analytics:development
