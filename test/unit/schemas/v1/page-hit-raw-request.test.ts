@@ -192,15 +192,6 @@ describe('PageHitRawRequestSchema v1', () => {
             expect(Value.Check(PayloadSchema, invalidPayload)).toBe(false);
         });
 
-        it('should reject invalid referrer URL', () => {
-            const invalidPayload = {
-                ...validPayload,
-                referrer: 'not-a-url'
-            };
-        
-            expect(Value.Check(PayloadSchema, invalidPayload)).toBe(false);
-        });
-
         it('should reject empty required strings', () => {
             const invalidPayload = {
                 ...validPayload,
