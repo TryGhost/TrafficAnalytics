@@ -22,9 +22,6 @@ export interface Payload {
     device?: string;
     user_signature?: string;
     meta?: {
-        referrerUrl?: string;
-        referrerSource?: string;
-        referrerMedium?: string;
         userSignature?: string;
         [key: string]: unknown;
     };
