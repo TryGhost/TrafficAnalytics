@@ -6,11 +6,61 @@ import {generateUserSignature} from './processors/user-signature';
 import {publishEvent} from '../events/publisher.js';
 import {TypeCompiler} from '@sinclair/typebox/compiler';
 import {QueryParamsSchema, HeadersSchema, BodySchema} from '../../schemas/v1/incoming-event-request';
+import {PageHitRaw} from '../../schemas/v1/page-hit-raw';
+import {Static} from '@sinclair/typebox';
 
 // Compile schema validators once for performance
 const queryValidator = TypeCompiler.Compile(QueryParamsSchema);
 const headersValidator = TypeCompiler.Compile(HeadersSchema);
 const bodyValidator = TypeCompiler.Compile(BodySchema);
+
+interface ValidatedRequest extends FastifyRequest {
+    query: Static<typeof QueryParamsSchema>;
+    headers: Static<typeof HeadersSchema>;
+    body: Static<typeof BodySchema>;
+}
+
+const pageHitRawPayloadFromRequest = (request: ValidatedRequest): PageHitRaw => {
+    return {
+        timestamp: request.body.timestamp,
+        action: request.body.action,
+        version: request.body.version,
+        site_uuid: request.headers['x-site-uuid'],
+        payload: {
+            member_uuid: request.body.payload.member_uuid,
+            member_status: request.body.payload.member_status,
+            post_uuid: request.body.payload.post_uuid,
+            post_type: request.body.payload.post_type,
+            locale: request.body.payload.locale,
+            location: request.body.payload.location,
+            referrer: request.body.payload.referrer,
+            pathname: request.body.payload.pathname,
+            href: request.body.payload.href
+        },
+        meta: {
+            ip: request.ip,
+            'user-agent': request.headers['user-agent']
+        }
+    };
+};
+
+const publishPageHitRaw = async (request: ValidatedRequest): Promise<void> => {
+    try {
+        const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
+        if (topic) {
+            await publishEvent({
+                topic,
+                payload: pageHitRawPayloadFromRequest(request),
+                logger: request.log
+            });
+        }    
+    } catch (error) {
+        request.log.error({
+            error: error instanceof Error ? error.message : String(error),
+            topic: process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string
+        }, 'Failed to publish page hit event - continuing with request');
+    };
+};
 
 // Accepts a request object
 // Does some processing — user agent parsing, geoip lookup, etc.
@@ -18,38 +68,17 @@ const bodyValidator = TypeCompiler.Compile(BodySchema);
 // Called within the HTTP proxy route
 // Eventually will be called on each request pulled from the queue
 export async function processRequest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    const validatedRequest = request as ValidatedRequest;
     handleSiteUUIDHeader(request);
 
     try {
         // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
         // This is fire-and-forget - don't let Pub/Sub errors break the proxy
-        const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
-        if (topic) {
-            try {
-                await publishEvent({
-                    topic,
-                    payload: {
-                        timestamp: new Date().toISOString(),
-                        method: request.method,
-                        url: request.url,
-                        headers: request.headers,
-                        body: request.body,
-                        ip: request.ip
-                    },
-                    logger: request.log
-                });
-            } catch (error) {
-                // Log the error but don't let it affect the request
-                request.log.warn({
-                    error: error instanceof Error ? error.message : String(error),
-                    topic
-                }, 'Failed to publish page hit event - continuing with request');
-            }
-        }
+        await publishPageHitRaw(validatedRequest);
 
-        parseUserAgent(request);
-        parseReferrer(request);
-        await generateUserSignature(request);
+        parseUserAgent(validatedRequest);
+        parseReferrer(validatedRequest);
+        await generateUserSignature(validatedRequest);
     } catch (error) {
         reply.code(500).send(error);
         throw error; // Re-throw to let Fastify handle it

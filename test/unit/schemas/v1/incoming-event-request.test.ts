@@ -238,7 +238,7 @@ describe('IncomingEventRequestSchema v1', () => {
         const validBody = {
             timestamp: '2024-01-01T00:00:00.000Z',
             action: 'page_hit',
-            version: '1.0.0',
+            version: '1',
             session_id: 'test-session-id',
             payload: {
                 'user-agent': 'Mozilla/5.0',
@@ -303,7 +303,7 @@ describe('IncomingEventRequestSchema v1', () => {
             body: {
                 timestamp: '2024-01-01T00:00:00.000Z',
                 action: 'page_hit',
-                version: '1.0.0',
+                version: '1',
                 session_id: 'test-session-id',
                 payload: {
                     'user-agent': 'Mozilla/5.0',
