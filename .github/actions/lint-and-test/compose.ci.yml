@@ -70,6 +70,28 @@ services:
       fake-tinybird:
         condition: service_healthy
 
+  # Override worker service to use production image for E2E tests
+  worker:
+    image: ${DOCKER_IMAGE_PRODUCTION}
+    build: null
+    command: ["yarn", "start"]
+    environment:
+      - NODE_ENV=production
+      - WORKER_MODE=true
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+    networks:
+      - dev-network
+    depends_on:
+      firestore:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+
   # Override e2e-test service to use development image (needs vitest) but test against production services
   e2e-test:
     image: ${DOCKER_IMAGE_DEVELOPMENT}
