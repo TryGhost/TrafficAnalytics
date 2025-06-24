@@ -53,7 +53,7 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
     // Build query string
     const queryString = new URLSearchParams(queryParams).toString();
     
-    const baseUrl = 'http://localhost:3000';
+    const baseUrl = process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3000';
     const url = `${baseUrl}/tb/web_analytics?${queryString}`;
 
     return fetch(url, {
@@ -64,12 +64,11 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
 }
 
 describe('E2E /tb/web_analytics', () => {
-    const wiremockUrl = 'http://localhost:8089';
-    const wireMock = new WireMock(wiremockUrl);
+    let wireMock: WireMock;
 
     beforeAll(async () => {
-        // Wait for WireMock to be ready
-        await wireMock.waitForHealthy();
+        const wiremockUrl = process.env.WIREMOCK_URL || 'http://localhost:8089';
+        wireMock = new WireMock(wiremockUrl);
         
         // Setup default stub for Tinybird endpoint
         await wireMock.setupTinybirdStub({
@@ -163,7 +162,7 @@ describe('E2E /tb/web_analytics', () => {
         it('should reject requests with missing required body fields', async () => {
             // Send incomplete body directly without merging with defaults
             const queryString = new URLSearchParams(DEFAULT_QUERY_PARAMS).toString();
-            const baseUrl = 'http://localhost:3000';
+            const baseUrl = process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3000';
             const url = `${baseUrl}/tb/web_analytics?${queryString}`;
             
             const response = await fetch(url, {
@@ -211,7 +210,7 @@ describe('E2E /tb/web_analytics', () => {
         };
 
         const queryString = new URLSearchParams(DEFAULT_QUERY_PARAMS).toString();
-        const baseUrl = 'http://localhost:3000';
+        const baseUrl = process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3000';
         const url = `${baseUrl}/tb/web_analytics?${queryString}`;
         
         const response = await fetch(url, {
