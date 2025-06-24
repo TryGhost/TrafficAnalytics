@@ -29,6 +29,8 @@ interface WireMockRequestLog {
         clientIp: string;
         headers: Record<string, string>;
         body: string;
+        cookies: Record<string, string>;
+        queryParameters?: Record<string, any>;
         loggedDate: number;
         loggedDateString: string;
     };
@@ -167,16 +169,20 @@ export class WireMock {
             return requests.filter((request) => {
                 let matches = true;
 
-                if (expectedData.token && request.request?.url) {
-                    matches = matches && request.request.url.includes(`token=${expectedData.token}`);
+                // Handle both wrapped and unwrapped request formats
+                const url = request.request?.url || request.url;
+                const body = request.request?.body || request.body;
+
+                if (expectedData.token && url) {
+                    matches = matches && url.includes(`token=${expectedData.token}`);
                 }
 
-                if (expectedData.name && request.request?.url) {
-                    matches = matches && request.request.url.includes(`name=${expectedData.name}`);
+                if (expectedData.name && url) {
+                    matches = matches && url.includes(`name=${expectedData.name}`);
                 }
 
-                if (expectedData.bodyContains && request.request?.body) {
-                    matches = matches && request.request.body.includes(expectedData.bodyContains);
+                if (expectedData.bodyContains && body) {
+                    matches = matches && body.includes(expectedData.bodyContains);
                 }
 
                 return matches;
@@ -187,12 +193,33 @@ export class WireMock {
     }
 
     // Helper method to get the parsed JSON body from a request
-    parseRequestBody(request: WireMockRequestLog): any {
+    parseRequestBody(request: any): any {
         try {
-            return JSON.parse(request.request?.body || '{}');
+            // Handle both wrapped and unwrapped request formats
+            const body = request.request?.body || request.body;
+            if (!body || body.trim() === '') {
+                return null;
+            }
+            return JSON.parse(body);
         } catch (error) {
-            return null;
+            // Return the raw body if JSON parsing fails, for debugging
+            return {
+                _rawBody: request.request?.body || request.body,
+                _parseError: error instanceof Error ? error.message : 'Unknown error'
+            };
         }
+    }
+
+    // Helper method to get all request details for debugging
+    getRequestDetails(request: WireMockRequestLog): any {
+        return {
+            url: request.request?.url,
+            method: request.request?.method,
+            headers: request.request?.headers,
+            body: request.request?.body,
+            bodyLength: request.request?.body?.length || 0,
+            fullRequest: request // Include the full request for debugging
+        };
     }
 }
 
