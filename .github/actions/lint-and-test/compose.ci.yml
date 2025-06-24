@@ -13,18 +13,18 @@ services:
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
 
-  # Override lint service to use pre-built image
+  # Override lint service to use pre-built development image
   lint:
-    image: ${DOCKER_IMAGE}
+    image: ${DOCKER_IMAGE_DEVELOPMENT}
     environment:
       - NODE_ENV=testing
     networks:
       - dev-network
     profiles: []
 
-  # Override test service to use pre-built image and CI configuration
+  # Override test service to use pre-built development image and CI configuration
   test:
-    image: ${DOCKER_IMAGE}
+    image: ${DOCKER_IMAGE_DEVELOPMENT}
     command: ["yarn", "test"]
     environment:
       - NODE_ENV=testing
@@ -56,6 +56,15 @@ services:
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
       - PROXY_TARGET=http://fake-tinybird:8080/v0/events
+    networks:
+      - dev-network
+    depends_on:
+      firestore:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+      fake-tinybird:
+        condition: service_healthy
 
   # Override e2e-test service to use development image (needs vitest) but test against production services
   e2e-test:

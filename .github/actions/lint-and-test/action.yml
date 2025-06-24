@@ -18,14 +18,16 @@ runs:
     - name: Lint
       shell: bash
       run: |
-        export DOCKER_IMAGE=${{ inputs.development-image }}
+        export DOCKER_IMAGE_DEVELOPMENT=${{ inputs.development-image }}
+        export DOCKER_IMAGE_PRODUCTION=${{ inputs.production-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm lint
 
     # Test with compose (includes Firestore emulator)
     - name: Test
       shell: bash
       run: |
-        export DOCKER_IMAGE=${{ inputs.development-image }}
+        export DOCKER_IMAGE_DEVELOPMENT=${{ inputs.development-image }}
+        export DOCKER_IMAGE_PRODUCTION=${{ inputs.production-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test
 
     # E2E Test - using production image for services, development image for test runner
@@ -47,7 +49,8 @@ runs:
     - name: Copy coverage report
       shell: bash
       run: |
-        export DOCKER_IMAGE=${{ inputs.development-image }}
+        export DOCKER_IMAGE_DEVELOPMENT=${{ inputs.development-image }}
+        export DOCKER_IMAGE_PRODUCTION=${{ inputs.production-image }}
         CONTAINER_ID=$(docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml ps -q test | head -1)
         if [ ! -z "$CONTAINER_ID" ]; then
           if docker cp $CONTAINER_ID:/app/coverage/cobertura-coverage.xml .; then
