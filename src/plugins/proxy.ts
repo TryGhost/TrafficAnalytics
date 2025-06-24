@@ -1,69 +1,37 @@
-import {FastifyInstance, FastifyRequest as FastifyRequestBase, FastifyReply as FastifyReplyBase} from 'fastify';
-import {Static} from '@sinclair/typebox';
+import {FastifyInstance, FastifyReply as FastifyReplyBase} from 'fastify';
 import fp from 'fastify-plugin';
 import {processRequest} from '../services/proxy';
 import {FastifyRequest, FastifyReply} from '../types';
-import {QueryParamsSchema, HeadersSchema, BodySchema} from '../schemas/v1/page-hit-raw-request';
+import {AnalyticsRouteSchema, ValidatedAnalyticsRequest} from '../schemas/v1/page-hit-raw-request';
 
 async function proxyPlugin(fastify: FastifyInstance) {
     await fastify.register(import('@fastify/reply-from'), {
         disableRequestLogging: process.env.LOG_PROXY_REQUESTS === 'false'
     });
 
-    const handleProxyError = (request: FastifyRequest, reply: FastifyReply, error: unknown) => {
-        const unwrappedError = error && typeof error === 'object' && 'error' in error ? (error as {error: Error}).error : error as Error;
-        reply.log.error({
-            err: {
-                message: unwrappedError.message,
-                stack: unwrappedError.stack,
-                name: unwrappedError.name
-            },
-            httpRequest: {
-                requestMethod: request.method,
-                requestUrl: request.url,
-                userAgent: request.headers['user-agent'],
-                remoteIp: request.ip,
-                referer: request.headers.referer,
-                protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
-                status: 502
-            },
-            upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
-            type: 'proxy_error'
-        }, 'Proxy error occurred');
-        reply.status(502).send({error: 'Proxy error'});
-    };
-
-    const typedProcessRequest = async (
-        request: FastifyRequestBase<{
-            Querystring: Static<typeof QueryParamsSchema>;
-            Headers: Static<typeof HeadersSchema>;
-            Body: Static<typeof BodySchema>;
-        }>,
-        reply: FastifyReplyBase
-    ) => {
-        await processRequest(request as FastifyRequest, reply as FastifyReply);
-    };
-
+    // Main analytics proxy route
     fastify.post('/tb/web_analytics', {
-        schema: {
-            querystring: QueryParamsSchema,
-            headers: HeadersSchema,
-            body: BodySchema
-        },
-        preHandler: typedProcessRequest
+        schema: AnalyticsRouteSchema,
+        preHandler: async (request: ValidatedAnalyticsRequest, reply: FastifyReplyBase) => {
+            await processRequest(request as FastifyRequest, reply as FastifyReply);
+        }
     }, async (request, reply) => {
         try {
-            // Forward directly to the PROXY_TARGET with query params
             const targetUrl = process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy';
             const url = new URL(request.url, 'http://localhost');
-            const fullTargetUrl = targetUrl + url.search;
-            await reply.from(fullTargetUrl);
+            await reply.from(targetUrl + url.search);
         } catch (error) {
-            handleProxyError(request as FastifyRequest, reply as FastifyReply, error);
+            // Log proxy errors and let Fastify handle the response
+            request.log.error({
+                error: error instanceof Error ? error.message : String(error),
+                targetUrl: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
+                url: request.url
+            }, 'Proxy forwarding failed');
+            throw error; // Re-throw to let Fastify handle the error response
         }
     });
     
-    // Default local proxy endpoint for development/testing
+    // Local proxy endpoint for development/testing
     fastify.post('/local-proxy', async () => {
         return 'Hello World - From the local proxy';
     });
