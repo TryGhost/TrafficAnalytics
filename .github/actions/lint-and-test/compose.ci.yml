@@ -50,7 +50,7 @@ services:
   # Override analytics-service to use pre-built image
   analytics-service:
     image: ${DOCKER_IMAGE}
-    build: null
+    pull_policy: never
     command: ["yarn", "dev"]
     environment:
       - NODE_ENV=testing
@@ -80,7 +80,7 @@ services:
   # Override worker to use pre-built image
   worker:
     image: ${DOCKER_IMAGE}
-    build: null
+    pull_policy: never
     command: ["yarn", "dev"]
     environment:
       - NODE_ENV=testing
