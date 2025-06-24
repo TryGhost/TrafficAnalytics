@@ -44,6 +44,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: development
     command: ["yarn", "dev"]
     ports:
       - ${ANALYTICS_PORT:-3000}:3000
@@ -71,6 +72,10 @@ services:
   worker:
     image: local/traffic-analytics:development
     pull_policy: never
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
     command: ["yarn", "dev"]
     ports:
       - ${WORKER_PORT:-3001}:3000
@@ -110,6 +115,10 @@ services:
   e2e-test:
     image: local/traffic-analytics:development
     pull_policy: never
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
     command: ["yarn", "test:e2e"]
     env_file:
       - path: .env
@@ -131,6 +140,10 @@ services:
   test:
     image: local/traffic-analytics:development
     pull_policy: never
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
     command: sh -c "yarn test && yarn lint"
     env_file:
       - path: .env
@@ -158,6 +171,10 @@ services:
   lint:
     image: local/traffic-analytics:development
     pull_policy: never
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
     command: ["yarn", "lint"]
     env_file:
       - path: .env

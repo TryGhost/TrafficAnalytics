@@ -45,9 +45,21 @@ services:
       pubsub:
         condition: service_healthy
 
-  # Override e2e-test service to use pre-built image and CI configuration
+  # Override analytics-service to use production image for E2E tests
+  analytics-service:
+    image: ${DOCKER_IMAGE_PRODUCTION}
+    environment:
+      - NODE_ENV=production
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+      - PROXY_TARGET=http://fake-tinybird:8080/v0/events
+
+  # Override e2e-test service to use development image (needs vitest) but test against production services
   e2e-test:
-    image: ${DOCKER_IMAGE}
+    image: ${DOCKER_IMAGE_DEVELOPMENT}
     command: ["yarn", "test:e2e"]
     environment:
       - NODE_ENV=testing

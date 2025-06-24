@@ -2,8 +2,11 @@ name: "Lint & Test"
 description: "Lint and test the codebase"
 
 inputs:
-  docker-image:
-    description: Which docker image to run linting and testing on
+  development-image:
+    description: Development docker image to use for linting and unit/integration testing
+    required: true
+  production-image:
+    description: Production docker image to use for E2E testing
     required: true
 
 runs:
@@ -15,34 +18,36 @@ runs:
     - name: Lint
       shell: bash
       run: |
-        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        export DOCKER_IMAGE=${{ inputs.development-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm lint
 
     # Test with compose (includes Firestore emulator)
     - name: Test
       shell: bash
       run: |
-        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        export DOCKER_IMAGE=${{ inputs.development-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test
 
-    # E2E Test
+    # E2E Test - using production image for services, development image for test runner
     - name: Start services for E2E tests
       shell: bash
       run: |
-        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        export DOCKER_IMAGE_DEVELOPMENT=${{ inputs.development-image }}
+        export DOCKER_IMAGE_PRODUCTION=${{ inputs.production-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml up -d
         
     - name: Run E2E tests
       shell: bash
       run: |
-        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        export DOCKER_IMAGE_DEVELOPMENT=${{ inputs.development-image }}
+        export DOCKER_IMAGE_PRODUCTION=${{ inputs.production-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm e2e-test
 
     # Copy coverage report from test container
     - name: Copy coverage report
       shell: bash
       run: |
-        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        export DOCKER_IMAGE=${{ inputs.development-image }}
         CONTAINER_ID=$(docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml ps -q test | head -1)
         if [ ! -z "$CONTAINER_ID" ]; then
           if docker cp $CONTAINER_ID:/app/coverage/cobertura-coverage.xml .; then
@@ -55,7 +60,7 @@ runs:
     # Upload coverage reports
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
-      if: success() && inputs.node-version == 20
+      if: success()
       with:
         files: ./cobertura-coverage.xml
         fail_ci_if_error: false
@@ -65,5 +70,6 @@ runs:
       shell: bash
       if: always()
       run: |
-        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        export DOCKER_IMAGE_DEVELOPMENT=${{ inputs.development-image }}
+        export DOCKER_IMAGE_PRODUCTION=${{ inputs.production-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml down

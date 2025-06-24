@@ -15,13 +15,22 @@ jobs:
         node: [20, 22]
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker Image
-        id: docker-build
+      - name: Build Development Docker Image
+        id: docker-build-dev
         uses: ./.github/actions/docker-build
         with:
           node-version: ${{ matrix.node }}
-          image-name: traffic-analytics-${{ matrix.node }}:latest
+          image-name: traffic-analytics-${{ matrix.node }}:development
+          target: development
+      - name: Build Production Docker Image
+        id: docker-build-prod
+        uses: ./.github/actions/docker-build
+        with:
+          node-version: ${{ matrix.node }}
+          image-name: traffic-analytics-${{ matrix.node }}:production
+          target: production
       - name: Lint & Test
         uses: ./.github/actions/lint-and-test
         with:
-          docker-image: ${{ steps.docker-build.outputs.image-name }}
+          development-image: ${{ steps.docker-build-dev.outputs.image-name }}
+          production-image: ${{ steps.docker-build-prod.outputs.image-name }}

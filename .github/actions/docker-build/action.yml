@@ -9,6 +9,10 @@ inputs:
     description: What to tag the built image as
     required: true
     default: traffic-analytics:latest
+  target:
+    description: The build target (development or production)
+    required: false
+    default: development
 
 outputs:
   image-name:
@@ -25,5 +29,6 @@ runs:
       with:
         context: .
         tags: ${{ inputs.image-name }}
+        target: ${{ inputs.target }}
         build-args: |
           NODE_VERSION=${{ inputs.node-version }}
