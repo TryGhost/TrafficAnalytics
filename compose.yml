@@ -58,6 +58,12 @@ services:
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
       - PROXY_TARGET=http://fake-tinybird:8080/v0/events
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
     networks:
       - dev-network
     depends_on:
@@ -124,7 +130,7 @@ services:
     profiles: [e2e]
     depends_on:
       analytics-service:
-        condition: service_started
+        condition: service_healthy
       fake-tinybird:
         condition: service_healthy
 

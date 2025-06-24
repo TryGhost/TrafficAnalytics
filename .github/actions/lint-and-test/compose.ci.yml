@@ -58,6 +58,6 @@ services:
     profiles: []
     depends_on:
       analytics-service:
-        condition: service_started
+        condition: service_healthy
       fake-tinybird:
         condition: service_healthy
