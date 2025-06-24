@@ -78,7 +78,7 @@ export const BodySchema = Type.Object({
 });
 
 // Complete request schema
-export const PageHitRawRequestSchema = Type.Object({
+export const IncomingEventRequestSchema = Type.Object({
     querystring: QueryParamsSchema,
     headers: HeadersSchema,
     body: BodySchema

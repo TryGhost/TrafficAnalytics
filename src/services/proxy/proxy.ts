@@ -5,7 +5,7 @@ import {parseUserAgent} from './processors/parse-user-agent';
 import {generateUserSignature} from './processors/user-signature';
 import {publishEvent} from '../events/publisher.js';
 import {TypeCompiler} from '@sinclair/typebox/compiler';
-import {QueryParamsSchema, HeadersSchema, BodySchema} from '../../schemas/v1/page-hit-raw-request';
+import {QueryParamsSchema, HeadersSchema, BodySchema} from '../../schemas/v1/incoming-event-request';
 
 // Compile schema validators once for performance
 const queryValidator = TypeCompiler.Compile(QueryParamsSchema);

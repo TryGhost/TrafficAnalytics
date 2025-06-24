@@ -5,10 +5,10 @@ import {
     HeadersSchema,
     PayloadSchema,
     BodySchema,
-    PageHitRawRequestSchema
-} from '../../../../src/schemas/v1/page-hit-raw-request';
+    IncomingEventRequestSchema
+} from '../../../../src/schemas/v1/incoming-event-request';
 
-describe('PageHitRawRequestSchema v1', () => {
+describe('IncomingEventRequestSchema v1', () => {
     describe('QueryParamsSchema', () => {
         it('should validate valid query parameters', () => {
             const validParams = {
@@ -290,7 +290,7 @@ describe('PageHitRawRequestSchema v1', () => {
         });
     });
 
-    describe('PageHitRawRequestSchema', () => {
+    describe('IncomingEventRequestSchema', () => {
         const validRequest = {
             querystring: {
                 name: 'analytics_events'
@@ -322,7 +322,7 @@ describe('PageHitRawRequestSchema v1', () => {
         };
 
         it('should validate complete valid request', () => {
-            expect(Value.Check(PageHitRawRequestSchema, validRequest)).toBe(true);
+            expect(Value.Check(IncomingEventRequestSchema, validRequest)).toBe(true);
         });
 
         it('should reject request with invalid query params', () => {
@@ -333,7 +333,7 @@ describe('PageHitRawRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRawRequestSchema, invalidRequest)).toBe(false);
+            expect(Value.Check(IncomingEventRequestSchema, invalidRequest)).toBe(false);
         });
 
         it('should reject request with invalid headers', () => {
@@ -346,7 +346,7 @@ describe('PageHitRawRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRawRequestSchema, invalidRequest)).toBe(false);
+            expect(Value.Check(IncomingEventRequestSchema, invalidRequest)).toBe(false);
         });
 
         it('should reject request with invalid body', () => {
@@ -358,7 +358,7 @@ describe('PageHitRawRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRawRequestSchema, invalidRequest)).toBe(false);
+            expect(Value.Check(IncomingEventRequestSchema, invalidRequest)).toBe(false);
         });
     });
 });
