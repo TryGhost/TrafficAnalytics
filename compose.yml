@@ -47,9 +47,6 @@ services:
     command: ["yarn", "dev"]
     ports:
       - ${ANALYTICS_PORT:-3000}:3000
-    volumes:
-      - .:/app
-      - node_modules_volume:/app/node_modules
     env_file:
       - path: .env
         required: false
@@ -77,9 +74,6 @@ services:
     command: ["yarn", "dev"]
     ports:
       - ${WORKER_PORT:-3001}:3000
-    volumes:
-      - .:/app
-      - node_modules_volume:/app/node_modules
     env_file:
       - path: .env
         required: false
@@ -117,11 +111,9 @@ services:
     image: local/traffic-analytics:development
     pull_policy: never
     command: sh -c "yarn test && yarn lint"
-    volumes:
-      - .:/app
-      - node_modules_volume:/app/node_modules
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - NODE_ENV=testing
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-test
@@ -146,11 +138,9 @@ services:
     image: local/traffic-analytics:development
     pull_policy: never
     command: ["yarn", "lint"]
-    volumes:
-      - .:/app
-      - node_modules_volume:/app/node_modules
     env_file:
-      - .env
+      - path: .env
+        required: false
     tty: true
     networks:
       - test-network

@@ -1,0 +1,24 @@
+# Local development overrides
+# This file is automatically loaded by `docker compose` for local development
+# It adds bind mounts and volumes that are needed for live code reloading
+
+services:
+  analytics-service:
+    volumes:
+      - .:/app
+      - node_modules_volume:/app/node_modules
+
+  worker:
+    volumes:
+      - .:/app
+      - node_modules_volume:/app/node_modules
+
+  test:
+    volumes:
+      - .:/app
+      - node_modules_volume:/app/node_modules
+
+  lint:
+    volumes:
+      - .:/app
+      - node_modules_volume:/app/node_modules

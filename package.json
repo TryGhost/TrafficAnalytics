@@ -29,6 +29,9 @@
     "lint": "eslint src/ test/ scripts/ *.ts --ext .js,.ts --cache",
     "lint:fix": "eslint src/ test/ scripts/ *.ts --ext .js,.ts --cache --fix",
     "docker:lint": "docker compose --profile testing run --rm lint",
+    "docker:ci:lint": "DOCKER_IMAGE=local/traffic-analytics:development docker compose -f compose.yml -f .github/actions/lint-and-test/compose.ci.yml run --rm lint",
+    "docker:ci:test": "DOCKER_IMAGE=local/traffic-analytics:development docker compose -f compose.yml -f .github/actions/lint-and-test/compose.ci.yml run --rm test",
+    "docker:ci:down": "DOCKER_IMAGE=local/traffic-analytics:development docker compose -f compose.yml -f .github/actions/lint-and-test/compose.ci.yml down",
     "ship": "node scripts/ship.js"
   },
   "files": [
