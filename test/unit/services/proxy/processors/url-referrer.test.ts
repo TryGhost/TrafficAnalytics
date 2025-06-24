@@ -88,8 +88,8 @@ describe('Referrer Parser', () => {
 
         urlReferrerModule.parseReferrer(testRequest);
 
-        expect(testRequest.body.payload.referrerSource).toBeNull();
-        expect(testRequest.body.payload.referrerUrl).toBeNull();
-        expect(testRequest.body.payload.referrerMedium).toBeNull();
+        expect(testRequest.body.payload.referrerSource).toBeUndefined();
+        expect(testRequest.body.payload.referrerUrl).toBeUndefined();
+        expect(testRequest.body.payload.referrerMedium).toBeUndefined();
     });
 });
