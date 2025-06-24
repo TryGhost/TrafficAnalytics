@@ -24,8 +24,9 @@ export function parseReferrer(request: FastifyRequest): void {
         return;
     }
 
-    // Parse the richer referrer data from the client and only return the processed source (this does grouping by domain for us)
     const parsedReferrer = referrerParser.parse(referrerData.url, referrerData.source ?? undefined, referrerData.medium ?? undefined);
     delete request.body.payload.parsedReferrer;
-    request.body.payload.referrer = parsedReferrer.referrerSource || null;
+    request.body.payload.referrerSource = parsedReferrer.referrerSource || null;
+    request.body.payload.referrerUrl = parsedReferrer.referrerUrl || null;
+    request.body.payload.referrerMedium = parsedReferrer.referrerMedium || null;
 }
