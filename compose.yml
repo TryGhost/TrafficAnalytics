@@ -95,7 +95,7 @@ services:
         condition: service_healthy
 
   fake-tinybird:
-    image: wiremock/wiremock:3.9.1
+    image: wiremock/wiremock:3.13.1
     ports:
       - ${FAKE_TINYBIRD_PORT:-8089}:8080
     command: ["--global-response-templating", "--verbose"]
