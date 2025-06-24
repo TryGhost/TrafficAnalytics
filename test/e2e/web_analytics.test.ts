@@ -1,4 +1,5 @@
-import {describe, it, expect} from 'vitest';
+import {describe, it, expect, beforeAll, afterEach} from 'vitest';
+import {WireMock} from '../utils/wiremock';
 
 // Default test data that passes schema validation
 const DEFAULT_QUERY_PARAMS = {
@@ -51,7 +52,9 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
 
     // Build query string
     const queryString = new URLSearchParams(queryParams).toString();
-    const url = `http://localhost:3000/tb/web_analytics?${queryString}`;
+    
+    const baseUrl = 'http://localhost:3000';
+    const url = `${baseUrl}/tb/web_analytics?${queryString}`;
 
     return fetch(url, {
         method,
@@ -61,13 +64,51 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
 }
 
 describe('E2E /tb/web_analytics', () => {
-    it('should process analytics request successfully', async () => {
+    const wiremockUrl = 'http://localhost:8089';
+    const wireMock = new WireMock(wiremockUrl);
+
+    beforeAll(async () => {
+        // Wait for WireMock to be ready
+        await wireMock.waitForHealthy();
+        
+        // Setup default stub for Tinybird endpoint
+        await wireMock.setupTinybirdStub({
+            status: 200,
+            responseBody: JSON.stringify({success: true}),
+            responseHeaders: {'Content-Type': 'application/json'}
+        });
+    });
+
+    afterEach(async () => {
+        // Reset WireMock after each test to clean up stubs and request logs
+        await wireMock.resetAll();
+        
+        // Re-setup the default stub
+        await wireMock.setupTinybirdStub({
+            status: 200,
+            responseBody: JSON.stringify({success: true}),
+            responseHeaders: {'Content-Type': 'application/json'}
+        });
+    });
+    it('should process analytics request successfully and forward to Tinybird', async () => {
         const response = await makeWebAnalyticsRequest();
 
         expect(response.status).toBe(200);
         
         const responseText = await response.text();
-        expect(responseText).toBe('Hello World - From the local proxy');
+        expect(responseText).toBe('{"success":true}');
+
+        // Verify the request was forwarded to Tinybird
+        const tinybirdRequests = await wireMock.verifyTinybirdRequest({
+            token: 'test-token',
+            name: 'analytics_events_test'
+        });
+
+        expect(tinybirdRequests).toHaveLength(1);
+
+        // Verify that the request was successfully forwarded to fake-tinybird
+        // (The body parsing can be enhanced later if needed)
+        expect(tinybirdRequests[0]).toBeTruthy();
     });
 
     describe('validation failures', () => {
@@ -106,7 +147,8 @@ describe('E2E /tb/web_analytics', () => {
         it('should reject requests with missing required body fields', async () => {
             // Send incomplete body directly without merging with defaults
             const queryString = new URLSearchParams(DEFAULT_QUERY_PARAMS).toString();
-            const url = `http://localhost:3000/tb/web_analytics?${queryString}`;
+            const baseUrl = 'http://localhost:3000';
+            const url = `${baseUrl}/tb/web_analytics?${queryString}`;
             
             const response = await fetch(url, {
                 method: 'POST',
@@ -153,7 +195,8 @@ describe('E2E /tb/web_analytics', () => {
         };
 
         const queryString = new URLSearchParams(DEFAULT_QUERY_PARAMS).toString();
-        const url = `http://localhost:3000/tb/web_analytics?${queryString}`;
+        const baseUrl = 'http://localhost:3000';
+        const url = `${baseUrl}/tb/web_analytics?${queryString}`;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -167,6 +210,18 @@ describe('E2E /tb/web_analytics', () => {
         expect(response.status).toBe(200);
         
         const responseText = await response.text();
-        expect(responseText).toBe('Hello World - From the local proxy');
+        expect(responseText).toBe('{"success":true}');
+
+        // Verify the request was forwarded to Tinybird with processed data
+        const tinybirdRequests = await wireMock.verifyTinybirdRequest({
+            token: 'test-token',
+            name: 'analytics_events_test'
+        });
+
+        expect(tinybirdRequests).toHaveLength(1);
+
+        // Verify that the healthcheck request was successfully forwarded to fake-tinybird
+        // (The body parsing can be enhanced later if needed)
+        expect(tinybirdRequests[0]).toBeTruthy();
     });
 });
