@@ -798,10 +798,10 @@
   resolved "https://registry.yarnpkg.com/@simple-dom/interface/-/interface-1.4.0.tgz#e8feea579232017f89b0138e2726facda6fbb71f"
   integrity sha512-l5qumKFWU0S+4ZzMaLXFU8tQZsicHEMEyAxI5kDFGhJsRqDwe0a7/iPA/GdxlGyDKseQQAgIz5kzU7eXTrlSpA==
 
-"@sinclair/typebox@0.34.36":
-  version "0.34.36"
-  resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.34.36.tgz#cbf53a007afa34e5f442b75888f9719f2ab463bb"
-  integrity sha512-JFHFhF6MqqRE49JDAGX/EPlHwxIukrKMhNwlMoB/wIJBkvu3+ciO335yDYPP3soI01FkhVXWnyNPKEl+EsC4Zw==
+"@sinclair/typebox@0.34.37":
+  version "0.34.37"
+  resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.34.37.tgz#f331e4db64ff8195e9e3d8449343c85aaa237d6e"
+  integrity sha512-2TRuQVgQYfy+EzHRTIvkhv2ADEouJ2xNS/Vq+W5EuuewBdOrvATvljZTxHWZSTYr2sTjTHpGvucaGAt67S2akw==
 
 "@stdlib/array-float32@^0.2.1", "@stdlib/array-float32@^0.2.2":
   version "0.2.2"
