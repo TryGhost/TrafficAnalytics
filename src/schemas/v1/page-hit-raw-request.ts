@@ -56,7 +56,7 @@ export const PayloadSchema = Type.Object({
     'user-agent': NonEmptyStringSchema,
     locale: NonEmptyStringSchema,
     location: Type.Union([NonEmptyStringSchema, Type.Null()]),
-    referrer: Type.Union([URLSchema, Type.Null()]),
+    referrer: Type.Union([StringSchema, Type.Null()]),
     pathname: NonEmptyStringSchema,
     href: URLSchema,
     site_uuid: UUIDSchema,
