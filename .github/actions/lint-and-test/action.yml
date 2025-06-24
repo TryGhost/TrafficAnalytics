@@ -36,7 +36,7 @@ runs:
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
-        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm e2e-test
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml --profile e2e run --rm e2e-test
 
     # Copy coverage report from test container
     - name: Copy coverage report

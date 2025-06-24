@@ -45,6 +45,63 @@ services:
       pubsub:
         condition: service_healthy
 
+  # Override analytics-service to use pre-built image
+  analytics-service:
+    image: ${DOCKER_IMAGE}
+    command: ["yarn", "dev"]
+    environment:
+      - NODE_ENV=testing
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+      - PROXY_TARGET=http://fake-tinybird:8080/v0/events
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+    networks:
+      - dev-network
+    profiles: []
+    depends_on:
+      firestore:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+      fake-tinybird:
+        condition: service_healthy
+
+  # Override worker to use pre-built image
+  worker:
+    image: ${DOCKER_IMAGE}
+    command: ["yarn", "dev"]
+    environment:
+      - NODE_ENV=testing
+      - WORKER_MODE=true
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+    networks:
+      - dev-network
+    profiles: []
+    depends_on:
+      firestore:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+
   # Override e2e-test service to use pre-built image and CI configuration
   e2e-test:
     image: ${DOCKER_IMAGE}
@@ -55,7 +112,7 @@ services:
       - WIREMOCK_URL=http://fake-tinybird:8080
     networks:
       - dev-network
-    profiles: []
+    profiles: [e2e]
     depends_on:
       analytics-service:
         condition: service_healthy
