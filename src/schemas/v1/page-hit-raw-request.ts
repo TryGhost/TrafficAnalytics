@@ -1,5 +1,4 @@
-import {Type, FormatRegistry, Static} from '@sinclair/typebox';
-import {FastifyRequest as FastifyRequestBase} from 'fastify';
+import {Type, FormatRegistry} from '@sinclair/typebox';
 import validator from '@tryghost/validator';
 
 // Register format validators for runtime validation using @tryghost/validator
@@ -84,17 +83,3 @@ export const PageHitRawRequestSchema = Type.Object({
     headers: HeadersSchema,
     body: BodySchema
 });
-
-// Fastify route schema configuration for analytics endpoints
-export const AnalyticsRouteSchema = {
-    querystring: QueryParamsSchema,
-    headers: HeadersSchema,
-    body: BodySchema
-};
-
-// TypeScript type for validated analytics requests
-export type ValidatedAnalyticsRequest = FastifyRequestBase<{
-    Querystring: Static<typeof QueryParamsSchema>;
-    Headers: Static<typeof HeadersSchema>;
-    Body: Static<typeof BodySchema>;
-}>;
