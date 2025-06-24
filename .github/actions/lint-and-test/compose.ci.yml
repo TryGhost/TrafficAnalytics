@@ -59,5 +59,7 @@ services:
     depends_on:
       analytics-service:
         condition: service_healthy
+      worker:
+        condition: service_healthy
       fake-tinybird:
         condition: service_healthy
