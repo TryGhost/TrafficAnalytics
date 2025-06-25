@@ -51,6 +51,8 @@ export const PageHitProcessedSchema = Type.Object({
 export type PageHitProcessed = Static<typeof PageHitProcessedSchema>;
 
 // Transform functions
+// NOTE: These functions are deliberately duplicated from the proxy service /processors
+// We will eventually use these transforms for both the proxy service and the batch worker
 export function transformUserAgent(userAgent: string): {os: string, browser: string, device: string} {
     try {
         if (!userAgent) {
