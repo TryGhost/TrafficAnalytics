@@ -30,6 +30,7 @@ export const PageHitProcessedSchema = Type.Object({
     site_uuid: Type.String({format: 'uuid'}),
     session_id: Type.String(),
     payload: Type.Object({
+        site_uuid: Type.String({format: 'uuid'}),
         member_uuid: Type.Union([Type.String({format: 'uuid'}), Type.Literal('undefined')]),
         member_status: Type.Union([Type.String({minLength: 1}), Type.Literal('undefined')]),
         post_uuid: Type.Union([Type.String({format: 'uuid'}), Type.Literal('undefined')]),
@@ -155,6 +156,7 @@ export async function transformPageHitRawToProcessed(
         site_uuid: pageHitRaw.site_uuid,
         session_id: sessionId,
         payload: {
+            site_uuid: pageHitRaw.site_uuid,
             ...pageHitRaw.payload,
             ...userAgentData,
             ...referrerData

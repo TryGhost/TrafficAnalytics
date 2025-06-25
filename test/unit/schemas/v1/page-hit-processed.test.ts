@@ -39,6 +39,7 @@ describe('PageHitProcessedSchema v1', () => {
         site_uuid: '12345678-1234-1234-1234-123456789012',
         session_id: 'abc123def456',
         payload: {
+            site_uuid: '12345678-1234-1234-1234-123456789012',
             member_uuid: 'undefined',
             member_status: 'free',
             post_uuid: 'undefined',
@@ -322,6 +323,7 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.session_id).toHaveLength(64);
         
             // Check original payload fields are preserved
+            expect(result.payload.site_uuid).toBe(validPageHitRaw.site_uuid);
             expect(result.payload.member_uuid).toBe(validPageHitRaw.payload.member_uuid);
             expect(result.payload.member_status).toBe(validPageHitRaw.payload.member_status);
             expect(result.payload.pathname).toBe(validPageHitRaw.payload.pathname);
