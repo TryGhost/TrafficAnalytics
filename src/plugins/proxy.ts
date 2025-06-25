@@ -9,7 +9,7 @@ async function proxyPlugin(fastify: FastifyInstance) {
         upstream: process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy',
         prefix: '/tb/web_analytics',
         rewritePrefix: '', // Remove the prefix when forwarding
-        httpMethods: ['GET', 'POST', 'PUT', 'DELETE'],
+        httpMethods: ['POST'],
         preValidation: validateRequestWithSchema as FastifyHttpProxyOptions['preValidation'],
         preHandler: processRequest as FastifyHttpProxyOptions['preHandler'],
         replyOptions: {

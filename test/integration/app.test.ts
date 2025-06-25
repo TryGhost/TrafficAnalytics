@@ -204,6 +204,12 @@ describe('Fastify App', () => {
                     .expect(400);
             });
 
+            it('should return 404 for GET requests', async function () {
+                await request(proxyServer)
+                    .get('/tb/web_analytics?token=abc123&name=test')
+                    .expect(404);
+            });
+
             it('should allow x-site-uuid header in CORS preflight requests', async function () {
                 await request(proxyServer)
                     .options('/tb/web_analytics')
