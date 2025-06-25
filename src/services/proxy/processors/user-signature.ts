@@ -41,7 +41,7 @@ export async function generateUserSignature(request: FastifyRequest): Promise<vo
         request.body.session_id = userSignature;
     } catch (error) {
         // Log error and re-throw to fail the request
-        request.log.error('Failed to generate user signature:', error);
+        request.log.error({error}, 'Failed to generate user signature');
         throw error;
     }
 }
