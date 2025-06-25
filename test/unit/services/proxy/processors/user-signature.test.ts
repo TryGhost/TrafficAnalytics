@@ -113,7 +113,7 @@ describe('User Signature Processor', () => {
 
         await expect(generateUserSignature(request)).rejects.toThrow('Test error');
 
-        expect(request.log.error).toHaveBeenCalledWith('Failed to generate user signature:', error);
+        expect(request.log.error).toHaveBeenCalledWith({error}, 'Failed to generate user signature');
     });
 
     it('should throw error if body is missing', async () => {
