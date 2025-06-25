@@ -25,6 +25,12 @@ runs:
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test
 
+    - name: Stop services
+      shell: bash
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml down
+
     # E2E Test
     - name: Start services for E2E tests
       shell: bash
