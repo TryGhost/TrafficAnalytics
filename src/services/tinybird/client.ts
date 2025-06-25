@@ -11,20 +11,28 @@ export interface TinybirdClientConfig {
 }
 
 export class TinybirdClient {
-    private config: TinybirdClientConfig;
+    private apiUrl: string;
+    private apiToken: string;
+    private datasource: string;
 
     constructor(config: TinybirdClientConfig) {
-        logger.info({config}, 'TinybirdClient constructor');
-        this.config = config;
+        if (!config.apiUrl || !config.apiToken || !config.datasource) {
+            throw new Error('TinybirdClient constructor requires apiUrl, apiToken, and datasource');
+        }
+        // Remove /v0/events from the apiUrl if it exists
+        this.apiUrl = config.apiUrl.replace(/\/v0\/events$/, '');
+        this.apiToken = config.apiToken;
+        this.datasource = config.datasource;
+        logger.info({apiUrl: this.apiUrl, datasource: this.datasource}, 'TinybirdClient constructor');
     }
 
     async postEvent(event: TinybirdEvent): Promise<void> {
-        const url = `${this.config.apiUrl}/v0/events?name=${encodeURIComponent(this.config.datasource)}`;
+        const url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}`;
         
         const response = await fetch(url, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${this.config.apiToken}`,
+                Authorization: `Bearer ${this.apiToken}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(event)

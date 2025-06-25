@@ -1,4 +1,4 @@
-import {beforeEach, afterEach} from 'vitest';
+import {beforeEach, afterEach, vi} from 'vitest';
 import {createTopic, createSubscription, deleteSubscription, deleteTopic, cleanupTestSubscriptions} from '../utils/pubsub.js';
 
 // Use the base environment variable names, but we'll ensure cleanup between tests
@@ -7,6 +7,7 @@ const subscriptionName = process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW || 'test-
 
 // eslint-disable-next-line ghost/mocha/no-top-level-hooks
 beforeEach(async () => {
+    vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'test-token');
     // Clean up any orphaned test resources first
     await cleanupTestSubscriptions(/^test-.*-\d+-[a-z0-9]+$/);
     
@@ -23,4 +24,5 @@ beforeEach(async () => {
 afterEach(async () => {
     await deleteSubscription(subscriptionName);
     await deleteTopic(topicName);
+    vi.unstubAllEnvs();
 });
