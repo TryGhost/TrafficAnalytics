@@ -57,4 +57,28 @@ export class MemorySaltStore implements ISaltStore {
         }
         return deletedCount;
     }
+
+    async getOrCreate(key: string, saltGenerator: () => string): Promise<SaltRecord> {
+        const existing = this.salts[key];
+        if (existing) {
+            return {
+                salt: existing.salt,
+                created_at: new Date(existing.created_at)
+            };
+        }
+        
+        // Create new salt record
+        const record: SaltRecord = {
+            salt: saltGenerator(),
+            created_at: new Date()
+        };
+        
+        this.salts[key] = record;
+        
+        // Return a copy to prevent external modifications
+        return {
+            salt: record.salt,
+            created_at: new Date(record.created_at)
+        };
+    }
 }

@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
-import {FirestoreSaltStore} from '../../../../src/services/salt-store/FirestoreSaltStore';
+import {FirestoreSaltStore, SaltAlreadyExistsError} from '../../../../src/services/salt-store/FirestoreSaltStore';
 
 describe('FirestoreSaltStore', () => {
     let saltStore: FirestoreSaltStore;
@@ -35,14 +35,23 @@ describe('FirestoreSaltStore', () => {
             expect(record.created_at).toBeInstanceOf(Date);
         });
 
-        it('should throw error if key already exists', async () => {
+        it('should throw SaltAlreadyExistsError if key already exists', async () => {
             const key = 'salt:2024-01-01:6ba7b810-9dad-11d1-80b4-00c04fd430c8';
             const salt = 'random-salt-value';
 
             await saltStore.set(key, salt);
 
             await expect(saltStore.set(key, 'another-salt'))
-                .rejects.toThrow('Salt with key salt:2024-01-01:6ba7b810-9dad-11d1-80b4-00c04fd430c8 already exists');
+                .rejects.toThrow(SaltAlreadyExistsError);
+            
+            // Also verify the error message and properties
+            try {
+                await saltStore.set(key, 'another-salt');
+            } catch (error) {
+                expect(error).toBeInstanceOf(SaltAlreadyExistsError);
+                expect((error as SaltAlreadyExistsError).code).toBe('SALT_ALREADY_EXISTS');
+                expect(error.message).toContain(key);
+            }
         });
     });
 
@@ -197,6 +206,86 @@ describe('FirestoreSaltStore', () => {
 
             const all = await saltStore.getAll();
             expect(Object.keys(all)).toHaveLength(2);
+        });
+    });
+
+    describe('getOrCreate', () => {
+        it('should create new salt when key does not exist', async () => {
+            const key = 'salt:2024-01-01:getorcreate-new';
+            const expectedSalt = 'generated-salt-123';
+            
+            const saltGenerator = vi.fn(() => expectedSalt);
+            const result = await saltStore.getOrCreate(key, saltGenerator);
+            
+            expect(saltGenerator).toHaveBeenCalledOnce();
+            expect(result.salt).toBe(expectedSalt);
+            expect(result.created_at).toBeInstanceOf(Date);
+            
+            // Verify salt was stored in Firestore
+            const stored = await saltStore.get(key);
+            expect(stored?.salt).toBe(expectedSalt);
+        });
+
+        it('should return existing salt when key exists', async () => {
+            const key = 'salt:2024-01-01:getorcreate-existing';
+            const existingSalt = 'existing-salt-456';
+            
+            // Pre-populate with existing salt
+            await saltStore.set(key, existingSalt);
+            
+            const saltGenerator = vi.fn(() => 'should-not-be-called');
+            const result = await saltStore.getOrCreate(key, saltGenerator);
+            
+            // With read-first approach, generator should not be called for existing documents
+            expect(saltGenerator).not.toHaveBeenCalled();
+            expect(result.salt).toBe(existingSalt);
+            expect(result.created_at).toBeInstanceOf(Date);
+        });
+
+        it('should handle concurrent getOrCreate calls atomically', async () => {
+            // This test validates race condition handling where multiple processes
+            // try to create the same salt simultaneously using read-first approach.
+            const key = 'salt:2024-01-01:getorcreate-concurrent';
+            const expectedSalt = 'concurrent-salt-789';
+            
+            let callCount = 0;
+            const saltGenerator = () => {
+                callCount += 1;
+                return `${expectedSalt}-${callCount}`;
+            };
+            
+            // Simulate the production race condition: multiple processes trying to create the same salt
+            const promises = [
+                saltStore.getOrCreate(key, saltGenerator),
+                saltStore.getOrCreate(key, saltGenerator)
+            ];
+            
+            const results = await Promise.all(promises);
+            
+            // Both should return the same salt value (from the successful transaction)
+            expect(results[0].salt).toBe(results[1].salt);
+            
+            // The salt should be from one of the generator calls
+            const finalSalt = results[0].salt;
+            expect(finalSalt).toMatch(/^concurrent-salt-789-\d+$/);
+            
+            // Verify only one salt was actually stored
+            const stored = await saltStore.get(key);
+            expect(stored?.salt).toBe(finalSalt);
+        });
+
+        it('should handle Firestore timestamp conversion correctly', async () => {
+            const key = 'salt:2024-01-01:timestamp-test';
+            const saltValue = 'timestamp-salt';
+            
+            const result = await saltStore.getOrCreate(key, () => saltValue);
+            
+            expect(result.created_at).toBeInstanceOf(Date);
+            
+            // Verify timestamp is preserved when retrieved
+            const stored = await saltStore.get(key);
+            expect(stored?.created_at).toBeInstanceOf(Date);
+            expect(Math.abs(stored!.created_at.getTime() - result.created_at.getTime())).toBeLessThan(1000);
         });
     });
 });

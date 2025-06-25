@@ -3,6 +3,19 @@ import {ISaltStore, SaltRecord} from './ISaltStore';
 import logger from '../../utils/logger';
 
 /**
+ * Error thrown when attempting to create a salt that already exists.
+ * Used for precise error handling in race condition scenarios.
+ */
+export class SaltAlreadyExistsError extends Error {
+    public readonly code = 'SALT_ALREADY_EXISTS';
+    
+    constructor(key: string) {
+        super(`Salt with key ${key} already exists`);
+        this.name = 'SaltAlreadyExistsError';
+    }
+}
+
+/**
  * Firestore implementation of the salt store.
  *
  * Stores salts in a Firestore collection. Salts are keyed by date,
@@ -146,7 +159,7 @@ export class FirestoreSaltStore implements ISaltStore {
             if (error instanceof Error && 'code' in error) {
                 const errorWithCode = error as Error & { code: string | number };
                 if (error.message?.includes('already exists') || errorWithCode.code === 'ALREADY_EXISTS') {
-                    throw new Error(`Salt with key ${key} already exists`);
+                    throw new SaltAlreadyExistsError(key);
                 }
             }
             throw error;
@@ -217,6 +230,46 @@ export class FirestoreSaltStore implements ISaltStore {
             return snapshot.size;
         } catch (error) {
             logger.error('FirestoreSaltStore cleanup failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get the salt for a given key, or create it if it doesn't exist.
+     * Uses a read-first approach optimized for the common case where salts already exist.
+     * Most requests will hit the fast read path; only the first request per day per site needs creation.
+     *
+     * @param key - The key to get or create the salt for
+     * @param saltGenerator - Function to generate the salt if needed (only called when creating)
+     * @returns The salt for the given key (existing or newly created)
+     */
+    async getOrCreate(key: string, saltGenerator: () => string): Promise<SaltRecord> {
+        // Fast path: try to read first (most common case - salt already exists)
+        const existingSalt = await this.get(key);
+        if (existingSalt) {
+            return existingSalt;
+        }
+        
+        // Document doesn't exist, create it (rare case - first request of the day for this site)
+        const newSalt = saltGenerator();
+        
+        try {
+            // Use existing set method which handles atomic creation
+            return await this.set(key, newSalt);
+        } catch (error) {
+            // Handle race condition: another process created the document between our read and create
+            // We could do this with a transaction, but it adds unnecessary performance overhead
+            if (error instanceof SaltAlreadyExistsError) {
+                // Another process created it, read and return the existing document
+                const freshSalt = await this.get(key);
+                if (!freshSalt) {
+                    throw new Error(`Document should exist but was not found after race condition for key: ${key}`);
+                }
+                return freshSalt;
+            }
+            
+            // Re-throw other errors
+            logger.error({error}, 'FirestoreSaltStore getOrCreate failed');
             throw error;
         }
     }

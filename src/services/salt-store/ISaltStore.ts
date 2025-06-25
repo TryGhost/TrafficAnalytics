@@ -42,4 +42,13 @@ export interface ISaltStore {
      * @returns Number of salts deleted
      */
     cleanup(): Promise<number>;
+
+    /**
+     * Get the salt for a given key, or create it if it doesn't exist.
+     * This operation is atomic and handles race conditions internally.
+     * @param key - The key to get or create the salt for
+     * @param saltGenerator - Function to generate the salt if needed
+     * @returns The salt for the given key
+     */
+    getOrCreate(key: string, saltGenerator: () => string): Promise<SaltRecord>;
 };

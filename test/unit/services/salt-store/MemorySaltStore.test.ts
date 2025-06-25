@@ -423,4 +423,80 @@ describe('MemorySaltStore', () => {
             expect(all[keys[3]]).toBeDefined();
         });
     });
+
+    describe('getOrCreate', () => {
+        it('should create new salt when key does not exist', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const expectedSalt = 'generated-salt-123';
+            
+            const saltGenerator = vi.fn(() => expectedSalt);
+            const result = await saltStore.getOrCreate(key, saltGenerator);
+            
+            expect(saltGenerator).toHaveBeenCalledOnce();
+            expect(result.salt).toBe(expectedSalt);
+            expect(result.created_at).toBeInstanceOf(Date);
+            
+            // Verify salt was stored
+            const stored = await saltStore.get(key);
+            expect(stored?.salt).toBe(expectedSalt);
+        });
+
+        it('should return existing salt when key exists', async () => {
+            const key = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const existingSalt = 'existing-salt-456';
+            
+            // Pre-populate with existing salt
+            await saltStore.set(key, existingSalt);
+            
+            const saltGenerator = vi.fn(() => 'should-not-be-called');
+            const result = await saltStore.getOrCreate(key, saltGenerator);
+            
+            expect(saltGenerator).not.toHaveBeenCalled();
+            expect(result.salt).toBe(existingSalt);
+            expect(result.created_at).toBeInstanceOf(Date);
+        });
+
+        it('should handle multiple concurrent getOrCreate calls', async () => {
+            const key = '987fcdeb-51d2-43e1-9b45-123456789abc';
+            const expectedSalt = 'concurrent-salt-789';
+            
+            let callCount = 0;
+            const saltGenerator = () => {
+                callCount += 1;
+                return `${expectedSalt}-${callCount}`;
+            };
+            
+            // Multiple concurrent calls should all return the same salt
+            const promises = [
+                saltStore.getOrCreate(key, saltGenerator),
+                saltStore.getOrCreate(key, saltGenerator),
+                saltStore.getOrCreate(key, saltGenerator)
+            ];
+            
+            const results = await Promise.all(promises);
+            
+            // First call should create, others should return existing
+            expect(results[0].salt).toBe(`${expectedSalt}-1`);
+            expect(results[1].salt).toBe(`${expectedSalt}-1`);
+            expect(results[2].salt).toBe(`${expectedSalt}-1`);
+            
+            // Generator should only be called once for the first creation
+            expect(callCount).toBe(1);
+        });
+
+        it('should return copy of stored record', async () => {
+            const key = '123e4567-e89b-12d3-a456-426614174000';
+            const saltValue = 'test-salt';
+            
+            const result = await saltStore.getOrCreate(key, () => saltValue);
+            
+            // Modifying returned record should not affect stored record
+            result.salt = 'modified-salt';
+            result.created_at = new Date('2020-01-01');
+            
+            const stored = await saltStore.get(key);
+            expect(stored?.salt).toBe(saltValue);
+            expect(stored?.created_at).not.toEqual(new Date('2020-01-01'));
+        });
+    });
 });
