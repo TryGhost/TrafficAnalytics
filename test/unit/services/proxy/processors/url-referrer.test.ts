@@ -52,9 +52,9 @@ describe('Referrer Parser', () => {
     it('should parse referrer data and add it to the payload', () => {
         urlReferrerModule.parseReferrer(request);
 
-        expect(request.body.payload.meta?.referrerSource).toBe('Google');
-        expect(request.body.payload.meta?.referrerMedium).toBe('search');
-        expect(request.body.payload.meta?.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
+        expect(request.body.payload.referrerSource).toBe('Google');
+        expect(request.body.payload.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
+        expect(request.body.payload.referrerMedium).toBe('search');
         expect(request.body.payload.parsedReferrer).toBeUndefined();
     });
 
@@ -64,7 +64,9 @@ describe('Referrer Parser', () => {
 
         urlReferrerModule.parseReferrer(testRequest);
 
-        expect(testRequest.body.payload.meta).toBeUndefined();
+        expect(testRequest.body.payload.referrerSource).toBeUndefined();
+        expect(testRequest.body.payload.referrerUrl).toBeUndefined();
+        expect(testRequest.body.payload.referrerMedium).toBeUndefined();
     });
 
     it('should handle non-object parsedReferrer headers', () => {
@@ -74,7 +76,9 @@ describe('Referrer Parser', () => {
 
         urlReferrerModule.parseReferrer(testRequest);
 
-        expect(testRequest.body.payload.meta).toBeUndefined();
+        expect(testRequest.body.payload.referrerSource).toBeUndefined();
+        expect(testRequest.body.payload.referrerUrl).toBeUndefined();
+        expect(testRequest.body.payload.referrerMedium).toBeUndefined();
     });
 
     it('should handle missing referrer properties', () => {
@@ -84,6 +88,8 @@ describe('Referrer Parser', () => {
 
         urlReferrerModule.parseReferrer(testRequest);
 
-        expect(testRequest.body.payload.meta).toBeUndefined();
+        expect(testRequest.body.payload.referrerSource).toBeUndefined();
+        expect(testRequest.body.payload.referrerUrl).toBeUndefined();
+        expect(testRequest.body.payload.referrerMedium).toBeUndefined();
     });
 });
