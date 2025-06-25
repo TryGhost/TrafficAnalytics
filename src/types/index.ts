@@ -21,10 +21,10 @@ export interface Payload {
     browser?: string;
     device?: string;
     user_signature?: string;
+    referrerSource?: string | null;
+    referrerUrl?: string | null;
+    referrerMedium?: string | null;
     meta?: {
-        referrerUrl?: string;
-        referrerSource?: string;
-        referrerMedium?: string;
         userSignature?: string;
         [key: string]: unknown;
     };

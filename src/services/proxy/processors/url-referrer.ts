@@ -26,8 +26,7 @@ export function parseReferrer(request: FastifyRequest): void {
 
     const parsedReferrer = referrerParser.parse(referrerData.url, referrerData.source ?? undefined, referrerData.medium ?? undefined);
     delete request.body.payload.parsedReferrer;
-    request.body.payload.meta = request.body.payload.meta || {};
-    request.body.payload.meta.referrerUrl = parsedReferrer.referrerUrl || undefined;
-    request.body.payload.meta.referrerSource = parsedReferrer.referrerSource || undefined;
-    request.body.payload.meta.referrerMedium = parsedReferrer.referrerMedium || undefined;
+    request.body.payload.referrerSource = parsedReferrer.referrerSource || null;
+    request.body.payload.referrerUrl = parsedReferrer.referrerUrl || null;
+    request.body.payload.referrerMedium = parsedReferrer.referrerMedium || null;
 }
