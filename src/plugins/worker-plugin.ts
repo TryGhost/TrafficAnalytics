@@ -1,6 +1,7 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import BatchWorker from '../services/batch-worker/BatchWorker';
+import {TinybirdClient} from '../services/tinybird/client';
 
 async function workerPlugin(fastify: FastifyInstance) {
     let batchWorker: BatchWorker | null = null;
@@ -16,7 +17,13 @@ async function workerPlugin(fastify: FastifyInstance) {
             fastify.log.info('Worker heartbeat - processing events...');
         }, 10000);
 
-        batchWorker = new BatchWorker(process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW as string);
+        const tinybirdClient = new TinybirdClient({
+            apiUrl: process.env.PROXY_TARGET as string,
+            apiToken: process.env.TINYBIRD_TRACKER_TOKEN as string,
+            datasource: 'analytics_events_test'
+        });
+
+        batchWorker = new BatchWorker(process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW as string, tinybirdClient);
         batchWorker.start();
     });
 

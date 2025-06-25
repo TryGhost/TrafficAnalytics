@@ -2,6 +2,7 @@ import {describe, it, expect, beforeEach, vi, afterEach} from 'vitest';
 import {Message} from '@google-cloud/pubsub';
 import BatchWorker from '../../../../src/services/batch-worker/BatchWorker';
 import {EventSubscriber} from '../../../../src/services/events/subscriber';
+import {TinybirdClient} from '../../../../src/services/tinybird/client';
 import logger from '../../../../src/utils/logger';
 
 // Mock EventSubscriber
@@ -9,6 +10,13 @@ vi.mock('../../../../src/services/events/subscriber', () => ({
     EventSubscriber: vi.fn().mockImplementation(() => ({
         subscribe: vi.fn(),
         close: vi.fn()
+    }))
+}));
+
+// Mock TinybirdClient
+vi.mock('../../../../src/services/tinybird/client', () => ({
+    TinybirdClient: vi.fn().mockImplementation(() => ({
+        postEvent: vi.fn().mockResolvedValue(undefined)
     }))
 }));
 
@@ -23,6 +31,7 @@ const createMockMessage = (data: string) => {
 describe('BatchWorker', () => {
     let batchWorker: BatchWorker;
     let mockSubscriber: EventSubscriber;
+    let mockTinybirdClient: TinybirdClient;
     const testTopic = 'test-topic';
 
     beforeEach(() => {
@@ -31,7 +40,13 @@ describe('BatchWorker', () => {
         vi.spyOn(logger, 'info').mockImplementation(() => {});
         vi.spyOn(logger, 'error').mockImplementation(() => {});
 
-        batchWorker = new BatchWorker(testTopic);
+        mockTinybirdClient = new TinybirdClient({
+            apiUrl: 'https://api.tinybird.co',
+            apiToken: 'test-token',
+            datasource: 'test-datasource'
+        });
+
+        batchWorker = new BatchWorker(testTopic, mockTinybirdClient);
         mockSubscriber = (batchWorker as any).subscriber;
     });
 
@@ -137,14 +152,56 @@ describe('BatchWorker', () => {
                         })
                     })
                 }),
-                'Worker processed message. Acknowledging message...'
+                'Worker processed message and posted to Tinybird. Acknowledging message...'
             );
             
             // Verify meta field is not included in processed output
-            const logCall = (logger.info as any).mock.calls.find((call: any) => call[1] === 'Worker processed message. Acknowledging message...');
+            const logCall = (logger.info as any).mock.calls.find((call: any) => call[1] === 'Worker processed message and posted to Tinybird. Acknowledging message...');
             expect(logCall[0].pageHitProcessed).not.toHaveProperty('meta');
             
             expectMessageAcked(mockMessage);
+        });
+
+        it('should call TinybirdClient.postEvent with processed data', async () => {
+            const mockMessage = createMockMessage(JSON.stringify(validPageHitRawData));
+
+            await (batchWorker as any).handleMessage(mockMessage);
+
+            expect(mockTinybirdClient.postEvent).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    timestamp: validPageHitRawData.timestamp,
+                    action: validPageHitRawData.action,
+                    version: validPageHitRawData.version,
+                    site_uuid: validPageHitRawData.site_uuid,
+                    session_id: expect.any(String),
+                    payload: expect.objectContaining({
+                        member_uuid: validPageHitRawData.payload.member_uuid,
+                        member_status: validPageHitRawData.payload.member_status,
+                        post_uuid: validPageHitRawData.payload.post_uuid,
+                        post_type: validPageHitRawData.payload.post_type,
+                        locale: validPageHitRawData.payload.locale,
+                        location: validPageHitRawData.payload.location,
+                        referrer: validPageHitRawData.payload.referrer,
+                        pathname: validPageHitRawData.payload.pathname,
+                        href: validPageHitRawData.payload.href,
+                        os: expect.any(String),
+                        browser: expect.any(String),
+                        device: expect.any(String)
+                    })
+                })
+            );
+            expectMessageAcked(mockMessage);
+        });
+
+        it('should handle TinybirdClient error and nack message', async () => {
+            const mockMessage = createMockMessage(JSON.stringify(validPageHitRawData));
+            const tinybirdError = new Error('Tinybird API error');
+            
+            (mockTinybirdClient.postEvent as any).mockRejectedValueOnce(tinybirdError);
+
+            await expect((batchWorker as any).handleMessage(mockMessage)).rejects.toThrow('Tinybird API error');
+
+            expectMessageNacked(mockMessage);
         });
 
         it('should handle invalid JSON and nack message', async () => {

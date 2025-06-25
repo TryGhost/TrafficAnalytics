@@ -1,3 +1,5 @@
+import logger from '../../utils/logger';
+
 export interface TinybirdEvent {
     [key: string]: unknown;
 }
@@ -12,6 +14,7 @@ export class TinybirdClient {
     private config: TinybirdClientConfig;
 
     constructor(config: TinybirdClientConfig) {
+        logger.info({config}, 'TinybirdClient constructor');
         this.config = config;
     }
 
