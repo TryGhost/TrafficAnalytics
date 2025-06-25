@@ -1,4 +1,4 @@
-import {Type, FormatRegistry} from '@sinclair/typebox';
+import {Type, FormatRegistry, Static} from '@sinclair/typebox';
 import validator from '@tryghost/validator';
 
 // Register format validators for runtime validation using @tryghost/validator
@@ -57,3 +57,5 @@ export const PageHitRawSchema = Type.Object({
     payload: PayloadSchema,
     meta: MetaSchema
 });
+
+export type PageHitRaw = Static<typeof PageHitRawSchema>;
