@@ -68,8 +68,3 @@ services:
     networks:
       - dev-network
     profiles: []
-    depends_on:
-      analytics-service:
-        condition: service_started
-      fake-tinybird:
-        condition: service_healthy
