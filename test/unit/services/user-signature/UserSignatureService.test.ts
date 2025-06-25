@@ -359,5 +359,62 @@ describe('UserSignatureService', () => {
                 service2.stopCleanupScheduler();
             });
         });
+
+        describe('race condition scenarios', () => {
+            it('should handle race condition when multiple processes create same salt', async () => {
+                vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-01T12:00:00.000Z');
+                
+                const testSiteUuid = '550e8400-e29b-41d4-a716-446655440000';
+                const expectedSalt = 'test-salt-value';
+                
+                let setCallCount = 0;
+                let createdSalt: string | null = null;
+                const raceSaltStore: ISaltStore = {
+                    async get() {
+                        // Return the salt if it was created by the first call
+                        if (createdSalt) {
+                            return {salt: createdSalt, created_at: new Date()};
+                        }
+                        return undefined;
+                    },
+                    async set(saltKey: string, salt: string) {
+                        setCallCount++;
+                        if (setCallCount === 1) {
+                            // First call succeeds and creates the salt
+                            createdSalt = salt;
+                            return {salt, created_at: new Date()};
+                        } else {
+                            // Second call fails because salt already exists
+                            throw new Error(`Salt with key ${saltKey} already exists`);
+                        }
+                    },
+                    async getAll() {
+                        return {};
+                    },
+                    async delete() {},
+                    clear: () => Promise.resolve(),
+                    cleanup: () => Promise.resolve(0)
+                };
+
+                const service = new UserSignatureService(raceSaltStore);
+                
+                // Both calls should succeed - one creates the salt, the other should retry and get it
+                const promise1 = (service as any).getOrCreateSaltForSite(testSiteUuid);
+                const promise2 = (service as any).getOrCreateSaltForSite(testSiteUuid);
+                
+                const results = await Promise.allSettled([promise1, promise2]);
+                
+                // Both should succeed (this will fail with current implementation)
+                expect(results[0].status).toBe('fulfilled');
+                expect(results[1].status).toBe('fulfilled');
+                
+                // Both should return the same salt value
+                if (results[0].status === 'fulfilled' && results[1].status === 'fulfilled') {
+                    expect(results[0].value).toBe(results[1].value);
+                }
+                
+                service.stopCleanupScheduler();
+            });
+        });
     });
 });
