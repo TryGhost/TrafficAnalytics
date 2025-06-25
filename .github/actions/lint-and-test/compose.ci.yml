@@ -1,42 +1,40 @@
-name: traffic-analytics-ci
+# CI override that extends the base compose.yml
+# This removes volumes and bind mounts while using pre-built images
 
 services:
+  # Override emulator services to use CI-specific project name
   firestore:
-    image: google/cloud-sdk:emulators
-    command: ["gcloud", "emulators", "firestore", "start", "--host-port=0.0.0.0:8080"]
-    ports:
-      - 8080:8080
     environment:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
   pubsub:
-    image: google/cloud-sdk:emulators
-    command: ["/app/start-pubsub.sh"]
-    ports:
-      - 8085:8085
-    volumes:
-      - ../../../docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
     environment:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
-      - PUBSUB_PORT=8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
-    healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
+      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
 
+  # Override lint service to use pre-built image
   lint:
     image: ${DOCKER_IMAGE}
-    command: ["yarn", "lint"]
     environment:
       - NODE_ENV=testing
+    networks:
+      - dev-network
+    profiles: []
 
+  analytics-service:
+    image: ${DOCKER_IMAGE}
+    build: {}  # Disable build in CI
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+
+  worker:
+    image: ${DOCKER_IMAGE}
+    build: {}  # Disable build in CI
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+
+  # Override test service to use pre-built image and CI configuration
   test:
     image: ${DOCKER_IMAGE}
     command: ["yarn", "test"]
@@ -47,9 +45,26 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+      - FIRESTORE_DATABASE_ID=(default)
+      - FIRESTORE_SALT_COLLECTION=salts
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+    networks:
+      - dev-network
+    profiles: []
     depends_on:
       firestore:
         condition: service_healthy
       pubsub:
         condition: service_healthy
+
+  # Override e2e-test service to use pre-built image and CI configuration
+  e2e-test:
+    image: ${DOCKER_IMAGE}
+    command: ["yarn", "test:e2e"]
+    environment:
+      - NODE_ENV=testing
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3000
+      - WIREMOCK_URL=http://fake-tinybird:8080
+    networks:
+      - dev-network
+    profiles: []

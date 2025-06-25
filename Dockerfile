@@ -2,6 +2,9 @@ ARG NODE_VERSION=22
 
 FROM node:${NODE_VERSION}-alpine AS base
 
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
 WORKDIR /app
 
 COPY package.json yarn.lock ./

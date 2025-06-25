@@ -1,7 +1,6 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
 import request from 'supertest';
 import {FastifyInstance} from 'fastify';
-import {publishEvent} from '../../src/services/events/publisher';
 
 describe('Worker App', () => {
     let app: FastifyInstance;
@@ -119,63 +118,6 @@ describe('Worker App', () => {
             await request(app.server)
                 .put('/health')
                 .expect(404);
-        });
-    });
-
-    describe('Worker Plugin', () => {
-        it('should be able to subscribe to a pubsub topic', async () => {
-            const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
-            const payload = {
-                test: 'test message from worker app test'
-            };
-
-            const logSpy = vi.spyOn(app.log, 'info');
-
-            const waitForWorkerMessage = () => {
-                return new Promise<void>((resolve, reject) => {
-                    const timeout = setTimeout(() => {
-                        reject(new Error('Worker did not receive message within 2000ms'));
-                    }, 2000);
-
-                    const checkForMessage = () => {
-                        const workerMessageCall = logSpy.mock.calls.find((call) => {
-                            const [logData, logMessage] = call;
-                            return (
-                                logData &&
-                                typeof logData === 'object' &&
-                                'messageData' in logData &&
-                                logMessage === 'Worker received message'
-                            );
-                        });
-
-                        if (workerMessageCall) {
-                            clearTimeout(timeout);
-                            const [logData] = workerMessageCall;
-                            const messageData = (logData as unknown as {messageData: string}).messageData;
-                            const receivedPayload = JSON.parse(messageData);
-                            expect(receivedPayload).toEqual(payload);
-                            resolve();
-                        } else {
-                            setTimeout(checkForMessage, 50);
-                        }
-                    };
-
-                    checkForMessage();
-                });
-            };
-
-            // Allow worker to set up subscription before publishing
-            await new Promise<void>((resolve) => {
-                setTimeout(() => resolve(), 100);
-            });
-            
-            await publishEvent({
-                topic: topicName,
-                payload,
-                logger: app.log
-            });
-
-            await waitForWorkerMessage();
         });
     });
 });

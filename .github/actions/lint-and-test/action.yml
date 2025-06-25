@@ -16,21 +16,40 @@ runs:
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
-        docker compose -f ${{ github.action_path }}/compose.ci.yml run --rm lint
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm lint
 
     # Test with compose (includes Firestore emulator)
     - name: Test
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
-        docker compose -f ${{ github.action_path }}/compose.ci.yml run --rm test
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test
+
+    - name: Stop services
+      shell: bash
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml down
+
+    # E2E Test
+    - name: Start services for E2E tests
+      shell: bash
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml up -d
+        
+    - name: Run E2E tests
+      shell: bash
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm e2e-test
 
     # Copy coverage report from test container
     - name: Copy coverage report
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
-        CONTAINER_ID=$(docker compose -f ${{ github.action_path }}/compose.ci.yml ps -q test | head -1)
+        CONTAINER_ID=$(docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml ps -q test | head -1)
         if [ ! -z "$CONTAINER_ID" ]; then
           if docker cp $CONTAINER_ID:/app/coverage/cobertura-coverage.xml .; then
             echo "Coverage report copied successfully"
@@ -53,4 +72,4 @@ runs:
       if: always()
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
-        docker compose -f ${{ github.action_path }}/compose.ci.yml down
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml down

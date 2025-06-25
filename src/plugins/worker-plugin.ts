@@ -1,13 +1,13 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
-import {EventSubscriber} from '../services/events/subscriber';
-import type {Message} from '@google-cloud/pubsub';
+import BatchWorker from '../services/batch-worker/BatchWorker';
 
 async function workerPlugin(fastify: FastifyInstance) {
-    let subscriber: EventSubscriber | null = null;
+    let batchWorker: BatchWorker | null = null;
     let heartbeatInterval: NodeJS.Timeout | null = null;
 
-    // Start heartbeat logging when the app is ready
+    // Start the worker process before the app starts listening for requests
+    // app.listen() will run after all .ready() hooks have completed
     fastify.ready(() => {
         fastify.log.info('Worker app started - beginning heartbeat logging');
         
@@ -16,12 +16,8 @@ async function workerPlugin(fastify: FastifyInstance) {
             fastify.log.info('Worker heartbeat - processing events...');
         }, 10000);
 
-        subscriber = new EventSubscriber(process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW as string);
-        subscriber.subscribe((message: Message) => {
-            const messageData = message.data.toString();
-            fastify.log.info({messageData}, 'Worker received message');
-            message.ack();
-        });
+        batchWorker = new BatchWorker(process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW as string);
+        batchWorker.start();
     });
 
     // Clean up resources when the app is closing
@@ -29,8 +25,8 @@ async function workerPlugin(fastify: FastifyInstance) {
         if (heartbeatInterval) {
             clearInterval(heartbeatInterval);
         }
-        if (subscriber) {
-            await subscriber.close();
+        if (batchWorker) {
+            await batchWorker.stop();
         }
     });
 }

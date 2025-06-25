@@ -47,9 +47,6 @@ services:
     command: ["yarn", "dev"]
     ports:
       - ${ANALYTICS_PORT:-3000}:3000
-    volumes:
-      - .:/app
-      - node_modules_volume:/app/node_modules
     env_file:
       - path: .env
         required: false
@@ -63,6 +60,12 @@ services:
       - PROXY_TARGET=http://fake-tinybird:8080/v0/events
     networks:
       - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     depends_on:
       firestore:
         condition: service_healthy
@@ -77,9 +80,6 @@ services:
     command: ["yarn", "dev"]
     ports:
       - ${WORKER_PORT:-3001}:3000
-    volumes:
-      - .:/app
-      - node_modules_volume:/app/node_modules
     env_file:
       - path: .env
         required: false
@@ -94,14 +94,22 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
     networks:
       - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     depends_on:
       firestore:
         condition: service_healthy
       pubsub:
         condition: service_healthy
+      fake-tinybird:
+        condition: service_healthy
 
   fake-tinybird:
-    image: wiremock/wiremock:3.9.1
+    image: wiremock/wiremock:3.13.1
     ports:
       - ${FAKE_TINYBIRD_PORT:-8089}:8080
     command: ["--global-response-templating", "--verbose"]
@@ -113,15 +121,36 @@ services:
     networks:
       - dev-network
 
+  e2e-test:
+    image: local/traffic-analytics:development
+    pull_policy: never
+    command: ["yarn", "test:e2e"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - NODE_ENV=testing
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3000
+      - WIREMOCK_URL=http://fake-tinybird:8080
+    tty: true
+    networks:
+      - dev-network
+    profiles: [e2e]
+    depends_on:
+      analytics-service:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+      fake-tinybird:
+        condition: service_healthy
+
   test:
     image: local/traffic-analytics:development
     pull_policy: never
     command: sh -c "yarn test && yarn lint"
-    volumes:
-      - .:/app
-      - node_modules_volume:/app/node_modules
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       - NODE_ENV=testing
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-test
@@ -146,11 +175,9 @@ services:
     image: local/traffic-analytics:development
     pull_policy: never
     command: ["yarn", "lint"]
-    volumes:
-      - .:/app
-      - node_modules_volume:/app/node_modules
     env_file:
-      - .env
+      - path: .env
+        required: false
     tty: true
     networks:
       - test-network

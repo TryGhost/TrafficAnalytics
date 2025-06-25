@@ -24,6 +24,7 @@ const URLSchema = Type.String({format: 'uri'});
 const ISO8601DateTimeSchema = Type.String({
     format: 'date-time'
 });
+const VersionSchema = Type.Literal('1');
 
 // Enum types
 const AnalyticsEventNameSchema = Type.Union([
@@ -72,13 +73,13 @@ export const PayloadSchema = Type.Object({
 export const BodySchema = Type.Object({
     timestamp: ISO8601DateTimeSchema,
     action: ActionSchema,
-    version: StringSchema,
+    version: VersionSchema,
     session_id: Type.Optional(StringSchema),
     payload: PayloadSchema
 });
 
 // Complete request schema
-export const PageHitRawRequestSchema = Type.Object({
+export const IncomingEventRequestSchema = Type.Object({
     querystring: QueryParamsSchema,
     headers: HeadersSchema,
     body: BodySchema
