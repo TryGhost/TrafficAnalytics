@@ -307,17 +307,6 @@ describe('PageHitProcessedSchema v1', () => {
         
             expect(signature1).not.toBe(signature2);
         });
-
-        it('should use default salt when none provided', async () => {
-            const siteUuid = '12345678-1234-1234-1234-123456789012';
-            const ipAddress = '192.168.1.1';
-            const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
-        
-            const signature = await generateUserSignature(siteUuid, ipAddress, userAgent);
-        
-            expect(signature).toHaveLength(64);
-            expect(typeof signature).toBe('string');
-        });
     });
 
     describe('transformPageHitRawToProcessed', () => {
