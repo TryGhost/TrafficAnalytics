@@ -17,7 +17,7 @@ class BatchWorker {
 
     public async start() {
         logger.info('Starting batch worker for topic: %s', this.topic);
-        this.subscriber.subscribe(this.handleMessage);
+        this.subscriber.subscribe(this.handleMessage.bind(this));
     }
 
     public async stop() {
