@@ -105,6 +105,48 @@ describe('BatchWorker', () => {
             expectMessageAcked(mockMessage);
         });
 
+        it('should transform pageHitRaw to pageHitProcessed and log processed data', async () => {
+            const mockMessage = createMockMessage(JSON.stringify(validPageHitRawData));
+
+            await (batchWorker as any).handleMessage(mockMessage);
+
+            // Verify the logger was called with processed data (not raw data)
+            expect(logger.info).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    pageHitProcessed: expect.objectContaining({
+                        timestamp: validPageHitRawData.timestamp,
+                        action: validPageHitRawData.action,
+                        version: validPageHitRawData.version,
+                        site_uuid: validPageHitRawData.site_uuid,
+                        session_id: expect.any(String),
+                        payload: expect.objectContaining({
+                            // Original payload fields
+                            member_uuid: validPageHitRawData.payload.member_uuid,
+                            member_status: validPageHitRawData.payload.member_status,
+                            post_uuid: validPageHitRawData.payload.post_uuid,
+                            post_type: validPageHitRawData.payload.post_type,
+                            locale: validPageHitRawData.payload.locale,
+                            location: validPageHitRawData.payload.location,
+                            referrer: validPageHitRawData.payload.referrer,
+                            pathname: validPageHitRawData.payload.pathname,
+                            href: validPageHitRawData.payload.href,
+                            // Processed fields
+                            os: expect.any(String),
+                            browser: expect.any(String),
+                            device: expect.any(String)
+                        })
+                    })
+                }),
+                'Worker processed message. Acknowledging message...'
+            );
+            
+            // Verify meta field is not included in processed output
+            const logCall = (logger.info as any).mock.calls.find((call: any) => call[1] === 'Worker processed message. Acknowledging message...');
+            expect(logCall[0].pageHitProcessed).not.toHaveProperty('meta');
+            
+            expectMessageAcked(mockMessage);
+        });
+
         it('should handle invalid JSON and nack message', async () => {
             const invalidJson = 'invalid json';
             const mockMessage = createMockMessage(invalidJson);

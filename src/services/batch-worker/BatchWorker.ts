@@ -1,6 +1,7 @@
 import {Message} from '@google-cloud/pubsub';
 import {EventSubscriber} from '../events/subscriber';
-import {PageHitRawSchema} from '../../schemas/v1/page-hit-raw';
+import {PageHitRaw, PageHitRawSchema} from '../../schemas/v1/page-hit-raw';
+import {transformPageHitRawToProcessed} from '../../schemas/v1/page-hit-processed';
 import {Value} from '@sinclair/typebox/value';
 import logger from '../../utils/logger';
 
@@ -25,15 +26,36 @@ class BatchWorker {
     }
 
     private async handleMessage(message: Message) {
-        const messageData = message.data.toString();
         try {
-            const json = JSON.parse(messageData);
-            const pageHitRaw = Value.Parse(PageHitRawSchema, json);
-            logger.info({pageHitRaw}, 'Worker received valid message');
+            const pageHitRaw = await this.parseMessage(message);
+            const pageHitProcessed = await this.transformMessage(pageHitRaw);
+
+            logger.info({pageHitProcessed}, 'Worker processed message. Acknowledging message...');
             message.ack();
         } catch (error) {
-            logger.error({messageData, error}, 'Worker received invalid message');
+            logger.error({messageData: message.data.toString(), error}, 'Worker unable to parse message. Nacking message...');
             message.nack();
+            throw error;
+        }
+    }
+
+    private async parseMessage(message: Message) {
+        try {
+            const messageData = message.data.toString();
+            const json = JSON.parse(messageData);
+            return Value.Parse(PageHitRawSchema, json);
+        } catch (error) {
+            logger.error({messageData: message.data.toString(), error}, 'Worker unable to parse message. Nacking message...');
+            message.nack();
+            throw error;
+        }
+    }
+
+    private async transformMessage(pageHitRaw: PageHitRaw) {
+        try {
+            return await transformPageHitRawToProcessed(pageHitRaw);
+        } catch (error) {
+            logger.error({pageHitRaw, error}, 'Worker unable to transform message');
             throw error;
         }
     }
