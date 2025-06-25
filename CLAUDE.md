@@ -61,6 +61,7 @@ Tests use Vitest and follow the same directory structure as the source code. Whe
 - Create corresponding test files in the `test/` directory
 - Use the existing test patterns for consistency
 - Ensure all new code has test coverage
+- Do not add constant timeouts to tests
 
 ## Development Notes
 

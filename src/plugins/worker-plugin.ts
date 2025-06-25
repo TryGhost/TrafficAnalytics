@@ -17,8 +17,12 @@ async function workerPlugin(fastify: FastifyInstance) {
             fastify.log.info('Worker heartbeat - processing events...');
         }, 10000);
 
+        // Extract base URL from PROXY_TARGET by removing /v0/events path
+        const proxyTarget = process.env.PROXY_TARGET as string;
+        const baseUrl = proxyTarget.replace('/v0/events', '');
+        
         const tinybirdClient = new TinybirdClient({
-            apiUrl: process.env.PROXY_TARGET as string,
+            apiUrl: baseUrl,
             apiToken: process.env.TINYBIRD_TRACKER_TOKEN as string,
             datasource: 'analytics_events_test'
         });
