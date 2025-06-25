@@ -94,18 +94,16 @@ export class UserSignatureService {
      * Uses the current date and site UUID to generate a unique key. This ensures
      * salts are automatically rotated daily for each site.
      *
+     * This method is now race-condition safe as it delegates to the salt store's
+     * atomic getOrCreate operation.
+     *
      * @param siteUuid - The unique identifier of the site
      * @returns The salt for the site and current date
      */
     private async getOrCreateSaltForSite(siteUuid: string): Promise<string> {
         const key = this.getKey(siteUuid);
-        const salt = await this.saltStore.get(key);
-        if (!salt) {
-            const newSalt = this.generateRandomSalt();
-            await this.saltStore.set(key, newSalt);
-            return newSalt;
-        }
-        return salt.salt;
+        const saltRecord = await this.saltStore.getOrCreate(key, () => this.generateRandomSalt());
+        return saltRecord.salt;
     }
 
     /**

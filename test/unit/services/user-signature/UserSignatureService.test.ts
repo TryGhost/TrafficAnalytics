@@ -132,6 +132,10 @@ describe('UserSignatureService', () => {
                 async set(key: string, salt: string) {
                     return {salt, created_at: new Date()};
                 },
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                async getOrCreate(key: string, saltGenerator: () => string) {
+                    return {salt: `custom-salt-for-${key}`, created_at: new Date()};
+                },
                 async getAll() {
                     return {};
                 },
@@ -365,28 +369,30 @@ describe('UserSignatureService', () => {
                 vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-01T12:00:00.000Z');
                 
                 const testSiteUuid = '550e8400-e29b-41d4-a716-446655440000';
-                const expectedSalt = 'test-salt-value';
                 
-                let setCallCount = 0;
                 let createdSalt: string | null = null;
                 const raceSaltStore: ISaltStore = {
                     async get() {
-                        // Return the salt if it was created by the first call
+                        // Return the salt if it was created
                         if (createdSalt) {
                             return {salt: createdSalt, created_at: new Date()};
                         }
                         return undefined;
                     },
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     async set(saltKey: string, salt: string) {
-                        setCallCount++;
-                        if (setCallCount === 1) {
-                            // First call succeeds and creates the salt
-                            createdSalt = salt;
-                            return {salt, created_at: new Date()};
-                        } else {
-                            // Second call fails because salt already exists
-                            throw new Error(`Salt with key ${saltKey} already exists`);
+                        // This shouldn't be called anymore since we use getOrCreate
+                        throw new Error('set() should not be called when using getOrCreate');
+                    },
+                    async getOrCreate(key: string, saltGenerator: () => string) {
+                        // Simulate race condition handling - first call wins
+                        if (createdSalt) {
+                            return {salt: createdSalt, created_at: new Date()};
                         }
+                        
+                        // Create the salt atomically
+                        createdSalt = saltGenerator();
+                        return {salt: createdSalt, created_at: new Date()};
                     },
                     async getAll() {
                         return {};
