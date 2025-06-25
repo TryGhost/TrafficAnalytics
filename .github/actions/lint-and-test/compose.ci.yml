@@ -22,6 +22,22 @@ services:
       - dev-network
     profiles: []
 
+  analytics-service:
+    image: ${DOCKER_IMAGE}
+    environment:
+      - NODE_ENV=testing
+    networks:
+      - dev-network
+    profiles: []
+
+  worker:
+    image: ${DOCKER_IMAGE}
+    environment:
+      - NODE_ENV=testing
+    networks:
+      - dev-network
+    profiles: []
+
   # Override test service to use pre-built image and CI configuration
   test:
     image: ${DOCKER_IMAGE}
