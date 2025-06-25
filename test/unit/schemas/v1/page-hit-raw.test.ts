@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest';
 import {Value} from '@sinclair/typebox/value';
-import {PageHitRawSchema} from '../../../../src/schemas/v1/page-hit-raw';
+import {PageHitRawSchema} from '../../../../src/schemas';
 
 describe('PageHitRawSchema v1', () => {
     const validPageHitRaw = {

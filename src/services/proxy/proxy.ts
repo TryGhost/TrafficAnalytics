@@ -5,8 +5,7 @@ import {parseUserAgent} from './processors/parse-user-agent';
 import {generateUserSignature} from './processors/user-signature';
 import {publishEvent} from '../events/publisher.js';
 import {TypeCompiler} from '@sinclair/typebox/compiler';
-import {QueryParamsSchema, HeadersSchema, BodySchema} from '../../schemas/v1/incoming-event-request';
-import {PageHitRaw} from '../../schemas/v1/page-hit-raw';
+import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRaw} from '../../schemas';
 import {Static} from '@sinclair/typebox';
 
 // Compile schema validators once for performance
