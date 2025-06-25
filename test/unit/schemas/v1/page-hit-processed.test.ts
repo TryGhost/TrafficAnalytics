@@ -5,9 +5,9 @@ import {
     transformUserAgent,
     transformReferrer,
     generateUserSignature,
-    transformPageHitRawToProcessed
-} from '../../../../src/schemas/v1/page-hit-processed';
-import {PageHitRaw} from '../../../../src/schemas/v1/page-hit-raw';
+    transformPageHitRawToProcessed,
+    PageHitRaw
+} from '../../../../src/schemas';
 
 const validPageHitRaw: PageHitRaw = {
     timestamp: '2024-01-01T00:00:00.000Z',

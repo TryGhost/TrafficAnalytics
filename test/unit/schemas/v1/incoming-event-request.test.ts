@@ -6,7 +6,7 @@ import {
     PayloadSchema,
     BodySchema,
     IncomingEventRequestSchema
-} from '../../../../src/schemas/v1/incoming-event-request';
+} from '../../../../src/schemas';
 
 describe('IncomingEventRequestSchema v1', () => {
     describe('QueryParamsSchema', () => {

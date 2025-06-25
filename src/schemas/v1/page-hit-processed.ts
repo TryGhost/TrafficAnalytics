@@ -1,24 +1,8 @@
-import {Type, Static, FormatRegistry} from '@sinclair/typebox';
-import validator from '@tryghost/validator';
+import {Type, Static} from '@sinclair/typebox';
 import {PageHitRaw} from './page-hit-raw';
 import uap from 'ua-parser-js';
 import {ReferrerParser} from '@tryghost/referrer-parser';
 import {userSignatureService} from '../../services/user-signature';
-
-// Register format validators for runtime validation using @tryghost/validator
-FormatRegistry.Set('uuid', (value) => {
-    return validator.isUUID(value);
-});
-
-FormatRegistry.Set('uri', (value) => {
-    return validator.isURL(value);
-});
-
-FormatRegistry.Set('date-time', (value) => {
-    // Use native Date parsing which handles ISO8601 formats properly
-    const date = new Date(value);
-    return !isNaN(date.getTime()) && date.toISOString() === value;
-});
 
 const referrerParser = new ReferrerParser();
 

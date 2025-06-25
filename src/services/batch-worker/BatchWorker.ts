@@ -1,7 +1,6 @@
 import {Message} from '@google-cloud/pubsub';
 import {EventSubscriber} from '../events/subscriber';
-import {PageHitRaw, PageHitRawSchema} from '../../schemas/v1/page-hit-raw';
-import {PageHitProcessed, transformPageHitRawToProcessed} from '../../schemas/v1/page-hit-processed';
+import {PageHitRaw, PageHitRawSchema, PageHitProcessed, transformPageHitRawToProcessed} from '../../schemas';
 import {Value} from '@sinclair/typebox/value';
 import {TinybirdClient} from '../tinybird/client';
 import logger from '../../utils/logger';
