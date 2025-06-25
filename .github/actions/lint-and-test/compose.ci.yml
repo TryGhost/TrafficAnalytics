@@ -33,6 +33,7 @@ services:
     build: {}  # Disable build in CI
     environment:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+      - TINYBIRD_TRACKER_TOKEN=test-token
 
   # Override test service to use pre-built image and CI configuration
   test:
