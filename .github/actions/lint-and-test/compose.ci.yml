@@ -22,6 +22,18 @@ services:
       - dev-network
     profiles: []
 
+  analytics-service:
+    image: ${DOCKER_IMAGE}
+    build: {}  # Disable build in CI
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+
+  worker:
+    image: ${DOCKER_IMAGE}
+    build: {}  # Disable build in CI
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+
   # Override test service to use pre-built image and CI configuration
   test:
     image: ${DOCKER_IMAGE}
@@ -56,8 +68,3 @@ services:
     networks:
       - dev-network
     profiles: []
-    depends_on:
-      analytics-service:
-        condition: service_started
-      fake-tinybird:
-        condition: service_healthy

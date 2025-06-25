@@ -60,6 +60,12 @@ services:
       - PROXY_TARGET=http://fake-tinybird:8080/v0/events
     networks:
       - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     depends_on:
       firestore:
         condition: service_healthy
@@ -88,10 +94,18 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
     networks:
       - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     depends_on:
       firestore:
         condition: service_healthy
       pubsub:
+        condition: service_healthy
+      fake-tinybird:
         condition: service_healthy
 
   fake-tinybird:
@@ -124,7 +138,9 @@ services:
     profiles: [e2e]
     depends_on:
       analytics-service:
-        condition: service_started
+        condition: service_healthy
+      worker:
+        condition: service_healthy
       fake-tinybird:
         condition: service_healthy
 
