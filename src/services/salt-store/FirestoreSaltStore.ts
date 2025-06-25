@@ -44,7 +44,7 @@ export class FirestoreSaltStore implements ISaltStore {
             await this.firestore.collection(this.collectionName).limit(1).get();
         } catch (error) {
             // Log warning but don't throw - allow graceful degradation
-            logger.warn('FirestoreSaltStore health check failed:', error instanceof Error ? error.message : error);
+            logger.warn({error}, 'FirestoreSaltStore health check failed');
         }
     }
 
