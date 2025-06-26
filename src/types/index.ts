@@ -4,7 +4,7 @@ export interface Payload {
     'user-agent': string;
     locale: string;
     location: string | null;
-    referrer: string | null;
+    referrer?: string | null;
     parsedReferrer?: {
         source: string | null;
         medium: string | null;

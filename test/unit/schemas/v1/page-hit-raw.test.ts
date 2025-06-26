@@ -213,6 +213,102 @@ describe('PageHitRawSchema v1', () => {
             expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
         });
 
+        it('should validate without referrer field (optional)', () => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const {referrer, ...payloadWithoutReferrer} = validPageHitRaw.payload;
+            const validData = {
+                ...validPageHitRaw,
+                payload: payloadWithoutReferrer
+            };
+            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+        });
+
+        it('should validate with parsedReferrer object with all string values', () => {
+            const validData = {
+                ...validPageHitRaw,
+                payload: {
+                    ...validPageHitRaw.payload,
+                    parsedReferrer: {
+                        source: 'google',
+                        medium: 'organic',
+                        url: 'https://google.com'
+                    }
+                }
+            };
+            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+        });
+
+        it('should validate with parsedReferrer object with null values', () => {
+            const validData = {
+                ...validPageHitRaw,
+                payload: {
+                    ...validPageHitRaw.payload,
+                    parsedReferrer: {
+                        source: null,
+                        medium: null,
+                        url: null
+                    }
+                }
+            };
+            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+        });
+
+        it('should validate with parsedReferrer object with mixed null and string values', () => {
+            const validData = {
+                ...validPageHitRaw,
+                payload: {
+                    ...validPageHitRaw.payload,
+                    parsedReferrer: {
+                        source: 'facebook',
+                        medium: null,
+                        url: 'https://facebook.com'
+                    }
+                }
+            };
+            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+        });
+
+        it('should validate without parsedReferrer field (optional)', () => {
+            const validData = {
+                ...validPageHitRaw,
+                payload: {
+                    ...validPageHitRaw.payload
+                    // parsedReferrer field omitted
+                }
+            };
+            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+        });
+
+        it('should reject parsedReferrer with missing required fields', () => {
+            const invalidData = {
+                ...validPageHitRaw,
+                payload: {
+                    ...validPageHitRaw.payload,
+                    parsedReferrer: {
+                        source: 'google',
+                        medium: 'organic'
+                        // missing url field
+                    }
+                }
+            };
+            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+        });
+
+        it('should reject parsedReferrer with invalid field types', () => {
+            const invalidData = {
+                ...validPageHitRaw,
+                payload: {
+                    ...validPageHitRaw.payload,
+                    parsedReferrer: {
+                        source: 123, // should be string or null
+                        medium: 'organic',
+                        url: 'https://google.com'
+                    }
+                }
+            };
+            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+        });
+
         it('should reject invalid href URL', () => {
             const invalidData = {
                 ...validPageHitRaw,
@@ -369,6 +465,37 @@ describe('PageHitRawSchema v1', () => {
             };
             
             expect(Value.Check(PageHitRawSchema, realWorldPayload)).toBe(true);
+        });
+
+        it('should validate payload with parsedReferrer', () => {
+            const realWorldPayloadWithParsedReferrer = {
+                timestamp: '2024-06-24T10:30:00.000Z',
+                action: 'page_hit',
+                version: '1',
+                site_uuid: 'c7929de8-27d7-404e-b714-0fc774f701e6',
+                payload: {
+                    member_uuid: 'undefined',
+                    member_status: 'undefined',
+                    post_uuid: 'undefined',
+                    post_type: 'null',
+                    locale: 'en-US',
+                    location: null,
+                    referrer: 'https://google.com/search?q=example',
+                    parsedReferrer: {
+                        source: 'google',
+                        medium: 'organic',
+                        url: 'https://google.com'
+                    },
+                    pathname: '/blog/post',
+                    href: 'https://example.com/blog/post'
+                },
+                meta: {
+                    ip: '203.0.113.42',
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.23 Safari/537.36'
+                }
+            };
+            
+            expect(Value.Check(PageHitRawSchema, realWorldPayloadWithParsedReferrer)).toBe(true);
         });
     });
 });
