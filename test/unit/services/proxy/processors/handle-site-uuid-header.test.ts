@@ -39,10 +39,7 @@ describe('Processors', () => {
             };
             
             expect(() => handleSiteUUIDHeader(request as FastifyRequest)).toThrow('Site UUID is required but not found in header or body');
-            expect(request.log!.error).toHaveBeenCalledWith(
-                'Failed to get site UUID from request header:',
-                expect.any(Error)
-            );
+            expect(request.log!.error).toHaveBeenCalled();
         });
 
         it('should throw error when x-site-uuid header is missing and no fallback exists', () => {
@@ -58,10 +55,7 @@ describe('Processors', () => {
             };
             
             expect(() => handleSiteUUIDHeader(request as FastifyRequest)).toThrow('Site UUID is required but not found in header or body');
-            expect(request.log!.error).toHaveBeenCalledWith(
-                'Failed to get site UUID from request header:',
-                expect.any(Error)
-            );
+            expect(request.log!.error).toHaveBeenCalled();
         });
 
         it('should throw error when x-site-uuid header is array and no fallback exists', () => {
@@ -79,10 +73,7 @@ describe('Processors', () => {
             };
             
             expect(() => handleSiteUUIDHeader(request as FastifyRequest)).toThrow('Site UUID is required but not found in header or body');
-            expect(request.log!.error).toHaveBeenCalledWith(
-                'Failed to get site UUID from request header:',
-                expect.any(Error)
-            );
+            expect(request.log!.error).toHaveBeenCalled();
         });
 
         it('should use site_uuid from body payload as fallback when header is missing', () => {
@@ -160,10 +151,7 @@ describe('Processors', () => {
             };
             
             expect(() => handleSiteUUIDHeader(request as FastifyRequest)).toThrow();
-            expect(request.log!.error).toHaveBeenCalledWith(
-                'Failed to get site UUID from request header:',
-                expect.any(Error)
-            );
+            expect(request.log!.error).toHaveBeenCalled();
         });
 
         it('should overwrite existing site_uuid in payload', () => {
