@@ -27,10 +27,11 @@ export const PageHitProcessedSchema = Type.Object({
         os: Type.String(),
         browser: Type.String(),
         device: Type.String(),
-        referrer_url: Type.Optional(Type.String()),
-        referrer_source: Type.Optional(Type.String()),
-        referrer_medium: Type.Optional(Type.String()),
+        referrerUrl: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+        referrerSource: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+        referrerMedium: Type.Optional(Type.Union([Type.String(), Type.Null()])),
         'user-agent': Type.String()
+
     })
 });
 
@@ -95,9 +96,9 @@ function isBot(userAgentString: string): boolean {
 }
 
 export function transformReferrer(referrer: string | null | undefined): {
-    referrer_url?: string,
-    referrer_source?: string,
-    referrer_medium?: string
+    referrerUrl?: string | null,
+    referrerSource?: string | null,
+    referrerMedium?: string | null
 } {
     if (!referrer || !referrerParser) {
         return {};
@@ -106,9 +107,9 @@ export function transformReferrer(referrer: string | null | undefined): {
     try {
         const parsedReferrer = referrerParser.parse(referrer);
         return {
-            referrer_url: parsedReferrer.referrerUrl || undefined,
-            referrer_source: parsedReferrer.referrerSource || undefined,
-            referrer_medium: parsedReferrer.referrerMedium || undefined
+            referrerUrl: parsedReferrer.referrerUrl || null,
+            referrerSource: parsedReferrer.referrerSource || null,
+            referrerMedium: parsedReferrer.referrerMedium || null
         };
     } catch (error) {
         return {};

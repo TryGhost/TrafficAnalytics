@@ -254,18 +254,18 @@ describe('PageHitProcessedSchema v1', () => {
             const referrer = 'https://www.google.com/search?q=test';
             const result = transformReferrer(referrer);
         
-            expect(result.referrer_url).toBe('www.google.com');
-            expect(result.referrer_source).toBe('Google');
-            expect(result.referrer_medium).toBe('search');
+            expect(result.referrerUrl).toBe('www.google.com');
+            expect(result.referrerSource).toBe('Google');
+            expect(result.referrerMedium).toBe('search');
         });
 
         it('should parse social media referrer correctly', () => {
             const referrer = 'https://twitter.com/user/status/123';
             const result = transformReferrer(referrer);
         
-            expect(result.referrer_url).toBe('twitter.com');
-            expect(result.referrer_source).toBe('Twitter');
-            expect(result.referrer_medium).toBe('social');
+            expect(result.referrerUrl).toBe('twitter.com');
+            expect(result.referrerSource).toBe('Twitter');
+            expect(result.referrerMedium).toBe('social');
         });
 
         it('should handle null referrer', () => {
@@ -284,15 +284,19 @@ describe('PageHitProcessedSchema v1', () => {
             const referrer = 'https://example.com/some-page';
             const result = transformReferrer(referrer);
         
-            expect(result.referrer_url).toBe('example.com');
-            expect(result.referrer_source).toBe('example.com');
-            expect(result.referrer_medium).toBeUndefined();
+            expect(result.referrerUrl).toBe('example.com');
+            expect(result.referrerSource).toBe('example.com');
+            expect(result.referrerMedium).toBe(null);
         });
 
         it('should handle malformed referrer gracefully', () => {
             const result = transformReferrer('not-a-url');
         
-            expect(result).toEqual({});
+            expect(result).toEqual({
+                referrerUrl: null,
+                referrerSource: null,
+                referrerMedium: null
+            });
         });
     });
 
@@ -345,9 +349,10 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.payload.os).toBe('macos');
             expect(result.payload.browser).toBe('chrome');
             expect(result.payload.device).toBe('desktop');
-            expect(result.payload.referrer_url).toBe('google.com');
-            expect(result.payload.referrer_source).toBe('Google');
-            expect(result.payload.referrer_medium).toBe('search');
+
+            expect(result.payload.referrerUrl).toBe('google.com');
+            expect(result.payload.referrerSource).toBe('Google');
+            expect(result.payload.referrerMedium).toBe('search');
             expect(result.payload['user-agent']).toBe(validPageHitRaw.meta['user-agent']);
         
             // Check meta is not included in processed output
@@ -365,9 +370,9 @@ describe('PageHitProcessedSchema v1', () => {
         
             const result = await transformPageHitRawToProcessed(pageHitRawWithNullReferrer);
         
-            expect(result.payload.referrer_url).toBeUndefined();
-            expect(result.payload.referrer_source).toBeUndefined();
-            expect(result.payload.referrer_medium).toBeUndefined();
+            expect(result.payload.referrerUrl).toBeUndefined();
+            expect(result.payload.referrerSource).toBeUndefined();
+            expect(result.payload.referrerMedium).toBeUndefined();
         });
 
         it('should handle page hit raw with bot user agent', async () => {
