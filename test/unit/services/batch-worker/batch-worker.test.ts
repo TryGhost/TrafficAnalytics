@@ -199,7 +199,7 @@ describe('BatchWorker', () => {
             
             (mockTinybirdClient.postEvent as any).mockRejectedValueOnce(tinybirdError);
 
-            await expect((batchWorker as any).handleMessage(mockMessage)).rejects.toThrow('Tinybird API error');
+            await (batchWorker as any).handleMessage(mockMessage);
 
             expectMessageNacked(mockMessage);
         });
@@ -208,7 +208,7 @@ describe('BatchWorker', () => {
             const invalidJson = 'invalid json';
             const mockMessage = createMockMessage(invalidJson);
 
-            await expect((batchWorker as any).handleMessage(mockMessage)).rejects.toThrow();
+            await (batchWorker as any).handleMessage(mockMessage);
 
             expectMessageNacked(mockMessage);
         });
@@ -221,7 +221,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(invalidData));
 
-            await expect((batchWorker as any).handleMessage(mockMessage)).rejects.toThrow();
+            await (batchWorker as any).handleMessage(mockMessage);
 
             expectMessageNacked(mockMessage);
         });
@@ -234,7 +234,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(incompleteData));
 
-            await expect((batchWorker as any).handleMessage(mockMessage)).rejects.toThrow();
+            await (batchWorker as any).handleMessage(mockMessage);
 
             expectMessageNacked(mockMessage);
         });
@@ -242,7 +242,7 @@ describe('BatchWorker', () => {
         it('should handle empty message data', async () => {
             const mockMessage = createMockMessage('');
 
-            await expect((batchWorker as any).handleMessage(mockMessage)).rejects.toThrow();
+            await (batchWorker as any).handleMessage(mockMessage);
 
             expectMessageNacked(mockMessage);
         });
@@ -289,7 +289,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(invalidUuidData));
 
-            await expect((batchWorker as any).handleMessage(mockMessage)).rejects.toThrow();
+            await (batchWorker as any).handleMessage(mockMessage);
 
             expectMessageNacked(mockMessage);
         });
@@ -304,7 +304,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(invalidUrlData));
 
-            await expect((batchWorker as any).handleMessage(mockMessage)).rejects.toThrow();
+            await (batchWorker as any).handleMessage(mockMessage);
 
             expectMessageNacked(mockMessage);
         });

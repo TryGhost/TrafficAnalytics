@@ -38,7 +38,6 @@ class BatchWorker {
         } catch (error) {
             logger.error({messageData: message.data.toString(), error}, 'Worker unable to process message. Nacking message...');
             message.nack();
-            throw error;
         }
     }
 
