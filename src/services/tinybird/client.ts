@@ -43,4 +43,31 @@ export class TinybirdClient {
             throw new Error(`Tinybird API error: ${response.status} ${response.statusText} - ${errorText}`);
         }
     }
+
+    async postEventBatch(events: TinybirdEvent[]): Promise<void> {
+        if (events.length === 0) {
+            return;
+        }
+
+        const url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}`;
+        
+        // Convert events to newline-delimited JSON format for batch insertion
+        const batchPayload = events.map(event => JSON.stringify(event)).join('\n');
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${this.apiToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: batchPayload
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Tinybird batch API error: ${response.status} ${response.statusText} - ${errorText}`);
+        }
+
+        logger.info(`Successfully posted batch of ${events.length} events to Tinybird`);
+    }
 }

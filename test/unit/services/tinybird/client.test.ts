@@ -247,4 +247,147 @@ describe('TinybirdClient', () => {
             expect(fetch).toHaveBeenCalledTimes(3);
         });
     });
+
+    describe('postEventBatch', () => {
+        it('should post multiple events in batch format', async () => {
+            const mockEvents = [
+                {timestamp: '2024-01-15T12:00:00Z', type: 'page_view', user_id: 'user1'},
+                {timestamp: '2024-01-15T12:01:00Z', type: 'click', user_id: 'user2'},
+                {timestamp: '2024-01-15T12:02:00Z', type: 'scroll', user_id: 'user3'}
+            ];
+
+            const mockResponse = {
+                ok: true,
+                status: 200,
+                statusText: 'OK'
+            };
+
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockResponse);
+
+            await client.postEventBatch(mockEvents);
+
+            expect(fetch).toHaveBeenCalledWith(
+                'https://api.tinybird.co/v0/events?name=test_datasource',
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: 'Bearer test-token',
+                        'Content-Type': 'application/json'
+                    },
+                    body: mockEvents.map(event => JSON.stringify(event)).join('\n')
+                }
+            );
+        });
+
+        it('should handle empty batch gracefully', async () => {
+            await client.postEventBatch([]);
+            expect(fetch).not.toHaveBeenCalled();
+        });
+
+        it('should handle single event in batch', async () => {
+            const mockEvent = {timestamp: '2024-01-15T12:00:00Z', type: 'page_view'};
+            const mockResponse = {
+                ok: true,
+                status: 200,
+                statusText: 'OK'
+            };
+
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockResponse);
+
+            await client.postEventBatch([mockEvent]);
+
+            expect(fetch).toHaveBeenCalledWith(
+                'https://api.tinybird.co/v0/events?name=test_datasource',
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: 'Bearer test-token',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(mockEvent)
+                }
+            );
+        });
+
+        it('should throw error for batch API failures', async () => {
+            const mockEvents = [{type: 'test'}];
+            const errorMessage = 'Batch validation failed';
+            const mockResponse = {
+                ok: false,
+                status: 400,
+                statusText: 'Bad Request',
+                text: vi.fn().mockResolvedValue(errorMessage)
+            };
+
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockResponse);
+
+            await expect(client.postEventBatch(mockEvents)).rejects.toThrow(
+                'Tinybird batch API error: 400 Bad Request - Batch validation failed'
+            );
+        });
+
+        it('should handle large batches', async () => {
+            const largeEventBatch = Array.from({length: 100}, (_, i) => ({
+                id: i,
+                timestamp: `2024-01-15T12:${i.toString().padStart(2, '0')}:00Z`,
+                type: 'batch_event'
+            }));
+
+            const mockResponse = {
+                ok: true,
+                status: 200,
+                statusText: 'OK'
+            };
+
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockResponse);
+
+            await client.postEventBatch(largeEventBatch);
+
+            expect(fetch).toHaveBeenCalledWith(
+                'https://api.tinybird.co/v0/events?name=test_datasource',
+                expect.objectContaining({
+                    method: 'POST',
+                    body: expect.stringContaining('batch_event')
+                })
+            );
+
+            const callArgs = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+            const body = callArgs[1].body;
+            const lines = body.split('\n');
+            expect(lines).toHaveLength(100);
+        });
+
+        it('should handle complex events in batch', async () => {
+            const complexEvents = [
+                {
+                    timestamp: '2024-01-15T12:00:00Z',
+                    user: {id: 'user1', metadata: {name: 'John'}},
+                    event_data: {page: '/home', metrics: [1, 2, 3]}
+                },
+                {
+                    timestamp: '2024-01-15T12:01:00Z',
+                    user: {id: 'user2', metadata: {name: 'Jane'}},
+                    event_data: {page: '/about', metrics: [4, 5, 6]}
+                }
+            ];
+
+            const mockResponse = {
+                ok: true,
+                status: 200,
+                statusText: 'OK'
+            };
+
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockResponse);
+
+            await client.postEventBatch(complexEvents);
+
+            const expectedBody = complexEvents.map(event => JSON.stringify(event)).join('\n');
+            expect(fetch).toHaveBeenCalledWith(
+                'https://api.tinybird.co/v0/events?name=test_datasource',
+                expect.objectContaining({
+                    body: expectedBody
+                })
+            );
+        });
+    });
 });
