@@ -54,7 +54,8 @@ describe('PageHitProcessedSchema v1', () => {
             device: 'desktop',
             referrer_url: 'google.com',
             referrer_source: 'Google',
-            referrer_medium: 'search'
+            referrer_medium: 'search',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
     };
 
@@ -97,6 +98,17 @@ describe('PageHitProcessedSchema v1', () => {
                 payload: {
                     ...validPageHitProcessed.payload,
                     device: undefined
+                }
+            };
+            expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
+        });
+
+        it('should require user-agent field', () => {
+            const invalidData = {
+                ...validPageHitProcessed,
+                payload: {
+                    ...validPageHitProcessed.payload,
+                    'user-agent': undefined
                 }
             };
             expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
@@ -336,6 +348,7 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.payload.referrer_url).toBe('google.com');
             expect(result.payload.referrer_source).toBe('Google');
             expect(result.payload.referrer_medium).toBe('search');
+            expect(result.payload['user-agent']).toBe(validPageHitRaw.meta['user-agent']);
         
             // Check meta is not included in processed output
             expect(result).not.toHaveProperty('meta');
@@ -371,6 +384,7 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.payload.device).toBe('bot');
             expect(result.payload.os).toBe('unknown');
             expect(result.payload.browser).toBe('unknown');
+            expect(result.payload['user-agent']).toBe(pageHitRawWithBot.meta['user-agent']);
         });
 
         it('should handle page hit raw with mobile user agent', async () => {
@@ -387,6 +401,7 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.payload.device).toBe('mobile-ios');
             expect(result.payload.os).toBe('ios');
             expect(result.payload.browser).toBe('safari');
+            expect(result.payload['user-agent']).toBe(pageHitRawWithMobile.meta['user-agent']);
         });
 
         it('should generate different session IDs for different page hits', async () => {
