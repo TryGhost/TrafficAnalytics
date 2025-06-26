@@ -29,7 +29,8 @@ export const PageHitProcessedSchema = Type.Object({
         device: Type.String(),
         referrer_url: Type.Optional(Type.String()),
         referrer_source: Type.Optional(Type.String()),
-        referrer_medium: Type.Optional(Type.String())
+        referrer_medium: Type.Optional(Type.String()),
+        'user-agent': Type.String()
     })
 });
 
@@ -146,7 +147,8 @@ export async function transformPageHitRawToProcessed(
             ...pageHitRaw.payload,
             referrer,
             ...userAgentData,
-            ...referrerData
+            ...referrerData,
+            'user-agent': pageHitRaw.meta['user-agent']
         }
     };
 }
