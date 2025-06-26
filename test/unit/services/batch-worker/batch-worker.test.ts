@@ -132,7 +132,7 @@ describe('BatchWorker', () => {
             await (batchWorker as any).handleMessage(mockMessage);
 
             // Should log debug message for adding to batch
-            expect(logger.debug).toHaveBeenCalledWith(
+            expect(logger.info).toHaveBeenCalledWith(
                 expect.objectContaining({
                     pageHitProcessed: expect.objectContaining({
                         timestamp: validPageHitRawData.timestamp,
