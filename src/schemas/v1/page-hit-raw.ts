@@ -13,6 +13,13 @@ const ISO8601DateTimeSchema = Type.String({
 const ActionSchema = Type.Literal('page_hit');
 const VersionSchema = Type.Literal('1');
 
+// Parsed referrer schema
+const ParsedReferrerSchema = Type.Object({
+    source: Type.Optional(StringSchema),
+    medium: Type.Optional(StringSchema),
+    url: Type.Optional(StringSchema)
+});
+
 // Payload schema for page hit raw events
 const PayloadSchema = Type.Object({
     member_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
@@ -21,7 +28,8 @@ const PayloadSchema = Type.Object({
     post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
     locale: NonEmptyStringSchema,
     location: Type.Union([NonEmptyStringSchema, Type.Null()]),
-    referrer: Type.Union([StringSchema, Type.Null()]),
+    referrer: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    parsedReferrer: Type.Optional(ParsedReferrerSchema),
     pathname: NonEmptyStringSchema,
     href: URLSchema
 });

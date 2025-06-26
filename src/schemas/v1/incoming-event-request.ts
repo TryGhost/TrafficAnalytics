@@ -36,12 +36,20 @@ export const HeadersSchema = Type.Object({
     additionalProperties: Type.Union([StringSchema, Type.Array(StringSchema)])
 });
 
+// Parsed referrer schema
+const ParsedReferrerSchema = Type.Object({
+    source: Type.Union([StringSchema, Type.Null()]),
+    medium: Type.Union([StringSchema, Type.Null()]),
+    url: Type.Union([StringSchema, Type.Null()])
+});
+
 // Payload schema
 export const PayloadSchema = Type.Object({
     'user-agent': NonEmptyStringSchema,
     locale: NonEmptyStringSchema,
     location: Type.Union([NonEmptyStringSchema, Type.Null()]),
-    referrer: Type.Union([StringSchema, Type.Null()]),
+    referrer: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    parsedReferrer: Type.Optional(ParsedReferrerSchema),
     pathname: NonEmptyStringSchema,
     href: URLSchema,
     site_uuid: UUIDSchema,
