@@ -5,6 +5,10 @@ services:
     networks:
       - ghost_default
 
+  worker:
+    networks:
+      - ghost_default
+
 networks:
   ghost_default:
     external: true
