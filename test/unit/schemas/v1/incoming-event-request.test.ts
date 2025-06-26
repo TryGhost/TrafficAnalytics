@@ -144,6 +144,22 @@ describe('IncomingEventRequestSchema v1', () => {
             expect(Value.Check(PayloadSchema, payloadWithNullReferrer)).toBe(true);
         });
 
+        it('should validate without referrer field (optional)', () => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const {referrer, ...payloadWithoutReferrer} = validPayload;
+        
+            expect(Value.Check(PayloadSchema, payloadWithoutReferrer)).toBe(true);
+        });
+
+        it('should validate with empty string referrer', () => {
+            const payloadWithEmptyReferrer = {
+                ...validPayload,
+                referrer: ''
+            };
+        
+            expect(Value.Check(PayloadSchema, payloadWithEmptyReferrer)).toBe(true);
+        });
+
         it('should validate with UUID post_uuid', () => {
             const payloadWithUUIDPost = {
                 ...validPayload,
@@ -232,6 +248,67 @@ describe('IncomingEventRequestSchema v1', () => {
             
             expect(Value.Check(PayloadSchema, healthcheckPayload)).toBe(true);
         });
+
+        it('should validate with parsedReferrer object with all string values', () => {
+            const payloadWithParsedReferrer = {
+                ...validPayload,
+                parsedReferrer: {
+                    source: 'google',
+                    medium: 'organic',
+                    url: 'https://google.com'
+                }
+            };
+        
+            expect(Value.Check(PayloadSchema, payloadWithParsedReferrer)).toBe(true);
+        });
+
+        it('should validate with parsedReferrer object with mixed null and string values', () => {
+            const payloadWithMixedParsedReferrer = {
+                ...validPayload,
+                parsedReferrer: {
+                    source: 'facebook',
+                    medium: null,
+                    url: 'https://facebook.com'
+                }
+            };
+        
+            expect(Value.Check(PayloadSchema, payloadWithMixedParsedReferrer)).toBe(true);
+        });
+
+        it('should validate without parsedReferrer field (optional)', () => {
+            const payloadWithoutParsedReferrer = {
+                ...validPayload
+                // parsedReferrer field omitted
+            };
+        
+            expect(Value.Check(PayloadSchema, payloadWithoutParsedReferrer)).toBe(true);
+        });
+
+        it('should reject parsedReferrer with missing required fields', () => {
+            const payloadWithIncompleteParsedReferrer = {
+                ...validPayload,
+                parsedReferrer: {
+                    source: 'google',
+                    medium: 'organic'
+                    // missing url field
+                }
+            };
+        
+            expect(Value.Check(PayloadSchema, payloadWithIncompleteParsedReferrer)).toBe(false);
+        });
+
+        it('should reject parsedReferrer with invalid field types', () => {
+            const payloadWithInvalidParsedReferrer = {
+                ...validPayload,
+                parsedReferrer: {
+                    source: 123, // should be string or null
+                    medium: 'organic',
+                    url: 'https://google.com'
+                }
+            };
+        
+            expect(Value.Check(PayloadSchema, payloadWithInvalidParsedReferrer)).toBe(false);
+        });
     });
 
     describe('BodySchema', () => {
@@ -244,7 +321,6 @@ describe('IncomingEventRequestSchema v1', () => {
                 'user-agent': 'Mozilla/5.0',
                 locale: 'en-US',
                 location: 'homepage',
-                referrer: null,
                 pathname: '/blog',
                 href: 'https://example.com/blog',
                 site_uuid: '12345678-1234-1234-1234-123456789012',
@@ -309,7 +385,6 @@ describe('IncomingEventRequestSchema v1', () => {
                     'user-agent': 'Mozilla/5.0',
                     locale: 'en-US',
                     location: 'homepage',
-                    referrer: null,
                     pathname: '/blog',
                     href: 'https://example.com/blog',
                     site_uuid: '12345678-1234-1234-1234-123456789012',

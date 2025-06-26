@@ -15,9 +15,9 @@ const VersionSchema = Type.Literal('1');
 
 // Parsed referrer schema
 const ParsedReferrerSchema = Type.Object({
-    source: Type.Optional(StringSchema),
-    medium: Type.Optional(StringSchema),
-    url: Type.Optional(StringSchema)
+    source: Type.Union([StringSchema, Type.Null()]),
+    medium: Type.Union([StringSchema, Type.Null()]),
+    url: Type.Union([StringSchema, Type.Null()])
 });
 
 // Payload schema for page hit raw events

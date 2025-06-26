@@ -32,7 +32,8 @@ const pageHitRawPayloadFromRequest = (request: ValidatedRequest): PageHitRaw => 
             post_type: request.body.payload.post_type,
             locale: request.body.payload.locale,
             location: request.body.payload.location,
-            referrer: request.body.payload.referrer,
+            referrer: request.body.payload.referrer ?? null,
+            parsedReferrer: request.body.payload.parsedReferrer,
             pathname: request.body.payload.pathname,
             href: request.body.payload.href
         },
