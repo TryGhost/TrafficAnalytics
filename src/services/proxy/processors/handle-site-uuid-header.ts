@@ -24,7 +24,7 @@ export function handleSiteUUIDHeader(request: FastifyRequest): void {
         // Set the site_uuid on the request payload to be sent with the proxied request.
         request.body.payload.site_uuid = siteUUID;
     } catch (error) {
-        request.log.error('Failed to get site UUID from request header:', error);
+        request.log.error({error}, 'Failed to get site UUID from request header');
         throw error;
     }
 }

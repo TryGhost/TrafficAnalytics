@@ -58,6 +58,7 @@ export const BodySchema = Type.Object({
     timestamp: ISO8601DateTimeSchema,
     action: ActionSchema,
     version: VersionSchema,
+    event_id: Type.Optional(UUIDSchema),
     session_id: Type.Optional(StringSchema),
     payload: PayloadSchema
 });

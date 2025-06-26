@@ -7,6 +7,7 @@ import {publishEvent} from '../events/publisher.js';
 import {TypeCompiler} from '@sinclair/typebox/compiler';
 import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRaw} from '../../schemas';
 import {Static} from '@sinclair/typebox';
+import crypto from 'crypto';
 
 // Compile schema validators once for performance
 const queryValidator = TypeCompiler.Compile(QueryParamsSchema);
@@ -25,6 +26,7 @@ const pageHitRawPayloadFromRequest = (request: ValidatedRequest): PageHitRaw => 
         action: request.body.action,
         version: request.body.version,
         site_uuid: request.headers['x-site-uuid'],
+        event_id: request.body.event_id || crypto.randomUUID(),
         payload: {
             member_uuid: request.body.payload.member_uuid,
             member_status: request.body.payload.member_status,
@@ -48,7 +50,7 @@ const publishPageHitRaw = async (request: ValidatedRequest): Promise<void> => {
         const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
         if (topic) {
             const payload = pageHitRawPayloadFromRequest(request);
-            request.log.info({payload}, 'Publishing page hit raw event');
+            request.log.info({payload, event_id: request.body.event_id}, 'Publishing page hit raw event');
             await publishEvent({
                 topic,
                 payload,
@@ -58,7 +60,8 @@ const publishPageHitRaw = async (request: ValidatedRequest): Promise<void> => {
     } catch (error) {
         request.log.error({
             error: error instanceof Error ? error.message : String(error),
-            topic: process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string
+            topic: process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string,
+            event_id: request.body.event_id
         }, 'Failed to publish page hit event - continuing with request');
     };
 };
@@ -70,6 +73,12 @@ const publishPageHitRaw = async (request: ValidatedRequest): Promise<void> => {
 // Eventually will be called on each request pulled from the queue
 export async function processRequest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const validatedRequest = request as ValidatedRequest;
+    
+    // Generate event_id at the very beginning of request processing if not provided
+    if (!validatedRequest.body.event_id) {
+        validatedRequest.body.event_id = crypto.randomUUID();
+    }
+    
     handleSiteUUIDHeader(request);
 
     try {

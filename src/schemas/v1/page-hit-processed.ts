@@ -3,6 +3,7 @@ import {PageHitRaw} from './page-hit-raw';
 import uap from 'ua-parser-js';
 import {ReferrerParser} from '@tryghost/referrer-parser';
 import {userSignatureService} from '../../services/user-signature';
+import crypto from 'crypto';
 
 const referrerParser = new ReferrerParser();
 
@@ -12,6 +13,7 @@ export const PageHitProcessedSchema = Type.Object({
     action: Type.Literal('page_hit'),
     version: Type.Literal('1'),
     site_uuid: Type.String({format: 'uuid'}),
+    event_id: Type.String({format: 'uuid'}),
     session_id: Type.String(),
     payload: Type.Object({
         site_uuid: Type.String({format: 'uuid'}),
@@ -138,6 +140,7 @@ export async function transformPageHitRawToProcessed(
         action: pageHitRaw.action,
         version: pageHitRaw.version,
         site_uuid: pageHitRaw.site_uuid,
+        event_id: pageHitRaw.event_id || crypto.randomUUID(),
         session_id: sessionId,
         payload: {
             site_uuid: pageHitRaw.site_uuid,

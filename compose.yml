@@ -93,6 +93,7 @@ services:
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
       - PROXY_TARGET=http://fake-tinybird:8080/v0/events
+      - TINYBIRD_TRACKER_TOKEN=test-token
     networks:
       - dev-network
     healthcheck:

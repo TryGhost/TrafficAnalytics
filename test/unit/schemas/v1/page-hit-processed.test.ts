@@ -37,6 +37,7 @@ describe('PageHitProcessedSchema v1', () => {
         action: 'page_hit',
         version: '1',
         site_uuid: '12345678-1234-1234-1234-123456789012',
+        event_id: '87654321-4321-4321-4321-210987654321',
         session_id: 'abc123def456',
         payload: {
             site_uuid: '12345678-1234-1234-1234-123456789012',
@@ -65,6 +66,12 @@ describe('PageHitProcessedSchema v1', () => {
     it('should require session_id field', () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars, camelcase
         const {session_id, ...invalidData} = validPageHitProcessed;
+        expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
+    });
+
+    it('should require event_id field', () => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars, camelcase
+        const {event_id, ...invalidData} = validPageHitProcessed;
         expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
     });
 
@@ -318,6 +325,8 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.action).toBe(validPageHitRaw.action);
             expect(result.version).toBe(validPageHitRaw.version);
             expect(result.site_uuid).toBe(validPageHitRaw.site_uuid);
+            expect(result.event_id).toBeDefined();
+            expect(typeof result.event_id).toBe('string');
             expect(result.session_id).toBeDefined();
             expect(typeof result.session_id).toBe('string');
             expect(result.session_id).toHaveLength(64);
@@ -415,6 +424,25 @@ describe('PageHitProcessedSchema v1', () => {
             const result = await transformPageHitRawToProcessed(validPageHitRaw);
         
             expect(Value.Check(PageHitProcessedSchema, result)).toBe(true);
+        });
+
+        it('should generate event_id when not provided in raw data', async () => {
+            const result = await transformPageHitRawToProcessed(validPageHitRaw);
+        
+            expect(result.event_id).toBeDefined();
+            expect(typeof result.event_id).toBe('string');
+            expect(result.event_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        });
+
+        it('should preserve event_id when provided in raw data', async () => {
+            const pageHitRawWithEventId: PageHitRaw = {
+                ...validPageHitRaw,
+                event_id: '11111111-2222-3333-4444-555555555555'
+            };
+        
+            const result = await transformPageHitRawToProcessed(pageHitRawWithEventId);
+        
+            expect(result.event_id).toBe('11111111-2222-3333-4444-555555555555');
         });
     });
 });

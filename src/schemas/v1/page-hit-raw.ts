@@ -38,6 +38,7 @@ export const PageHitRawSchema = Type.Object({
     action: ActionSchema,
     version: VersionSchema,
     site_uuid: UUIDSchema,
+    event_id: Type.Optional(UUIDSchema),
     payload: PayloadSchema,
     meta: MetaSchema
 });
