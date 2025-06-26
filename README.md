@@ -42,12 +42,19 @@ Copy `.env.example` to `.env` and configure as needed:
 
 ## Run locally with Ghost in Docker
 
-Sometimes it's useful to test the full setup with Ghost pointing its tracker script to this analytics service running locally. This can be acheived relatively easily with Docker Compose:
-- Set the `tinybird:tracker:endpoint` to `http://localhost/.ghost/analytics/tb/web_analytics` in your Ghost config
-- Run `docker compose --profile=split up` in your Ghost clone
-- If you want to test the full e2e flow to Tinybird, set the `PROXY_TARGET=https://api.tinybird.co/v0/events` value in your `.env` file in this repo. Otherwise the analytics service will use the `/local-proxy` mock endpoint, which does not forward events to Tinybird.
-- Run `yarn docker:dev:ghost` in the root of this repo
-- Visit your Ghost site's homepage at `http://localhost` and you should see a successful request in the network tab.
+Sometimes it's useful to test the full setup with Ghost pointing its tracker script to this analytics service running locally. The setup is a bit painful, but it is possible:
+- In the Ghost repo, run `yarn tb` to run Tinybird local
+- Ensure your Ghost configuration is setup to point to the local tinybird instance — i.e. `tinybird:stats:local:enabled` and `tinybird:tracker:local:enabled` should be true, with the appropriate endpoints set.
+- In your `tb` shell, run `tb token ls` to list your local tokens
+    - Copy the tracker token, and set it as `tinybird:tracker:local:token` in your Ghost config
+    - Also add this to your `.env` file in this repo
+    - Copy the `stats_page` token and set it as `tinybird:stats:local:token` in your Ghost config
+- Set your `tinybird:tracker:local:endpoint` config to `http://localhost:3000/tb/web_analytics`, which will point the `ghost-stats` script to your local analytic service
+- In your `.env` file in this repo, set the `PROXY_TARGET=http://host.docker.internal:7181/v0/events` to point the analytics service to your `tb-local` container
+
+To test the setup: 
+- load your local Ghost site's frontend in your browser. You should see a successful POST request to `/tb/web_analytics`
+- Run `tb datasource data analytics_events` in your `tb` shell, and you should see your new pageview event
 
 ## Test
 
