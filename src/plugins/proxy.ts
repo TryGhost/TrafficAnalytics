@@ -22,6 +22,21 @@ async function proxyPlugin(fastify: FastifyInstance) {
             // Proxy the request to the upstream target
             const upstream = process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy';
             await reply.from(upstream, {
+                queryString: (_search, _reqUrl, req) => {
+                    // Rewrite the query parameters to include the tracker token
+                    const params = new URLSearchParams(req.query as Record<string, string>);
+                    if (process.env.TINYBIRD_TRACKER_TOKEN) {
+                        params.delete('token');
+                    }
+                    return params.toString();
+                },
+                rewriteRequestHeaders: (_request, headers) => {
+                    // Add an authorization header to the request to Tinybird
+                    if (process.env.TINYBIRD_TRACKER_TOKEN) {
+                        headers.authorization = `Bearer ${process.env.TINYBIRD_TRACKER_TOKEN}`;
+                    }
+                    return headers;
+                },
                 onError: (replyInstance, error) => {
                     // Log proxy errors with proper structure for GCP
                     const unwrappedError = 'error' in error ? error.error : error;

@@ -140,6 +140,7 @@ describe('Fastify App', () => {
 
     describe('/tb/web_analytics', function () {
         it('should proxy requests to the target server', async function () {
+            vi.stubEnv('TINYBIRD_TRACKER_TOKEN', undefined);
             await request(proxyServer)
                 .post('/tb/web_analytics')
                 .query({token: 'abc123', name: 'analytics_events_test'})
@@ -379,6 +380,55 @@ describe('Fastify App', () => {
                 // Verify the IP is not empty
                 const callArgs = vi.mocked(userSignatureService.generateUserSignature).mock.calls[0];
                 expect(callArgs[1]).toBeTruthy();
+            });
+        });
+
+        describe('token handling with TINYBIRD_TRACKER_TOKEN', function () {
+            it('should strip token query parameter and add authorization header when TINYBIRD_TRACKER_TOKEN is set', async () => {
+                vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'tinybird-secret-token');
+
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'test-token', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayload)
+                    .expect(202);
+
+                expect(targetRequests.length).toBe(1);
+                const targetRequest = targetRequests[0];
+
+                // Verify token query parameter was stripped
+                expect(targetRequest.url).not.toContain('token=');
+                expect(targetRequest.url).not.toContain('test-token');
+                expect(targetRequest.query.token).toBeUndefined();
+
+                // Verify authorization header was added
+                expect(targetRequest.headers.authorization).toBe('Bearer tinybird-secret-token');
+            });
+
+            it('should keep token query parameter and not add authorization header when TINYBIRD_TRACKER_TOKEN is not set', async () => {
+                vi.stubEnv('TINYBIRD_TRACKER_TOKEN', undefined);
+
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'test-token', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayload)
+                    .expect(202);
+
+                expect(targetRequests.length).toBe(1);
+                const targetRequest = targetRequests[0];
+
+                // Verify token query parameter was preserved
+                expect(targetRequest.url).toContain('token=test-token');
+                expect(targetRequest.query.token).toBe('test-token');
+
+                // Verify no authorization header was added
+                expect(targetRequest.headers.authorization).toBeUndefined();
             });
         });
 
