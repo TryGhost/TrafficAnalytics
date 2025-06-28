@@ -45,6 +45,7 @@ const ParsedReferrerSchema = Type.Object({
 
 // Payload schema
 export const PayloadSchema = Type.Object({
+    event_id: Type.Optional(StringSchema),
     'user-agent': NonEmptyStringSchema,
     locale: NonEmptyStringSchema,
     location: Type.Union([NonEmptyStringSchema, Type.Null()]),

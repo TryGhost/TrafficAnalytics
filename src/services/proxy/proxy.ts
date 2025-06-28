@@ -7,11 +7,25 @@ import {publishEvent} from '../events/publisher.js';
 import {TypeCompiler} from '@sinclair/typebox/compiler';
 import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRaw} from '../../schemas';
 import {Static} from '@sinclair/typebox';
+import {randomUUID} from 'crypto';
+import validator from '@tryghost/validator';
 
 // Compile schema validators once for performance
 const queryValidator = TypeCompiler.Compile(QueryParamsSchema);
 const headersValidator = TypeCompiler.Compile(HeadersSchema);
 const bodyValidator = TypeCompiler.Compile(BodySchema);
+
+/**
+ * Validates an event_id and returns a valid UUID.
+ * If the provided event_id is a valid UUID, returns it unchanged.
+ * Otherwise, generates a new random UUID.
+ */
+export const ensureValidEventId = (eventId?: string): string => {
+    if (eventId && validator.isUUID(eventId)) {
+        return eventId;
+    }
+    return randomUUID();
+};
 
 interface ValidatedRequest extends FastifyRequest {
     query: Static<typeof QueryParamsSchema>;
@@ -26,6 +40,7 @@ const pageHitRawPayloadFromRequest = (request: ValidatedRequest): PageHitRaw => 
         version: request.body.version,
         site_uuid: request.headers['x-site-uuid'],
         payload: {
+            event_id: ensureValidEventId(request.body.payload.event_id),
             member_uuid: request.body.payload.member_uuid,
             member_status: request.body.payload.member_status,
             post_uuid: request.body.payload.post_uuid,
@@ -71,6 +86,7 @@ const publishPageHitRaw = async (request: ValidatedRequest): Promise<void> => {
 // Eventually will be called on each request pulled from the queue
 export async function processRequest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const validatedRequest = request as ValidatedRequest;
+    validatedRequest.body.payload.event_id = ensureValidEventId(validatedRequest.body.payload.event_id);
     handleSiteUUIDHeader(request);
 
     try {

@@ -22,6 +22,7 @@ const ParsedReferrerSchema = Type.Object({
 
 // Payload schema for page hit raw events
 const PayloadSchema = Type.Object({
+    event_id: Type.Optional(StringSchema),
     member_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
     member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')]),
     post_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
