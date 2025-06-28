@@ -52,7 +52,7 @@ services:
   # Override e2e-test service to use pre-built image and CI configuration
   e2e-test:
     image: ${DOCKER_IMAGE}
-    command: ["yarn", "test:e2e"]
+    command: ["yarn", "_test:e2e"]
     environment:
       - NODE_ENV=testing
       - ANALYTICS_SERVICE_URL=http://analytics-service:3000
