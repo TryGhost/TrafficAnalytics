@@ -154,7 +154,7 @@ services:
   test:
     image: local/traffic-analytics:development
     pull_policy: never
-    command: sh -c "yarn test && yarn lint"
+    command: sh -c "yarn _test && yarn _lint"
     env_file:
       - path: .env
         required: false
