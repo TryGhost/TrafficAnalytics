@@ -18,11 +18,6 @@ services:
       - .:/app
       - node_modules_volume:/app/node_modules
 
-  lint:
-    volumes:
-      - .:/app
-      - node_modules_volume:/app/node_modules
-
   e2e-test:
     volumes:
       - .:/app

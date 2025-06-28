@@ -44,7 +44,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["yarn", "dev"]
+    command: ["yarn","tsx", "watch", "server.ts"]
     ports:
       - ${ANALYTICS_PORT:-3000}:3000
     env_file:
@@ -80,7 +80,7 @@ services:
   worker:
     image: local/traffic-analytics:development
     pull_policy: never
-    command: ["yarn", "dev"]
+    command: ["yarn","tsx", "watch", "server.ts"]
     ports:
       - ${WORKER_PORT:-3001}:3000
     env_file:
@@ -131,7 +131,7 @@ services:
   e2e-test:
     image: local/traffic-analytics:development
     pull_policy: never
-    command: ["yarn", "test:e2e"]
+    command: ["yarn", "_test:e2e"]
     env_file:
       - path: .env
         required: false
@@ -154,7 +154,7 @@ services:
   test:
     image: local/traffic-analytics:development
     pull_policy: never
-    command: sh -c "yarn test && yarn lint"
+    command: sh -c "yarn _test && yarn _lint"
     env_file:
       - path: .env
         required: false
@@ -177,18 +177,6 @@ services:
         condition: service_healthy
       pubsub-test:
         condition: service_healthy
-
-  lint:
-    image: local/traffic-analytics:development
-    pull_policy: never
-    command: ["yarn", "lint"]
-    env_file:
-      - path: .env
-        required: false
-    tty: true
-    networks:
-      - test-network
-    profiles: [testing]
 
   # Test-specific emulator services (isolated from dev)
   firestore-test:
