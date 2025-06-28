@@ -2,7 +2,7 @@ import {FastifyInstance, FastifyRequest, FastifyReply} from 'fastify';
 import fp from 'fastify-plugin';
 import replyFrom from '@fastify/reply-from';
 import {processRequest} from '../services/proxy';
-import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRequest} from '../schemas';
+import {PageHitRequest, PageHitRequestSchema} from '../schemas';
 
 async function proxyPlugin(fastify: FastifyInstance) {
     // Register reply-from for proxying capabilities
@@ -10,11 +10,7 @@ async function proxyPlugin(fastify: FastifyInstance) {
 
     // Register the analytics proxy with native schema validation
     fastify.post('/tb/web_analytics', {
-        schema: {
-            querystring: QueryParamsSchema,
-            headers: HeadersSchema,
-            body: BodySchema
-        }
+        schema: PageHitRequestSchema
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             await processRequest(request as PageHitRequest, reply);
