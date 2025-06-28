@@ -2,7 +2,7 @@ import {FastifyInstance, FastifyRequest, FastifyReply} from 'fastify';
 import fp from 'fastify-plugin';
 import replyFrom from '@fastify/reply-from';
 import {processRequest} from '../services/proxy';
-import {PageHitRequest, PageHitRequestSchema} from '../schemas';
+import {PageHitRequest, QueryParamsSchema, HeadersSchema, BodySchema} from '../schemas';
 
 async function proxyPlugin(fastify: FastifyInstance) {
     // Register reply-from for proxying capabilities
@@ -10,7 +10,11 @@ async function proxyPlugin(fastify: FastifyInstance) {
 
     // Register the analytics proxy with native schema validation
     fastify.post('/tb/web_analytics', {
-        schema: PageHitRequestSchema
+        schema: {
+            querystring: QueryParamsSchema,
+            headers: HeadersSchema,
+            body: BodySchema
+        }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             await processRequest(request as PageHitRequest, reply);
@@ -19,17 +23,21 @@ async function proxyPlugin(fastify: FastifyInstance) {
             const upstream = process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy';
             await reply.from(upstream, {
                 queryString: (_search, _reqUrl, req) => {
-                    // Rewrite the query parameters to include the tracker token
+                    // Rewrite the query parameters
                     const params = new URLSearchParams(req.query as Record<string, string>);
-                    if (process.env.TINYBIRD_TRACKER_TOKEN) {
+                    if (process.env.TINYBIRD_TRACKER_TOKEN && params.has('token')) {
+                        // Remove token from query string when using env var
                         params.delete('token');
                     }
                     return params.toString();
                 },
-                rewriteRequestHeaders: (_request, headers) => {
-                    // Add an authorization header to the request to Tinybird
+                rewriteRequestHeaders: (req, headers) => {
+                    // Add authorization header when using env var token
                     if (process.env.TINYBIRD_TRACKER_TOKEN) {
-                        headers.authorization = `Bearer ${process.env.TINYBIRD_TRACKER_TOKEN}`;
+                        return {
+                            ...headers,
+                            authorization: `Bearer ${process.env.TINYBIRD_TRACKER_TOKEN}`
+                        };
                     }
                     return headers;
                 },
