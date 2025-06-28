@@ -260,7 +260,7 @@
     "@fastify/forwarded" "^3.0.0"
     ipaddr.js "^2.1.0"
 
-"@fastify/reply-from@^11.0.0":
+"@fastify/reply-from@11.0.2":
   version "11.0.2"
   resolved "https://registry.yarnpkg.com/@fastify/reply-from/-/reply-from-11.0.2.tgz#8b20d504256cbf03da5c5ef74498a026a70e3d9b"
   integrity sha512-VcHhe01PsHuVX2eVrkoskCs+pwNPgVfOOpwQJnSo3AwIKtISm0VCFB7bycQjHfxAuPYgkrI6ZvYoovdHx4sVMA==
