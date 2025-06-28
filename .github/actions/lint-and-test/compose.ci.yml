@@ -13,15 +13,6 @@ services:
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
 
-  # Override lint service to use pre-built image
-  lint:
-    image: ${DOCKER_IMAGE}
-    environment:
-      - NODE_ENV=testing
-    networks:
-      - dev-network
-    profiles: []
-
   analytics-service:
     image: ${DOCKER_IMAGE}
     build: {}  # Disable build in CI

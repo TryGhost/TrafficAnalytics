@@ -178,18 +178,6 @@ services:
       pubsub-test:
         condition: service_healthy
 
-  lint:
-    image: local/traffic-analytics:development
-    pull_policy: never
-    command: ["yarn", "lint"]
-    env_file:
-      - path: .env
-        required: false
-    tty: true
-    networks:
-      - test-network
-    profiles: [testing]
-
   # Test-specific emulator services (isolated from dev)
   firestore-test:
     image: google/cloud-sdk:emulators
