@@ -5,10 +5,10 @@ import {
     HeadersSchema,
     PayloadSchema,
     BodySchema,
-    IncomingEventRequestSchema
+    PageHitRequestSchema
 } from '../../../../src/schemas';
 
-describe('IncomingEventRequestSchema v1', () => {
+describe('PageHitRequestSchema v1', () => {
     describe('QueryParamsSchema', () => {
         it('should validate valid query parameters', () => {
             const validParams = {
@@ -366,7 +366,7 @@ describe('IncomingEventRequestSchema v1', () => {
         });
     });
 
-    describe('IncomingEventRequestSchema', () => {
+    describe('PageHitRequestSchema', () => {
         const validRequest = {
             querystring: {
                 name: 'analytics_events'
@@ -397,7 +397,7 @@ describe('IncomingEventRequestSchema v1', () => {
         };
 
         it('should validate complete valid request', () => {
-            expect(Value.Check(IncomingEventRequestSchema, validRequest)).toBe(true);
+            expect(Value.Check(PageHitRequestSchema, validRequest)).toBe(true);
         });
 
         it('should reject request with invalid query params', () => {
@@ -408,7 +408,7 @@ describe('IncomingEventRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(IncomingEventRequestSchema, invalidRequest)).toBe(false);
+            expect(Value.Check(PageHitRequestSchema, invalidRequest)).toBe(false);
         });
 
         it('should reject request with invalid headers', () => {
@@ -421,7 +421,7 @@ describe('IncomingEventRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(IncomingEventRequestSchema, invalidRequest)).toBe(false);
+            expect(Value.Check(PageHitRequestSchema, invalidRequest)).toBe(false);
         });
 
         it('should reject request with invalid body', () => {
@@ -433,7 +433,7 @@ describe('IncomingEventRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(IncomingEventRequestSchema, invalidRequest)).toBe(false);
+            expect(Value.Check(PageHitRequestSchema, invalidRequest)).toBe(false);
         });
     });
 });

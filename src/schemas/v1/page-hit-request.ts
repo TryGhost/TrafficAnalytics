@@ -73,13 +73,13 @@ export const BodySchema = Type.Object({
 });
 
 // Complete request schema
-export const IncomingEventRequestSchema = Type.Object({
+export const PageHitRequestSchema = Type.Object({
     querystring: QueryParamsSchema,
     headers: HeadersSchema,
     body: BodySchema
 });
 
-export interface IncomingEventRequest extends FastifyRequest {
+export interface PageHitRequest extends FastifyRequest {
     query: Static<typeof QueryParamsSchema>;
     headers: Static<typeof HeadersSchema>;
     body: Static<typeof BodySchema>;
