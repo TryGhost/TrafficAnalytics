@@ -5,7 +5,7 @@ import {parseUserAgent} from './processors/parse-user-agent';
 import {generateUserSignature} from './processors/user-signature';
 import {publishEvent} from '../events/publisher.js';
 import {TypeCompiler} from '@sinclair/typebox/compiler';
-import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRaw, IncomingEventRequest} from '../../schemas';
+import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRaw, PageHitRequest} from '../../schemas';
 import {randomUUID} from 'crypto';
 import validator from '@tryghost/validator';
 
@@ -26,7 +26,7 @@ export const ensureValidEventId = (eventId?: string): string => {
     return randomUUID();
 };
 
-const pageHitRawPayloadFromRequest = (request: IncomingEventRequest): PageHitRaw => {
+const pageHitRawPayloadFromRequest = (request: PageHitRequest): PageHitRaw => {
     return {
         timestamp: request.body.timestamp,
         action: request.body.action,
@@ -52,7 +52,7 @@ const pageHitRawPayloadFromRequest = (request: IncomingEventRequest): PageHitRaw
     };
 };
 
-const publishPageHitRaw = async (request: IncomingEventRequest): Promise<void> => {
+const publishPageHitRaw = async (request: PageHitRequest): Promise<void> => {
     try {
         const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
         if (topic) {
@@ -78,7 +78,7 @@ const publishPageHitRaw = async (request: IncomingEventRequest): Promise<void> =
 // Called within the HTTP proxy route
 // Eventually will be called on each request pulled from the queue
 export async function processRequest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-    const validatedRequest = request as IncomingEventRequest;
+    const validatedRequest = request as PageHitRequest;
     validatedRequest.body.payload.event_id = ensureValidEventId(validatedRequest.body.payload.event_id);
     handleSiteUUIDHeader(request);
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Test script to send multiple requests matching the incoming-event-request schema
+# Test script to send multiple requests matching the page-hit-request schema
 # Usage: ./scripts/send-test-request.sh [COUNT]
 
 # Default values
