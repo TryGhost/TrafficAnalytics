@@ -32,12 +32,11 @@ Copy `.env.example` to `.env` and configure as needed:
 
 ## Build
 - `yarn build` to transpile Typescript to JS
-- `docker compose build` or `yarn docker:build` to build docker image
+- `docker compose build` to build docker image
 
 ## Run
 
-- `yarn dev` start development server locally
-- `docker compose up` or `yarn docker:dev` start development server in docker compose (includes Firestore emulator)
+- `yarn dev` start development server in docker compose (includes Firestore, Pub/Sub emulator)
 - View: [http://localhost:3000](http://localhost:3000)
 
 ## Run locally with Ghost in Docker
@@ -58,12 +57,10 @@ To test the setup:
 
 ## Test
 
-- `yarn test` run all tests locally
-- `docker compose run --rm test` or `yarn docker:test` run all tests in docker compose
+- `yarn test` run all tests in docker compose
 
 ## Lint
-- `yarn lint` run eslint locally
-- `docker compose run --rm lint` or `yarn docker:lint` run eslint in docker compose
+- `yarn lint` run eslint in docker compose
 
 ## Multi-Worktree Development
 

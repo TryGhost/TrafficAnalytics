@@ -13,14 +13,16 @@ TrafficAnalytics is a web analytics proxy service for Ghost that processes and e
 - `docker compose build` - Build docker image
 
 ### Development
-- `docker compose up` - Start development server in Docker
+- `yarn dev` - Start development server in Docker
 
 ### Testing
-- `docker compose run --rm test` - Run all unit tests in Docker
-- Always run the tests using the `yarn docker:*` commands, i.e. `yarn docker:test`, `yarn docker:test:unit`, `yarn docker:test:integration`
+- `yarn test` - Run all tests in Docker
+- `yarn test:unit` - Run unit tests in Docker
+- `yarn test:integration` - Run integration tests in Docker
+- `yarn test:e2e` - Run e2e tests in Docker
 
 ### Linting
-- `docker compose run --rm lint` - Run linter in Docker
+- `yarn lint` - Run linter in Docker
 
 ## Architecture
 
