@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "docker compose up",
+    "dev": "docker compose up -d --wait && docker compose logs -f analytics-service worker",
     "start": "node dist/server.js",
     "start:worker": "WORKER_MODE=true node dist/server.js",
     "pretest": "yarn build",
