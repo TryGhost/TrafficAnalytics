@@ -4,15 +4,9 @@ import {parseReferrer} from './processors/url-referrer';
 import {parseUserAgent} from './processors/parse-user-agent';
 import {generateUserSignature} from './processors/user-signature';
 import {publishEvent} from '../events/publisher.js';
-import {TypeCompiler} from '@sinclair/typebox/compiler';
-import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRaw, PageHitRequest} from '../../schemas';
+import {PageHitRaw, PageHitRequest} from '../../schemas';
 import {randomUUID} from 'crypto';
 import validator from '@tryghost/validator';
-
-// Compile schema validators once for performance
-const queryValidator = TypeCompiler.Compile(QueryParamsSchema);
-const headersValidator = TypeCompiler.Compile(HeadersSchema);
-const bodyValidator = TypeCompiler.Compile(BodySchema);
 
 /**
  * Validates an event_id and returns a valid UUID.
