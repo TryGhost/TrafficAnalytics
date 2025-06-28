@@ -4,15 +4,9 @@ import {parseReferrer} from './processors/url-referrer';
 import {parseUserAgent} from './processors/parse-user-agent';
 import {generateUserSignature} from './processors/user-signature';
 import {publishEvent} from '../events/publisher.js';
-import {TypeCompiler} from '@sinclair/typebox/compiler';
-import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRaw, PageHitRequest} from '../../schemas';
+import {PageHitRaw, PageHitRequest} from '../../schemas';
 import {randomUUID} from 'crypto';
 import validator from '@tryghost/validator';
-
-// Compile schema validators once for performance
-const queryValidator = TypeCompiler.Compile(QueryParamsSchema);
-const headersValidator = TypeCompiler.Compile(HeadersSchema);
-const bodyValidator = TypeCompiler.Compile(BodySchema);
 
 /**
  * Validates an event_id and returns a valid UUID.
@@ -94,60 +88,4 @@ export async function processRequest(request: FastifyRequest, reply: FastifyRepl
         reply.code(500).send(error);
         throw error; // Re-throw to let Fastify handle it
     }
-}
-
-export function validateRequestWithSchema(request: FastifyRequest, reply: FastifyReply, done: () => void): void {
-    const allErrors: Array<{section: string, path: string, message: string, value: unknown}> = [];
-
-    // Validate query parameters
-    if (!queryValidator.Check(request.query)) {
-        const queryErrors = [...queryValidator.Errors(request.query)];
-        allErrors.push(...queryErrors.map(error => ({
-            section: 'query',
-            path: error.path,
-            message: error.message,
-            value: error.value
-        })));
-    }
-
-    // Validate headers
-    if (!headersValidator.Check(request.headers)) {
-        const headerErrors = [...headersValidator.Errors(request.headers)];
-        allErrors.push(...headerErrors.map(error => ({
-            section: 'headers',
-            path: error.path,
-            message: error.message,
-            value: error.value
-        })));
-    }
-
-    // Validate body
-    if (!bodyValidator.Check(request.body)) {
-        const bodyErrors = [...bodyValidator.Errors(request.body)];
-        allErrors.push(...bodyErrors.map(error => ({
-            section: 'body',
-            path: error.path,
-            message: error.message,
-            value: error.value
-        })));
-    }
-
-    // If there are any validation errors, log them and return 400
-    if (allErrors.length > 0) {
-        request.log.warn({
-            validationErrors: allErrors,
-            url: request.url,
-            method: request.method
-        }, 'Request validation failed');
-
-        reply.code(400).send({
-            statusCode: 400,
-            error: 'Bad Request',
-            message: 'Validation failed',
-            details: allErrors
-        });
-        return;
-    }
-
-    done();
 }
