@@ -5,8 +5,7 @@ import {parseUserAgent} from './processors/parse-user-agent';
 import {generateUserSignature} from './processors/user-signature';
 import {publishEvent} from '../events/publisher.js';
 import {TypeCompiler} from '@sinclair/typebox/compiler';
-import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRaw} from '../../schemas';
-import {Static} from '@sinclair/typebox';
+import {QueryParamsSchema, HeadersSchema, BodySchema, PageHitRaw, IncomingEventRequest} from '../../schemas';
 import {randomUUID} from 'crypto';
 import validator from '@tryghost/validator';
 
@@ -27,13 +26,7 @@ export const ensureValidEventId = (eventId?: string): string => {
     return randomUUID();
 };
 
-interface ValidatedRequest extends FastifyRequest {
-    query: Static<typeof QueryParamsSchema>;
-    headers: Static<typeof HeadersSchema>;
-    body: Static<typeof BodySchema>;
-}
-
-const pageHitRawPayloadFromRequest = (request: ValidatedRequest): PageHitRaw => {
+const pageHitRawPayloadFromRequest = (request: IncomingEventRequest): PageHitRaw => {
     return {
         timestamp: request.body.timestamp,
         action: request.body.action,
@@ -59,7 +52,7 @@ const pageHitRawPayloadFromRequest = (request: ValidatedRequest): PageHitRaw => 
     };
 };
 
-const publishPageHitRaw = async (request: ValidatedRequest): Promise<void> => {
+const publishPageHitRaw = async (request: IncomingEventRequest): Promise<void> => {
     try {
         const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
         if (topic) {
@@ -85,7 +78,7 @@ const publishPageHitRaw = async (request: ValidatedRequest): Promise<void> => {
 // Called within the HTTP proxy route
 // Eventually will be called on each request pulled from the queue
 export async function processRequest(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-    const validatedRequest = request as ValidatedRequest;
+    const validatedRequest = request as IncomingEventRequest;
     validatedRequest.body.payload.event_id = ensureValidEventId(validatedRequest.body.payload.event_id);
     handleSiteUUIDHeader(request);
 
