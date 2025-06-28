@@ -29,7 +29,7 @@ services:
   # Override test service to use pre-built image and CI configuration
   test:
     image: ${DOCKER_IMAGE}
-    command: ["yarn", "test"]
+    command: ["yarn", "_test"]
     environment:
       - NODE_ENV=testing
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
