@@ -9,6 +9,7 @@ describe('PageHitRawSchema v1', () => {
         version: '1',
         site_uuid: '12345678-1234-1234-1234-123456789012',
         payload: {
+            event_id: '550e8400-e29b-41d4-a716-446655440000',
             member_uuid: 'undefined',
             member_status: 'free',
             post_uuid: 'undefined',
@@ -440,6 +441,33 @@ describe('PageHitRawSchema v1', () => {
         });
     });
 
+    describe('event_id validation', () => {
+        it('should validate when event_id is present', () => {
+            expect(Value.Check(PageHitRawSchema, validPageHitRaw)).toBe(true);
+        });
+
+        it('should validate when event_id is missing (optional field)', () => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const {event_id: eventId, ...payloadWithoutEventId} = validPageHitRaw.payload;
+            const validDataWithoutEventId = {
+                ...validPageHitRaw,
+                payload: payloadWithoutEventId
+            };
+            expect(Value.Check(PageHitRawSchema, validDataWithoutEventId)).toBe(true);
+        });
+
+        it('should accept any string as event_id (validation happens during processing)', () => {
+            const dataWithInvalidEventId = {
+                ...validPageHitRaw,
+                payload: {
+                    ...validPageHitRaw.payload,
+                    event_id: 'not-a-uuid'
+                }
+            };
+            expect(Value.Check(PageHitRawSchema, dataWithInvalidEventId)).toBe(true);
+        });
+    });
+
     describe('real-world payload validation', () => {
         it('should validate typical payload with null values', () => {
             const realWorldPayload = {
@@ -448,6 +476,7 @@ describe('PageHitRawSchema v1', () => {
                 version: '1',
                 site_uuid: 'c7929de8-27d7-404e-b714-0fc774f701e6',
                 payload: {
+                    event_id: 'c7929de8-27d7-404e-b714-0fc774f701e6',
                     member_uuid: 'undefined',
                     member_status: 'undefined',
                     post_uuid: 'undefined',
@@ -474,6 +503,7 @@ describe('PageHitRawSchema v1', () => {
                 version: '1',
                 site_uuid: 'c7929de8-27d7-404e-b714-0fc774f701e6',
                 payload: {
+                    event_id: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
                     member_uuid: 'undefined',
                     member_status: 'undefined',
                     post_uuid: 'undefined',

@@ -15,6 +15,7 @@ const validPageHitRaw: PageHitRaw = {
     version: '1',
     site_uuid: '12345678-1234-1234-1234-123456789012',
     payload: {
+        event_id: '550e8400-e29b-41d4-a716-446655440000',
         member_uuid: 'undefined',
         member_status: 'free',
         post_uuid: 'undefined',
@@ -39,6 +40,7 @@ describe('PageHitProcessedSchema v1', () => {
         site_uuid: '12345678-1234-1234-1234-123456789012',
         session_id: 'abc123def456',
         payload: {
+            event_id: '550e8400-e29b-41d4-a716-446655440000',
             site_uuid: '12345678-1234-1234-1234-123456789012',
             member_uuid: 'undefined',
             member_status: 'free',

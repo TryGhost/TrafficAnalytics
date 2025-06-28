@@ -96,6 +96,7 @@ describe('BatchWorker', () => {
             version: '1',
             site_uuid: '550e8400-e29b-41d4-a716-446655440000',
             payload: {
+                event_id: '123e4567-e89b-12d3-a456-426614174000',
                 member_uuid: 'undefined',
                 member_status: 'undefined',
                 post_uuid: 'undefined',
@@ -304,6 +305,7 @@ describe('BatchWorker', () => {
             version: '1',
             site_uuid: '550e8400-e29b-41d4-a716-446655440000',
             payload: {
+                event_id: '123e4567-e89b-12d3-a456-426614174000',
                 member_uuid: 'undefined',
                 member_status: 'undefined',
                 post_uuid: 'undefined',
