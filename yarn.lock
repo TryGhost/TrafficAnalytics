@@ -245,16 +245,6 @@
   resolved "https://registry.yarnpkg.com/@fastify/forwarded/-/forwarded-3.0.0.tgz#0fc96cdbbb5a38ad453d2d5533a34f09b4949b37"
   integrity sha512-kJExsp4JCms7ipzg7SJ3y8DwmePaELHxKYtg+tZow+k0znUTf3cb+npgyqm8+ATZOdmfgfydIebPDWM172wfyA==
 
-"@fastify/http-proxy@11.3.0":
-  version "11.3.0"
-  resolved "https://registry.yarnpkg.com/@fastify/http-proxy/-/http-proxy-11.3.0.tgz#e1d7cfa05ac328e062757d8b2fbc19b57b1e8a6d"
-  integrity sha512-FXFxkdTlXqVI11fqlxmHqOPzIo0elBA60o3bfdh2seD44KWOBBzelzCVgs1OelrxuADCyWUQp2ZxA2wp3mqQMg==
-  dependencies:
-    "@fastify/reply-from" "^12.0.2"
-    fast-querystring "^1.1.2"
-    fastify-plugin "^5.0.1"
-    ws "^8.18.0"
-
 "@fastify/merge-json-schemas@^0.2.0":
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/@fastify/merge-json-schemas/-/merge-json-schemas-0.2.1.tgz#3aa30d2f0c81a8ac5995b6d94ed4eaa2c3055824"
@@ -270,10 +260,10 @@
     "@fastify/forwarded" "^3.0.0"
     ipaddr.js "^2.1.0"
 
-"@fastify/reply-from@^12.0.2":
-  version "12.1.0"
-  resolved "https://registry.yarnpkg.com/@fastify/reply-from/-/reply-from-12.1.0.tgz#e376a2119e4465a84f399e6b2092454268ed1fdb"
-  integrity sha512-5SvMj0NnAAhno/MIv+bErCfzYxcqTueqUxCyub/i+68/CqYWroYg0/p8D0ZhrSQcDigowaKk+MEQSoLjbGwZ+g==
+"@fastify/reply-from@^11.0.0":
+  version "11.0.2"
+  resolved "https://registry.yarnpkg.com/@fastify/reply-from/-/reply-from-11.0.2.tgz#8b20d504256cbf03da5c5ef74498a026a70e3d9b"
+  integrity sha512-VcHhe01PsHuVX2eVrkoskCs+pwNPgVfOOpwQJnSo3AwIKtISm0VCFB7bycQjHfxAuPYgkrI6ZvYoovdHx4sVMA==
   dependencies:
     "@fastify/error" "^4.0.0"
     end-of-stream "^1.4.4"
@@ -281,7 +271,7 @@
     fast-querystring "^1.1.2"
     fastify-plugin "^5.0.1"
     toad-cache "^3.7.0"
-    undici "^7.0.0"
+    undici "^6.11.1"
 
 "@fastify/type-provider-typebox@5.1.0":
   version "5.1.0"
@@ -6080,10 +6070,10 @@ undici-types@~7.8.0:
   resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-7.8.0.tgz#de00b85b710c54122e44fbfd911f8d70174cd294"
   integrity sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==
 
-undici@^7.0.0:
-  version "7.10.0"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-7.10.0.tgz#8ae17a976acc6593b13c9ff3342840bea9b24670"
-  integrity sha512-u5otvFBOBZvmdjWLVW+5DAc9Nkq8f24g0O9oY7qw2JVIF1VocIFoyz9JFkuVOS2j41AufeO0xnlweJ2RLT8nGw==
+undici@^6.11.1:
+  version "6.21.3"
+  resolved "https://registry.yarnpkg.com/undici/-/undici-6.21.3.tgz#185752ad92c3d0efe7a7d1f6854a50f83b552d7a"
+  integrity sha512-gBLkYIlEnSp8pFbT64yFgGE6UIB9tAkhukC23PmMDCe5Nd+cRqKxSjw5y54MK2AZMgZfJWMaNE4nYUHgi1XEOw==
 
 universalify@^0.1.0:
   version "0.1.2"
@@ -6352,11 +6342,6 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
   integrity sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==
-
-ws@^8.18.0:
-  version "8.18.2"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.18.2.tgz#42738b2be57ced85f46154320aabb51ab003705a"
-  integrity sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==
 
 y18n@^5.0.5:
   version "5.0.8"

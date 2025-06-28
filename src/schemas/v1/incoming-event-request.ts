@@ -1,4 +1,5 @@
-import {Type} from '@sinclair/typebox';
+import {Static, Type} from '@sinclair/typebox';
+import {FastifyRequest} from 'fastify';
 
 // Common types
 const StringSchema = Type.String();
@@ -77,3 +78,9 @@ export const IncomingEventRequestSchema = Type.Object({
     headers: HeadersSchema,
     body: BodySchema
 });
+
+export interface IncomingEventRequest extends FastifyRequest {
+    query: Static<typeof QueryParamsSchema>;
+    headers: Static<typeof HeadersSchema>;
+    body: Static<typeof BodySchema>;
+}

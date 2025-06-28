@@ -1,1 +1,1 @@
-export * from './proxy';
+export {processRequest} from './proxy';
