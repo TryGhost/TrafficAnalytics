@@ -59,7 +59,7 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
-      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-}
+      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
       - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
     networks:
       - dev-network
@@ -97,7 +97,7 @@ services:
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
-      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-}
+      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
       - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
     networks:
       - dev-network
