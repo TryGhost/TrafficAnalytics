@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {ensureValidEventId} from '../../../../src/services/proxy/proxy';
+import {ensureValidEventId} from '../../../../src/plugins/proxy';
 
 describe('Proxy Service', () => {
     describe('ensureValidEventId', () => {
