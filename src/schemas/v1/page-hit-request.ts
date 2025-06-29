@@ -20,15 +20,17 @@ const ActionSchema = Type.Literal('page_hit');
 const ContentTypeSchema = Type.Literal('application/json');
 
 // Query parameters schema
-export const QueryParamsSchema = Type.Object({
+export const PageHitRequestQueryParamsSchema = Type.Object({
     token: Type.Optional(NonEmptyStringSchema),
     name: AnalyticsEventNameSchema
 }, {
     additionalProperties: Type.String()
 });
 
+export type PageHitRequestQueryParamsType = Static<typeof PageHitRequestQueryParamsSchema>;
+
 // Headers schema
-export const HeadersSchema = Type.Object({
+export const PageHitRequestHeadersSchema = Type.Object({
     'x-site-uuid': UUIDSchema,
     'content-type': ContentTypeSchema,
     'user-agent': StringSchema,
@@ -36,6 +38,8 @@ export const HeadersSchema = Type.Object({
 }, {
     additionalProperties: Type.Union([StringSchema, Type.Array(StringSchema)])
 });
+
+export type PageHitRequestHeadersType = Static<typeof PageHitRequestHeadersSchema>;
 
 // Parsed referrer schema
 const ParsedReferrerSchema = Type.Object({
@@ -45,7 +49,7 @@ const ParsedReferrerSchema = Type.Object({
 });
 
 // Payload schema
-export const PayloadSchema = Type.Object({
+export const PageHitRequestPayloadSchema = Type.Object({
     event_id: Type.Optional(StringSchema),
     'user-agent': NonEmptyStringSchema,
     locale: NonEmptyStringSchema,
@@ -64,23 +68,25 @@ export const PayloadSchema = Type.Object({
 });
 
 // Request body schema
-export const BodySchema = Type.Object({
+export const PageHitRequestBodySchema = Type.Object({
     timestamp: ISO8601DateTimeSchema,
     action: ActionSchema,
     version: VersionSchema,
     session_id: Type.Optional(StringSchema),
-    payload: PayloadSchema
+    payload: PageHitRequestPayloadSchema
 });
+
+export type PageHitRequestBodyType = Static<typeof PageHitRequestBodySchema>;
 
 // Complete request schema
 export const PageHitRequestSchema = Type.Object({
-    querystring: QueryParamsSchema,
-    headers: HeadersSchema,
-    body: BodySchema
+    querystring: PageHitRequestQueryParamsSchema,
+    headers: PageHitRequestHeadersSchema,
+    body: PageHitRequestBodySchema
 });
 
-export interface PageHitRequest extends FastifyRequest {
-    query: Static<typeof QueryParamsSchema>;
-    headers: Static<typeof HeadersSchema>;
-    body: Static<typeof BodySchema>;
+export interface PageHitRequestType extends FastifyRequest {
+    query: Static<typeof PageHitRequestQueryParamsSchema>;
+    headers: Static<typeof PageHitRequestHeadersSchema>;
+    body: Static<typeof PageHitRequestBodySchema>;
 }

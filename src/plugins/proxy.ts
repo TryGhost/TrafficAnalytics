@@ -1,4 +1,4 @@
-import {FastifyInstance, FastifyRequest, FastifyReply} from 'fastify';
+import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import replyFrom from '@fastify/reply-from';
 import {handleSiteUUIDHeader} from '../services/proxy/processors/handle-site-uuid-header';
@@ -6,7 +6,8 @@ import {parseReferrer} from '../services/proxy/processors/url-referrer';
 import {parseUserAgent} from '../services/proxy/processors/parse-user-agent';
 import {generateUserSignature} from '../services/proxy/processors/user-signature';
 import {publishEvent} from '../services/events/publisher.js';
-import {PageHitRequest, PageHitRaw, QueryParamsSchema, HeadersSchema, BodySchema} from '../schemas';
+import {PageHitRequestType, PageHitRaw, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema} from '../schemas/v1';
+import type {PageHitRequestQueryParamsType, PageHitRequestHeadersType, PageHitRequestBodyType} from '../schemas/v1';
 import {randomUUID} from 'crypto';
 import validator from '@tryghost/validator';
 
@@ -22,7 +23,7 @@ export const ensureValidEventId = (eventId?: string): string => {
     return randomUUID();
 };
 
-const pageHitRawPayloadFromRequest = (request: PageHitRequest): PageHitRaw => {
+const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageHitRaw => {
     return {
         timestamp: request.body.timestamp,
         action: request.body.action,
@@ -48,7 +49,7 @@ const pageHitRawPayloadFromRequest = (request: PageHitRequest): PageHitRaw => {
     };
 };
 
-const publishPageHitRaw = async (request: PageHitRequest): Promise<void> => {
+const publishPageHitRaw = async (request: PageHitRequestType): Promise<void> => {
     try {
         const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
         if (topic) {
@@ -73,27 +74,30 @@ async function proxyPlugin(fastify: FastifyInstance) {
     await fastify.register(replyFrom);
 
     // Register the analytics proxy with native schema validation
-    fastify.post('/tb/web_analytics', {
+    fastify.post<{
+        Querystring: PageHitRequestQueryParamsType,
+        Headers: PageHitRequestHeadersType,
+        Body: PageHitRequestBodyType
+    }>('/tb/web_analytics', {
         schema: {
-            querystring: QueryParamsSchema,
-            headers: HeadersSchema,
-            body: BodySchema
+            querystring: PageHitRequestQueryParamsSchema,
+            headers: PageHitRequestHeadersSchema,
+            body: PageHitRequestBodySchema
         }
-    }, async (request: FastifyRequest, reply: FastifyReply) => {
+    }, async (request, reply) => {
         try {
             // Process the request inline (previously processRequest function)
-            const validatedRequest = request as PageHitRequest;
-            validatedRequest.body.payload.event_id = ensureValidEventId(validatedRequest.body.payload.event_id);
-            handleSiteUUIDHeader(validatedRequest);
+            request.body.payload.event_id = ensureValidEventId(request.body.payload.event_id);
+            handleSiteUUIDHeader(request);
 
             try {
                 // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
                 // This is fire-and-forget - don't let Pub/Sub errors break the proxy
-                await publishPageHitRaw(validatedRequest);
+                await publishPageHitRaw(request);
 
-                parseUserAgent(validatedRequest);
-                parseReferrer(validatedRequest);
-                await generateUserSignature(validatedRequest);
+                parseUserAgent(request);
+                parseReferrer(request);
+                await generateUserSignature(request);
             } catch (error) {
                 reply.code(500).send(error);
                 throw error; // Re-throw to let Fastify handle it
