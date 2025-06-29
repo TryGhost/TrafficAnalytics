@@ -5,12 +5,16 @@ import loggingPlugin from './plugins/logging';
 import corsPlugin from './plugins/cors';
 import proxyPlugin from './plugins/proxy';
 import {getLoggerConfig} from './utils/logger';
+import {createValidationErrorHandler} from './utils/validation-error-handler';
 
 const app = fastify({
     logger: getLoggerConfig(),
     disableRequestLogging: true,
     trustProxy: process.env.TRUST_PROXY !== 'false'
 }).withTypeProvider<TypeBoxTypeProvider>();
+
+// Register global validation error handler
+app.setErrorHandler(createValidationErrorHandler());
 
 // Register CORS plugin
 app.register(corsPlugin);
