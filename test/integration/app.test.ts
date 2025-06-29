@@ -3,6 +3,7 @@ import request, {Response} from 'supertest';
 import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
 import {Server} from 'http';
+import assert from 'node:assert/strict';
 
 // Mock the user signature service before importing the app
 vi.mock('../../src/services/user-signature', () => ({
@@ -165,36 +166,39 @@ describe('Fastify App', () => {
         });
         
         describe('request validation', function () { 
-            it('should reject requests without token parameter', async function () {
+            it('should accept requests without token parameter', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics?name=test')
-                    .expect(400)
-                    .expect(function (res: Response) {
-                        if (!res.body.error || !res.body.message) {
-                            throw new Error('Expected error response with message');
-                        }
-                    });
+                    .post('/tb/web_analytics?name=analytics_events')
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayload)
+                    .expect(202);
             });
     
             it('should reject requests without name parameter', async function () {
                 await request(proxyServer)
                     .post('/tb/web_analytics?token=abc123')
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayload)
                     .expect(400)
                     .expect(function (res) {
-                        if (!res.body.error || !res.body.message) {
-                            throw new Error('Expected error response with message');
-                        }
+                        assert.ok(res.body.message === 'querystring must have required property \'name\'');
                     });
             });
     
-            it('should reject requests with empty parameters', async function () {
+            it('should reject requests with invalid name parameter', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics?token=&name=test')
+                    .post('/tb/web_analytics?token=abc123&name=invalid_name')
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayload)
                     .expect(400)
                     .expect(function (res) {
-                        if (!res.body.error || !res.body.message) {
-                            throw new Error('Expected error response with message');
-                        }
+                        assert.ok(res.body.message.includes('querystring/name'));
                     });
             });
     
@@ -202,7 +206,34 @@ describe('Fastify App', () => {
                 await request(proxyServer)
                     .post('/tb/web_analytics?token=abc123&name=test')
                     .send({})
-                    .expect(400);
+                    .expect(400)
+                    .expect(function (res) {
+                        assert.ok(res.body.message.includes('body'));
+                    });
+            });
+
+            it('should reject requests without x-site-uuid header', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics?name=analytics_events')
+                    .set('Content-Type', 'application/json')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayload)
+                    .expect(400)
+                    .expect(function (res) {
+                        assert.ok(res.body.message === 'headers must have required property \'x-site-uuid\'');
+                    });
+            });
+
+            it('should reject requests without user-agent header', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics?name=analytics_events')
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .send(eventPayload)
+                    .expect(400)
+                    .expect(function (res) {
+                        assert.ok(res.body.message === 'headers must have required property \'user-agent\'');
+                    });
             });
 
             it('should return 404 for GET requests', async function () {
