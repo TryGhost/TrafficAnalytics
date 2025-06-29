@@ -1,1 +1,0 @@
-export {processRequest} from './proxy';

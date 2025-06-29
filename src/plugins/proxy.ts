@@ -1,8 +1,72 @@
 import {FastifyInstance, FastifyRequest, FastifyReply} from 'fastify';
 import fp from 'fastify-plugin';
 import replyFrom from '@fastify/reply-from';
-import {processRequest} from '../services/proxy';
-import {PageHitRequest, QueryParamsSchema, HeadersSchema, BodySchema} from '../schemas';
+import {handleSiteUUIDHeader} from '../services/proxy/processors/handle-site-uuid-header';
+import {parseReferrer} from '../services/proxy/processors/url-referrer';
+import {parseUserAgent} from '../services/proxy/processors/parse-user-agent';
+import {generateUserSignature} from '../services/proxy/processors/user-signature';
+import {publishEvent} from '../services/events/publisher.js';
+import {PageHitRequest, PageHitRaw, QueryParamsSchema, HeadersSchema, BodySchema} from '../schemas';
+import {randomUUID} from 'crypto';
+import validator from '@tryghost/validator';
+
+/**
+ * Validates an event_id and returns a valid UUID.
+ * If the provided event_id is a valid UUID, returns it unchanged.
+ * Otherwise, generates a new random UUID.
+ */
+export const ensureValidEventId = (eventId?: string): string => {
+    if (eventId && validator.isUUID(eventId)) {
+        return eventId;
+    }
+    return randomUUID();
+};
+
+const pageHitRawPayloadFromRequest = (request: PageHitRequest): PageHitRaw => {
+    return {
+        timestamp: request.body.timestamp,
+        action: request.body.action,
+        version: request.body.version,
+        site_uuid: request.headers['x-site-uuid'],
+        payload: {
+            event_id: ensureValidEventId(request.body.payload.event_id),
+            member_uuid: request.body.payload.member_uuid,
+            member_status: request.body.payload.member_status,
+            post_uuid: request.body.payload.post_uuid,
+            post_type: request.body.payload.post_type,
+            locale: request.body.payload.locale,
+            location: request.body.payload.location,
+            referrer: request.body.payload.referrer ?? null,
+            parsedReferrer: request.body.payload.parsedReferrer,
+            pathname: request.body.payload.pathname,
+            href: request.body.payload.href
+        },
+        meta: {
+            ip: request.ip,
+            'user-agent': request.headers['user-agent']
+        }
+    };
+};
+
+const publishPageHitRaw = async (request: PageHitRequest): Promise<void> => {
+    try {
+        const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
+        if (topic) {
+            const payload = pageHitRawPayloadFromRequest(request);
+            request.log.info({payload}, 'Publishing page hit raw event');
+            await publishEvent({
+                topic,
+                payload,
+                logger: request.log
+            });
+        }    
+    } catch (error) {
+        request.log.error({
+            error: error instanceof Error ? error.message : String(error),
+            topic: process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string
+        }, 'Failed to publish page hit event - continuing with request');
+    };
+};
 
 async function proxyPlugin(fastify: FastifyInstance) {
     // Register reply-from for proxying capabilities
@@ -17,7 +81,23 @@ async function proxyPlugin(fastify: FastifyInstance) {
         }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            await processRequest(request as PageHitRequest, reply);
+            // Process the request inline (previously processRequest function)
+            const validatedRequest = request as PageHitRequest;
+            validatedRequest.body.payload.event_id = ensureValidEventId(validatedRequest.body.payload.event_id);
+            handleSiteUUIDHeader(validatedRequest);
+
+            try {
+                // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
+                // This is fire-and-forget - don't let Pub/Sub errors break the proxy
+                await publishPageHitRaw(validatedRequest);
+
+                parseUserAgent(validatedRequest);
+                parseReferrer(validatedRequest);
+                await generateUserSignature(validatedRequest);
+            } catch (error) {
+                reply.code(500).send(error);
+                throw error; // Re-throw to let Fastify handle it
+            }
 
             // Proxy the request to the upstream target
             const upstream = process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy';
