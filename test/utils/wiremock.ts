@@ -174,11 +174,13 @@ export class WireMock {
                 const body = request.request?.body || request.body;
 
                 if (expectedData.token && url) {
-                    matches = matches && url.includes(`token=${expectedData.token}`);
+                    const urlObj = new URL(url, 'http://localhost');
+                    matches = matches && urlObj.searchParams.get('token') === expectedData.token;
                 }
 
                 if (expectedData.name && url) {
-                    matches = matches && url.includes(`name=${expectedData.name}`);
+                    const urlObj = new URL(url, 'http://localhost');
+                    matches = matches && urlObj.searchParams.get('name') === expectedData.name;
                 }
 
                 if (expectedData.bodyContains && body) {

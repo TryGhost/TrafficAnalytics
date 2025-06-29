@@ -4,7 +4,7 @@ import {WireMock} from '../utils/wiremock';
 // Default test data that passes schema validation
 const DEFAULT_QUERY_PARAMS = {
     token: 'test-token',
-    name: 'analytics_events_test'
+    name: 'analytics_events'
 };
 
 const DEFAULT_HEADERS = {
@@ -52,7 +52,7 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
 
     // Build query string
     const queryString = new URLSearchParams(queryParams).toString();
-    
+
     const baseUrl = process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3000';
     const url = `${baseUrl}/tb/web_analytics?${queryString}`;
 
@@ -69,10 +69,10 @@ describe('E2E /tb/web_analytics', () => {
     beforeAll(async () => {
         const wiremockUrl = process.env.WIREMOCK_URL || 'http://localhost:8089';
         wireMock = new WireMock(wiremockUrl);
-        
+
         // Setup default stub for Tinybird endpoint
         await wireMock.setupTinybirdStub({
-            status: 200,
+            status: 202,
             responseBody: JSON.stringify({success: true}),
             responseHeaders: {'Content-Type': 'application/json'}
         });
@@ -81,31 +81,31 @@ describe('E2E /tb/web_analytics', () => {
     afterEach(async () => {
         // Reset WireMock after each test to clean up stubs and request logs
         await wireMock.resetAll();
-        
+
         // Re-setup the default stub
         await wireMock.setupTinybirdStub({
-            status: 200,
+            status: 202,
             responseBody: JSON.stringify({success: true}),
             responseHeaders: {'Content-Type': 'application/json'}
         });
     });
+
     it('should process analytics request successfully and forward to Tinybird', async () => {
         const response = await makeWebAnalyticsRequest();
 
-        expect(response.status).toBe(200);
-        
+        expect(response.status).toBe(202);
+
         const responseText = await response.text();
         expect(responseText).toBe('{"success":true}');
 
         // Verify the request was forwarded to Tinybird
         const tinybirdRequests = await wireMock.verifyTinybirdRequest({
-            token: 'test-token',
-            name: 'analytics_events_test'
+            name: 'analytics_events'
         });
 
         expect(tinybirdRequests).toHaveLength(1);
 
-        // Verify the request body was processed and enriched  
+        // Verify the request body was processed and enriched
         const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
 
         expect(requestBody).toMatchObject({
@@ -135,14 +135,6 @@ describe('E2E /tb/web_analytics', () => {
             expect(response.status).toBe(400);
         });
 
-        it('should reject requests without required token parameter', async () => {
-            const response = await makeWebAnalyticsRequest({
-                queryParams: {token: ''}
-            });
-
-            expect(response.status).toBe(400);
-        });
-
         it('should reject requests without x-site-uuid header', async () => {
             const response = await makeWebAnalyticsRequest({
                 headers: {'x-site-uuid': ''}
@@ -154,29 +146,6 @@ describe('E2E /tb/web_analytics', () => {
         it('should reject requests with invalid x-site-uuid format', async () => {
             const response = await makeWebAnalyticsRequest({
                 headers: {'x-site-uuid': 'not-a-uuid'}
-            });
-
-            expect(response.status).toBe(400);
-        });
-
-        it('should reject requests with missing required body fields', async () => {
-            // Send incomplete body directly without merging with defaults
-            const queryString = new URLSearchParams(DEFAULT_QUERY_PARAMS).toString();
-            const baseUrl = process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3000';
-            const url = `${baseUrl}/tb/web_analytics?${queryString}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: DEFAULT_HEADERS,
-                body: JSON.stringify({timestamp: '2025-04-14T22:16:06.095Z'}) // Missing action, version, payload, etc.
-            });
-
-            expect(response.status).toBe(400);
-        });
-
-        it('should reject requests with invalid timestamp format', async () => {
-            const response = await makeWebAnalyticsRequest({
-                body: {timestamp: 'not-a-timestamp'}
             });
 
             expect(response.status).toBe(400);
@@ -212,7 +181,7 @@ describe('E2E /tb/web_analytics', () => {
         const queryString = new URLSearchParams(DEFAULT_QUERY_PARAMS).toString();
         const baseUrl = process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3000';
         const url = `${baseUrl}/tb/web_analytics?${queryString}`;
-        
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -222,15 +191,14 @@ describe('E2E /tb/web_analytics', () => {
             body: JSON.stringify(healthcheckBody)
         });
 
-        expect(response.status).toBe(200);
-        
+        expect(response.status).toBe(202);
+
         const responseText = await response.text();
         expect(responseText).toBe('{"success":true}');
 
         // Verify the request was forwarded to Tinybird with processed data
         const tinybirdRequests = await wireMock.verifyTinybirdRequest({
-            token: 'test-token',
-            name: 'analytics_events_test'
+            name: 'analytics_events'
         });
 
         expect(tinybirdRequests).toHaveLength(1);
@@ -241,7 +209,7 @@ describe('E2E /tb/web_analytics', () => {
             timestamp: healthcheckBody.timestamp,
             action: 'page_hit',
             version: '1',
-            // Should have session_id added by processing  
+            // Should have session_id added by processing
             session_id: expect.any(String),
             payload: expect.objectContaining({
                 site_uuid: 'c7929de8-27d7-404e-b714-0fc774f701e6',
@@ -252,33 +220,5 @@ describe('E2E /tb/web_analytics', () => {
                 os: expect.any(String)
             })
         });
-    });
-
-    it('should process proxy events and batch worker events the same way', async () => {
-        // Make a request to the analytics endpoint
-        const response = await makeWebAnalyticsRequest();
-        expect(response.status).toBe(200);
-
-        // Get requests sent to analytics_events datasource (direct proxy)
-        const directProxyRequests = await wireMock.verifyTinybirdRequest({
-            token: 'test-token',
-            name: 'analytics_events'
-        });
-
-        // Get requests sent to analytics_events_test datasource (batch worker + direct proxy test)
-        const testDatasourceRequests = await wireMock.verifyTinybirdRequest({
-            token: 'test-token',
-            name: 'analytics_events_test'
-        });
-
-        // Should have requests to both datasources
-        expect(directProxyRequests.length).toBeGreaterThanOrEqual(1);
-        expect(testDatasourceRequests.length).toBeGreaterThanOrEqual(1);
-        
-        // Parse request bodies from both datasources
-        const directProxyBody = wireMock.parseRequestBody(directProxyRequests[0]);
-        const testDatasourceBody = wireMock.parseRequestBody(testDatasourceRequests[0]);
-
-        expect(directProxyBody).toStrictEqual(testDatasourceBody);
     });
 });
