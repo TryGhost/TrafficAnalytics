@@ -52,6 +52,11 @@ export function createValidationErrorHandler() {
         }
         
         // For all other errors, use default error handling
+        reply.log.error({
+            error: error,
+            request: request,
+            reply: reply
+        }, 'Unhandled error occurred');
         reply.send(error);
     };
 }
