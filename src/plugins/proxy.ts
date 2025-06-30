@@ -1,4 +1,4 @@
-import {FastifyInstance} from 'fastify';
+import {FastifyInstance, FastifyReply} from 'fastify';
 import fp from 'fastify-plugin';
 import replyFrom from '@fastify/reply-from';
 import {parseReferrer} from '../services/proxy/processors/url-referrer';
@@ -35,23 +35,77 @@ const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageHitRaw =
 };
 
 const publishPageHitRaw = async (request: PageHitRequestType): Promise<void> => {
+    const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
+    if (topic) {
+        const payload = pageHitRawPayloadFromRequest(request);
+        request.log.info({payload}, 'Publishing page hit raw event');
+        await publishEvent({
+            topic,
+            payload,
+            logger: request.log
+        });
+    }    
+};
+
+const handlePageHitRequestStrategyBatch = async (request: PageHitRequestType): Promise<void> => {
     try {
-        const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
-        if (topic) {
-            const payload = pageHitRawPayloadFromRequest(request);
-            request.log.info({payload}, 'Publishing page hit raw event');
-            await publishEvent({
-                topic,
-                payload,
-                logger: request.log
-            });
-        }    
+        await publishPageHitRaw(request);
     } catch (error) {
-        request.log.error({
-            error: error instanceof Error ? error.message : String(error),
-            topic: process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string
-        }, 'Failed to publish page hit event - continuing with request');
-    };
+        request.log.error({error: error instanceof Error ? error.message : String(error)}, 'Failed to publish page hit event - continuing with request');
+    }
+};
+
+const handlePageHitRequestStrategyInline = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
+    parseUserAgent(request);
+    parseReferrer(request);
+    await generateUserSignature(request);
+
+    // Proxy the request to the upstream target
+    const upstream = process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy';
+    await reply.from(upstream, {
+        queryString: (_search, _reqUrl, req) => {
+            // Rewrite the query parameters
+            const params = new URLSearchParams(req.query as Record<string, string>);
+            if (process.env.TINYBIRD_TRACKER_TOKEN && params.has('token')) {
+                // Remove token from query string when using env var
+                params.delete('token');
+            }
+            return params.toString();
+        },
+        rewriteRequestHeaders: (req, headers) => {
+            // Add authorization header when using env var token
+            if (process.env.TINYBIRD_TRACKER_TOKEN) {
+                return {
+                    ...headers,
+                    authorization: `Bearer ${process.env.TINYBIRD_TRACKER_TOKEN}`
+                };
+            }
+            return headers;
+        },
+        onError: (replyInstance, error) => {
+            // Log proxy errors with proper structure for GCP
+            const unwrappedError = 'error' in error ? error.error : error;
+            replyInstance.log.error({
+                err: {
+                    message: unwrappedError.message,
+                    stack: unwrappedError.stack,
+                    name: unwrappedError.name
+                },
+                httpRequest: {
+                    requestMethod: replyInstance.request.method,
+                    requestUrl: replyInstance.request.url,
+                    userAgent: replyInstance.request.headers['user-agent'],
+                    remoteIp: replyInstance.request.ip,
+                    referer: replyInstance.request.headers.referer,
+                    protocol: `${replyInstance.request.protocol.toUpperCase()}/${replyInstance.request.raw.httpVersion}`,
+                    status: 502
+                },
+                upstream: upstream,
+                type: 'proxy_error'
+            }, 'Proxy error occurred');
+            replyInstance.status(502).send({error: 'Proxy error'});
+        }
+    });
 };
 
 async function proxyPlugin(fastify: FastifyInstance) {
@@ -72,65 +126,10 @@ async function proxyPlugin(fastify: FastifyInstance) {
         preHandler: populateAndTransformPageHitRequest
     }, async (request, reply) => {
         try {
-            try {
-                // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
-                // This is fire-and-forget - don't let Pub/Sub errors break the proxy
-                await publishPageHitRaw(request);
-
-                parseUserAgent(request);
-                parseReferrer(request);
-                await generateUserSignature(request);
-            } catch (error) {
-                reply.code(500).send(error);
-                throw error; // Re-throw to let Fastify handle it
-            }
-
-            // Proxy the request to the upstream target
-            const upstream = process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy';
-            await reply.from(upstream, {
-                queryString: (_search, _reqUrl, req) => {
-                    // Rewrite the query parameters
-                    const params = new URLSearchParams(req.query as Record<string, string>);
-                    if (process.env.TINYBIRD_TRACKER_TOKEN && params.has('token')) {
-                        // Remove token from query string when using env var
-                        params.delete('token');
-                    }
-                    return params.toString();
-                },
-                rewriteRequestHeaders: (req, headers) => {
-                    // Add authorization header when using env var token
-                    if (process.env.TINYBIRD_TRACKER_TOKEN) {
-                        return {
-                            ...headers,
-                            authorization: `Bearer ${process.env.TINYBIRD_TRACKER_TOKEN}`
-                        };
-                    }
-                    return headers;
-                },
-                onError: (replyInstance, error) => {
-                    // Log proxy errors with proper structure for GCP
-                    const unwrappedError = 'error' in error ? error.error : error;
-                    replyInstance.log.error({
-                        err: {
-                            message: unwrappedError.message,
-                            stack: unwrappedError.stack,
-                            name: unwrappedError.name
-                        },
-                        httpRequest: {
-                            requestMethod: replyInstance.request.method,
-                            requestUrl: replyInstance.request.url,
-                            userAgent: replyInstance.request.headers['user-agent'],
-                            remoteIp: replyInstance.request.ip,
-                            referer: replyInstance.request.headers.referer,
-                            protocol: `${replyInstance.request.protocol.toUpperCase()}/${replyInstance.request.raw.httpVersion}`,
-                            status: 502
-                        },
-                        upstream: upstream,
-                        type: 'proxy_error'
-                    }, 'Proxy error occurred');
-                    replyInstance.status(502).send({error: 'Proxy error'});
-                }
-            });
+            // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
+            // This is fire-and-forget - don't let Pub/Sub errors break the proxy
+            await handlePageHitRequestStrategyBatch(request);
+            await handlePageHitRequestStrategyInline(request, reply);
         } catch (error) {
             reply.log.error({
                 err: error instanceof Error ? {
