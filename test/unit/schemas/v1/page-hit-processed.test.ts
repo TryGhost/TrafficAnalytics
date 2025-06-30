@@ -71,7 +71,6 @@ describe('PageHitProcessedSchema v1', () => {
             post_type: 'post',
             locale: 'en-US',
             location: 'homepage',
-            referrer: 'https://google.com',
             pathname: '/blog/post',
             href: 'https://example.com/blog/post',
             os: 'macos',
@@ -359,6 +358,8 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.payload.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
             expect(result.payload.referrerSource).toBe('Google');
             expect(result.payload.referrerMedium).toBe('search');
+            expect((result.payload as any).referrer).toBeUndefined();
+            expect((result.payload as any).parsedReferrer).toBeUndefined();
             expect(result.payload['user-agent']).toBe(validPageHitRaw.meta['user-agent']);
         
             // Check meta is not included in processed output

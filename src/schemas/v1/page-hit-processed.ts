@@ -23,7 +23,6 @@ export const PageHitProcessedSchema = Type.Object({
         post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
         locale: Type.String({minLength: 1}),
         location: Type.Union([Type.String({minLength: 1}), Type.Null()]),
-        referrer: Type.Optional(Type.Union([Type.String(), Type.Null()])),
         pathname: Type.String({minLength: 1}),
         href: Type.String({format: 'uri'}),
         os: Type.String(),
@@ -137,9 +136,7 @@ export async function transformPageHitRawToProcessed(
         pageHitRaw.meta['user-agent']
     );
 
-    const referrer = pageHitRaw.payload.parsedReferrer?.source ?? pageHitRaw.payload.referrer ?? null;
-
-    return {
+    const pageHitProcessed = {
         timestamp: pageHitRaw.timestamp,
         action: pageHitRaw.action,
         version: pageHitRaw.version,
@@ -149,10 +146,11 @@ export async function transformPageHitRawToProcessed(
             event_id: pageHitRaw.payload.event_id ?? crypto.randomUUID(),
             site_uuid: pageHitRaw.site_uuid,
             ...pageHitRaw.payload,
-            referrer,
             ...userAgentData,
             ...referrerData,
             'user-agent': pageHitRaw.meta['user-agent']
         }
     };
+    delete pageHitProcessed.payload.parsedReferrer;
+    return pageHitProcessed;
 }
