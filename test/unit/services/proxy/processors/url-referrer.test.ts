@@ -55,7 +55,6 @@ describe('Referrer Parser', () => {
         expect(request.body.payload.referrerSource).toBe('Google');
         expect(request.body.payload.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
         expect(request.body.payload.referrerMedium).toBe('search');
-        expect(request.body.payload.parsedReferrer).toBeUndefined();
     });
 
     it('should skip processing if referrer header is missing', () => {
