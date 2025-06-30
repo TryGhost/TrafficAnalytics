@@ -5,10 +5,63 @@ import {
     PageHitRequestHeadersSchema,
     PageHitRequestPayloadSchema,
     PageHitRequestBodySchema,
-    PageHitRequestSchema
+    PageHitRequestSchema,
+    EventIdSchema
 } from '../../../../src/schemas';
+import assert from 'node:assert/strict';
 
 describe('PageHitRequestSchema v1', () => {
+    describe('EventIdSchema', () => {
+        it('should validate with an undefined event ID', () => {
+            assert.ok(Value.Check(EventIdSchema, undefined), 'Event ID can be undefined');
+        });
+
+        it('should validate with a null event ID', () => {
+            assert.ok(Value.Check(EventIdSchema, null), 'Event ID can be null');
+        });
+
+        it('should validate with a string event ID', () => {
+            assert.ok(Value.Check(EventIdSchema, '12345678-1234-1234-1234-123456789012'), 'Event ID can be a string');
+        });
+
+        it('should validate with a number event ID', () => {
+            assert.ok(Value.Check(EventIdSchema, 123), 'Event ID can be a number');
+        });
+
+        it('should validate with a boolean event ID', () => {
+            assert.ok(Value.Check(EventIdSchema, true), 'Event ID can be a boolean');
+        });
+
+        it('should transform undefined to a UUID', () => {
+            const result = Value.Decode(EventIdSchema, undefined);
+            expect(typeof result).toBe('string');
+            expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        });
+
+        it('should transform null to a UUID', () => {
+            const result = Value.Decode(EventIdSchema, null);
+            expect(typeof result).toBe('string');
+            expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        });
+
+        it('should transform a string event ID to itself', () => {
+            const result = Value.Decode(EventIdSchema, '12345678-1234-1234-1234-123456789012');
+            expect(result).toBe('12345678-1234-1234-1234-123456789012');
+        });
+
+        it('should transform an empty string to a UUID', () => {
+            const result = Value.Decode(EventIdSchema, '');
+            expect(typeof result).toBe('string');
+            expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        });
+
+        it('should transform a non-string value to a UUID', () => {
+            const result = Value.Decode(EventIdSchema, 123); 
+            expect(typeof result).toBe('string');
+            expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        });
+    });
+
     describe('QueryParamsSchema', () => {
         it('should validate valid query parameters', () => {
             const validParams = {

@@ -1,4 +1,6 @@
 import {Static, Type} from '@sinclair/typebox';
+import {Value} from '@sinclair/typebox/value';
+import {randomUUID} from 'crypto';
 import {FastifyRequest} from 'fastify';
 
 // Common types
@@ -18,6 +20,19 @@ const AnalyticsEventNameSchema = Type.Union([
 ]);
 const ActionSchema = Type.Literal('page_hit');
 const ContentTypeSchema = Type.Literal('application/json');
+
+// Accept any value, but transform it to a UUID if it's not a string
+// Allows non-valid UUIDs to be passed as long as they are a string
+export const EventIdSchema = Type.Transform(Type.Any())
+    .Decode((value: unknown) => {
+        // If it's a string and non-empty, use it
+        if (typeof value === 'string' && value.length > 0) {
+            return value;
+        }
+        // If it's an empty string, undefined, null, or any other value, generate a new UUID
+        return randomUUID();
+    })
+    .Encode((value: string) => value);
 
 // Query parameters schema
 export const PageHitRequestQueryParamsSchema = Type.Object({
@@ -50,7 +65,7 @@ const ParsedReferrerSchema = Type.Object({
 
 // Payload schema
 export const PageHitRequestPayloadSchema = Type.Object({
-    event_id: Type.Optional(StringSchema),
+    event_id: Type.Optional(EventIdSchema),
     'user-agent': NonEmptyStringSchema,
     locale: NonEmptyStringSchema,
     location: Type.Union([NonEmptyStringSchema, Type.Null()]),
@@ -90,3 +105,33 @@ export interface PageHitRequestType extends FastifyRequest {
     headers: Static<typeof PageHitRequestHeadersSchema>;
     body: Static<typeof PageHitRequestBodySchema>;
 }
+
+export const populateAndTransformPageHitRequest = async (request: PageHitRequestType): Promise<PageHitRequestType> => {
+    request.body.payload = {
+        ...PageHitRequestPayloadDefaults,
+        ...request.body.payload
+    };
+    request.body = Value.Decode(PageHitRequestBodySchema, request.body);
+    request.query = Value.Decode(PageHitRequestQueryParamsSchema, request.query);
+    request.headers = Value.Decode(PageHitRequestHeadersSchema, request.headers);
+    return request;
+};
+
+export const PageHitRequestPayloadDefaults = {
+    event_id: '',
+    locale: '',
+    location: null,
+    referrer: null,
+    parsedReferrer: {
+        source: null,
+        medium: null,
+        url: null
+    },
+    pathname: '',
+    href: '',
+    site_uuid: '',
+    post_uuid: 'undefined',
+    post_type: 'null',
+    member_uuid: 'undefined',
+    member_status: 'undefined'
+};

@@ -44,6 +44,7 @@ type TargetRequest = {
     body: {
         session_id: string;
         payload: {
+            event_id?: string;
             browser: string;
             device: string;
             os: string;
@@ -256,6 +257,45 @@ describe('Fastify App', () => {
                             throw new Error('x-site-uuid header should be allowed in CORS');
                         }
                     });
+            });
+        });
+
+        describe('event id transformation', function () {
+            it('should generate an event id if it is not provided', async function () {
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayload)
+                    .expect(202);
+
+                const targetRequest = targetRequests[0];
+                expect(targetRequest.body.payload.event_id).toBeDefined();
+                expect(targetRequest.body.payload.event_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/); // UUID format
+            });
+
+            it('should not generate a new event id if it is provided', async function () {
+                const eventId = '12345678-1234-1234-1234-123456789012';
+                const eventPayloadWithEventId = {
+                    ...eventPayload,
+                    payload: {
+                        ...eventPayload.payload,
+                        event_id: eventId
+                    }
+                };
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(eventPayloadWithEventId)
+                    .expect(202);
+
+                const targetRequest = targetRequests[0];
+                expect(targetRequest.body.payload.event_id).toBe(eventId);
             });
         });
 

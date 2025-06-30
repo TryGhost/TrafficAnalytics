@@ -1,28 +1,13 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import replyFrom from '@fastify/reply-from';
-import {handleSiteUUIDHeader} from '../services/proxy/processors/handle-site-uuid-header';
 import {parseReferrer} from '../services/proxy/processors/url-referrer';
 import {parseUserAgent} from '../services/proxy/processors/parse-user-agent';
 import {generateUserSignature} from '../services/proxy/processors/user-signature';
 import {publishEvent} from '../services/events/publisher.js';
-import {PageHitRequestType, PageHitRaw, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema} from '../schemas/v1';
-import type {PageHitRequestQueryParamsType, PageHitRequestHeadersType, PageHitRequestBodyType} from '../schemas/v1';
+import {PageHitRequestType, PageHitRaw, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest} from '../schemas';
+import type {PageHitRequestQueryParamsType, PageHitRequestHeadersType, PageHitRequestBodyType} from '../schemas';
 import {randomUUID} from 'crypto';
-import validator from '@tryghost/validator';
-
-/**
- * Validates an event_id and returns a valid UUID.
- * If the provided event_id is a valid UUID, returns it unchanged.
- * Otherwise, generates a new random UUID.
- */
-export const ensureValidEventId = (eventId?: string): string => {
-    if (eventId && validator.isUUID(eventId)) {
-        return eventId;
-    }
-    return randomUUID();
-};
-
 const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageHitRaw => {
     return {
         timestamp: request.body.timestamp,
@@ -30,7 +15,7 @@ const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageHitRaw =
         version: request.body.version,
         site_uuid: request.headers['x-site-uuid'],
         payload: {
-            event_id: ensureValidEventId(request.body.payload.event_id),
+            event_id: request.body.payload.event_id ?? randomUUID(),
             member_uuid: request.body.payload.member_uuid,
             member_status: request.body.payload.member_status,
             post_uuid: request.body.payload.post_uuid,
@@ -83,13 +68,10 @@ async function proxyPlugin(fastify: FastifyInstance) {
             querystring: PageHitRequestQueryParamsSchema,
             headers: PageHitRequestHeadersSchema,
             body: PageHitRequestBodySchema
-        }
+        },
+        preHandler: populateAndTransformPageHitRequest
     }, async (request, reply) => {
         try {
-            // Process the request inline (previously processRequest function)
-            request.body.payload.event_id = ensureValidEventId(request.body.payload.event_id);
-            handleSiteUUIDHeader(request);
-
             try {
                 // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
                 // This is fire-and-forget - don't let Pub/Sub errors break the proxy
