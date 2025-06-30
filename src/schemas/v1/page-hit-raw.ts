@@ -20,6 +20,8 @@ const ParsedReferrerSchema = Type.Object({
     url: Type.Union([StringSchema, Type.Null()])
 });
 
+export type ParsedReferrer = Static<typeof ParsedReferrerSchema>;
+
 // Payload schema for page hit raw events
 const PayloadSchema = Type.Object({
     event_id: Type.Optional(StringSchema),

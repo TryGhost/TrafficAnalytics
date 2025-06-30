@@ -1,5 +1,6 @@
 import {Type, Static} from '@sinclair/typebox';
 import {PageHitRaw} from './page-hit-raw';
+import type {ParsedReferrer} from './page-hit-raw';
 import uap from 'ua-parser-js';
 import {ReferrerParser} from '@tryghost/referrer-parser';
 import {userSignatureService} from '../../services/user-signature';
@@ -96,17 +97,17 @@ function isBot(userAgentString: string): boolean {
     return botPattern.test(userAgentString);
 }
 
-export function transformReferrer(referrer: string | null | undefined): {
+export function transformReferrer(referrerData: ParsedReferrer | undefined): {
     referrerUrl?: string | null,
     referrerSource?: string | null,
     referrerMedium?: string | null
 } {
-    if (!referrer || !referrerParser) {
+    if (!referrerParser || !referrerData || typeof referrerData !== 'object' || !referrerData.url) {
         return {};
     }
 
     try {
-        const parsedReferrer = referrerParser.parse(referrer);
+        const parsedReferrer = referrerParser.parse(referrerData.url, referrerData.source ?? undefined, referrerData.medium ?? undefined);
         return {
             referrerUrl: parsedReferrer.referrerUrl || null,
             referrerSource: parsedReferrer.referrerSource || null,
@@ -129,7 +130,7 @@ export async function transformPageHitRawToProcessed(
     pageHitRaw: PageHitRaw
 ): Promise<PageHitProcessed> {
     const userAgentData = transformUserAgent(pageHitRaw.meta['user-agent']);
-    const referrerData = transformReferrer(pageHitRaw.payload.referrer);
+    const referrerData = transformReferrer(pageHitRaw.payload.parsedReferrer);
     const sessionId = await generateUserSignature(
         pageHitRaw.site_uuid,
         pageHitRaw.meta.ip,

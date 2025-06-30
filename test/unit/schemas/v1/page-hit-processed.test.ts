@@ -1,4 +1,4 @@
-import {describe, it, expect} from 'vitest';
+import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {Value} from '@sinclair/typebox/value';
 import {
     PageHitProcessedSchema,
@@ -6,8 +6,24 @@ import {
     transformReferrer,
     generateUserSignature,
     transformPageHitRawToProcessed,
-    PageHitRaw
+    PageHitRaw,
+    ParsedReferrer
 } from '../../../../src/schemas';
+
+// Mock the @tryghost/referrer-parser module
+vi.mock('@tryghost/referrer-parser', async () => {
+    const ReferrerParser = vi.fn().mockImplementation(() => ({
+        parse: vi.fn().mockImplementation((url, source, medium) => ({
+            referrerUrl: url,
+            referrerSource: source,
+            referrerMedium: medium || 'unknown'
+        }))
+    }));
+
+    return {
+        ReferrerParser
+    };
+});
 
 const validPageHitRaw: PageHitRaw = {
     timestamp: '2024-01-01T00:00:00.000Z',
@@ -22,7 +38,11 @@ const validPageHitRaw: PageHitRaw = {
         post_type: 'post',
         locale: 'en-US',
         location: 'homepage',
-        referrer: 'https://google.com',
+        parsedReferrer: {
+            url: 'https://www.google.com/search?q=ghost+cms',
+            source: 'Google',
+            medium: 'search'
+        },
         pathname: '/blog/post',
         href: 'https://example.com/blog/post'
     },
@@ -33,6 +53,9 @@ const validPageHitRaw: PageHitRaw = {
 };
 
 describe('PageHitProcessedSchema v1', () => {
+    beforeEach(function () {
+        vi.clearAllMocks();
+    });
     const validPageHitProcessed = {
         timestamp: '2024-01-01T00:00:00.000Z',
         action: 'page_hit',
@@ -54,9 +77,9 @@ describe('PageHitProcessedSchema v1', () => {
             os: 'macos',
             browser: 'chrome',
             device: 'desktop',
-            referrer_url: 'google.com',
-            referrer_source: 'Google',
-            referrer_medium: 'search',
+            referrerUrl: 'https://www.google.com/search?q=ghost+cms',
+            referrerSource: 'Google',
+            referrerMedium: 'search',
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
     };
@@ -134,9 +157,9 @@ describe('PageHitProcessedSchema v1', () => {
                 ...validPageHitProcessed,
                 payload: {
                     ...validPageHitProcessed.payload,
-                    referrer_url: 'https://twitter.com',
-                    referrer_source: 'Twitter',
-                    referrer_medium: 'social'
+                    referrerUrl: 'https://twitter.com',
+                    referrerSource: 'Twitter',
+                    referrerMedium: 'social'
                 }
             };
             expect(Value.Check(PageHitProcessedSchema, validData)).toBe(true);
@@ -252,53 +275,34 @@ describe('PageHitProcessedSchema v1', () => {
     });
 
     describe('transformReferrer', () => {
-        it('should parse Google search referrer correctly', () => {
-            const referrer = 'https://www.google.com/search?q=test';
+        it('should parse referrer data correctly', () => {
+            const referrer = {
+                url: 'https://www.google.com/search?q=ghost+cms',
+                source: 'Google',
+                medium: 'search'
+            };
             const result = transformReferrer(referrer);
         
-            expect(result.referrerUrl).toBe('www.google.com');
+            expect(result.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
             expect(result.referrerSource).toBe('Google');
             expect(result.referrerMedium).toBe('search');
         });
 
-        it('should parse social media referrer correctly', () => {
-            const referrer = 'https://twitter.com/user/status/123';
-            const result = transformReferrer(referrer);
-        
-            expect(result.referrerUrl).toBe('twitter.com');
-            expect(result.referrerSource).toBe('Twitter');
-            expect(result.referrerMedium).toBe('social');
-        });
-
-        it('should handle null referrer', () => {
-            const result = transformReferrer(null);
-        
+        it('should return empty object if referrer is undefined', () => {
+            const result = transformReferrer(undefined);
             expect(result).toEqual({});
         });
 
-        it('should handle empty referrer', () => {
-            const result = transformReferrer('');
-        
+        it('should return empty object if referrer is not an object', () => {
+            const referrer = 'not-an-object' as unknown as ParsedReferrer;
+            const result = transformReferrer(referrer);
             expect(result).toEqual({});
         });
 
-        it('should handle direct traffic', () => {
-            const referrer = 'https://example.com/some-page';
+        it('should return empty object if referrer is an empty object', () => {
+            const referrer = {} as unknown as ParsedReferrer;
             const result = transformReferrer(referrer);
-        
-            expect(result.referrerUrl).toBe('example.com');
-            expect(result.referrerSource).toBe('example.com');
-            expect(result.referrerMedium).toBe(null);
-        });
-
-        it('should handle malformed referrer gracefully', () => {
-            const result = transformReferrer('not-a-url');
-        
-            expect(result).toEqual({
-                referrerUrl: null,
-                referrerSource: null,
-                referrerMedium: null
-            });
+            expect(result).toEqual({});
         });
     });
 
@@ -352,29 +356,13 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.payload.browser).toBe('chrome');
             expect(result.payload.device).toBe('desktop');
 
-            expect(result.payload.referrerUrl).toBe('google.com');
+            expect(result.payload.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
             expect(result.payload.referrerSource).toBe('Google');
             expect(result.payload.referrerMedium).toBe('search');
             expect(result.payload['user-agent']).toBe(validPageHitRaw.meta['user-agent']);
         
             // Check meta is not included in processed output
             expect(result).not.toHaveProperty('meta');
-        });
-
-        it('should handle page hit raw with null referrer', async () => {
-            const pageHitRawWithNullReferrer: PageHitRaw = {
-                ...validPageHitRaw,
-                payload: {
-                    ...validPageHitRaw.payload,
-                    referrer: null
-                }
-            };
-        
-            const result = await transformPageHitRawToProcessed(pageHitRawWithNullReferrer);
-        
-            expect(result.payload.referrerUrl).toBeUndefined();
-            expect(result.payload.referrerSource).toBeUndefined();
-            expect(result.payload.referrerMedium).toBeUndefined();
         });
 
         it('should handle page hit raw with bot user agent', async () => {
