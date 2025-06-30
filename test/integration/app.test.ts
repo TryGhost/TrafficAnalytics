@@ -103,6 +103,7 @@ describe('Fastify App', () => {
         // Using targetRequests = [] would create a new array, and the mock upstream would not record any requests
         targetRequests.length = 0;
 
+        vi.stubEnv('PUBSUB_TOPIC_PAGE_HITS_RAW', undefined);
         vi.clearAllMocks();
     });
 
@@ -157,6 +158,18 @@ describe('Fastify App', () => {
             expect(targetRequests[0].url).toBe('/?token=abc123&name=analytics_events_test');
             expect(targetRequests[0].query.token).toBe('abc123');
             expect(targetRequests[0].query.name).toBe('analytics_events_test');
+        });
+
+        it('should not proxy requests to the target server if pub/sub topic is set', async function () {
+            vi.stubEnv('PUBSUB_TOPIC_PAGE_HITS_RAW', 'test-topic');
+            await request(proxyServer)
+                .post('/tb/web_analytics')
+                .query({name: 'analytics_events'})
+                .set('Content-Type', 'application/json')
+                .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                .send(eventPayload);
+            expect(targetRequests.length).toBe(0);
         });
 
         it('should handle proxy errors gracefully', async function () {
@@ -500,31 +513,6 @@ describe('Fastify App', () => {
 
                 // Verify no authorization header was added
                 expect(targetRequest.headers.authorization).toBeUndefined();
-            });
-        });
-
-        describe('pubsub publishing', function () {
-            it('should still proxy requests when Pub/Sub publishing fails', async () => {
-                // Temporarily set an invalid topic to cause publishing to fail
-                const originalTopic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW;
-                process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'invalid-topic-that-does-not-exist';
-    
-                try {
-                    await request(proxyServer)
-                        .post('/tb/web_analytics')
-                        .query({token: 'abc123', name: 'analytics_events_test'})
-                        .set('Content-Type', 'application/json')
-                        .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
-                        .set('User-Agent', 'Mozilla/5.0 Test Browser')
-                        .send(eventPayload)
-                        .expect(202);
-    
-                    // Verify the request was still proxied to the target server
-                    expect(targetRequests.length).toBe(1);
-                } finally {
-                    // Restore original topic
-                    process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = originalTopic;
-                }
             });
         });
     });

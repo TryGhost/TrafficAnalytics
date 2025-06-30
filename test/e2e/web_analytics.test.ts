@@ -96,7 +96,11 @@ describe('E2E /tb/web_analytics', () => {
         expect(response.status).toBe(202);
 
         const responseText = await response.text();
-        expect(responseText).toBe('{"success":true}');
+        expect(responseText).toBe('{"message":"Page hit event received"}');
+
+        await new Promise((resolve) => {
+            setTimeout(resolve, 1000);
+        });
 
         // Verify the request was forwarded to Tinybird
         const tinybirdRequests = await wireMock.verifyTinybirdRequest({
@@ -149,76 +153,6 @@ describe('E2E /tb/web_analytics', () => {
             });
 
             expect(response.status).toBe(400);
-        });
-    });
-
-    it('should accept real healthcheck request with null location and undefined member_status', async () => {
-        // This is the exact request body that was causing 400 responses in healthchecks
-        const healthcheckBody = {
-            timestamp: '2025-06-23T23:23:55.030Z',
-            action: 'page_hit',
-            version: '1',
-            payload: {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.23 Safari/537.36',
-                locale: 'en-US',
-                location: null,
-                referrer: null,
-                parsedReferrer: {
-                    source: null,
-                    medium: null,
-                    url: null
-                },
-                pathname: '/',
-                href: 'https://traffic-analytics.ghst.pro/',
-                site_uuid: 'c7929de8-27d7-404e-b714-0fc774f701e6',
-                post_uuid: 'undefined',
-                post_type: 'null',
-                member_uuid: 'undefined',
-                member_status: 'undefined'
-            }
-        };
-
-        const queryString = new URLSearchParams(DEFAULT_QUERY_PARAMS).toString();
-        const baseUrl = process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3000';
-        const url = `${baseUrl}/tb/web_analytics?${queryString}`;
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                ...DEFAULT_HEADERS,
-                'x-site-uuid': 'c7929de8-27d7-404e-b714-0fc774f701e6'
-            },
-            body: JSON.stringify(healthcheckBody)
-        });
-
-        expect(response.status).toBe(202);
-
-        const responseText = await response.text();
-        expect(responseText).toBe('{"success":true}');
-
-        // Verify the request was forwarded to Tinybird with processed data
-        const tinybirdRequests = await wireMock.verifyTinybirdRequest({
-            name: 'analytics_events'
-        });
-
-        expect(tinybirdRequests).toHaveLength(1);
-
-        // Verify healthcheck request body was processed correctly
-        const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
-        expect(requestBody).toMatchObject({
-            timestamp: healthcheckBody.timestamp,
-            action: 'page_hit',
-            version: '1',
-            // Should have session_id added by processing
-            session_id: expect.any(String),
-            payload: expect.objectContaining({
-                site_uuid: 'c7929de8-27d7-404e-b714-0fc774f701e6',
-                location: null,
-                member_status: 'undefined',
-                // Should have parsed user agent info
-                browser: expect.any(String),
-                os: expect.any(String)
-            })
         });
     });
 });

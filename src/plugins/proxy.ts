@@ -44,9 +44,10 @@ const publishPageHitRaw = async (request: PageHitRequestType): Promise<void> => 
     }    
 };
 
-const handlePageHitRequestStrategyBatch = async (request: PageHitRequestType): Promise<void> => {
+const handlePageHitRequestStrategyBatch = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
     try {
         await publishPageHitRaw(request);
+        reply.status(202).send({message: 'Page hit event received'});
     } catch (error) {
         request.log.error({error: error instanceof Error ? error.message : String(error)}, 'Failed to publish page hit event - continuing with request');
     }
@@ -123,10 +124,12 @@ async function proxyPlugin(fastify: FastifyInstance) {
         preHandler: populateAndTransformPageHitRequest
     }, async (request, reply) => {
         try {
-            // Publish raw page hit event to Pub/Sub BEFORE any processing (if topic is configured)
-            // This is fire-and-forget - don't let Pub/Sub errors break the proxy
-            await handlePageHitRequestStrategyBatch(request);
-            await handlePageHitRequestStrategyInline(request, reply);
+            // If pub/sub topic is set, publish to topic and return 202. Else, proxy to target server
+            if (process.env.PUBSUB_TOPIC_PAGE_HITS_RAW) {
+                await handlePageHitRequestStrategyBatch(request, reply);
+            } else {
+                await handlePageHitRequestStrategyInline(request, reply);
+            }
         } catch (error) {
             reply.log.error({
                 err: error instanceof Error ? {
