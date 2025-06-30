@@ -38,6 +38,7 @@ export function createValidationErrorHandler() {
                     referer: request.headers.referer
                 },
                 bodyLength: request.body ? JSON.stringify(request.body).length : 0,
+                requestBody: request.body,
                 type: 'validation_error'
             }, 'Schema validation failed');
             
