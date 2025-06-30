@@ -24,7 +24,7 @@ async function workerPlugin(fastify: FastifyInstance) {
         const tinybirdClient = new TinybirdClient({
             apiUrl: proxyTarget,
             apiToken: process.env.TINYBIRD_TRACKER_TOKEN as string,
-            datasource: 'analytics_events_test'
+            datasource: 'analytics_events'
         });
 
         batchWorker = new BatchWorker(process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW as string, tinybirdClient);
