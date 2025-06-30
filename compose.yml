@@ -1,50 +1,13 @@
 name: traffic-analytics
 services:
-  firestore:
-    image: google/cloud-sdk:emulators
-    command: ["/app/firestore-wrapper.sh"]
-    ports:
-      - ${FIRESTORE_PORT:-8080}:8080
-    volumes:
-      - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
-    environment:
-      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    stop_grace_period: 5s
-    networks:
-      - dev-network
-
-  pubsub:
-    image: google/cloud-sdk:emulators
-    command: ["/app/start-pubsub.sh"]
-    ports:
-      - ${PUBSUB_PORT:-8085}:8085
-    volumes:
-      - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
-    environment:
-      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
-      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
-      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
-    healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    stop_grace_period: 2s
-    networks:
-      - dev-network
-
   analytics-service:
     image: local/traffic-analytics:development
     pull_policy: never
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["yarn","tsx", "watch", "server.ts"]
+    command: ["yarn", "tsx", "watch", "server.ts"]
+    profiles: [batch]
     ports:
       - ${ANALYTICS_PORT:-3000}:3000
     env_file:
@@ -101,6 +64,7 @@ services:
       - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
     networks:
       - dev-network
+    profiles: [batch]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 5s
@@ -115,6 +79,75 @@ services:
       fake-tinybird:
         condition: service_healthy
 
+  analytics-service-proxy:
+    image: local/traffic-analytics:development
+    pull_policy: never
+    command: ["yarn", "tsx", "watch", "server.ts"]
+    ports:
+      - 4000:3000
+    env_file:
+      - path: .env
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - FIRESTORE_DATABASE_ID=traffic-analytics-dev
+      - SALT_STORE_TYPE=firestore
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
+      - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
+    profiles: [proxy]
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      firestore:
+        condition: service_healthy
+      fake-tinybird:
+        condition: service_healthy
+
+  firestore:
+    image: google/cloud-sdk:emulators
+    command: ["/app/firestore-wrapper.sh"]
+    ports:
+      - ${FIRESTORE_PORT:-8080}:8080
+    volumes:
+      - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    stop_grace_period: 5s
+    networks:
+      - dev-network
+
+  pubsub:
+    image: google/cloud-sdk:emulators
+    command: ["/app/start-pubsub.sh"]
+    ports:
+      - ${PUBSUB_PORT:-8085}:8085
+    volumes:
+      - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    stop_grace_period: 2s
+    networks:
+      - dev-network
   fake-tinybird:
     image: wiremock/wiremock:3.13.1
     ports:
@@ -137,7 +170,6 @@ services:
         required: false
     environment:
       - NODE_ENV=testing
-      - ANALYTICS_SERVICE_URL=http://analytics-service:3000
       - WIREMOCK_URL=http://fake-tinybird:8080
     tty: true
     networks:
@@ -147,6 +179,8 @@ services:
       analytics-service:
         condition: service_healthy
       worker:
+        condition: service_healthy
+      analytics-service-proxy:
         condition: service_healthy
       fake-tinybird:
         condition: service_healthy

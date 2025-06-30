@@ -212,6 +212,35 @@ export class WireMock {
         }
     }
 
+    // Helper method to wait for a request to be received by WireMock
+    async waitForRequest(criteria: {
+        method?: string;
+        url?: string;
+        urlPattern?: string;
+        headers?: Record<string, string>;
+        token?: string;
+        name?: string;
+        bodyContains?: string;
+    }, options: {
+        timeoutMs?: number;
+        pollIntervalMs?: number;
+    } = {}): Promise<WireMockRequestLog[]> {
+        const {timeoutMs = 10000, pollIntervalMs = 100} = options;
+        const startTime = Date.now();
+
+        while (Date.now() - startTime < timeoutMs) {
+            const requests = await this.verifyTinybirdRequest(criteria);
+            if (requests.length > 0) {
+                return requests;
+            }
+            await new Promise<void>((resolve) => {
+                setTimeout(() => resolve(), pollIntervalMs);
+            });
+        }
+
+        throw new Error(`Timeout waiting for request matching criteria: ${JSON.stringify(criteria)}`);
+    }
+
     // Helper method to get all request details for debugging
     getRequestDetails(request: WireMockRequestLog): any {
         return {
