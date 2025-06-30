@@ -1,11 +1,8 @@
 import {FastifyInstance, FastifyReply} from 'fastify';
 import fp from 'fastify-plugin';
 import replyFrom from '@fastify/reply-from';
-import {parseReferrer} from '../services/proxy/processors/url-referrer';
-import {parseUserAgent} from '../services/proxy/processors/parse-user-agent';
-import {generateUserSignature} from '../services/proxy/processors/user-signature';
 import {publishEvent} from '../services/events/publisher.js';
-import {PageHitRequestType, PageHitRaw, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest} from '../schemas';
+import {PageHitRequestType, PageHitRaw, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest, transformPageHitRawToProcessed} from '../schemas';
 import type {PageHitRequestQueryParamsType, PageHitRequestHeadersType, PageHitRequestBodyType} from '../schemas';
 import {randomUUID} from 'crypto';
 const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageHitRaw => {
@@ -56,9 +53,9 @@ const handlePageHitRequestStrategyBatch = async (request: PageHitRequestType): P
 };
 
 const handlePageHitRequestStrategyInline = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
-    parseUserAgent(request);
-    parseReferrer(request);
-    await generateUserSignature(request);
+    const pageHitRaw = pageHitRawPayloadFromRequest(request);
+    const pageHitProcessed = await transformPageHitRawToProcessed(pageHitRaw);
+    request.body = pageHitProcessed;
 
     // Proxy the request to the upstream target
     const upstream = process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy';
