@@ -359,7 +359,6 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.payload.referrerSource).toBe('Google');
             expect(result.payload.referrerMedium).toBe('search');
             expect((result.payload as any).referrer).toBeUndefined();
-            expect((result.payload as any).parsedReferrer).toBeUndefined();
             expect(result.payload['user-agent']).toBe(validPageHitRaw.meta['user-agent']);
         
             // Check meta is not included in processed output

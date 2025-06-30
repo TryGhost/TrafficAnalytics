@@ -28,6 +28,11 @@ export const PageHitProcessedSchema = Type.Object({
         os: Type.String(),
         browser: Type.String(),
         device: Type.String(),
+        parsedReferrer: Type.Optional(Type.Object({
+            url: Type.Union([Type.String(), Type.Null()]),
+            source: Type.Union([Type.String(), Type.Null()]),
+            medium: Type.Union([Type.String(), Type.Null()])
+        })),
         referrerUrl: Type.Optional(Type.Union([Type.String(), Type.Null()])),
         referrerSource: Type.Optional(Type.Union([Type.String(), Type.Null()])),
         referrerMedium: Type.Optional(Type.Union([Type.String(), Type.Null()])),
@@ -151,6 +156,5 @@ export async function transformPageHitRawToProcessed(
             'user-agent': pageHitRaw.meta['user-agent']
         }
     };
-    delete pageHitProcessed.payload.parsedReferrer;
     return pageHitProcessed;
 }
