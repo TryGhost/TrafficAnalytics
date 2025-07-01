@@ -9,7 +9,7 @@ import {FastifyError, FastifyRequest, FastifyReply} from 'fastify';
  * 
  * @returns A Fastify error handler function
  */
-export function createValidationErrorHandler() {
+export function errorHandler() {
     return (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
         // Only handle validation errors specifically
         if (error.statusCode === 400 && error.validation) {
@@ -18,6 +18,8 @@ export function createValidationErrorHandler() {
                 err: {
                     message: error.message,
                     name: error.name,
+                    code: error.code,
+                    stack: error.stack,
                     validationContext: error.validationContext, // 'query', 'headers', 'body'
                     validation: error.validation // Array of validation errors
                 },
@@ -27,17 +29,9 @@ export function createValidationErrorHandler() {
                     userAgent: request.headers['user-agent'],
                     remoteIp: request.ip,
                     referer: request.headers.referer,
-                    protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
                     status: 400
                 },
                 query: request.query,
-                headers: {
-                    'content-type': request.headers['content-type'],
-                    'x-site-uuid': request.headers['x-site-uuid'],
-                    'user-agent': request.headers['user-agent'],
-                    referer: request.headers.referer
-                },
-                bodyLength: request.body ? JSON.stringify(request.body).length : 0,
                 requestBody: request.body,
                 type: 'validation_error'
             }, 'Schema validation failed');
@@ -51,12 +45,26 @@ export function createValidationErrorHandler() {
             });
         }
         
-        // For all other errors, use default error handling
+        // For all other errors, log with proper stack trace and useful context
         reply.log.error({
-            error: error,
-            request: request,
-            reply: reply
-        }, 'Unhandled error occurred');
+            err: {
+                message: error.message,
+                name: error.name,
+                code: error.code,
+                stack: error.stack,
+                statusCode: error.statusCode
+            },
+            httpRequest: {
+                requestMethod: request.method,
+                requestUrl: request.url,
+                userAgent: request.headers['user-agent'],
+                remoteIp: request.ip,
+                referer: request.headers.referer
+            },
+            query: request.query,
+            requestBody: request.body,
+            type: 'unhandled_error'
+        }, error.message);
         reply.send(error);
     };
 }

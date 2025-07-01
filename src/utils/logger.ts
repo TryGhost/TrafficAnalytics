@@ -38,6 +38,14 @@ export function getLoggerConfig(): LoggerOptions {
                     return {
                         statusCode: reply.statusCode
                     };
+                },
+                err(error: Error) {
+                    return {
+                        message: error.message,
+                        name: error.name,
+                        code: 'code' in error ? (error as Error & {code: string}).code : undefined,
+                        stack: error.stack
+                    };
                 }
             }
         };
@@ -47,7 +55,18 @@ export function getLoggerConfig(): LoggerOptions {
     const gcpConfig = createGcpLoggingPinoConfig();
     return {
         ...gcpConfig,
-        level: process.env.LOG_LEVEL || 'info'
+        level: process.env.LOG_LEVEL || 'info',
+        serializers: {
+            ...gcpConfig.serializers,
+            err(error: Error) {
+                return {
+                    message: error.message,
+                    name: error.name,
+                    code: 'code' in error ? (error as Error & {code: string}).code : undefined,
+                    stack: error.stack
+                };
+            }
+        }
     };
 }
 
