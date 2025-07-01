@@ -14,7 +14,11 @@ async function loggingPlugin(fastify: FastifyInstance) {
             httpRequest: {
                 requestMethod: request.method,
                 requestUrl: request.url,
-                remoteIp: request.ip
+                userAgent: request.headers['user-agent'],
+                remoteIp: request.ip,
+                referer: request.headers.referer,
+                protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
+                requestSize: String(request.raw.headers['content-length'] || 0)
             }
         }, 'incoming request');
     });
@@ -24,9 +28,14 @@ async function loggingPlugin(fastify: FastifyInstance) {
             httpRequest: {
                 requestMethod: request.method,
                 requestUrl: request.url,
+                userAgent: request.headers['user-agent'],
                 remoteIp: request.ip,
+                referer: request.headers.referer,
+                protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
+                requestSize: String(request.raw.headers['content-length'] || 0),
+                responseSize: String(reply.getHeader('content-length') || 0),
                 status: reply.statusCode,
-                latency: `${(reply.elapsedTime / 1000).toFixed(3)}s`
+                latency: `${(reply.elapsedTime / 1000).toFixed(9)}s`
             }
         }, 'request completed');
     });
