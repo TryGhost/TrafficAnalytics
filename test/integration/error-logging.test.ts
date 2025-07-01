@@ -65,6 +65,10 @@ describe('Error Logging', () => {
                     userAgent: expect.any(String),
                     referer: expect.any(String)
                 }),
+                headers: expect.objectContaining({
+                    'user-agent': expect.any(String),
+                    referer: expect.any(String)
+                }),
                 query: expect.any(Object),
                 requestBody: expect.any(Object),
                 type: 'validation_error'
@@ -76,6 +80,7 @@ describe('Error Logging', () => {
         const loggedData = mockWarn.mock.calls[0][0];
         expect(loggedData).toHaveProperty('err.stack');
         expect(loggedData).toHaveProperty('err.code');
+        expect(loggedData).toHaveProperty('headers');
         expect(loggedData).toHaveProperty('query');
         expect(loggedData).toHaveProperty('requestBody');
     });
@@ -109,6 +114,10 @@ describe('Error Logging', () => {
                     userAgent: expect.any(String),
                     referer: expect.any(String)
                 }),
+                headers: expect.objectContaining({
+                    'user-agent': expect.any(String),
+                    referer: expect.any(String)
+                }),
                 query: expect.any(Object),
                 requestBody: expect.any(Object),
                 type: 'unhandled_error'
@@ -120,6 +129,7 @@ describe('Error Logging', () => {
         const loggedData = mockError.mock.calls[0][0];
         expect(loggedData).toHaveProperty('err.stack');
         expect(loggedData).toHaveProperty('err.code');
+        expect(loggedData).toHaveProperty('headers');
         expect(loggedData).toHaveProperty('query');
         expect(loggedData).toHaveProperty('requestBody');
     });
@@ -144,6 +154,7 @@ describe('Error Logging', () => {
         const loggedData = mockError.mock.calls[0][0];
         expect(loggedData).toHaveProperty('err.stack');
         expect(loggedData).toHaveProperty('err.code');
+        expect(loggedData).toHaveProperty('headers');
         expect(loggedData).toHaveProperty('query');
         expect(loggedData).toHaveProperty('requestBody');
         expect(loggedData).toHaveProperty('httpRequest.userAgent');

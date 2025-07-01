@@ -31,6 +31,12 @@ export function errorHandler() {
                     referer: request.headers.referer,
                     status: 400
                 },
+                headers: {
+                    'content-type': request.headers['content-type'],
+                    'x-site-uuid': request.headers['x-site-uuid'],
+                    'user-agent': request.headers['user-agent'],
+                    referer: request.headers.referer
+                },
                 query: request.query,
                 requestBody: request.body,
                 type: 'validation_error'
@@ -59,6 +65,12 @@ export function errorHandler() {
                 requestUrl: request.url,
                 userAgent: request.headers['user-agent'],
                 remoteIp: request.ip,
+                referer: request.headers.referer
+            },
+            headers: {
+                'content-type': request.headers['content-type'],
+                'x-site-uuid': request.headers['x-site-uuid'],
+                'user-agent': request.headers['user-agent'],
                 referer: request.headers.referer
             },
             query: request.query,
