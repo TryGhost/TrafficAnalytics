@@ -34,6 +34,7 @@ const DEFAULT_BODY = {
 };
 
 interface WebAnalyticsRequestOptions {
+    url?: string;
     queryParams?: Record<string, string>;
     headers?: Record<string, string>;
     body?: Record<string, any>;
@@ -53,7 +54,7 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
     // Build query string
     const queryString = new URLSearchParams(queryParams).toString();
 
-    const baseUrl = process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3000';
+    const baseUrl = options.url || process.env.ANALYTICS_SERVICE_URL || 'http://analytics-service:3000';
     const url = `${baseUrl}/tb/web_analytics?${queryString}`;
 
     return fetch(url, {
@@ -90,20 +91,16 @@ describe('E2E /tb/web_analytics', () => {
         });
     });
 
-    it('should process analytics request successfully and forward to Tinybird', async () => {
-        const response = await makeWebAnalyticsRequest();
+    it('should process analytics request successfully and forward to Tinybird (batch mode)', async () => {
+        const response = await makeWebAnalyticsRequest({url: 'http://analytics-service:3000'});
 
         expect(response.status).toBe(202);
 
         const responseText = await response.text();
         expect(responseText).toBe('{"message":"Page hit event received"}');
 
-        await new Promise((resolve) => {
-            setTimeout(resolve, 1000);
-        });
-
-        // Verify the request was forwarded to Tinybird
-        const tinybirdRequests = await wireMock.verifyTinybirdRequest({
+        // Wait for the request to be forwarded to Tinybird (handles batch processing delay)
+        const tinybirdRequests = await wireMock.waitForRequest({
             name: 'analytics_events'
         });
 

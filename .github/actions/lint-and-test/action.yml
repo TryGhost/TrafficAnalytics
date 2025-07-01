@@ -39,6 +39,8 @@ runs:
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml up -d
         
     - name: Run E2E tests
+      env:
+        PROXY_TARGET: http://fake-tinybird:8080/v0/events
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
