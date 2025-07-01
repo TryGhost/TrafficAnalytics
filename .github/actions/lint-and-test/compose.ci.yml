@@ -3,15 +3,6 @@
 
 services:
   # Override emulator services to use CI-specific project name
-  firestore:
-    environment:
-      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
-
-  pubsub:
-    environment:
-      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
-      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
-      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
 
   analytics-service:
     image: ${DOCKER_IMAGE}
@@ -25,6 +16,25 @@ services:
     environment:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
       - TINYBIRD_TRACKER_TOKEN=test-token
+
+  analytics-service-proxy:
+    image: ${DOCKER_IMAGE}
+    build: {}  # Disable build in CI
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+      - TINYBIRD_TRACKER_TOKEN=test-token
+
+  firestore:
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+
+  pubsub:
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+
+  
 
   # Override test service to use pre-built image and CI configuration
   test:

@@ -86,7 +86,7 @@ services:
       dockerfile: Dockerfile
     command: ["yarn","tsx", "watch", "server.ts"]
     ports:
-      - ${ANALYTICS_PORT:-4000}:3000
+      - 4000:3000
     env_file:
       - path: .env
         required: false
@@ -182,6 +182,8 @@ services:
     profiles: [e2e]
     depends_on:
       analytics-service:
+        condition: service_healthy
+      analytics-service-proxy:
         condition: service_healthy
       worker:
         condition: service_healthy

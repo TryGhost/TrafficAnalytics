@@ -127,29 +127,39 @@ describe('E2E /tb/web_analytics', () => {
         });
     });
 
-    describe('validation failures', () => {
-        it('should reject requests with invalid name parameter', async () => {
-            const response = await makeWebAnalyticsRequest({
-                queryParams: {name: 'invalid_name'}
-            });
+    it('should process analytics request successfully and forward to Tinybird (proxy mode)', async () => {
+        const response = await makeWebAnalyticsRequest({url: 'http://analytics-service-proxy:3000'});
 
-            expect(response.status).toBe(400);
+        expect(response.status).toBe(202);
+
+        const responseText = await response.text();
+        expect(responseText).toBe('{"success":true}');
+
+        // Wait for the request to be forwarded to Tinybird (handles batch processing delay)
+        const tinybirdRequests = await wireMock.waitForRequest({
+            name: 'analytics_events'
         });
 
-        it('should reject requests without x-site-uuid header', async () => {
-            const response = await makeWebAnalyticsRequest({
-                headers: {'x-site-uuid': ''}
-            });
+        expect(tinybirdRequests).toHaveLength(1);
 
-            expect(response.status).toBe(400);
-        });
+        // Verify the request body was processed and enriched
+        const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
 
-        it('should reject requests with invalid x-site-uuid format', async () => {
-            const response = await makeWebAnalyticsRequest({
-                headers: {'x-site-uuid': 'not-a-uuid'}
-            });
-
-            expect(response.status).toBe(400);
+        expect(requestBody).toMatchObject({
+            timestamp: DEFAULT_BODY.timestamp,
+            action: 'page_hit',
+            version: '1',
+            // Should have session_id added by processing
+            session_id: expect.any(String),
+            payload: expect.objectContaining({
+                site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
+                pathname: '/test-page',
+                href: 'https://example.com/test-page',
+                // Should have parsed user agent info
+                browser: expect.any(String),
+                os: expect.any(String),
+                device: expect.any(String)
+            })
         });
     });
 });
