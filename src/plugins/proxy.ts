@@ -106,9 +106,6 @@ const handlePageHitRequestStrategyInline = async (request: PageHitRequestType, r
 };
 
 async function proxyPlugin(fastify: FastifyInstance) {
-    // Register reply-from for proxying capabilities
-
-    // Register the analytics proxy with native schema validation
     fastify.post<{
         Querystring: PageHitRequestQueryParamsType,
         Headers: PageHitRequestHeadersType,
