@@ -1,34 +1,9 @@
 import {FastifyInstance, FastifyReply} from 'fastify';
 import fp from 'fastify-plugin';
 import {publishEvent} from '../services/events/publisher.js';
-import {PageHitRequestType, PageHitRaw, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest, transformPageHitRawToProcessed} from '../schemas';
+import {PageHitRequestType, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest, transformPageHitRawToProcessed} from '../schemas';
 import type {PageHitRequestQueryParamsType, PageHitRequestHeadersType, PageHitRequestBodyType} from '../schemas';
-import {randomUUID} from 'crypto';
-const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageHitRaw => {
-    return {
-        timestamp: request.body.timestamp,
-        action: request.body.action,
-        version: request.body.version,
-        site_uuid: request.headers['x-site-uuid'],
-        payload: {
-            event_id: request.body.payload.event_id ?? randomUUID(),
-            member_uuid: request.body.payload.member_uuid,
-            member_status: request.body.payload.member_status,
-            post_uuid: request.body.payload.post_uuid,
-            post_type: request.body.payload.post_type,
-            locale: request.body.payload.locale,
-            location: request.body.payload.location,
-            referrer: request.body.payload.referrer ?? null,
-            parsedReferrer: request.body.payload.parsedReferrer,
-            pathname: request.body.payload.pathname,
-            href: request.body.payload.href
-        },
-        meta: {
-            ip: request.ip,
-            'user-agent': request.headers['user-agent']
-        }
-    };
-};
+import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations.js';
 
 const publishPageHitRaw = async (request: PageHitRequestType): Promise<void> => {
     const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
