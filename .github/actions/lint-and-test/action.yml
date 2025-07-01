@@ -41,7 +41,7 @@ runs:
     - name: Run E2E tests
       env:
         PROXY_TARGET: http://fake-tinybird:8080/v0/events
-        COMPOSE_FILE: compose.yml,.github/actions/lint-and-test/compose.ci.yml
+        COMPOSE_FILE: compose.yml,${{ github.action_path }}/compose.ci.yml
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
