@@ -4,8 +4,9 @@ import {publishEvent} from '../services/events/publisher.js';
 import {PageHitRequestType, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest, transformPageHitRawToProcessed} from '../schemas';
 import type {PageHitRequestQueryParamsType, PageHitRequestHeadersType, PageHitRequestBodyType} from '../schemas';
 import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations.js';
+import {handlePageHitRequestStrategyBatch} from '../handlers/page-hit-handlers.js';
 
-const publishPageHitRaw = async (request: PageHitRequestType): Promise<void> => {
+export const publishPageHitRaw = async (request: PageHitRequestType): Promise<void> => {
     const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
     if (topic) {
         const payload = pageHitRawPayloadFromRequest(request);
@@ -16,15 +17,6 @@ const publishPageHitRaw = async (request: PageHitRequestType): Promise<void> => 
             logger: request.log
         });
     }    
-};
-
-const handlePageHitRequestStrategyBatch = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
-    try {
-        await publishPageHitRaw(request);
-        reply.status(202).send({message: 'Page hit event received'});
-    } catch (error) {
-        request.log.error({error: error instanceof Error ? error.message : String(error)}, 'Failed to publish page hit event - continuing with request');
-    }
 };
 
 const handlePageHitRequestStrategyInline = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
