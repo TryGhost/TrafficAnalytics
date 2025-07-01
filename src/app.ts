@@ -6,6 +6,7 @@ import corsPlugin from './plugins/cors';
 import proxyPlugin from './plugins/proxy';
 import {getLoggerConfig} from './utils/logger';
 import {createValidationErrorHandler} from './utils/validation-error-handler';
+import v1Routes from './routes/v1';
 
 const app = fastify({
     logger: getLoggerConfig(),
@@ -24,6 +25,9 @@ app.register(loggingPlugin);
 
 // Register proxy plugin
 app.register(proxyPlugin);
+
+// Register v1 routes
+app.register(v1Routes, {prefix: '/api/v1'});
 
 // Routes
 app.get('/', async () => {
