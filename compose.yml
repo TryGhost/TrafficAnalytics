@@ -1,5 +1,120 @@
 name: traffic-analytics
 services:
+  analytics-service:
+    image: local/traffic-analytics:development
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["yarn","tsx", "watch", "server.ts"]
+    ports:
+      - ${ANALYTICS_PORT:-3000}:3000
+    env_file:
+      - path: .env
+        required: false
+    profiles: [batch]
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - FIRESTORE_DATABASE_ID=traffic-analytics-dev
+      - SALT_STORE_TYPE=firestore
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
+      - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      firestore:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+      fake-tinybird:
+        condition: service_healthy
+  worker:
+    image: local/traffic-analytics:development
+    pull_policy: never
+    command: ["yarn","tsx", "watch", "server.ts"]
+    ports:
+      - ${WORKER_PORT:-3001}:3000
+    env_file:
+      - path: .env
+        required: false
+    profiles: [batch]
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - WORKER_MODE=true
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - FIRESTORE_DATABASE_ID=traffic-analytics-dev
+      - SALT_STORE_TYPE=firestore
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
+      - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      firestore:
+        condition: service_healthy
+      pubsub:
+        condition: service_healthy
+      fake-tinybird:
+        condition: service_healthy
+
+  analytics-service-proxy:
+    image: local/traffic-analytics:development
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["yarn","tsx", "watch", "server.ts"]
+    ports:
+      - 4000:3000
+    env_file:
+      - path: .env
+        required: false
+    profiles: [proxy]
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
+      - FIRESTORE_EMULATOR_HOST=firestore:8080
+      - FIRESTORE_DATABASE_ID=traffic-analytics-dev
+      - SALT_STORE_TYPE=firestore
+      - PUBSUB_EMULATOR_HOST=pubsub:8085
+      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
+      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
+      - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    depends_on:
+      firestore:
+        condition: service_healthy
+      fake-tinybird:
+        condition: service_healthy
+  
   firestore:
     image: google/cloud-sdk:emulators
     command: ["/app/firestore-wrapper.sh"]
@@ -37,84 +152,6 @@ services:
     stop_grace_period: 2s
     networks:
       - dev-network
-
-  analytics-service:
-    image: local/traffic-analytics:development
-    pull_policy: never
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: ["yarn","tsx", "watch", "server.ts"]
-    ports:
-      - ${ANALYTICS_PORT:-3000}:3000
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      - NODE_ENV=${NODE_ENV:-development}
-      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
-      - FIRESTORE_EMULATOR_HOST=firestore:8080
-      - FIRESTORE_DATABASE_ID=traffic-analytics-dev
-      - SALT_STORE_TYPE=firestore
-      - PUBSUB_EMULATOR_HOST=pubsub:8085
-      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
-      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
-      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
-      - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
-    networks:
-      - dev-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
-    depends_on:
-      firestore:
-        condition: service_healthy
-      pubsub:
-        condition: service_healthy
-      fake-tinybird:
-        condition: service_healthy
-
-  worker:
-    image: local/traffic-analytics:development
-    pull_policy: never
-    command: ["yarn","tsx", "watch", "server.ts"]
-    ports:
-      - ${WORKER_PORT:-3001}:3000
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      - NODE_ENV=${NODE_ENV:-development}
-      - WORKER_MODE=true
-      - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
-      - FIRESTORE_EMULATOR_HOST=firestore:8080
-      - FIRESTORE_DATABASE_ID=traffic-analytics-dev
-      - SALT_STORE_TYPE=firestore
-      - PUBSUB_EMULATOR_HOST=pubsub:8085
-      - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
-      - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
-      - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
-      - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
-      - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
-    networks:
-      - dev-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
-    depends_on:
-      firestore:
-        condition: service_healthy
-      pubsub:
-        condition: service_healthy
-      fake-tinybird:
-        condition: service_healthy
-
   fake-tinybird:
     image: wiremock/wiremock:3.13.1
     ports:
@@ -145,6 +182,8 @@ services:
     profiles: [e2e]
     depends_on:
       analytics-service:
+        condition: service_healthy
+      analytics-service-proxy:
         condition: service_healthy
       worker:
         condition: service_healthy

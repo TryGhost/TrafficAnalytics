@@ -33,6 +33,8 @@ runs:
 
     # E2E Test
     - name: Start services for E2E tests
+      env:
+        COMPOSE_PROFILES: batch,proxy
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
@@ -40,6 +42,7 @@ runs:
         
     - name: Run E2E tests
       env:
+        COMPOSE_PROFILES: batch,proxy
         PROXY_TARGET: http://fake-tinybird:8080/v0/events
       shell: bash
       run: |
