@@ -65,7 +65,6 @@ class BatchWorker {
         try {
             const pageHitRaw = await this.parseMessage(message);
             const pageHitProcessed = await this.transformMessage(pageHitRaw);
-            
             // Add to batch instead of posting immediately
             this.batch.push({
                 message,

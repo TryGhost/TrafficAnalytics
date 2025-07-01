@@ -4,7 +4,6 @@ import {Type, Static} from '@sinclair/typebox';
 const StringSchema = Type.String();
 const NonEmptyStringSchema = Type.String({minLength: 1});
 const UUIDSchema = Type.String({format: 'uuid'});
-const URLSchema = Type.String({format: 'uri'});
 const ISO8601DateTimeSchema = Type.String({
     format: 'date-time'
 });
@@ -34,7 +33,7 @@ const PayloadSchema = Type.Object({
     referrer: Type.Optional(Type.Union([StringSchema, Type.Null()])),
     parsedReferrer: Type.Optional(ParsedReferrerSchema),
     pathname: NonEmptyStringSchema,
-    href: URLSchema
+    href: Type.String()
 });
 
 // Meta schema for page hit raw events

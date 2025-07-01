@@ -310,7 +310,7 @@ describe('PageHitRawSchema v1', () => {
             expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
         });
 
-        it('should reject invalid href URL', () => {
+        it('should not be too strict about the href value', () => {
             const invalidData = {
                 ...validPageHitRaw,
                 payload: {
@@ -318,7 +318,7 @@ describe('PageHitRawSchema v1', () => {
                     href: 'not-a-url'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(true);
         });
 
         it('should reject empty pathname', () => {

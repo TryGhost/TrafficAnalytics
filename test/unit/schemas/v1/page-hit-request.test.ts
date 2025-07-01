@@ -252,13 +252,13 @@ describe('PageHitRequestSchema v1', () => {
             expect(Value.Check(PageHitRequestPayloadSchema, invalidPayload)).toBe(false);
         });
 
-        it('should reject invalid href URL', () => {
+        it('should not be too strict about the href value', () => {
             const invalidPayload = {
                 ...validPayload,
                 href: 'not-a-url'
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, invalidPayload)).toBe(false);
+            expect(Value.Check(PageHitRequestPayloadSchema, invalidPayload)).toBe(true);
         });
 
         it('should reject empty required strings', () => {

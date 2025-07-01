@@ -24,7 +24,7 @@ export const PageHitProcessedSchema = Type.Object({
         locale: Type.String({minLength: 1}),
         location: Type.Union([Type.String({minLength: 1}), Type.Null()]),
         pathname: Type.String({minLength: 1}),
-        href: Type.String({format: 'uri'}),
+        href: Type.String(),
         os: Type.String(),
         browser: Type.String(),
         device: Type.String(),

@@ -7,7 +7,6 @@ import {FastifyRequest} from 'fastify';
 const StringSchema = Type.String();
 const NonEmptyStringSchema = Type.String({minLength: 1});
 const UUIDSchema = Type.String({format: 'uuid'});
-const URLSchema = Type.String({format: 'uri'});
 const ISO8601DateTimeSchema = Type.String({
     format: 'date-time'
 });
@@ -72,7 +71,7 @@ export const PageHitRequestPayloadSchema = Type.Object({
     referrer: Type.Optional(Type.Union([StringSchema, Type.Null()])),
     parsedReferrer: Type.Optional(ParsedReferrerSchema),
     pathname: NonEmptyStringSchema,
-    href: URLSchema,
+    href: Type.String(),
     site_uuid: UUIDSchema,
     post_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
     post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
