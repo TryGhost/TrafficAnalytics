@@ -126,21 +126,6 @@ describe('Fastify App', () => {
         });
     });
 
-    describe('/local-proxy', function () {
-        it('should handle requests to local-proxy path', async function () {
-            await request(proxyServer)
-                .post('/local-proxy')
-                .expect(200)
-                .expect('Hello World - From the local proxy');
-        });
-
-        it('should respond 404 to GET on local-proxy path', async function () {
-            await request(proxyServer)
-                .get('/local-proxy')
-                .expect(404);
-        });
-    });
-
     describe('/tb/web_analytics', function () {
         it('should proxy requests to the target server', async function () {
             vi.stubEnv('TINYBIRD_TRACKER_TOKEN', undefined);

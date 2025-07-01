@@ -151,11 +151,6 @@ async function proxyPlugin(fastify: FastifyInstance) {
             reply.status(500).send({error: 'Internal server error'});
         }
     });
-    
-    // Register local proxy endpoint for development/testing
-    fastify.post('/local-proxy*', async () => {
-        return 'Hello World - From the local proxy';
-    });
 }
 
 export default fp(proxyPlugin);
