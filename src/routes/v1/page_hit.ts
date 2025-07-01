@@ -1,6 +1,6 @@
-import {FastifyInstance, FastifyPluginOptions} from 'fastify';
+import {FastifyInstance} from 'fastify';
 
-async function pageHitRoutes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+async function pageHitRoutes(fastify: FastifyInstance) {
     fastify.get('/', async (request, reply) => {
         return reply.status(200).send('Hello World');
     });

@@ -1,6 +1,6 @@
-import {FastifyInstance, FastifyPluginOptions} from 'fastify';
+import {FastifyInstance} from 'fastify';
 
-async function v1Routes(fastify: FastifyInstance, options: FastifyPluginOptions) {
+async function v1Routes(fastify: FastifyInstance) {
     await fastify.register(import('./page_hit'), {prefix: '/page_hit'});
 }
 
