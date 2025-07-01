@@ -8,6 +8,11 @@ services:
       - .:/app
       - node_modules_volume:/app/node_modules
 
+  analytics-service-proxy:
+    volumes:
+      - .:/app
+      - node_modules_volume:/app/node_modules
+
   worker:
     volumes:
       - .:/app

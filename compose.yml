@@ -42,7 +42,7 @@ services:
   worker:
     image: local/traffic-analytics:development
     pull_policy: never
-    command: ["yarn","tsx", "watch", "server.ts"]
+    command: ["yarn", "tsx", "watch", "server.ts"]
     ports:
       - ${WORKER_PORT:-3001}:3000
     env_file:
@@ -84,7 +84,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["yarn","tsx", "watch", "server.ts"]
+    command: ["yarn", "tsx", "watch", "server.ts"]
     ports:
       - 4000:3000
     env_file:
@@ -97,7 +97,6 @@ services:
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - FIRESTORE_DATABASE_ID=traffic-analytics-dev
       - SALT_STORE_TYPE=firestore
-      - PUBSUB_EMULATOR_HOST=pubsub:8085
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
       - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
       - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}

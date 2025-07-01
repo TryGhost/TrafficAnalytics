@@ -7,7 +7,6 @@ import proxyPlugin from './plugins/proxy';
 import {getLoggerConfig} from './utils/logger';
 import {createValidationErrorHandler} from './utils/validation-error-handler';
 import v1Routes from './routes/v1';
-import fp from 'fastify-plugin';
 import replyFrom from '@fastify/reply-from';
 
 const app = fastify({
@@ -20,7 +19,7 @@ const app = fastify({
 app.setErrorHandler(createValidationErrorHandler());
 
 // Register reply-from plugin
-app.register(fp(replyFrom));
+app.register(replyFrom);
 
 // Register CORS plugin
 app.register(corsPlugin);
