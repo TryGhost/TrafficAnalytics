@@ -1,6 +1,5 @@
 import {FastifyInstance, FastifyReply} from 'fastify';
 import fp from 'fastify-plugin';
-import replyFrom from '@fastify/reply-from';
 import {publishEvent} from '../services/events/publisher.js';
 import {PageHitRequestType, PageHitRaw, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest, transformPageHitRawToProcessed} from '../schemas';
 import type {PageHitRequestQueryParamsType, PageHitRequestHeadersType, PageHitRequestBodyType} from '../schemas';
@@ -107,10 +106,6 @@ const handlePageHitRequestStrategyInline = async (request: PageHitRequestType, r
 };
 
 async function proxyPlugin(fastify: FastifyInstance) {
-    // Register reply-from for proxying capabilities
-    await fastify.register(replyFrom);
-
-    // Register the analytics proxy with native schema validation
     fastify.post<{
         Querystring: PageHitRequestQueryParamsType,
         Headers: PageHitRequestHeadersType,
