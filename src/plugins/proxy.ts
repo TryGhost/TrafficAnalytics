@@ -1,10 +1,10 @@
-import {FastifyInstance, FastifyReply} from 'fastify';
+import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import {publishEvent} from '../services/events/publisher.js';
-import {PageHitRequestType, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest, transformPageHitRawToProcessed} from '../schemas';
+import {PageHitRequestType, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest} from '../schemas';
 import type {PageHitRequestQueryParamsType, PageHitRequestHeadersType, PageHitRequestBodyType} from '../schemas';
 import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations.js';
-import {handlePageHitRequestStrategyBatch} from '../handlers/page-hit-handlers.js';
+import {handlePageHitRequestStrategyBatch, handlePageHitRequestStrategyInline} from '../handlers/page-hit-handlers.js';
 
 export const publishPageHitRaw = async (request: PageHitRequestType): Promise<void> => {
     const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
@@ -17,59 +17,6 @@ export const publishPageHitRaw = async (request: PageHitRequestType): Promise<vo
             logger: request.log
         });
     }    
-};
-
-const handlePageHitRequestStrategyInline = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
-    const pageHitRaw = pageHitRawPayloadFromRequest(request);
-    const pageHitProcessed = await transformPageHitRawToProcessed(pageHitRaw);
-    request.body = pageHitProcessed;
-
-    // Proxy the request to the upstream target
-    const upstream = process.env.PROXY_TARGET || 'http://localhost:3000/local-proxy';
-    await reply.from(upstream, {
-        queryString: (_search, _reqUrl, req) => {
-            // Rewrite the query parameters
-            const params = new URLSearchParams(req.query as Record<string, string>);
-            if (process.env.TINYBIRD_TRACKER_TOKEN && params.has('token')) {
-                // Remove token from query string when using env var
-                params.delete('token');
-            }
-            return params.toString();
-        },
-        rewriteRequestHeaders: (req, headers) => {
-            // Add authorization header when using env var token
-            if (process.env.TINYBIRD_TRACKER_TOKEN) {
-                return {
-                    ...headers,
-                    authorization: `Bearer ${process.env.TINYBIRD_TRACKER_TOKEN}`
-                };
-            }
-            return headers;
-        },
-        onError: (replyInstance, error) => {
-            // Log proxy errors with proper structure for GCP
-            const unwrappedError = 'error' in error ? error.error : error;
-            replyInstance.log.error({
-                err: {
-                    message: unwrappedError.message,
-                    stack: unwrappedError.stack,
-                    name: unwrappedError.name
-                },
-                httpRequest: {
-                    requestMethod: replyInstance.request.method,
-                    requestUrl: replyInstance.request.url,
-                    userAgent: replyInstance.request.headers['user-agent'],
-                    remoteIp: replyInstance.request.ip,
-                    referer: replyInstance.request.headers.referer,
-                    protocol: `${replyInstance.request.protocol.toUpperCase()}/${replyInstance.request.raw.httpVersion}`,
-                    status: 502
-                },
-                upstream: upstream,
-                type: 'proxy_error'
-            }, 'Proxy error occurred');
-            replyInstance.status(502).send({error: 'Proxy error'});
-        }
-    });
 };
 
 async function proxyPlugin(fastify: FastifyInstance) {
