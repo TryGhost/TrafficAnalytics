@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+
+# Exit early if pre-commit hooks are disabled
+if [ "$ENABLE_PRE_COMMIT_HOOKS" != "true" ]; then
+  echo "Pre-commit hooks disabled (set ENABLE_PRE_COMMIT_HOOKS=true to enable)"
+  exit 0
+fi
+
+echo "Running pre-commit checks..."
+
+# Run linting
+echo "Running yarn lint..."
+yarn lint
+if [ $? -ne 0 ]; then
+  echo "Linting failed. Please fix the issues before committing."
+  exit 1
+fi
+
+# Run unit tests
+echo "Running yarn test:unit..."
+yarn test:unit
+if [ $? -ne 0 ]; then
+  echo "Unit tests failed. Please fix the issues before committing."
+  exit 1
+fi
+
+echo "Pre-commit checks passed!"
