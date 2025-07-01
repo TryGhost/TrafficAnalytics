@@ -293,8 +293,7 @@ describe('BatchWorker', () => {
             const mockMessage = createMockMessage(JSON.stringify(invalidUrlData));
 
             await (batchWorker as any).handleMessage(mockMessage);
-
-            expectMessageNacked(mockMessage);
+            expect(mockMessage.nack).not.toHaveBeenCalled();
         });
     });
 

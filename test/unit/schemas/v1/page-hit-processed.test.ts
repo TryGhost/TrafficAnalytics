@@ -93,6 +93,20 @@ describe('PageHitProcessedSchema v1', () => {
         expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
     });
 
+    it('should not be too strict about the href value', async () => {
+        const pageHitRawWithWeirdHref: PageHitRaw = {
+            ...validPageHitRaw,
+            payload: {
+                ...validPageHitRaw.payload,
+                href: 'not-a-url'
+            }
+        };
+
+        const result = await transformPageHitRawToProcessed(pageHitRawWithWeirdHref);
+
+        expect(result.payload.href).toBe('not-a-url');
+    });
+
     describe('processed payload fields validation', () => {
         it('should require os field', () => {
             const invalidData = {

@@ -271,6 +271,22 @@ describe('Fastify App', () => {
                         }
                     });
             });
+
+            it('should not be too strict about the href value', async function () {
+                const payloadWithWeirdHref = {
+                    ...eventPayload,
+                    href: 'https://www.thesgnl.com/2025/06/members-despatch-week-xxv-mmxxv/#dhvfg-yhkhel%23dhvfg-yhkhelasd/234/[]+'
+                };
+
+                await request(proxyServer)
+                    .post('/tb/web_analytics')
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(payloadWithWeirdHref)
+                    .expect(202);
+            });
         });
 
         describe('event id transformation', function () {
