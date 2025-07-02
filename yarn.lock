@@ -1717,10 +1717,10 @@
   resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.5.tgz#1001cc5e6a3704b83c236027e77f2f58ea010f40"
   integrity sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==
 
-"@types/node@*", "@types/node@24.0.9", "@types/node@>=13.7.0":
-  version "24.0.9"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.0.9.tgz#0276ebb02550c9bec72d1fcec7642431dfaacad0"
-  integrity sha512-AVQN3mtPEWbtWfXryyHV8+8IBD4Ijm1reEVPjNWT1AvTQdLxlaroFy425Y+tKVSEJvUnKbyOGkaU6BH7Ox+NzQ==
+"@types/node@*", "@types/node@24.0.10", "@types/node@>=13.7.0":
+  version "24.0.10"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.0.10.tgz#f65a169779bf0d70203183a1890be7bee8ca2ddb"
+  integrity sha512-ENHwaH+JIRTDIEEbDK6QSQntAYGtbvdDXnMXnZaZ6k13Du1dPMmprkEHIL7ok2Wl2aZevetwTAb5S+7yIF+enA==
   dependencies:
     undici-types "~7.8.0"
 
