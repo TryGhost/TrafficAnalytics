@@ -79,7 +79,7 @@ describe('Fastify App', () => {
 
         // Import directly from the source
         const appModule = await import('../../src/app');
-        app = appModule.default;
+        app = appModule.default();
         await app.ready();
         proxyServer = app.server;
     });

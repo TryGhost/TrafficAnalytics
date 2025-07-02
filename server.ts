@@ -12,7 +12,7 @@ if (isWorkerMode) {
     app = workerModule.default;
 } else {
     const appModule = await import('./src/app');
-    app = appModule.default;
+    app = appModule.default();
 }
 
 // Start the server if this file is run directly

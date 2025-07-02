@@ -48,7 +48,7 @@ describe('Validation Error Logging', () => {
         process.env.PROXY_TARGET = targetUrl;
 
         const appModule = await import('../../src/app');
-        app = appModule.default;
+        app = appModule.default();
         await app.ready();
         proxyServer = app.server;
     });

@@ -6,7 +6,7 @@ describe('/api/v1/page_hit', () => {
 
     beforeAll(async function () {
         const appModule = await import('../../../../src/app');
-        fastify = appModule.default;
+        fastify = appModule.default();
         await fastify.ready();
     });
 
