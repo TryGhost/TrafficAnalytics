@@ -23,9 +23,9 @@ describe('Unversioned API Endpoint', function () {
                 const response = await app.inject({
                     method: 'POST',
                     url: '/tb/web_analytics',
-                    query: fixtures.defaultValidRequestQuery,
-                    headers: fixtures.defaultValidRequestHeaders,
-                    body: fixtures.defaultValidRequestBody
+                    query: fixtures.queryParams.defaultValidRequestQuery,
+                    headers: fixtures.headers.defaultValidRequestHeaders,
+                    body: fixtures.pageHits.defaultValidRequestBody
                 });
                 expect(response.statusCode).toBe(202);
             });
@@ -35,9 +35,9 @@ describe('Unversioned API Endpoint', function () {
                     const response = await app.inject({
                         method: 'POST',
                         url: '/tb/web_analytics',
-                        query: fixtures.defaultValidRequestQuery,
-                        headers: fixtures.headersWithoutSiteUuid,
-                        body: fixtures.defaultValidRequestBody
+                        query: fixtures.queryParams.defaultValidRequestQuery,
+                        headers: fixtures.headers.headersWithoutSiteUuid,
+                        body: fixtures.pageHits.defaultValidRequestBody
                     });
                     expectValidationErrorWithMessage(response, 'headers must have required property \'x-site-uuid\'');
                 });
@@ -51,9 +51,9 @@ describe('Unversioned API Endpoint', function () {
                     const response = await app.inject({
                         method: 'POST',
                         url: '/tb/web_analytics',
-                        query: fixtures.defaultValidRequestQuery,
-                        headers: fixtures.headersWithoutUserAgent,
-                        body: fixtures.defaultValidRequestBody
+                        query: fixtures.queryParams.defaultValidRequestQuery,
+                        headers: fixtures.headers.headersWithoutUserAgent,
+                        body: fixtures.pageHits.defaultValidRequestBody
                     });
                     expectValidationErrorWithMessage(response, 'headers must have required property \'user-agent\'');
                 });
@@ -62,9 +62,9 @@ describe('Unversioned API Endpoint', function () {
                     const response = await app.inject({
                         method: 'POST',
                         url: '/tb/web_analytics',
-                        query: fixtures.defaultValidRequestQuery,
-                        headers: fixtures.headersWithInvalidContentType,
-                        body: fixtures.defaultValidRequestBody
+                        query: fixtures.queryParams.defaultValidRequestQuery,
+                        headers: fixtures.headers.headersWithInvalidContentType,
+                        body: fixtures.pageHits.defaultValidRequestBody
                     });
                     expectUnsupportedMediaTypeErrorWithMessage(response, 'Unsupported Media Type: application/xml');
                 });
