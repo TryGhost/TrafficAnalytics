@@ -1,26 +1,14 @@
-// Lazy load the fixtures to avoid loading all of them into memory at once
-// Each fixture will be cached after first access using Node's require cache
-const fixtures = {
-    get defaultValidRequestHeaders() {
-        return require('./defaultValidRequestHeaders.json');
-    },
-    get defaultValidRequestBody() {
-        return require('./defaultValidRequestBody.json');
-    },
-    get defaultValidRequestQuery() {
-        return require('./defaultValidRequestQuery.json');
-    },
-    get headersWithoutSiteUuid() {
-        return require('./headersWithoutSiteUuid.json');
-    },
-    get headersWithoutUserAgent() {
-        return require('./headersWithoutUserAgent.json');
-    },
-    get headersWithInvalidContentType() {
-        return require('./headersWithInvalidContentType.json');
-    }
-} as const;
+import {readdirSync} from 'fs';
+import {join} from 'path';
 
-export type FixtureName = keyof typeof fixtures;
+const fixtures: Record<string, any> = {};
+
+// Load all .json files in this directory
+readdirSync(__dirname)
+    .filter(file => file.endsWith('.json'))
+    .forEach((file) => {
+        const name = file.replace('.json', '');
+        fixtures[name] = require(join(__dirname, file));
+    });
 
 export default fixtures;

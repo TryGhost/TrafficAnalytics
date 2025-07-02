@@ -30,7 +30,7 @@ describe('Unversioned API Endpoint', function () {
                 expect(response.statusCode).toBe(202);
             });
 
-            describe('requests with missing required headers', function () {
+            describe('requests with missing or invalid required headers', function () {
                 it('should reject a request with a missing site uuid header', async function () {
                     const response = await app.inject({
                         method: 'POST',

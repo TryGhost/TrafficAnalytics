@@ -1,2 +1,1 @@
-export {default as expectValidationErrorWithMessage} from './expectValidationErrorWithMessage';
-export {default as expectUnsupportedMediaTypeErrorWithMessage} from './expectUnsupportedMediaTypeErrorWithMessage';
+export * from './assertions';
