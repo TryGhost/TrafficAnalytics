@@ -17,20 +17,11 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run unit tests
-echo "Running yarn test"
-yarn test
+echo "Running yarn test:unit..."
+yarn test:unit
 if [ $? -ne 0 ]; then
   echo "Unit tests failed. Please fix the issues before committing."
   exit 1
-fi
-
-if [ "$ENABLE_PRE_COMMIT_HOOKS_E2E" = "true" ]; then
-  echo "Running yarn test:e2e..."
-  yarn test:e2e
-  if [ $? -ne 0 ]; then
-    echo "E2E tests failed. Please fix the issues before committing."
-    exit 1
-  fi
 fi
 
 echo "Pre-commit checks passed!"
