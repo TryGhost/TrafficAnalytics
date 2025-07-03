@@ -1,4 +1,4 @@
-import {FastifyInstance} from 'fastify';
+import {FastifyInstance, FastifyReply, FastifyRequest} from 'fastify';
 import fp from 'fastify-plugin';
 import {publishEvent} from '../services/events/publisher.js';
 import {PageHitRequestType, PageHitRequestQueryParamsSchema, PageHitRequestHeadersSchema, PageHitRequestBodySchema, populateAndTransformPageHitRequest} from '../schemas';
@@ -19,6 +19,40 @@ export const publishPageHitRaw = async (request: PageHitRequestType): Promise<vo
     }    
 };
 
+const pageHitRequestHandler = async (request: FastifyRequest<{
+    Querystring: PageHitRequestQueryParamsType,
+    Headers: PageHitRequestHeadersType,
+    Body: PageHitRequestBodyType
+}>, reply: FastifyReply) => {
+    try {
+        // If pub/sub topic is set, publish to topic and return 202. Else, proxy to target server
+        if (process.env.PUBSUB_TOPIC_PAGE_HITS_RAW) {
+            await handlePageHitRequestStrategyBatch(request, reply);
+        } else {
+            await handlePageHitRequestStrategyInline(request, reply);
+        }
+    } catch (error) {
+        reply.log.error({
+            err: error instanceof Error ? {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            } : error,
+            httpRequest: {
+                requestMethod: request.method,
+                requestUrl: request.url,
+                userAgent: request.headers['user-agent'],
+                remoteIp: request.ip,
+                referer: request.headers.referer,
+                protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
+                status: 500
+            },
+            type: 'processing_error'
+        }, 'Request processing error occurred');
+        reply.status(500).send({error: 'Internal server error'});
+    }
+};
+
 async function proxyPlugin(fastify: FastifyInstance) {
     fastify.post<{
         Querystring: PageHitRequestQueryParamsType,
@@ -31,35 +65,7 @@ async function proxyPlugin(fastify: FastifyInstance) {
             body: PageHitRequestBodySchema
         },
         preHandler: populateAndTransformPageHitRequest
-    }, async (request, reply) => {
-        try {
-            // If pub/sub topic is set, publish to topic and return 202. Else, proxy to target server
-            if (process.env.PUBSUB_TOPIC_PAGE_HITS_RAW) {
-                await handlePageHitRequestStrategyBatch(request, reply);
-            } else {
-                await handlePageHitRequestStrategyInline(request, reply);
-            }
-        } catch (error) {
-            reply.log.error({
-                err: error instanceof Error ? {
-                    message: error.message,
-                    stack: error.stack,
-                    name: error.name
-                } : error,
-                httpRequest: {
-                    requestMethod: request.method,
-                    requestUrl: request.url,
-                    userAgent: request.headers['user-agent'],
-                    remoteIp: request.ip,
-                    referer: request.headers.referer,
-                    protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
-                    status: 500
-                },
-                type: 'processing_error'
-            }, 'Request processing error occurred');
-            reply.status(500).send({error: 'Internal server error'});
-        }
-    });
+    }, pageHitRequestHandler);
     
     // Register local proxy endpoint for development/testing
     fastify.post('/local-proxy*', async () => {
