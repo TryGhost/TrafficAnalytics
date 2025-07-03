@@ -53,20 +53,22 @@ const pageHitRequestHandler = async (request: FastifyRequest<{
     }
 };
 
+const pageHitRouteOptions = {
+    schema: {
+        querystring: PageHitRequestQueryParamsSchema,
+        headers: PageHitRequestHeadersSchema,
+        body: PageHitRequestBodySchema
+    },
+    preHandler: populateAndTransformPageHitRequest,
+    handler: pageHitRequestHandler
+};
+
 async function proxyPlugin(fastify: FastifyInstance) {
     fastify.post<{
         Querystring: PageHitRequestQueryParamsType,
         Headers: PageHitRequestHeadersType,
         Body: PageHitRequestBodyType
-    }>('/tb/web_analytics', {
-        schema: {
-            querystring: PageHitRequestQueryParamsSchema,
-            headers: PageHitRequestHeadersSchema,
-            body: PageHitRequestBodySchema
-        },
-        preHandler: populateAndTransformPageHitRequest,
-        handler: pageHitRequestHandler
-    });
+    }>('/tb/web_analytics', pageHitRouteOptions);
     
     // Register local proxy endpoint for development/testing
     fastify.post('/local-proxy*', async () => {
