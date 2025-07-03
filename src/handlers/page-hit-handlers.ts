@@ -1,5 +1,5 @@
-import {FastifyReply} from 'fastify';
-import {PageHitRequestType, transformPageHitRawToProcessed} from '../schemas';
+import {FastifyReply, FastifyRequest} from 'fastify';
+import {PageHitRequestType, transformPageHitRawToProcessed, type PageHitRequestBodyType, type PageHitRequestHeadersType, type PageHitRequestQueryParamsType} from '../schemas';
 import {publishPageHitRaw} from '../plugins/proxy';
 import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations';
 
@@ -80,5 +80,39 @@ export const handlePageHitRequestStrategyInline = async (request: PageHitRequest
             replyInstance.status(502).send({error: 'Proxy error'});
         }
     });
+};
+
+export const pageHitRequestHandler = async (request: FastifyRequest<{
+    Querystring: PageHitRequestQueryParamsType;
+    Headers: PageHitRequestHeadersType;
+    Body: PageHitRequestBodyType;
+}>, reply: FastifyReply) => {
+    try {
+        // If pub/sub topic is set, publish to topic and return 202. Else, proxy to target server
+        if (process.env.PUBSUB_TOPIC_PAGE_HITS_RAW) {
+            await handlePageHitRequestStrategyBatch(request, reply);
+        } else {
+            await handlePageHitRequestStrategyInline(request, reply);
+        }
+    } catch (error) {
+        reply.log.error({
+            err: error instanceof Error ? {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            } : error,
+            httpRequest: {
+                requestMethod: request.method,
+                requestUrl: request.url,
+                userAgent: request.headers['user-agent'],
+                remoteIp: request.ip,
+                referer: request.headers.referer,
+                protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
+                status: 500
+            },
+            type: 'processing_error'
+        }, 'Request processing error occurred');
+        reply.status(500).send({error: 'Internal server error'});
+    }
 };
 

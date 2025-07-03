@@ -141,11 +141,21 @@ describe('Fastify App', () => {
         });
     });
 
-    describe('/tb/web_analytics', function () {
+    /**
+     * Temporarily duplicate the tests for the /api/v1/page_hit and /tb/web_analytics routes
+     * to ensure that the routes are working as expected.
+     * 
+     * TODO: Remove this once the /tb/web_analytics route is removed.
+     */
+    /* eslint-disable-next-line ghost/mocha/no-setup-in-describe */
+    describe.each([
+        {path: '/api/v1/page_hit'}, 
+        {path: '/tb/web_analytics'}
+    ])('describe $path', ({path}) => {
         it('should proxy requests to the target server', async function () {
             vi.stubEnv('TINYBIRD_TRACKER_TOKEN', undefined);
             await request(proxyServer)
-                .post('/tb/web_analytics')
+                .post(path)
                 .query({token: 'abc123', name: 'analytics_events_test'})
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -163,7 +173,7 @@ describe('Fastify App', () => {
         it('should not proxy requests to the target server if pub/sub topic is set', async function () {
             vi.stubEnv('PUBSUB_TOPIC_PAGE_HITS_RAW', 'test-topic');
             await request(proxyServer)
-                .post('/tb/web_analytics')
+                .post(path)
                 .query({name: 'analytics_events'})
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -174,7 +184,7 @@ describe('Fastify App', () => {
 
         it('should handle proxy errors gracefully', async function () {
             await request(proxyServer)
-                .post('/tb/web_analytics')
+                .post(path)
                 .set('x-test-header-400', 'true')
                 .expect(400);
         });
@@ -182,7 +192,8 @@ describe('Fastify App', () => {
         describe('request validation', function () { 
             it('should accept requests without token parameter', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics?name=analytics_events')
+                    .post(path)
+                    .query({name: 'analytics_events'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -192,7 +203,8 @@ describe('Fastify App', () => {
     
             it('should reject requests without name parameter', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics?token=abc123')
+                    .post(path)
+                    .query({token: 'abc123'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -205,7 +217,8 @@ describe('Fastify App', () => {
     
             it('should reject requests with invalid name parameter', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics?token=abc123&name=invalid_name')
+                    .post(path)
+                    .query({token: 'abc123', name: 'invalid_name'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -218,7 +231,8 @@ describe('Fastify App', () => {
     
             it('should reject requests with empty body', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics?token=abc123&name=test')
+                    .post(path)
+                    .query({token: 'abc123', name: 'test'})
                     .send({})
                     .expect(400)
                     .expect(function (res) {
@@ -228,7 +242,8 @@ describe('Fastify App', () => {
 
             it('should reject requests without x-site-uuid header', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics?name=analytics_events')
+                    .post(path)
+                    .query({name: 'analytics_events'})
                     .set('Content-Type', 'application/json')
                     .set('User-Agent', 'Mozilla/5.0 Test Browser')
                     .send(eventPayload)
@@ -240,7 +255,8 @@ describe('Fastify App', () => {
 
             it('should reject requests without user-agent header', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics?name=analytics_events')
+                    .post(path)
+                    .query({name: 'analytics_events'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                     .send(eventPayload)
@@ -252,13 +268,14 @@ describe('Fastify App', () => {
 
             it('should return 404 for GET requests', async function () {
                 await request(proxyServer)
-                    .get('/tb/web_analytics?token=abc123&name=test')
+                    .get(path)
+                    .query({token: 'abc123', name: 'test'})
                     .expect(404);
             });
 
             it('should allow x-site-uuid header in CORS preflight requests', async function () {
                 await request(proxyServer)
-                    .options('/tb/web_analytics')
+                    .options(path)
                     .set('Origin', 'https://main.ghost.org')
                     .set('Access-Control-Request-Method', 'POST')
                     .set('Access-Control-Request-Headers', 'x-site-uuid, content-type')
@@ -279,7 +296,7 @@ describe('Fastify App', () => {
                 };
 
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -292,7 +309,7 @@ describe('Fastify App', () => {
         describe('event id transformation', function () {
             it('should generate an event id if it is not provided', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -315,7 +332,7 @@ describe('Fastify App', () => {
                     }
                 };
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -331,7 +348,7 @@ describe('Fastify App', () => {
         describe('user agent parsing', function () {
             it('should parse the OS from the user agent and pass it to the upstream server under the meta key', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -345,7 +362,7 @@ describe('Fastify App', () => {
     
             it('should parse the browser from the user agent and pass it to the upstream server', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -359,7 +376,7 @@ describe('Fastify App', () => {
     
             it('should parse the device from the user agent and pass it to the upstream server', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -375,7 +392,7 @@ describe('Fastify App', () => {
         describe('user signature generation', function () {
             it('should generate user signature and pass it to the upstream server', async function () {
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -394,7 +411,7 @@ describe('Fastify App', () => {
                 const userAgent = 'Mozilla/5.0 Test Browser';
                 
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -418,7 +435,7 @@ describe('Fastify App', () => {
                 const userAgent = 'Mozilla/5.0 Test Browser';
                 
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -440,7 +457,7 @@ describe('Fastify App', () => {
                 const userAgent = 'Mozilla/5.0 Test Browser';
                 
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -461,7 +478,7 @@ describe('Fastify App', () => {
                 const userAgent = 'Mozilla/5.0 Direct Connection';
                 
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -488,7 +505,7 @@ describe('Fastify App', () => {
                 vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'tinybird-secret-token');
 
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'test-token', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
@@ -512,7 +529,7 @@ describe('Fastify App', () => {
                 vi.stubEnv('TINYBIRD_TRACKER_TOKEN', undefined);
 
                 await request(proxyServer)
-                    .post('/tb/web_analytics')
+                    .post(path)
                     .query({token: 'test-token', name: 'analytics_events_test'})
                     .set('Content-Type', 'application/json')
                     .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
