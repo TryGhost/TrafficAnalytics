@@ -1,3 +1,4 @@
+import './src/utils/instrumentation';
 import {fileURLToPath} from 'url';
 
 const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
