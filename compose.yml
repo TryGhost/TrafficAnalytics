@@ -190,12 +190,14 @@ services:
         condition: service_healthy
 
   jaeger:
-    image: jaegertracing/all-in-one:1.6.0
+    image: jaegertracing/all-in-one:1.62.0
     networks:
       - dev-network
       - test-network
     ports:
       - 16686:16686
+      - 4317:4317
+      - 4318:4318
 
   test:
     image: local/traffic-analytics:development
