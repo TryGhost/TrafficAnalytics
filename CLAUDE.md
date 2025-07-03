@@ -56,6 +56,10 @@ The service follows a modular architecture:
 - `SALT_STORE_TYPE` - Salt store implementation (default: memory)
 - `ENABLE_SALT_CLEANUP_SCHEDULER` - Enable automatic daily salt cleanup (default: true, set to 'false' to disable)
 - `TRUST_PROXY` - Enable trust proxy to resolve client IPs from X-Forwarded-For headers (default: true, set to 'false' to disable)
+- `OTEL_TRACE_EXPORTER` - OpenTelemetry trace exporter type: 'jaeger' (default) or 'gcp' for Google Cloud Trace
+- `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` - Custom OTLP traces endpoint (default: http://jaeger:4318/v1/traces)
+- `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` - Custom OTLP metrics endpoint (default: http://jaeger:4318/v1/metrics)
+- `K_SERVICE` - Automatically set by Cloud Run; when present, enables Google Cloud Trace
 
 ## Testing Approach
 
