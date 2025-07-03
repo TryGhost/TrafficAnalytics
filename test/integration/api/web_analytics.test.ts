@@ -1,15 +1,13 @@
-import {describe, expect, it, vi, beforeEach} from 'vitest';
-import createApp from '../../../src/app';
+import {describe, expect, it, beforeEach} from 'vitest';
 import {FastifyInstance, FastifyRequest, FastifyReply} from 'fastify';
 import fixtures from '../../utils/fixtures';
 import {expectValidationErrorWithMessage, expectUnsupportedMediaTypeErrorWithMessage} from '../../utils/assertions';
 import {createPubSubSpy} from '../../utils/pubsub-spy';
-import {EventPublisher} from '../../../src/services/events/publisher';
+import {setupAppWithStubbedPreHandler, setupAppInBatchModeWithPubSubSpy} from '../../utils/setup-app';
 
-function handlerStub(_request: FastifyRequest, reply: FastifyReply, done: () => void) {
+const preHandlerStub = async (_request: FastifyRequest, reply: FastifyReply) => {
     reply.code(202);
-    done();
-}
+};
 
 describe('Unversioned API Endpoint', function () {
     let app: FastifyInstance;
@@ -17,9 +15,7 @@ describe('Unversioned API Endpoint', function () {
     describe('POST /tb/web_analytics', () => {
         describe('Request validation', function () {
             beforeEach(async function () {
-                app = createApp();
-                // Handler stub is only called if validation passes
-                app.addHook('preHandler', handlerStub);
+                app = setupAppWithStubbedPreHandler(preHandlerStub);
             });
 
             it('should accept a default valid request from the tracking script', async function () {
@@ -75,19 +71,14 @@ describe('Unversioned API Endpoint', function () {
         });
 
         describe('Batch Mode - Publishing to pub/sub', function () {
-            const gcpProjectId: string = 'test-project';
-            const pageHitsRawTopic: string = 'page-hits-raw';
             let pubSubSpy: ReturnType<typeof createPubSubSpy>;
+            const pageHitsRawTopic: string = 'page-hits-raw';
 
             beforeEach(async function () {
-                vi.stubEnv('GOOGLE_CLOUD_PROJECT', gcpProjectId);
-                vi.stubEnv('PUBSUB_TOPIC_PAGE_HITS_RAW', pageHitsRawTopic);
-                
-                // Create and inject PubSub spy
-                pubSubSpy = createPubSubSpy();
-                EventPublisher.resetInstance(pubSubSpy.mockPubSub as any);
-                
-                app = createApp();
+                ({app, pubSubSpy} = setupAppInBatchModeWithPubSubSpy({
+                    gcpProjectId: 'test-project',
+                    pageHitsRawTopic
+                }));
             });
 
             it('should transform the request body and publish to pub/sub', async function () {
