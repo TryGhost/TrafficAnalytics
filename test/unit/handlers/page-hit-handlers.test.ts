@@ -2,12 +2,12 @@ import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {FastifyReply} from 'fastify';
 import {handlePageHitRequestStrategyBatch, handlePageHitRequestStrategyInline} from '../../../src/handlers/page-hit-handlers';
 import {PageHitRequestType} from '../../../src/schemas';
-import * as proxyModule from '../../../src/plugins/proxy';
+import * as publisherUtilsModule from '../../../src/services/events/publisherUtils';
 import * as transformationsModule from '../../../src/transformations/page-hit-transformations';
 import * as schemasModule from '../../../src/schemas/v1/page-hit-processed';
 
 // Mock the proxy module
-vi.mock('../../../src/plugins/proxy', () => ({
+vi.mock('../../../src/services/events/publisherUtils', () => ({
     publishPageHitRaw: vi.fn()
 }));
 
@@ -83,7 +83,7 @@ describe('page-hit-handlers', () => {
 
     describe('handlePageHitRequestStrategyBatch', () => {
         it('should publish page hit event and return 202 on success', async () => {
-            const publishPageHitRawSpy = vi.spyOn(proxyModule, 'publishPageHitRaw').mockResolvedValue();
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockResolvedValue();
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -95,7 +95,7 @@ describe('page-hit-handlers', () => {
 
         it('should log error and continue when publishPageHitRaw throws an Error', async () => {
             const testError = new Error('Test error message');
-            const publishPageHitRawSpy = vi.spyOn(proxyModule, 'publishPageHitRaw').mockRejectedValue(testError);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -126,7 +126,7 @@ describe('page-hit-handlers', () => {
 
         it('should log error and continue when publishPageHitRaw throws a non-Error', async () => {
             const testError = 'String error';
-            const publishPageHitRawSpy = vi.spyOn(proxyModule, 'publishPageHitRaw').mockRejectedValue(testError);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -153,7 +153,7 @@ describe('page-hit-handlers', () => {
 
         it('should log error and continue when publishPageHitRaw throws null', async () => {
             const testError = null;
-            const publishPageHitRawSpy = vi.spyOn(proxyModule, 'publishPageHitRaw').mockRejectedValue(testError);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -180,7 +180,7 @@ describe('page-hit-handlers', () => {
 
         it('should log error and continue when publishPageHitRaw throws undefined', async () => {
             const testError = undefined;
-            const publishPageHitRawSpy = vi.spyOn(proxyModule, 'publishPageHitRaw').mockRejectedValue(testError);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -207,7 +207,7 @@ describe('page-hit-handlers', () => {
 
         it('should handle complex error objects', async () => {
             const complexError = {message: 'Complex error', code: 500, details: {nested: 'data'}};
-            const publishPageHitRawSpy = vi.spyOn(proxyModule, 'publishPageHitRaw').mockRejectedValue(complexError);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(complexError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
