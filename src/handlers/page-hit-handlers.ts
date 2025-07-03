@@ -1,6 +1,6 @@
 import {FastifyReply, FastifyRequest} from 'fastify';
 import {PageHitRequestBodySchema, PageHitRequestHeadersSchema, PageHitRequestQueryParamsSchema, PageHitRequestType, populateAndTransformPageHitRequest, transformPageHitRawToProcessed, type PageHitRequestBodyType, type PageHitRequestHeadersType, type PageHitRequestQueryParamsType} from '../schemas';
-import {publishPageHitRaw} from '../plugins/proxy';
+import { publishPageHitRaw } from '../services/events/publisherUtils';
 import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations';
 
 export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
