@@ -64,11 +64,7 @@ const pageHitRouteOptions = {
 };
 
 async function proxyPlugin(fastify: FastifyInstance) {
-    fastify.post<{
-        Querystring: PageHitRequestQueryParamsType,
-        Headers: PageHitRequestHeadersType,
-        Body: PageHitRequestBodyType
-    }>('/tb/web_analytics', pageHitRouteOptions);
+    fastify.post('/tb/web_analytics', pageHitRouteOptions);
     
     // Register local proxy endpoint for development/testing
     fastify.post('/local-proxy*', async () => {
