@@ -11,8 +11,8 @@ class EventPublisher {
     private static instance: EventPublisher;
     private pubsub: PubSub;
 
-    private constructor() {
-        this.pubsub = new PubSub({
+    private constructor(pubsub?: PubSub) {
+        this.pubsub = pubsub || new PubSub({
             projectId: process.env.GOOGLE_CLOUD_PROJECT
         });
     }
@@ -24,6 +24,10 @@ class EventPublisher {
         return EventPublisher.instance;
     }
 
+    static resetInstance(pubsub?: PubSub): void {
+        EventPublisher.instance = new EventPublisher(pubsub);
+    }
+
     async publishEvent({topic, payload, logger}: PublishEventOptions): Promise<string> {
         try {
             const message = {
@@ -32,7 +36,7 @@ class EventPublisher {
             };
 
             const messageId = await this.pubsub.topic(topic).publishMessage(message);
-            
+
             logger.info({
                 messageId,
                 topic,
@@ -56,3 +60,6 @@ export const publishEvent = async ({topic, payload, logger}: PublishEventOptions
     const publisher = EventPublisher.getInstance();
     return publisher.publishEvent({topic, payload, logger});
 };
+
+// Export for testing purposes
+export {EventPublisher};
