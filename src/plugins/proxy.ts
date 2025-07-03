@@ -64,8 +64,9 @@ async function proxyPlugin(fastify: FastifyInstance) {
             headers: PageHitRequestHeadersSchema,
             body: PageHitRequestBodySchema
         },
-        preHandler: populateAndTransformPageHitRequest
-    }, pageHitRequestHandler);
+        preHandler: populateAndTransformPageHitRequest,
+        handler: pageHitRequestHandler
+    });
     
     // Register local proxy endpoint for development/testing
     fastify.post('/local-proxy*', async () => {
