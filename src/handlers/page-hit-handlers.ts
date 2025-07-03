@@ -1,5 +1,5 @@
 import {FastifyReply, FastifyRequest} from 'fastify';
-import {PageHitRequestType, transformPageHitRawToProcessed, type PageHitRequestBodyType, type PageHitRequestHeadersType, type PageHitRequestQueryParamsType} from '../schemas';
+import {PageHitRequestBodySchema, PageHitRequestHeadersSchema, PageHitRequestQueryParamsSchema, PageHitRequestType, populateAndTransformPageHitRequest, transformPageHitRawToProcessed, type PageHitRequestBodyType, type PageHitRequestHeadersType, type PageHitRequestQueryParamsType} from '../schemas';
 import {publishPageHitRaw} from '../plugins/proxy';
 import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations';
 
@@ -81,6 +81,7 @@ export const handlePageHitRequestStrategyInline = async (request: PageHitRequest
         }
     });
 };
+
 export const pageHitRequestHandler = async (request: FastifyRequest<{
     Querystring: PageHitRequestQueryParamsType;
     Headers: PageHitRequestHeadersType;
@@ -113,5 +114,15 @@ export const pageHitRequestHandler = async (request: FastifyRequest<{
         }, 'Request processing error occurred');
         reply.status(500).send({error: 'Internal server error'});
     }
+};
+
+export const pageHitRouteOptions = {
+    schema: {
+        querystring: PageHitRequestQueryParamsSchema,
+        headers: PageHitRequestHeadersSchema,
+        body: PageHitRequestBodySchema
+    },
+    preHandler: populateAndTransformPageHitRequest,
+    handler: pageHitRequestHandler
 };
 
