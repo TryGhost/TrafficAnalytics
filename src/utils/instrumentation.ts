@@ -9,7 +9,7 @@ import {getNodeAutoInstrumentations} from '@opentelemetry/auto-instrumentations-
 
 const sdk = new NodeSDK({
     resource: resourceFromAttributes({
-        [ATTR_SERVICE_NAME]: 'analytics-service',
+        [ATTR_SERVICE_NAME]: process.env.WORKER_MODE ? 'analytics-worker' : 'analytics-service',
         [ATTR_SERVICE_VERSION]: '1.0'
     }), 
     traceExporter: new OTLPTraceExporter({
