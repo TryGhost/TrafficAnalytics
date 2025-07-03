@@ -189,6 +189,14 @@ services:
       fake-tinybird:
         condition: service_healthy
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.6.0
+    networks:
+      - dev-network
+      - test-network
+    ports:
+      - 16686:16686
+
   test:
     image: local/traffic-analytics:development
     pull_policy: never

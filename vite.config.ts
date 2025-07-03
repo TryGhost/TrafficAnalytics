@@ -20,6 +20,7 @@ export default defineConfig({
                 /^@fastify/,
                 /^@google-cloud/,
                 /^@tryghost/,
+                /^@opentelemetry/,
                 'fastify',
                 'fastify-plugin',
                 'pino',
