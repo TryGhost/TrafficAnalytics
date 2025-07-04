@@ -14,6 +14,7 @@ vi.mock('../../src/services/user-signature', () => ({
 
 // Import the mocked service
 import {userSignatureService} from '../../src/services/user-signature';
+import {initializeApp} from '../../src/initializeApp';
 
 const eventPayload = {
     timestamp: '2025-04-14T22:16:06.095Z',
@@ -77,9 +78,8 @@ describe('Fastify App', () => {
         // Set the PROXY_TARGET environment variable before requiring the app
         process.env.PROXY_TARGET = targetUrl;
 
-        // Import directly from the source
-        const appModule = await import('../../src/app');
-        app = appModule.default();
+        // Create an instance of the app
+        app = await initializeApp({isWorkerMode: false});
         await app.ready();
         proxyServer = app.server;
     });

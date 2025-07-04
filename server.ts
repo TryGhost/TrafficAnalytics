@@ -1,17 +1,13 @@
 import './src/utils/instrumentation';
 import {fileURLToPath} from 'url';
+import {initializeApp} from './src/initializeApp';
 
 const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 const port: number = parseInt(process.env.PORT || '3000', 10);
+const isWorkerMode = process.env.WORKER_MODE === 'true';
 
-async function initializeApp({isWorkerMode}: {isWorkerMode: boolean}) {
-    const appModulePath = isWorkerMode ? './src/worker-app' : './src/app';
-    const appModule = await import(appModulePath);
-    return appModule.default();    
-}
-
-// Load the appropriate app once
-const app = await initializeApp({isWorkerMode: process.env.WORKER_MODE === 'true'});
+// Create an instance of the appropriate app
+const app = await initializeApp({isWorkerMode});
 
 // Start the server if this file is run directly
 if (isMainModule) {

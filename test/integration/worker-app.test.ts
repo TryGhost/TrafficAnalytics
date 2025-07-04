@@ -1,21 +1,13 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
 import request from 'supertest';
 import {FastifyInstance} from 'fastify';
+import {initializeApp} from '../../src/initializeApp';
 
 describe('Worker App', () => {
     let app: FastifyInstance;
     beforeEach(async () => {
-        // Clear environment variables to ensure clean state
-        delete process.env.WORKER_MODE;
-        
-        // Clear module cache to ensure fresh import
-        vi.resetModules();
-        
-        // Import worker app fresh
-        const workerModule = await import('../../src/worker-app');
-        app = workerModule.default();
-        
-        // Wait for app to be ready
+        // Create an instance of the worker app
+        app = await initializeApp({isWorkerMode: true});
         await app.ready();
     });
 
@@ -23,7 +15,6 @@ describe('Worker App', () => {
         if (app) {
             await app.close();
         }
-        // Note: Global setup handles resource cleanup
     });
 
     describe('Health Endpoints', () => {

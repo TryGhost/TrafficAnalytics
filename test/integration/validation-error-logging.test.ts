@@ -3,6 +3,7 @@ import request from 'supertest';
 import createMockUpstream from '../utils/mock-upstream';
 import {FastifyInstance} from 'fastify';
 import {Server} from 'http';
+import {initializeApp} from '../../src/initializeApp';
 
 // Mock the user signature service before importing the app
 vi.mock('../../src/services/user-signature', () => ({
@@ -47,8 +48,7 @@ describe('Validation Error Logging', () => {
 
         process.env.PROXY_TARGET = targetUrl;
 
-        const appModule = await import('../../src/app');
-        app = appModule.default();
+        app = await initializeApp({isWorkerMode: false});
         await app.ready();
         proxyServer = app.server;
     });
