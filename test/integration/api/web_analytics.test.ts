@@ -1,9 +1,14 @@
 import {describe, expect, it, beforeEach} from 'vitest';
 import {FastifyInstance, FastifyRequest, FastifyReply} from 'fastify';
-import fixtures from '../../utils/fixtures';
 import {expectValidationErrorWithMessage, expectUnsupportedMediaTypeErrorWithMessage} from '../../utils/assertions';
 import {createPubSubSpy} from '../../utils/pubsub-spy';
 import {setupAppWithStubbedPreHandler, setupAppInBatchModeWithPubSubSpy} from '../../utils/setup-app';
+import defaultValidRequestQuery from '../../utils/fixtures/defaultValidRequestQuery.json';
+import defaultValidRequestHeaders from '../../utils/fixtures/defaultValidRequestHeaders.json';
+import defaultValidRequestBody from '../../utils/fixtures/defaultValidRequestBody.json';
+import headersWithInvalidContentType from '../../utils/fixtures/headersWithInvalidContentType.json';
+import headersWithoutUserAgent from '../../utils/fixtures/headersWithoutUserAgent.json';
+import headersWithoutSiteUuid from '../../utils/fixtures/headersWithoutSiteUuid.json';
 
 const preHandlerStub = async (_request: FastifyRequest, reply: FastifyReply) => {
     reply.code(202);
@@ -22,9 +27,9 @@ describe('Unversioned API Endpoint', function () {
                 const response = await app.inject({
                     method: 'POST',
                     url: '/tb/web_analytics',
-                    query: fixtures.queryParams.defaultValidRequestQuery,
-                    headers: fixtures.headers.defaultValidRequestHeaders,
-                    body: fixtures.pageHits.defaultValidRequestBody
+                    query: defaultValidRequestQuery,
+                    headers: defaultValidRequestHeaders,
+                    body: defaultValidRequestBody
                 });
                 expect(response.statusCode).toBe(202);
             });
@@ -34,9 +39,9 @@ describe('Unversioned API Endpoint', function () {
                     const response = await app.inject({
                         method: 'POST',
                         url: '/tb/web_analytics',
-                        query: fixtures.queryParams.defaultValidRequestQuery,
-                        headers: fixtures.headers.headersWithoutSiteUuid,
-                        body: fixtures.pageHits.defaultValidRequestBody
+                        query: defaultValidRequestQuery,
+                        headers: headersWithoutSiteUuid,
+                        body: defaultValidRequestBody
                     });
                     expectValidationErrorWithMessage(response, 'headers must have required property \'x-site-uuid\'');
                 });
@@ -50,9 +55,9 @@ describe('Unversioned API Endpoint', function () {
                     const response = await app.inject({
                         method: 'POST',
                         url: '/tb/web_analytics',
-                        query: fixtures.queryParams.defaultValidRequestQuery,
-                        headers: fixtures.headers.headersWithoutUserAgent,
-                        body: fixtures.pageHits.defaultValidRequestBody
+                        query: defaultValidRequestQuery,
+                        headers: headersWithoutUserAgent,
+                        body: defaultValidRequestBody
                     });
                     expectValidationErrorWithMessage(response, 'headers must have required property \'user-agent\'');
                 });
@@ -61,9 +66,9 @@ describe('Unversioned API Endpoint', function () {
                     const response = await app.inject({
                         method: 'POST',
                         url: '/tb/web_analytics',
-                        query: fixtures.queryParams.defaultValidRequestQuery,
-                        headers: fixtures.headers.headersWithInvalidContentType,
-                        body: fixtures.pageHits.defaultValidRequestBody
+                        query: defaultValidRequestQuery,
+                        headers: headersWithInvalidContentType,
+                        body: defaultValidRequestBody
                     });
                     expectUnsupportedMediaTypeErrorWithMessage(response, 'Unsupported Media Type: application/xml');
                 });
@@ -85,18 +90,18 @@ describe('Unversioned API Endpoint', function () {
                 await app.inject({
                     method: 'POST',
                     url: '/tb/web_analytics',
-                    query: fixtures.queryParams.defaultValidRequestQuery,
-                    headers: fixtures.headers.defaultValidRequestHeaders,
-                    body: fixtures.pageHits.defaultValidRequestBody
+                    query: defaultValidRequestQuery,
+                    headers: defaultValidRequestHeaders,
+                    body: defaultValidRequestBody
                 });
                 
                 pubSubSpy.expectPublishedMessageToTopic(pageHitsRawTopic).withMessageData({
                     timestamp: expect.any(String),
                     action: 'page_hit',
                     version: '1',
-                    site_uuid: fixtures.headers.defaultValidRequestHeaders['x-site-uuid'],
+                    site_uuid: defaultValidRequestHeaders['x-site-uuid'],
                     payload: {
-                        event_id: fixtures.pageHits.defaultValidRequestBody.payload.event_id,
+                        event_id: defaultValidRequestBody.payload.event_id,
                         href: 'https://www.example.com/',
                         pathname: '/',
                         member_uuid: 'undefined',
@@ -123,9 +128,9 @@ describe('Unversioned API Endpoint', function () {
                 const response = await app.inject({
                     method: 'POST',
                     url: '/tb/web_analytics',
-                    query: fixtures.queryParams.defaultValidRequestQuery,
-                    headers: fixtures.headers.headersWithoutSiteUuid,
-                    body: fixtures.pageHits.defaultValidRequestBody
+                    query: defaultValidRequestQuery,
+                    headers: headersWithoutSiteUuid,
+                    body: defaultValidRequestBody
                 });
                 expectValidationErrorWithMessage(response, 'headers must have required property \'x-site-uuid\'');
                 pubSubSpy.expectNoMessagesPublished();
