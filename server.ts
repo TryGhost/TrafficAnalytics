@@ -9,7 +9,7 @@ const isWorkerMode = process.env.WORKER_MODE === 'true';
 let app;
 if (isWorkerMode) {
     const workerModule = await import('./src/worker-app');
-    app = workerModule.default;
+    app = workerModule.default();
 } else {
     const appModule = await import('./src/app');
     app = appModule.default();

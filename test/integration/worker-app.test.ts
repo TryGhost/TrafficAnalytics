@@ -13,7 +13,7 @@ describe('Worker App', () => {
         
         // Import worker app fresh
         const workerModule = await import('../../src/worker-app');
-        app = workerModule.default;
+        app = workerModule.default();
         
         // Wait for app to be ready
         await app.ready();
