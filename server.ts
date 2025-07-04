@@ -3,17 +3,15 @@ import {fileURLToPath} from 'url';
 
 const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 const port: number = parseInt(process.env.PORT || '3000', 10);
-const isWorkerMode = process.env.WORKER_MODE === 'true';
+
+async function initializeApp({isWorkerMode}: {isWorkerMode: boolean}) {
+    const appModulePath = isWorkerMode ? './src/worker-app' : './src/app';
+    const appModule = await import(appModulePath);
+    return appModule.default();    
+}
 
 // Load the appropriate app once
-let app;
-if (isWorkerMode) {
-    const workerModule = await import('./src/worker-app');
-    app = workerModule.default();
-} else {
-    const appModule = await import('./src/app');
-    app = appModule.default();
-}
+const app = await initializeApp({isWorkerMode: process.env.WORKER_MODE === 'true'});
 
 // Start the server if this file is run directly
 if (isMainModule) {
@@ -35,5 +33,4 @@ if (isMainModule) {
     start();
 }
 
-// Export the app
 export default app;
