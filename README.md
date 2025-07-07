@@ -44,39 +44,21 @@ sequenceDiagram
 - User agent parsing for OS, browser, and device detection
 - Referrer URL parsing and categorization
 - Privacy-preserving user signatures with daily-rotating salts
-- Configurable salt storage (in-memory or Firestore)
-- Docker-first development with Firestore emulator support
 
 ## Configuration
 
-Copy `.env.example` to `.env` and configure as needed:
-
-- `PORT` - Server port (default: 3000)
-- `LOG_LEVEL` - Logging level (default: info)
-- `PROXY_TARGET` - Upstream URL to forward requests (default: http://localhost:3000/local-proxy)
-- `SALT_STORE_TYPE` - Salt store implementation: memory or firestore (default: memory)
-- `GOOGLE_CLOUD_PROJECT` - Google Cloud project ID for Firestore (required when using firestore salt store)
-- `LOG_PROXY_REQUESTS` - Enable logging of proxy requests (default: true)
-- `ENABLE_SALT_CLEANUP_SCHEDULER` - Enable automatic daily salt cleanup (default: true)
-- `FIRESTORE_DATABASE_ID` - Firestore database ID (required when using firestore salt store)
-- `PUBSUB_TOPIC_PAGE_HITS_RAW` - Pub/Sub topic for raw page hits (required for pub/sub functionality)
-- `TRUST_PROXY` - Enable trust proxy to resolve client IPs from X-Forwarded-For headers (default: true)
+Copy `.env.example` to `.env` and configure as needed. For local development with Ghost, see [Develop locally with Ghost](#develop-locally-with-ghost)
 
 ## Develop
 
+Pre-requisites:
+- A container runtime, such as Docker Desktop or Orbstack
+- Docker Compose
+
 1. `git clone` this repo & `cd` into it as usual
-2. Run `yarn` to install top-level dependencies.
+2. `yarn dev` to build & start all required development services. The Analytics Service will be reachable at `http://localhost:3000`.
 
-## Build
-- `yarn build` to transpile Typescript to JS
-- `docker compose build` to build docker image
-
-## Run
-
-- `yarn dev` start development server in docker compose (includes Firestore, Pub/Sub emulator)
-- View: [http://localhost:3000](http://localhost:3000)
-
-## Run locally with Ghost
+## Develop locally with Ghost
 
 It is possible to run this Analytics Service locally alongside your local development instance of Ghost. This can be useful to test the full end-to-end flow from Ghost > `ghost-stats.js` > Analytics Service > Tinybird and back.
 
@@ -86,23 +68,31 @@ Here are the steps to get setup:
     - `workspaceId`: run `tb info` in your Tinybird shell, and copy the `workspace_id` value
     - `adminToken`: run `tb token ls` and copy the token that is named "admin token"
     - `trackerToken`: run `tb token ls` and copy the token that is named "tracker"
-3. Update your Ghost configuration in `ghost/core/config.local.json` or `ghost/core/config.local.jsonc` with the following:
+3. Update your Ghost configuration in `ghost/core/config.local.json` or `ghost/core/config.local.jsonc` with the following. Make sure to replace the `${workspaceId}` and `${adminToken}` with the values from step 2:
 ```json
 {
     "tinybird": {
         "workspaceId": "${workspaceId}",
         "adminToken": "${adminToken}",
         "tracker": {
-            "endpoint": "http://localhost:3000/tb/web_analytics", // This points Ghost to your local instance of the Analytics Service for event ingestion
+            "endpoint": "http://localhost:3000/tb/web_analytics",
             "datasource": "analytics_events"
         },
         "stats": {
-            "endpoint": "http://localhost:7181" // This points Ghost Admin to your local tinybird container for querying the API endpoints
+            "endpoint": "http://localhost:7181"
         }
     }
 }
 ```
-5. Add the following to your `.env` file in the root of this repo:
+4. Ensure you've set the `trafficAnalytics` labs flag in Ghost. This can be done through the Admin UI in settings, or more simply via config:
+```json
+{
+    "labs": {
+        "trafficAnalytics": true
+    }
+}
+```
+5. Add the following to your `.env` file in the root of this repo. Make sure to replace `${trackerToken}` with the value from step 2:
 ```bash
 TINYBIRD_TRACKER_TOKEN=${trackerToken} # From step 2
 PROXY_TARGET=http://host.docker.internal:7181/v0/events # The URL of your Tinybird-local container
@@ -118,10 +108,15 @@ To confirm everything is working:
 
 ## Test
 
-- `yarn test` run all tests in docker compose
+- `yarn test:types` — run Typescript typechecks in Docker
+- `yarn test:unit` — run all unit tests in Docker
+- `yarn test:integration` — run all integration tests in Docker
+- `yarn test` — run typechecks, unit tests and integration tests in Docker
+- `yarn test:e2e` — run e2e tests (with wiremock) in Docker
 
 ## Lint
 - `yarn lint` run eslint in docker compose
+
 
 ## Multi-Worktree Development
 
