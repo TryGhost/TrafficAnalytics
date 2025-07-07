@@ -1,9 +1,8 @@
 import {FastifyInstance} from 'fastify';
+import {pageHitRouteOptions} from '../../handlers/page-hit-handlers';
 
 async function pageHitRoutes(fastify: FastifyInstance) {
-    fastify.get('/', async (request, reply) => {
-        return reply.status(200).send('Hello World');
-    });
+    fastify.post('/', pageHitRouteOptions);
 }
 
 export default pageHitRoutes;
