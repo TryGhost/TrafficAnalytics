@@ -4,6 +4,13 @@ import type {PrettyOptions} from 'pino-pretty';
 import type {FastifyRequest, FastifyReply} from 'fastify';
 import {createGcpLoggingPinoConfig} from '@google-cloud/pino-logging-gcp-config';
 
+interface LogRecord {
+    trace_id?: string;
+    span_id?: string;
+    trace_flags?: string;
+    [key: string]: unknown;
+}
+
 /**
  * Get logger configuration based on environment
  */
@@ -56,6 +63,24 @@ export function getLoggerConfig(): LoggerOptions {
     return {
         ...gcpConfig,
         level: process.env.LOG_LEVEL || 'info',
+        formatters: {
+            log(object: LogRecord): Record<string, unknown> {
+                // Add trace context attributes following Cloud Logging structured log format described
+                // in https://cloud.google.com/logging/docs/structured-logging#special-payload-fields
+
+                /* eslint-disable camelcase */
+                const {trace_id, span_id, trace_flags, ...rest} = object;
+
+                return {
+                    'logging.googleapis.com/trace': trace_id,
+                    'logging.googleapis.com/spanId': span_id,
+                    'logging.googleapis.com/trace_sampled': trace_flags
+                        ? trace_flags === '01'
+                        : undefined,
+                    ...rest
+                };
+            }
+        },
         serializers: {
             ...gcpConfig.serializers,
             err(error: Error) {
