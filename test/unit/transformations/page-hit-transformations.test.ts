@@ -260,17 +260,17 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should correctly map meta fields from request', () => {
-        const request = pageHitRequest();
-        const modifiedRequest = {
-            ...request,
+        const initialRequest = pageHitRequest();
+        const request = {
+            ...initialRequest,
             ip: '10.0.0.1',
             headers: {
-                ...request.headers,
+                ...initialRequest.headers,
                 'user-agent': 'Custom User Agent String'
             }
         } as PageHitRequestType;
 
-        const result = pageHitRawPayloadFromRequest(modifiedRequest);
+        const result = pageHitRawPayloadFromRequest(request);
 
         expect(result.meta).toEqual({
             ip: '10.0.0.1',
