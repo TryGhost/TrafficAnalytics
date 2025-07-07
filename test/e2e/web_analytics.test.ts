@@ -1,5 +1,6 @@
 import {describe, it, expect, beforeAll, afterEach} from 'vitest';
 import {WireMock} from '../utils/wiremock';
+import path from 'path';
 
 // Default test data that passes schema validation
 const DEFAULT_QUERY_PARAMS = {
@@ -34,7 +35,8 @@ const DEFAULT_BODY = {
 };
 
 interface WebAnalyticsRequestOptions {
-    url?: string;
+    path: string;
+    baseUrl: string;
     queryParams?: Record<string, string>;
     headers?: Record<string, string>;
     body?: Record<string, any>;
@@ -45,7 +47,7 @@ interface WebAnalyticsRequestOptions {
  * Helper function to make requests to the web analytics endpoint
  * Uses sensible defaults that pass schema validation, allows overrides for testing edge cases
  */
-async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {}) {
+async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions) {
     const queryParams = {...DEFAULT_QUERY_PARAMS, ...options.queryParams};
     const headers = {...DEFAULT_HEADERS, ...options.headers};
     const body = {...DEFAULT_BODY, ...options.body};
@@ -54,8 +56,8 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
     // Build query string
     const queryString = new URLSearchParams(queryParams).toString();
 
-    const baseUrl = options.url || process.env.ANALYTICS_SERVICE_URL || 'http://analytics-service:3000';
-    const url = `${baseUrl}/tb/web_analytics?${queryString}`;
+    const url = new URL(path.join(options.baseUrl, options.path));
+    url.search = queryString;
 
     return fetch(url, {
         method,
@@ -92,7 +94,7 @@ describe('E2E /tb/web_analytics', () => {
     });
 
     it('should process analytics request successfully and forward to Tinybird (batch mode)', async () => {
-        const response = await makeWebAnalyticsRequest({url: 'http://analytics-service:3000'});
+        const response = await makeWebAnalyticsRequest({baseUrl: 'http://analytics-service:3000', path: '/tb/web_analytics'});
 
         expect(response.status).toBe(202);
 
@@ -128,7 +130,7 @@ describe('E2E /tb/web_analytics', () => {
     });
 
     it('should process analytics request successfully and forward to Tinybird (proxy mode)', async () => {
-        const response = await makeWebAnalyticsRequest({url: 'http://analytics-service-proxy:3000'});
+        const response = await makeWebAnalyticsRequest({baseUrl: 'http://analytics-service-proxy:3000', path: '/tb/web_analytics'});
 
         expect(response.status).toBe(202);
 
