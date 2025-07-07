@@ -1,0 +1,23 @@
+{
+    "timestamp": "2025-07-02T20:09:42.591Z",
+    "action": "page_hit",
+    "version": "1",
+    "payload": {
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+        "locale": "en-US",
+        "location": "US",
+        "parsedReferrer": {
+            "source": null,
+            "medium": null,
+            "url": null
+        },
+        "pathname": "/",
+        "href": "https://www.chrisraible.com/",
+        "event_id": "70ce307c-0b09-4bb5-b7c7-e41cf1085720",
+        "site_uuid": "940b73e9-4952-4752-b23d-9486f999c47e",
+        "post_uuid": "undefined",
+        "post_type": "null",
+        "member_uuid": "undefined",
+        "member_status": "undefined"
+    }
+}
