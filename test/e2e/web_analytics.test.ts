@@ -52,12 +52,8 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions) {
     const headers = {...DEFAULT_HEADERS, ...options.headers};
     const body = {...DEFAULT_BODY, ...options.body};
     const method = options.method || 'POST';
-
-    // Build query string
-    const queryString = new URLSearchParams(queryParams).toString();
-
     const url = new URL(path.join(options.baseUrl, options.path));
-    url.search = queryString;
+    url.search = new URLSearchParams(queryParams).toString();
 
     return fetch(url, {
         method,
