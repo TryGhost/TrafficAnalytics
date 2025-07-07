@@ -143,7 +143,7 @@ describe('Fastify App', () => {
     
     /* eslint-disable ghost/mocha/no-setup-in-describe */
     describe.each([
-        '/tb/web_analytics'
+        '/tb/web_analytics', '/api/v1/page_hit'
     ])(`%s`, (path) => {
         it('should proxy requests to the target server', async function () {
             vi.stubEnv('TINYBIRD_TRACKER_TOKEN', undefined);
