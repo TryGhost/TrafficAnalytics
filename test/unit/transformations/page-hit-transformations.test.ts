@@ -1,12 +1,10 @@
-import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
+import {describe, it, expect} from 'vitest';
 import {pageHitRawPayloadFromRequest} from '../../../src/transformations/page-hit-transformations';
 import {PageHitRequestType} from '../../../src/schemas';
 
 describe('pageHitRawPayloadFromRequest', () => {
-    let mockRequest: PageHitRequestType;
-
-    beforeEach(() => {
-        mockRequest = {
+    function createPageHitRequest() {
+        return {
             ip: '192.168.1.1',
             headers: {
                 'x-site-uuid': '12345678-1234-1234-1234-123456789012',
@@ -36,14 +34,11 @@ describe('pageHitRawPayloadFromRequest', () => {
                 }
             }
         } as PageHitRequestType;
-    });
-
-    afterEach(() => {
-        vi.restoreAllMocks();
-    });
+    }
 
     it('should transform request to PageHitRaw with all fields present', () => {
-        const result = pageHitRawPayloadFromRequest(mockRequest);
+        const request = createPageHitRequest();
+        const result = pageHitRawPayloadFromRequest(request);
 
         expect(result).toEqual({
             timestamp: '2024-01-01T00:00:00.000Z',
@@ -74,197 +69,209 @@ describe('pageHitRawPayloadFromRequest', () => {
         });
     });
 
-    it('should generate random UUID when event_id is undefined', () => {
-        mockRequest.body.payload.event_id = undefined;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
-        expect(result.payload.event_id).toBeDefined();
-        expect(typeof result.payload.event_id).toBe('string');
-        expect(result.payload.event_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-    });
+    describe('Event ID', () => {
+        const uuidMatcher = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-    it('should generate random UUID when event_id is null', () => {
-        mockRequest.body.payload.event_id = null as any;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
-        expect(result.payload.event_id).toBeDefined();
-        expect(typeof result.payload.event_id).toBe('string');
-        expect(result.payload.event_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-    });
+        it('should generate random UUID when event_id is undefined', () => {
+            const request = createPageHitRequest();
+            request.body.payload.event_id = undefined;
 
-    it('should generate random UUID when event_id is empty string', () => {
-        mockRequest.body.payload.event_id = '';
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
-        expect(result.payload.event_id).toBeDefined();
-        expect(typeof result.payload.event_id).toBe('string');
-        expect(result.payload.event_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+            const result = pageHitRawPayloadFromRequest(request);
+
+            expect(result.payload.event_id).toBeDefined();
+            expect(typeof result.payload.event_id).toBe('string');
+            expect(result.payload.event_id).toMatch(uuidMatcher);
+        });
+
+        it('should generate random UUID when event_id is null', () => {
+            const request = createPageHitRequest();
+            request.body.payload.event_id = null as any;
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            expect(result.payload.event_id).toBeDefined();
+            expect(typeof result.payload.event_id).toBe('string');
+            expect(result.payload.event_id).toMatch(uuidMatcher);
+        });
+
+        it('should generate random UUID when event_id is empty string', () => {
+            const request = createPageHitRequest();
+            request.body.payload.event_id = '';
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            expect(result.payload.event_id).toBeDefined();
+            expect(typeof result.payload.event_id).toBe('string');
+            expect(result.payload.event_id).toMatch(uuidMatcher);
+        });
     });
 
     it('should set referrer to null when undefined', () => {
-        mockRequest.body.payload.referrer = undefined;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.referrer = undefined;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.referrer).toBeNull();
     });
 
     it('should preserve referrer when it has a value', () => {
-        mockRequest.body.payload.referrer = 'https://facebook.com';
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.referrer = 'https://facebook.com';
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.referrer).toBe('https://facebook.com');
     });
 
     it('should preserve referrer when it is null', () => {
-        mockRequest.body.payload.referrer = null;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.referrer = null;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.referrer).toBeNull();
     });
 
     it('should handle undefined member_uuid', () => {
-        mockRequest.body.payload.member_uuid = 'undefined';
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.member_uuid = 'undefined';
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.member_uuid).toBe('undefined');
     });
 
     it('should handle valid member_uuid', () => {
+        const request = createPageHitRequest();
         const uuid = '87654321-4321-4321-4321-210987654321';
-        mockRequest.body.payload.member_uuid = uuid;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        request.body.payload.member_uuid = uuid;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.member_uuid).toBe(uuid);
     });
 
     it('should handle undefined member_status', () => {
-        mockRequest.body.payload.member_status = 'undefined';
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.member_status = 'undefined';
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.member_status).toBe('undefined');
     });
 
     it('should handle valid member_status', () => {
-        mockRequest.body.payload.member_status = 'paid';
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.member_status = 'paid';
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.member_status).toBe('paid');
     });
 
     it('should handle undefined post_uuid', () => {
-        mockRequest.body.payload.post_uuid = 'undefined';
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.post_uuid = 'undefined';
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.post_uuid).toBe('undefined');
     });
 
     it('should handle valid post_uuid', () => {
+        const request = createPageHitRequest();
         const uuid = '11111111-2222-3333-4444-555555555555';
-        mockRequest.body.payload.post_uuid = uuid;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        request.body.payload.post_uuid = uuid;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.post_uuid).toBe(uuid);
     });
 
     it('should handle all post_type values', () => {
         const postTypes = ['null', 'post', 'page'] as const;
-        
+
         postTypes.forEach((postType) => {
-            mockRequest.body.payload.post_type = postType;
-            
-            const result = pageHitRawPayloadFromRequest(mockRequest);
-            
+            const request = createPageHitRequest();
+            request.body.payload.post_type = postType;
+
+            const result = pageHitRawPayloadFromRequest(request);
+
             expect(result.payload.post_type).toBe(postType);
         });
     });
 
     it('should handle null location', () => {
-        mockRequest.body.payload.location = null;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.location = null;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.location).toBeNull();
     });
 
     it('should handle string location', () => {
-        mockRequest.body.payload.location = 'blog-section';
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.location = 'blog-section';
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.location).toBe('blog-section');
     });
 
     it('should handle parsedReferrer with all fields', () => {
-        const parsedReferrer = {
-            source: 'twitter',
-            medium: 'social',
-            url: 'https://twitter.com'
-        };
-        mockRequest.body.payload.parsedReferrer = parsedReferrer;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        const parsedReferrer = {source: 'twitter', medium: 'social', url: 'https://twitter.com'};
+        request.body.payload.parsedReferrer = parsedReferrer;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.parsedReferrer).toEqual(parsedReferrer);
     });
 
     it('should handle parsedReferrer with null values', () => {
-        const parsedReferrer = {
-            source: null,
-            medium: null,
-            url: null
-        };
-        mockRequest.body.payload.parsedReferrer = parsedReferrer;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        const parsedReferrer = {source: null, medium: null, url: null};
+        request.body.payload.parsedReferrer = parsedReferrer;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.parsedReferrer).toEqual(parsedReferrer);
     });
 
     it('should handle parsedReferrer with mixed null and string values', () => {
-        const parsedReferrer = {
-            source: 'reddit',
-            medium: null,
-            url: 'https://reddit.com'
-        };
-        mockRequest.body.payload.parsedReferrer = parsedReferrer;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        const parsedReferrer = {source: 'reddit', medium: null, url: 'https://reddit.com'};
+        request.body.payload.parsedReferrer = parsedReferrer;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.parsedReferrer).toEqual(parsedReferrer);
     });
 
     it('should handle undefined parsedReferrer', () => {
-        mockRequest.body.payload.parsedReferrer = undefined;
-        
-        const result = pageHitRawPayloadFromRequest(mockRequest);
-        
+        const request = createPageHitRequest();
+        request.body.payload.parsedReferrer = undefined;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.payload.parsedReferrer).toBeUndefined();
     });
 
     it('should correctly map meta fields from request', () => {
-        const modifiedRequest = {
-            ...mockRequest,
+        const initialRequest = createPageHitRequest();
+        const request = {
+            ...initialRequest,
             ip: '10.0.0.1',
             headers: {
-                ...mockRequest.headers,
+                ...initialRequest.headers,
                 'user-agent': 'Custom User Agent String'
             }
         } as PageHitRequestType;
-        
-        const result = pageHitRawPayloadFromRequest(modifiedRequest);
-        
+
+        const result = pageHitRawPayloadFromRequest(request);
+
         expect(result.meta).toEqual({
             ip: '10.0.0.1',
             'user-agent': 'Custom User Agent String'
@@ -272,7 +279,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle complex real-world request', () => {
-        const realWorldRequest = {
+        const request = {
             ip: '203.0.113.42',
             headers: {
                 'x-site-uuid': 'c7929de8-27d7-404e-b714-0fc774f701e6',
@@ -303,7 +310,7 @@ describe('pageHitRawPayloadFromRequest', () => {
             }
         } as PageHitRequestType;
 
-        const result = pageHitRawPayloadFromRequest(realWorldRequest);
+        const result = pageHitRawPayloadFromRequest(request);
 
         expect(result.timestamp).toBe('2024-03-15T14:30:25.123Z');
         expect(result.action).toBe('page_hit');
