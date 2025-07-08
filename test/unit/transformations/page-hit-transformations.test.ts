@@ -37,7 +37,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     }
 
     it('should transform request to PageHitRaw with all fields present', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         const result = pageHitRawPayloadFromRequest(request);
 
         expect(result).toEqual({
@@ -73,7 +73,7 @@ describe('pageHitRawPayloadFromRequest', () => {
         const uuidMatcher = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
         it('should generate random UUID when event_id is undefined', () => {
-            const request = pageHitRequest();
+            const request = createPageHitRequest();
             request.body.payload.event_id = undefined;
 
             const result = pageHitRawPayloadFromRequest(request);
@@ -84,7 +84,7 @@ describe('pageHitRawPayloadFromRequest', () => {
         });
 
         it('should generate random UUID when event_id is null', () => {
-            const request = pageHitRequest();
+            const request = createPageHitRequest();
             request.body.payload.event_id = null as any;
 
             const result = pageHitRawPayloadFromRequest(request);
@@ -95,7 +95,7 @@ describe('pageHitRawPayloadFromRequest', () => {
         });
 
         it('should generate random UUID when event_id is empty string', () => {
-            const request = pageHitRequest();
+            const request = createPageHitRequest();
             request.body.payload.event_id = '';
 
             const result = pageHitRawPayloadFromRequest(request);
@@ -107,7 +107,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should set referrer to null when undefined', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.referrer = undefined;
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -116,7 +116,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should preserve referrer when it has a value', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.referrer = 'https://facebook.com';
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -125,7 +125,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should preserve referrer when it is null', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.referrer = null;
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -134,7 +134,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle undefined member_uuid', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.member_uuid = 'undefined';
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -143,7 +143,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle valid member_uuid', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         const uuid = '87654321-4321-4321-4321-210987654321';
         request.body.payload.member_uuid = uuid;
 
@@ -153,7 +153,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle undefined member_status', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.member_status = 'undefined';
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -162,7 +162,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle valid member_status', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.member_status = 'paid';
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -171,7 +171,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle undefined post_uuid', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.post_uuid = 'undefined';
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -180,7 +180,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle valid post_uuid', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         const uuid = '11111111-2222-3333-4444-555555555555';
         request.body.payload.post_uuid = uuid;
 
@@ -193,7 +193,7 @@ describe('pageHitRawPayloadFromRequest', () => {
         const postTypes = ['null', 'post', 'page'] as const;
 
         postTypes.forEach((postType) => {
-            const request = pageHitRequest();
+            const request = createPageHitRequest();
             request.body.payload.post_type = postType;
 
             const result = pageHitRawPayloadFromRequest(request);
@@ -203,7 +203,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle null location', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.location = null;
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -212,7 +212,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle string location', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.location = 'blog-section';
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -221,7 +221,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle parsedReferrer with all fields', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         const parsedReferrer = {source: 'twitter', medium: 'social', url: 'https://twitter.com'};
         request.body.payload.parsedReferrer = parsedReferrer;
 
@@ -231,7 +231,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle parsedReferrer with null values', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         const parsedReferrer = {source: null, medium: null, url: null};
         request.body.payload.parsedReferrer = parsedReferrer;
 
@@ -241,7 +241,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle parsedReferrer with mixed null and string values', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         const parsedReferrer = {source: 'reddit', medium: null, url: 'https://reddit.com'};
         request.body.payload.parsedReferrer = parsedReferrer;
 
@@ -251,7 +251,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle undefined parsedReferrer', () => {
-        const request = pageHitRequest();
+        const request = createPageHitRequest();
         request.body.payload.parsedReferrer = undefined;
 
         const result = pageHitRawPayloadFromRequest(request);
@@ -260,7 +260,7 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should correctly map meta fields from request', () => {
-        const initialRequest = pageHitRequest();
+        const initialRequest = createPageHitRequest();
         const request = {
             ...initialRequest,
             ip: '10.0.0.1',
