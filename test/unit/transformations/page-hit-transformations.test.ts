@@ -3,7 +3,7 @@ import {pageHitRawPayloadFromRequest} from '../../../src/transformations/page-hi
 import {PageHitRequestType} from '../../../src/schemas';
 
 describe('pageHitRawPayloadFromRequest', () => {
-    function pageHitRequest() {
+    function createPageHitRequest() {
         return {
             ip: '192.168.1.1',
             headers: {
