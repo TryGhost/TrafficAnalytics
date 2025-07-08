@@ -69,7 +69,7 @@ describe('pageHitRawPayloadFromRequest', () => {
         });
     });
 
-    describe('UUID', () => {
+    describe('Event ID', () => {
         const uuidMatcher = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
         it('should generate random UUID when event_id is undefined', () => {
