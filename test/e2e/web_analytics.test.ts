@@ -1,5 +1,6 @@
 import {describe, it, expect, beforeAll, afterEach} from 'vitest';
 import {WireMock} from '../utils/wiremock';
+import path from 'path';
 
 // Default test data that passes schema validation
 const DEFAULT_QUERY_PARAMS = {
@@ -34,7 +35,8 @@ const DEFAULT_BODY = {
 };
 
 interface WebAnalyticsRequestOptions {
-    url?: string;
+    path: string;
+    baseUrl: string;
     queryParams?: Record<string, string>;
     headers?: Record<string, string>;
     body?: Record<string, any>;
@@ -45,17 +47,13 @@ interface WebAnalyticsRequestOptions {
  * Helper function to make requests to the web analytics endpoint
  * Uses sensible defaults that pass schema validation, allows overrides for testing edge cases
  */
-async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {}) {
+async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions) {
     const queryParams = {...DEFAULT_QUERY_PARAMS, ...options.queryParams};
     const headers = {...DEFAULT_HEADERS, ...options.headers};
     const body = {...DEFAULT_BODY, ...options.body};
     const method = options.method || 'POST';
-
-    // Build query string
-    const queryString = new URLSearchParams(queryParams).toString();
-
-    const baseUrl = options.url || process.env.ANALYTICS_SERVICE_URL || 'http://analytics-service:3000';
-    const url = `${baseUrl}/tb/web_analytics?${queryString}`;
+    const url = new URL(path.join(options.baseUrl, options.path));
+    url.search = new URLSearchParams(queryParams).toString();
 
     return fetch(url, {
         method,
@@ -64,7 +62,7 @@ async function makeWebAnalyticsRequest(options: WebAnalyticsRequestOptions = {})
     });
 }
 
-describe('E2E /tb/web_analytics', () => {
+describe('E2E Tests with Fake Tinybird', () => {
     let wireMock: WireMock;
 
     beforeAll(async () => {
@@ -91,75 +89,151 @@ describe('E2E /tb/web_analytics', () => {
         });
     });
 
-    it('should process analytics request successfully and forward to Tinybird (batch mode)', async () => {
-        const response = await makeWebAnalyticsRequest({url: 'http://analytics-service:3000'});
-
-        expect(response.status).toBe(202);
-
-        const responseText = await response.text();
-        expect(responseText).toBe('{"message":"Page hit event received"}');
-
-        // Wait for the request to be forwarded to Tinybird (handles batch processing delay)
-        const tinybirdRequests = await wireMock.waitForRequest({
-            name: 'analytics_events'
+    describe('POST /tb/web_analytics', () => {
+        it('should process analytics request successfully and forward to Tinybird (batch mode)', async () => {
+            const response = await makeWebAnalyticsRequest({baseUrl: 'http://analytics-service:3000', path: '/tb/web_analytics'});
+    
+            expect(response.status).toBe(202);
+    
+            const responseText = await response.text();
+            expect(responseText).toBe('{"message":"Page hit event received"}');
+    
+            // Wait for the request to be forwarded to Tinybird (handles batch processing delay)
+            const tinybirdRequests = await wireMock.waitForRequest({
+                name: 'analytics_events'
+            });
+    
+            expect(tinybirdRequests).toHaveLength(1);
+    
+            // Verify the request body was processed and enriched
+            const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
+    
+            expect(requestBody).toMatchObject({
+                timestamp: DEFAULT_BODY.timestamp,
+                action: 'page_hit',
+                version: '1',
+                // Should have session_id added by processing
+                session_id: expect.any(String),
+                payload: expect.objectContaining({
+                    site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
+                    pathname: '/test-page',
+                    href: 'https://example.com/test-page',
+                    // Should have parsed user agent info
+                    browser: expect.any(String),
+                    os: expect.any(String),
+                    device: expect.any(String)
+                })
+            });
         });
-
-        expect(tinybirdRequests).toHaveLength(1);
-
-        // Verify the request body was processed and enriched
-        const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
-
-        expect(requestBody).toMatchObject({
-            timestamp: DEFAULT_BODY.timestamp,
-            action: 'page_hit',
-            version: '1',
-            // Should have session_id added by processing
-            session_id: expect.any(String),
-            payload: expect.objectContaining({
-                site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
-                pathname: '/test-page',
-                href: 'https://example.com/test-page',
-                // Should have parsed user agent info
-                browser: expect.any(String),
-                os: expect.any(String),
-                device: expect.any(String)
-            })
-        });
+    
+        it('should process analytics request successfully and forward to Tinybird (proxy mode)', async () => {
+            const response = await makeWebAnalyticsRequest({baseUrl: 'http://analytics-service-proxy:3000', path: '/tb/web_analytics'});
+    
+            expect(response.status).toBe(202);
+    
+            const responseText = await response.text();
+            expect(responseText).toBe('{"success":true}');
+    
+            // Wait for the request to be forwarded to Tinybird (handles batch processing delay)
+            const tinybirdRequests = await wireMock.waitForRequest({
+                name: 'analytics_events'
+            });
+    
+            expect(tinybirdRequests).toHaveLength(1);
+    
+            // Verify the request body was processed and enriched
+            const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
+    
+            expect(requestBody).toMatchObject({
+                timestamp: DEFAULT_BODY.timestamp,
+                action: 'page_hit',
+                version: '1',
+                // Should have session_id added by processing
+                session_id: expect.any(String),
+                payload: expect.objectContaining({
+                    site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
+                    pathname: '/test-page',
+                    href: 'https://example.com/test-page',
+                    // Should have parsed user agent info
+                    browser: expect.any(String),
+                    os: expect.any(String),
+                    device: expect.any(String)
+                })
+            });
+        });    
     });
 
-    it('should process analytics request successfully and forward to Tinybird (proxy mode)', async () => {
-        const response = await makeWebAnalyticsRequest({url: 'http://analytics-service-proxy:3000'});
-
-        expect(response.status).toBe(202);
-
-        const responseText = await response.text();
-        expect(responseText).toBe('{"success":true}');
-
-        // Wait for the request to be forwarded to Tinybird (handles batch processing delay)
-        const tinybirdRequests = await wireMock.waitForRequest({
-            name: 'analytics_events'
+    describe('POST /api/v1/page_hit', () => {
+        it('should process analytics request successfully and forward to Tinybird (batch mode)', async () => {
+            const response = await makeWebAnalyticsRequest({baseUrl: 'http://analytics-service:3000', path: '/api/v1/page_hit'});
+    
+            expect(response.status).toBe(202);
+    
+            const responseText = await response.text();
+            expect(responseText).toBe('{"message":"Page hit event received"}');
+    
+            // Wait for the request to be forwarded to Tinybird (handles batch processing delay)
+            const tinybirdRequests = await wireMock.waitForRequest({
+                name: 'analytics_events'
+            });
+    
+            expect(tinybirdRequests).toHaveLength(1);
+    
+            // Verify the request body was processed and enriched
+            const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
+    
+            expect(requestBody).toMatchObject({
+                timestamp: DEFAULT_BODY.timestamp,
+                action: 'page_hit',
+                version: '1',
+                // Should have session_id added by processing
+                session_id: expect.any(String),
+                payload: expect.objectContaining({
+                    site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
+                    pathname: '/test-page',
+                    href: 'https://example.com/test-page',
+                    // Should have parsed user agent info
+                    browser: expect.any(String),
+                    os: expect.any(String),
+                    device: expect.any(String)
+                })
+            });
         });
-
-        expect(tinybirdRequests).toHaveLength(1);
-
-        // Verify the request body was processed and enriched
-        const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
-
-        expect(requestBody).toMatchObject({
-            timestamp: DEFAULT_BODY.timestamp,
-            action: 'page_hit',
-            version: '1',
-            // Should have session_id added by processing
-            session_id: expect.any(String),
-            payload: expect.objectContaining({
-                site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
-                pathname: '/test-page',
-                href: 'https://example.com/test-page',
-                // Should have parsed user agent info
-                browser: expect.any(String),
-                os: expect.any(String),
-                device: expect.any(String)
-            })
-        });
+    
+        it('should process analytics request successfully and forward to Tinybird (proxy mode)', async () => {
+            const response = await makeWebAnalyticsRequest({baseUrl: 'http://analytics-service-proxy:3000', path: '/api/v1/page_hit'});
+    
+            expect(response.status).toBe(202);
+    
+            const responseText = await response.text();
+            expect(responseText).toBe('{"success":true}');
+    
+            // Wait for the request to be forwarded to Tinybird (handles batch processing delay)
+            const tinybirdRequests = await wireMock.waitForRequest({
+                name: 'analytics_events'
+            });
+    
+            expect(tinybirdRequests).toHaveLength(1);
+    
+            // Verify the request body was processed and enriched
+            const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
+    
+            expect(requestBody).toMatchObject({
+                timestamp: DEFAULT_BODY.timestamp,
+                action: 'page_hit',
+                version: '1',
+                // Should have session_id added by processing
+                session_id: expect.any(String),
+                payload: expect.objectContaining({
+                    site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
+                    pathname: '/test-page',
+                    href: 'https://example.com/test-page',
+                    // Should have parsed user agent info
+                    browser: expect.any(String),
+                    os: expect.any(String),
+                    device: expect.any(String)
+                })
+            });
+        });    
     });
 });
