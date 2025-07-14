@@ -53,7 +53,7 @@ describe('Error Formatters', () => {
                         'content-type': 'application/json',
                         'x-site-uuid': '940b73e9-4952-4752-b23d-9486f999c47e',
                         'user-agent': 'USER AGENT',
-                        referer: 'https://example.com/referer',
+                        referer: 'https://example.com/referer'
                     },
                     query: {page: '1', limit: '10'},
                     requestBody: {name: 'John Doe', email: 'john@example.com'},
@@ -103,13 +103,13 @@ describe('Error Formatters', () => {
                         requestUrl: '/endpoint',
                         userAgent: 'USER AGENT',
                         remoteIp: '127.0.0.1',
-                        referer: 'https://example.com/referer',
+                        referer: 'https://example.com/referer'
                     },
                     headers: {
                         'content-type': 'application/json',
                         'x-site-uuid': '940b73e9-4952-4752-b23d-9486f999c47e',
                         'user-agent': 'USER AGENT',
-                        referer: 'https://example.com/referer',
+                        referer: 'https://example.com/referer'
                     },
                     query: {page: '1', limit: '10'},
                     requestBody: {name: 'John Doe', email: 'john@example.com'},
