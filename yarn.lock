@@ -283,10 +283,10 @@
     toad-cache "^3.7.0"
     undici "^6.11.1"
 
-"@fastify/type-provider-typebox@5.1.0":
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/@fastify/type-provider-typebox/-/type-provider-typebox-5.1.0.tgz#465a26a46af7ff811fc84106dc603b62d1d166ee"
-  integrity sha512-F1AQHeLiKp1hu6GMWm5W6fZ6zXQ0mTV+qHOzrptAie9AYewvFr5Q3blfy8Qmx9gUgwA3Yj+CWvQQJeTwDgTnIg==
+"@fastify/type-provider-typebox@5.2.0":
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/@fastify/type-provider-typebox/-/type-provider-typebox-5.2.0.tgz#d04b7ce431aa217cf085e3aabc3f051c764acc01"
+  integrity sha512-RoUFTQNYlaVM/gXosFqlrUAD/JHC+OXLcj4DxNoMOag2GI7OydfCt+3vdT+6D2daJwhGAdkpxB0wLNqS7gf4CQ==
 
 "@glimmer/env@0.1.7", "@glimmer/env@^0.1.7":
   version "0.1.7"
