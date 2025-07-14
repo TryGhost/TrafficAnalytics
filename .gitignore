@@ -86,4 +86,4 @@ playwright-report/
 playwright/.cache/
 
 # Data Directory
-data/
+data/**
