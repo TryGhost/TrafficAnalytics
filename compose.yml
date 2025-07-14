@@ -18,7 +18,7 @@ services:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - FIRESTORE_DATABASE_ID=traffic-analytics-dev
-      - SALT_STORE_TYPE=firestore
+      - SALT_STORE_TYPE=${SALT_STORE_TYPE:-firestore}
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
@@ -55,7 +55,7 @@ services:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - FIRESTORE_DATABASE_ID=traffic-analytics-dev
-      - SALT_STORE_TYPE=firestore
+      - SALT_STORE_TYPE=${SALT_STORE_TYPE:-firestore}
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
@@ -96,7 +96,7 @@ services:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
       - FIRESTORE_EMULATOR_HOST=firestore:8080
       - FIRESTORE_DATABASE_ID=traffic-analytics-dev
-      - SALT_STORE_TYPE=firestore
+      - SALT_STORE_TYPE=${SALT_STORE_TYPE:-firestore}
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
       - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
       - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}

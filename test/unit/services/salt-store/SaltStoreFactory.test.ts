@@ -2,7 +2,11 @@ import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
 import {createSaltStore, SaltStoreConfig} from '../../../../src/services/salt-store/SaltStoreFactory';
 import {MemorySaltStore} from '../../../../src/services/salt-store/MemorySaltStore';
 import {FirestoreSaltStore} from '../../../../src/services/salt-store/FirestoreSaltStore';
+import {FileSaltStore} from '../../../../src/services/salt-store/FileSaltStore';
 import type {ISaltStore} from '../../../../src/services/salt-store/ISaltStore';
+import {promises as fs} from 'fs';
+import * as path from 'path';
+import {randomUUID} from 'crypto';
 
 describe('SaltStoreFactory', () => {
     beforeEach(() => {
@@ -107,10 +111,47 @@ describe('SaltStoreFactory', () => {
             expect(store).toBeInstanceOf(FirestoreSaltStore);
         });
 
-        it('should throw error for file store type', () => {
+        it('should create a file salt store with default path', () => {
             const saltStoreConfig: SaltStoreConfig = {type: 'file'};
+            const store = createSaltStore(saltStoreConfig);
 
-            expect(() => createSaltStore(saltStoreConfig)).toThrow('File salt store is not implemented yet');
+            expect(store).toBeInstanceOf(FileSaltStore);
+            expect(store).toHaveProperty('get');
+            expect(store).toHaveProperty('set');
+            expect(store).toHaveProperty('getAll');
+            expect(store).toHaveProperty('delete');
+        });
+
+        it('should create a file salt store with custom path from config', () => {
+            const saltStoreConfig: SaltStoreConfig = {
+                type: 'file',
+                filePath: '/custom/path/salts.json'
+            };
+            const store = createSaltStore(saltStoreConfig);
+
+            expect(store).toBeInstanceOf(FileSaltStore);
+        });
+
+        it('should create a file salt store with path from environment', () => {
+            vi.stubEnv('SALT_STORE_TYPE', 'file');
+            vi.stubEnv('SALT_STORE_FILE_PATH', '/env/path/salts.json');
+            
+            const store = createSaltStore();
+
+            expect(store).toBeInstanceOf(FileSaltStore);
+        });
+
+        it('should use config path over environment path for file store', () => {
+            vi.stubEnv('SALT_STORE_FILE_PATH', '/env/path/salts.json');
+            
+            const saltStoreConfig: SaltStoreConfig = {
+                type: 'file',
+                filePath: '/config/path/salts.json'
+            };
+            const store = createSaltStore(saltStoreConfig);
+
+            expect(store).toBeInstanceOf(FileSaltStore);
+            // The actual path used is private, but we can verify it's a FileSaltStore
         });
 
         it('should throw error for unknown store type', () => {
@@ -162,6 +203,28 @@ describe('SaltStoreFactory', () => {
             expect(result2?.salt).toBe('salt2');
             expect(missing1).toBeUndefined();
             expect(missing2).toBeUndefined();
+        });
+
+        it('should create functional file salt store', async () => {
+            const testFilePath = path.join('/tmp', `test-factory-salts-${randomUUID()}.json`);
+            const saltStoreConfig: SaltStoreConfig = {
+                type: 'file',
+                filePath: testFilePath
+            };
+            const store = createSaltStore(saltStoreConfig);
+
+            await store.set('test-key', 'test-salt');
+            const result = await store.get('test-key');
+
+            expect(result?.salt).toBe('test-salt');
+            expect(result?.created_at).toBeInstanceOf(Date);
+
+            // Clean up
+            try {
+                await fs.unlink(testFilePath);
+            } catch {
+                // Ignore errors
+            }
         });
     });
 });
