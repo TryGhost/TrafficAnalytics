@@ -29,7 +29,7 @@ describe('Error Formatters', () => {
                 stack: 'FastifyStackError'
             } as FastifyError;
 
-            it('format validation error with all required fields', () => {
+            it('should format validation error with all required fields', () => {
                 const result = ErrorDataFormatter.formatValidationError(validationError, request);
 
                 expect(result).toEqual({
@@ -61,7 +61,7 @@ describe('Error Formatters', () => {
                 });
             });
 
-            it('handle missing headers gracefully', () => {
+            it('should handle missing headers gracefully', () => {
                 const requestWithoutHeaders = {
                     ...request,
                     headers: {}
@@ -135,7 +135,7 @@ describe('Error Formatters', () => {
                 validation: [{instancePath: '/name', message: 'must be string'}]
             } as FastifyError;
 
-            it('format validation response correctly', () => {
+            it('should format validation response correctly', () => {
                 const result = ErrorResponseFormatter.formatResponse(validationError);
 
                 expect(result).toEqual({
