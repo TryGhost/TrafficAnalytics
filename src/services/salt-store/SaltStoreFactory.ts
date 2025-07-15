@@ -1,6 +1,7 @@
 import type {ISaltStore} from './ISaltStore';
 import {MemorySaltStore} from './MemorySaltStore';
 import {FirestoreSaltStore} from './FirestoreSaltStore';
+import {FileSaltStore} from './FileSaltStore';
 
 export type SaltStoreType = 'memory' | 'file' | 'firestore';
 
@@ -32,8 +33,10 @@ export function createSaltStore(saltStoreConfig?: SaltStoreConfig): ISaltStore {
         
         return new FirestoreSaltStore(projectId, databaseId, saltStoreConfig?.collectionName);
     }
-    case 'file':
-        throw new Error('File salt store is not implemented yet');
+    case 'file': {
+        const filePath = saltStoreConfig?.filePath || process.env.SALT_STORE_FILE_PATH || './data/salts.json';
+        return new FileSaltStore(filePath);
+    }
     default:
         throw new Error(`Unknown salt store type: ${storeType}`);
     }
