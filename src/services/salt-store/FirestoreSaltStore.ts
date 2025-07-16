@@ -269,7 +269,7 @@ export class FirestoreSaltStore implements ISaltStore {
             }
             
             // Re-throw other errors
-            logger.error({error}, 'FirestoreSaltStore getOrCreate failed');
+            logger.error({err: error}, 'FirestoreSaltStore getOrCreate failed');
             throw error;
         }
     }

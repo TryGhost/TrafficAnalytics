@@ -78,7 +78,7 @@ class BatchWorker {
                 await this.flushBatch();
             }
         } catch (error) {
-            logger.error({messageData: message.data.toString(), error}, 'Worker unable to process message. Nacking message...');
+            logger.error({messageData: message.data.toString(), err: error}, 'Worker unable to process message. Nacking message...');
             message.nack();
         }
     }
@@ -89,7 +89,7 @@ class BatchWorker {
             const json = JSON.parse(messageData);
             return Value.Parse(PageHitRawSchema, json);
         } catch (error) {
-            logger.error({messageData: message.data.toString(), error}, 'Worker unable to parse message. Nacking message...');
+            logger.error({messageData: message.data.toString(), err: error}, 'Worker unable to parse message. Nacking message...');
             message.nack();
             throw error;
         }
@@ -99,7 +99,7 @@ class BatchWorker {
         try {
             return await transformPageHitRawToProcessed(pageHitRaw);
         } catch (error) {
-            logger.error({pageHitRaw, error}, 'Worker unable to transform message');
+            logger.error({pageHitRaw, err: error}, 'Worker unable to transform message');
             throw error;
         }
     }
@@ -124,7 +124,7 @@ class BatchWorker {
             
             logger.info(`Successfully flushed batch of ${batchToFlush.length} events to Tinybird`);
         } catch (error) {
-            logger.error({batchSize: batchToFlush.length, error}, 'Failed to flush batch to Tinybird');
+            logger.error({batchSize: batchToFlush.length, err: error}, 'Failed to flush batch to Tinybird');
             
             // Nack all messages in the failed batch
             batchToFlush.forEach((item) => {
@@ -146,7 +146,7 @@ class BatchWorker {
             try {
                 await this.flushBatch();
             } catch (error) {
-                logger.error({error}, 'Error during scheduled batch flush');
+                logger.error({err: error}, 'Error during scheduled batch flush');
             }
             
             // Schedule the next flush if not shutting down

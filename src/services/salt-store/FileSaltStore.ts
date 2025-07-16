@@ -85,7 +85,7 @@ export class FileSaltStore implements ISaltStore {
                 return {};
             }
             // Handle corrupted file
-            logger.error({error}, 'FileSaltStore: Failed to read file, starting fresh');
+            logger.error({err: error}, 'FileSaltStore: Failed to read file, starting fresh');
             await this.writeFile({});
             return {};
         }
