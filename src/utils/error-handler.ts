@@ -12,9 +12,9 @@ import {ErrorDataFormatter, ErrorResponseFormatter} from './error-formatters';
  */
 export function errorHandler() {
     return (error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
-        const handleValidationErrors = error.statusCode === 400 && error.validation;
+        const handleValidationError = error.statusCode === 400 && error.validation;
 
-        if (handleValidationErrors) {
+        if (handleValidationError) {
             const structuredLogData = ErrorDataFormatter.formatValidationError(error, request);
             const structuredResponseData = ErrorResponseFormatter.formatResponse(error);
 
