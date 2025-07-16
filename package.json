@@ -62,7 +62,7 @@
     "@fastify/otel": "0.9.2",
     "@fastify/reply-from": "11.0.2",
     "@fastify/type-provider-typebox": "5.2.0",
-    "@google-cloud/firestore": "7.11.2",
+    "@google-cloud/firestore": "7.11.3",
     "@google-cloud/opentelemetry-cloud-trace-exporter": "2.4.1",
     "@google-cloud/pino-logging-gcp-config": "1.0.6",
     "@google-cloud/pubsub": "5.1.0",
