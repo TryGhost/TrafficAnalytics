@@ -1,0 +1,648 @@
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
+import {promises as fs} from 'fs';
+import * as path from 'path';
+import {FileSaltStore, SaltAlreadyExistsError} from '../../../../src/services/salt-store/FileSaltStore';
+import {randomUUID} from 'crypto';
+
+describe('FileSaltStore', () => {
+    let saltStore: FileSaltStore;
+    let testFilePath: string;
+
+    beforeEach(() => {
+        // Create a unique test file path for each test
+        testFilePath = path.join('/tmp', `test-salts-${randomUUID()}.json`);
+        saltStore = new FileSaltStore(testFilePath);
+    });
+
+    afterEach(async () => {
+        // Clean up test file
+        try {
+            await fs.unlink(testFilePath);
+        } catch {
+            // Ignore errors if file doesn't exist
+        }
+    });
+
+    describe('set', () => {
+        it('should store a salt with key and return the created record', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const salt = 'random-salt-123';
+
+            const returnedRecord = await saltStore.set(key, salt);
+
+            expect(returnedRecord.salt).toBe(salt);
+            expect(returnedRecord.created_at).toBeInstanceOf(Date);
+
+            const result = await saltStore.get(key);
+            expect(result?.salt).toBe(salt);
+            expect(result?.created_at).toBeInstanceOf(Date);
+        });
+
+        it('should create a new date for created_at', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const salt = 'random-salt-123';
+            const beforeSet = new Date();
+
+            const returnedRecord = await saltStore.set(key, salt);
+
+            expect(returnedRecord.created_at.getTime()).toBeGreaterThanOrEqual(beforeSet.getTime());
+
+            const result = await saltStore.get(key);
+            expect(result?.created_at.getTime()).toBeGreaterThanOrEqual(beforeSet.getTime());
+        });
+
+        it('should throw SaltAlreadyExistsError when trying to set existing key', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const originalSalt = 'original-salt';
+            const newSalt = 'new-salt';
+
+            await saltStore.set(key, originalSalt);
+
+            await expect(saltStore.set(key, newSalt)).rejects.toThrow(SaltAlreadyExistsError);
+            await expect(saltStore.set(key, newSalt)).rejects.toThrow(`Salt with key ${key} already exists`);
+
+            // Verify original salt is still there
+            const result = await saltStore.get(key);
+            expect(result?.salt).toBe(originalSalt);
+        });
+
+        it('should successfully set salt for new keys', async () => {
+            const key1 = '550e8400-e29b-41d4-a716-446655440000';
+            const key2 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const salt1 = 'salt-1';
+            const salt2 = 'salt-2';
+
+            // First key should succeed
+            const record1 = await saltStore.set(key1, salt1);
+            expect(record1?.salt).toBe(salt1);
+            expect(record1?.created_at).toBeInstanceOf(Date);
+
+            // Second key should also succeed
+            const record2 = await saltStore.set(key2, salt2);
+            expect(record2?.salt).toBe(salt2);
+            expect(record2?.created_at).toBeInstanceOf(Date);
+
+            // Verify both are stored
+            const result1 = await saltStore.get(key1);
+            const result2 = await saltStore.get(key2);
+            expect(result1?.salt).toBe(salt1);
+            expect(result2?.salt).toBe(salt2);
+        });
+
+        it('should persist data to file', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const salt = 'persistent-salt';
+
+            await saltStore.set(key, salt);
+
+            // Create a new instance with the same file path
+            const newStore = new FileSaltStore(testFilePath);
+            const result = await newStore.get(key);
+
+            expect(result?.salt).toBe(salt);
+            expect(result?.created_at).toBeInstanceOf(Date);
+        });
+    });
+
+    describe('get', () => {
+        it('should return salt record for existing key', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const salt = 'random-salt-123';
+
+            await saltStore.set(key, salt);
+            const result = await saltStore.get(key);
+
+            expect(result).toEqual({
+                salt: salt,
+                created_at: expect.any(Date)
+            });
+        });
+
+        it('should return undefined for non-existent key', async () => {
+            const result = await saltStore.get('987fcdeb-51d2-43e1-9b45-123456789abc');
+            expect(result).toBeUndefined();
+        });
+
+        it('should return a copy of the salt record', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const salt = 'random-salt-123';
+
+            await saltStore.set(key, salt);
+            const result1 = await saltStore.get(key);
+            const result2 = await saltStore.get(key);
+
+            expect(result1).toEqual(result2);
+            expect(result1).not.toBe(result2);
+            expect(result1?.created_at).not.toBe(result2?.created_at);
+
+            result1!.salt = 'modified';
+            const result3 = await saltStore.get(key);
+            expect(result3?.salt).toBe(salt);
+        });
+    });
+
+    describe('getAll', () => {
+        it('should return empty object when no salts are stored', async () => {
+            const result = await saltStore.getAll();
+            expect(result).toEqual({});
+        });
+
+        it('should return all stored salts', async () => {
+            const salt1 = 'salt-1';
+            const salt2 = 'salt-2';
+            const key1 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const key2 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+
+            await saltStore.set(key1, salt1);
+            await saltStore.set(key2, salt2);
+
+            const result = await saltStore.getAll();
+
+            expect(Object.keys(result)).toHaveLength(2);
+            expect(result[key1].salt).toBe(salt1);
+            expect(result[key2].salt).toBe(salt2);
+            expect(result[key1].created_at).toBeInstanceOf(Date);
+            expect(result[key2].created_at).toBeInstanceOf(Date);
+        });
+
+        it('should return a copy of the internal state', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const salt = 'random-salt-123';
+
+            await saltStore.set(key, salt);
+            const result1 = await saltStore.getAll();
+            const result2 = await saltStore.getAll();
+
+            expect(result1).toEqual(result2);
+            expect(result1).not.toBe(result2);
+
+            result1[key].salt = 'modified';
+            const result3 = await saltStore.getAll();
+            expect(result3[key].salt).toBe(salt);
+        });
+    });
+
+    describe('delete', () => {
+        it('should delete an existing salt', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const salt = 'random-salt-123';
+
+            await saltStore.set(key, salt);
+
+            const resultBefore = await saltStore.get(key);
+            expect(resultBefore).toBeDefined();
+            expect(resultBefore?.salt).toBe(salt);
+
+            await saltStore.delete(key);
+
+            const resultAfter = await saltStore.get(key);
+            expect(resultAfter).toBeUndefined();
+        });
+
+        it('should not throw when deleting non-existent key', async () => {
+            await expect(saltStore.delete('987fcdeb-51d2-43e1-9b45-123456789abc')).resolves.toBeUndefined();
+        });
+
+        it('should remove salt from getAll results', async () => {
+            const key1 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const key2 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+            const salt1 = 'salt-1';
+            const salt2 = 'salt-2';
+
+            await saltStore.set(key1, salt1);
+            await saltStore.set(key2, salt2);
+
+            let allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(2);
+            expect(allSalts[key1]).toBeDefined();
+            expect(allSalts[key2]).toBeDefined();
+
+            await saltStore.delete(key1);
+
+            allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(1);
+            expect(allSalts[key1]).toBeUndefined();
+            expect(allSalts[key2]).toBeDefined();
+            expect(allSalts[key2].salt).toBe(salt2);
+        });
+
+        it('should handle multiple deletes on same key', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const salt = 'random-salt-123';
+
+            await saltStore.set(key, salt);
+            await saltStore.delete(key);
+
+            await expect(saltStore.delete(key)).resolves.toBeUndefined();
+
+            const result = await saltStore.get(key);
+            expect(result).toBeUndefined();
+        });
+
+        it('should not affect other salts when deleting', async () => {
+            const key1 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const key2 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+            const key3 = '6ba7b812-9dad-11d1-80b4-00c04fd430c8';
+            const salt1 = 'salt-1';
+            const salt2 = 'salt-2';
+            const salt3 = 'salt-3';
+
+            await saltStore.set(key1, salt1);
+            await saltStore.set(key2, salt2);
+            await saltStore.set(key3, salt3);
+
+            await saltStore.delete(key2);
+
+            const result1 = await saltStore.get(key1);
+            const result2 = await saltStore.get(key2);
+            const result3 = await saltStore.get(key3);
+
+            expect(result1?.salt).toBe(salt1);
+            expect(result2).toBeUndefined();
+            expect(result3?.salt).toBe(salt3);
+        });
+
+        it('should persist deletion to file', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const salt = 'random-salt-123';
+
+            await saltStore.set(key, salt);
+            await saltStore.delete(key);
+
+            // Create a new instance with the same file path
+            const newStore = new FileSaltStore(testFilePath);
+            const result = await newStore.get(key);
+
+            expect(result).toBeUndefined();
+        });
+    });
+
+    describe('clear', () => {
+        it('should remove all salts from the store', async () => {
+            const key1 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const key2 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+            const key3 = '6ba7b812-9dad-11d1-80b4-00c04fd430c8';
+
+            await saltStore.set(key1, 'salt-1');
+            await saltStore.set(key2, 'salt-2');
+            await saltStore.set(key3, 'salt-3');
+
+            let allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(3);
+
+            await saltStore.clear();
+
+            allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(0);
+            expect(allSalts).toEqual({});
+        });
+
+        it('should allow setting new salts after clear', async () => {
+            const key1 = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const key2 = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+
+            await saltStore.set(key1, 'salt-1');
+            await saltStore.clear();
+
+            // Should be able to set the same key again after clear
+            await expect(saltStore.set(key1, 'new-salt-1')).resolves.toBeDefined();
+            await expect(saltStore.set(key2, 'new-salt-2')).resolves.toBeDefined();
+
+            const allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(2);
+            expect(allSalts[key1].salt).toBe('new-salt-1');
+            expect(allSalts[key2].salt).toBe('new-salt-2');
+        });
+
+        it('should work correctly when called on empty store', async () => {
+            await expect(saltStore.clear()).resolves.toBeUndefined();
+
+            const allSalts = await saltStore.getAll();
+            expect(allSalts).toEqual({});
+        });
+
+        it('should persist clear to file', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            await saltStore.set(key, 'salt');
+            await saltStore.clear();
+
+            // Create a new instance with the same file path
+            const newStore = new FileSaltStore(testFilePath);
+            const allSalts = await newStore.getAll();
+
+            expect(allSalts).toEqual({});
+        });
+    });
+
+    describe('cleanup', () => {
+        it('should delete salts from before today UTC', async () => {
+            // Mock today as 2024-01-15 in UTC
+            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
+            
+            const key1 = '550e8400-e29b-41d4-a716-446655440001';
+            const key2 = '550e8400-e29b-41d4-a716-446655440002';
+            const key3 = '550e8400-e29b-41d4-a716-446655440003';
+            
+            await saltStore.set(key1, 'yesterday-salt');
+            await saltStore.set(key2, 'today-salt');
+            await saltStore.set(key3, 'old-salt');
+
+            // Manually update the created_at dates in the file
+            const fileData = JSON.parse(await fs.readFile(testFilePath, 'utf-8'));
+            fileData[key1].created_at = '2024-01-14T23:59:59.999Z'; // Yesterday
+            fileData[key2].created_at = '2024-01-15T00:00:00.000Z'; // Today at midnight
+            fileData[key3].created_at = '2024-01-10T12:00:00.000Z'; // 5 days ago
+            await fs.writeFile(testFilePath, JSON.stringify(fileData));
+
+            const deletedCount = await saltStore.cleanup();
+
+            expect(deletedCount).toBe(2); // Yesterday and old salt deleted
+            
+            const result1 = await saltStore.get(key1);
+            const result2 = await saltStore.get(key2);
+            const result3 = await saltStore.get(key3);
+            
+            expect(result1).toBeUndefined();
+            expect(result2?.salt).toBe('today-salt');
+            expect(result3).toBeUndefined();
+        });
+
+        it('should keep salts created at exactly midnight UTC today', async () => {
+            // Mock today as 2024-01-15
+            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
+
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            await saltStore.set(key, 'midnight-salt');
+            
+            // Manually update the created_at date in the file
+            const fileData = JSON.parse(await fs.readFile(testFilePath, 'utf-8'));
+            fileData[key].created_at = '2024-01-15T00:00:00.000Z';
+            await fs.writeFile(testFilePath, JSON.stringify(fileData));
+
+            const deletedCount = await saltStore.cleanup();
+
+            // Should NOT be deleted because it's from today
+            expect(deletedCount).toBe(0);
+            
+            const result = await saltStore.get(key);
+            expect(result?.salt).toBe('midnight-salt');
+        });
+
+        it('should return 0 when all salts are from today', async () => {
+            await saltStore.set('key1', 'salt1');
+            await saltStore.set('key2', 'salt2');
+
+            const deletedCount = await saltStore.cleanup();
+
+            expect(deletedCount).toBe(0);
+            
+            const all = await saltStore.getAll();
+            expect(Object.keys(all)).toHaveLength(2);
+        });
+
+        it('should handle empty store', async () => {
+            const deletedCount = await saltStore.cleanup();
+            
+            expect(deletedCount).toBe(0);
+        });
+
+        it('should handle salts from different dates correctly', async () => {
+            // Mock today as 2024-01-15
+            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T08:00:00.000Z');
+            
+            const keys = [
+                'salt:2024-01-10:old1',
+                'salt:2024-01-14:yesterday',
+                'salt:2024-01-15:today1',
+                'salt:2024-01-15:today2',
+                'salt:2024-01-13:old2'
+            ];
+            
+            for (const key of keys) {
+                await saltStore.set(key, `value-${key}`);
+            }
+            
+            // Set created_at based on the date in the key
+            const fileData = JSON.parse(await fs.readFile(testFilePath, 'utf-8'));
+            fileData[keys[0]].created_at = '2024-01-10T12:00:00.000Z';
+            fileData[keys[1]].created_at = '2024-01-14T12:00:00.000Z';
+            fileData[keys[2]].created_at = '2024-01-15T01:00:00.000Z';
+            fileData[keys[3]].created_at = '2024-01-15T23:59:59.999Z';
+            fileData[keys[4]].created_at = '2024-01-13T12:00:00.000Z';
+            await fs.writeFile(testFilePath, JSON.stringify(fileData));
+
+            const deletedCount = await saltStore.cleanup();
+
+            expect(deletedCount).toBe(3); // 3 salts from before today
+            
+            const all = await saltStore.getAll();
+            expect(Object.keys(all)).toHaveLength(2); // Only today's salts remain
+            expect(all[keys[2]]).toBeDefined();
+            expect(all[keys[3]]).toBeDefined();
+        });
+    });
+
+    describe('getOrCreate', () => {
+        it('should create new salt when key does not exist', async () => {
+            const key = '550e8400-e29b-41d4-a716-446655440000';
+            const expectedSalt = 'generated-salt-123';
+            
+            const saltGenerator = vi.fn(() => expectedSalt);
+            const result = await saltStore.getOrCreate(key, saltGenerator);
+            
+            expect(saltGenerator).toHaveBeenCalledOnce();
+            expect(result.salt).toBe(expectedSalt);
+            expect(result.created_at).toBeInstanceOf(Date);
+            
+            // Verify salt was stored
+            const stored = await saltStore.get(key);
+            expect(stored?.salt).toBe(expectedSalt);
+        });
+
+        it('should return existing salt when key exists', async () => {
+            const key = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+            const existingSalt = 'existing-salt-456';
+            
+            // Pre-populate with existing salt
+            await saltStore.set(key, existingSalt);
+            
+            const saltGenerator = vi.fn(() => 'should-not-be-called');
+            const result = await saltStore.getOrCreate(key, saltGenerator);
+            
+            expect(saltGenerator).not.toHaveBeenCalled();
+            expect(result.salt).toBe(existingSalt);
+            expect(result.created_at).toBeInstanceOf(Date);
+        });
+
+        it('should handle multiple concurrent getOrCreate calls', async () => {
+            const key = '987fcdeb-51d2-43e1-9b45-123456789abc';
+            const expectedSalt = 'concurrent-salt-789';
+            
+            let callCount = 0;
+            const saltGenerator = () => {
+                callCount += 1;
+                return `${expectedSalt}-${callCount}`;
+            };
+            
+            // Multiple concurrent calls should all return the same salt
+            const promises = [
+                saltStore.getOrCreate(key, saltGenerator),
+                saltStore.getOrCreate(key, saltGenerator),
+                saltStore.getOrCreate(key, saltGenerator)
+            ];
+            
+            const results = await Promise.all(promises);
+            
+            // All results should have the same salt
+            expect(results[0].salt).toBe(results[1].salt);
+            expect(results[1].salt).toBe(results[2].salt);
+            
+            // Generator should only be called once (for the first creation)
+            expect(callCount).toBe(1);
+        });
+
+        it('should return copy of stored record', async () => {
+            const key = '123e4567-e89b-12d3-a456-426614174000';
+            const saltValue = 'test-salt';
+            
+            const result = await saltStore.getOrCreate(key, () => saltValue);
+            
+            // Modifying returned record should not affect stored record
+            result.salt = 'modified-salt';
+            result.created_at = new Date('2020-01-01');
+            
+            const stored = await saltStore.get(key);
+            expect(stored?.salt).toBe(saltValue);
+            expect(stored?.created_at).not.toEqual(new Date('2020-01-01'));
+        });
+    });
+
+    describe('file system edge cases', () => {
+        it('should handle corrupted file gracefully', async () => {
+            // Write corrupted JSON to the file
+            await fs.writeFile(testFilePath, 'invalid json{', 'utf-8');
+
+            // Should start fresh with empty data
+            const result = await saltStore.getAll();
+            expect(result).toEqual({});
+
+            // Should be able to add new data
+            await saltStore.set('key1', 'salt1');
+            const stored = await saltStore.get('key1');
+            expect(stored?.salt).toBe('salt1');
+        });
+
+        it('should create directory if it does not exist', async () => {
+            const nestedPath = path.join('/tmp', randomUUID(), 'nested', 'path', 'salts.json');
+            const nestedStore = new FileSaltStore(nestedPath);
+
+            await nestedStore.set('key1', 'salt1');
+            const result = await nestedStore.get('key1');
+            expect(result?.salt).toBe('salt1');
+
+            // Clean up
+            await fs.rm(path.dirname(nestedPath), {recursive: true, force: true});
+        });
+
+        it('should handle concurrent writes correctly', async () => {
+            const keys = Array.from({length: 10}, (_, i) => `key-${i}`);
+            const salts = Array.from({length: 10}, (_, i) => `salt-${i}`);
+
+            // Create multiple concurrent writes
+            const promises = keys.map((key, i) => saltStore.set(key, salts[i]));
+            await Promise.all(promises);
+
+            // Verify all salts were stored correctly
+            const allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(10);
+
+            for (let i = 0; i < keys.length; i++) {
+                expect(allSalts[keys[i]].salt).toBe(salts[i]);
+            }
+        });
+
+        it('should handle file permissions issues gracefully', async () => {
+            // This test is platform-dependent and may not work in all environments
+            // Skip if running as root or on Windows
+            if (process.platform === 'win32' || process.getuid?.() === 0) {
+                return;
+            }
+
+            await saltStore.set('key1', 'salt1');
+
+            // Make file read-only
+            await fs.chmod(testFilePath, 0o444);
+
+            // Should throw when trying to write
+            await expect(saltStore.set('key2', 'salt2')).rejects.toThrow();
+
+            // Restore permissions for cleanup
+            await fs.chmod(testFilePath, 0o644);
+        });
+    });
+
+    describe('integration tests', () => {
+        it('should handle multiple operations correctly', async () => {
+            const keys = ['6ba7b810-9dad-11d1-80b4-00c04fd430c8', '6ba7b811-9dad-11d1-80b4-00c04fd430c8', '6ba7b812-9dad-11d1-80b4-00c04fd430c8'];
+            const salts = ['salt-1', 'salt-2', 'salt-3'];
+
+            for (let i = 0; i < keys.length; i++) {
+                const returnedRecord = await saltStore.set(keys[i], salts[i]);
+                expect(returnedRecord.salt).toBe(salts[i]);
+            }
+
+            const allSalts = await saltStore.getAll();
+            expect(Object.keys(allSalts)).toHaveLength(3);
+
+            for (let i = 0; i < keys.length; i++) {
+                const salt = await saltStore.get(keys[i]);
+                expect(salt!.salt).toBe(salts[i]);
+            }
+
+            await saltStore.delete(keys[1]);
+
+            const allSaltsAfterDelete = await saltStore.getAll();
+            expect(Object.keys(allSaltsAfterDelete)).toHaveLength(2);
+            expect(allSaltsAfterDelete[keys[0]]).toBeDefined();
+            expect(allSaltsAfterDelete[keys[1]]).toBeUndefined();
+            expect(allSaltsAfterDelete[keys[2]]).toBeDefined();
+        });
+
+        it('should maintain isolation between different instances', async () => {
+            const store1Path = path.join('/tmp', `test-salts-${randomUUID()}.json`);
+            const store2Path = path.join('/tmp', `test-salts-${randomUUID()}.json`);
+            const store1 = new FileSaltStore(store1Path);
+            const store2 = new FileSaltStore(store2Path);
+
+            await store1.set('550e8400-e29b-41d4-a716-446655440000', 'salt1');
+            await store2.set('6ba7b810-9dad-11d1-80b4-00c04fd430c8', 'salt2');
+
+            const result1 = await store1.get('550e8400-e29b-41d4-a716-446655440000');
+            const result2 = await store2.get('6ba7b810-9dad-11d1-80b4-00c04fd430c8');
+            const missing1 = await store1.get('6ba7b810-9dad-11d1-80b4-00c04fd430c8');
+            const missing2 = await store2.get('550e8400-e29b-41d4-a716-446655440000');
+
+            expect(result1!.salt).toBe('salt1');
+            expect(result2!.salt).toBe('salt2');
+            expect(missing1).toBeUndefined();
+            expect(missing2).toBeUndefined();
+
+            // Clean up
+            await fs.unlink(store1Path);
+            await fs.unlink(store2Path);
+        });
+
+        it('should work correctly with multiple instances using same file', async () => {
+            const store1 = new FileSaltStore(testFilePath);
+            const store2 = new FileSaltStore(testFilePath);
+
+            await store1.set('key1', 'salt1');
+            const result = await store2.get('key1');
+            expect(result?.salt).toBe('salt1');
+
+            await store2.set('key2', 'salt2');
+            const result2 = await store1.get('key2');
+            expect(result2?.salt).toBe('salt2');
+        });
+    });
+});

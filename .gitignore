@@ -84,3 +84,6 @@ config.development.json
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Data Directory
+data/**
