@@ -5,14 +5,15 @@ const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
 const port: number = parseInt(process.env.PORT || '3000', 10);
 const isWorkerMode = process.env.WORKER_MODE === 'true';
 
+import workerApp from './src/worker-app';
+import mainApp from './src/app';
+
 // Load the appropriate app once
 let app;
 if (isWorkerMode) {
-    const workerModule = await import('./src/worker-app');
-    app = workerModule.default;
+    app = workerApp;
 } else {
-    const appModule = await import('./src/app');
-    app = appModule.default;
+    app = mainApp;
 }
 
 // Start the server if this file is run directly

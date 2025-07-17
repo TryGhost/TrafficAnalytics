@@ -5,27 +5,18 @@ export default defineConfig({
         port: 3000
     },
     build: {
-        target: 'esnext',
+        target: 'es2015',
         outDir: 'dist',
         minify: false,
         ssr: true,
+        sourcemap: true,
         rollupOptions: {
             input: 'server.ts',
             output: {
                 entryFileNames: '[name].js',
                 format: 'es'
             },
-            external: [
-                // External dependencies that should not be bundled
-                /^@fastify/,
-                /^@google-cloud/,
-                /^@tryghost/,
-                /^@opentelemetry/,
-                'fastify',
-                'fastify-plugin',
-                'pino',
-                'ua-parser-js'
-            ]
+            external: []
         }
     }
 });
