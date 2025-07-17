@@ -5,7 +5,7 @@ export default defineConfig({
         port: 3000
     },
     build: {
-        target: 'es2015',
+        target: 'esnext',
         outDir: 'dist',
         minify: false,
         ssr: true,
@@ -14,9 +14,23 @@ export default defineConfig({
             input: 'server.ts',
             output: {
                 entryFileNames: '[name].js',
-                format: 'es'
+                format: 'es',
+                inlineDynamicImports: true,
+                banner: `
+import { createRequire } from 'module';
+import { fileURLToPath as fileURLToPath$1 } from 'url';
+import { dirname as dirname$1 } from 'path';
+const require = createRequire(import.meta.url);
+const __filename = fileURLToPath$1(import.meta.url);
+const __dirname = dirname$1(__filename);
+`
             },
-            external: []
+            external: () => {
+                return false;
+            }
         }
+    },
+    ssr: {
+        noExternal: true
     }
 });
