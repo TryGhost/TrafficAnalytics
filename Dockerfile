@@ -15,4 +15,4 @@ COPY . .
 
 RUN yarn build
 
-CMD ["yarn", "start"]
+CMD ["node", "--enable-source-maps", "dist/server.js"]
