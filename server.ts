@@ -1,3 +1,4 @@
+import './src/utils/cjs-polyfill';
 import './src/utils/instrumentation';
 import {fileURLToPath} from 'url';
 

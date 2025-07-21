@@ -15,15 +15,7 @@ export default defineConfig({
             output: {
                 entryFileNames: '[name].js',
                 format: 'es',
-                inlineDynamicImports: true,
-                banner: `
-import { createRequire } from 'module';
-import { fileURLToPath as fileURLToPath$1 } from 'url';
-import { dirname as dirname$1 } from 'path';
-const require = createRequire(import.meta.url);
-const __filename = fileURLToPath$1(import.meta.url);
-const __dirname = dirname$1(__filename);
-`
+                inlineDynamicImports: true
             },
             external: () => {
                 return false;
