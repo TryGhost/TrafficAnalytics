@@ -28,7 +28,7 @@ send_request() {
   
   echo "Sending request ${request_num}/${COUNT}..."
   
-  curl -X POST "${URL}/tb/web_analytics?token=${TOKEN}&name=analytics_events" \
+  curl -X POST "${URL}/api/v1/page_hit?token=${TOKEN}&name=analytics_events" \
     -H "Content-Type: application/json" \
     -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" \
     -H "X-Site-UUID: ${SITE_UUID}" \
