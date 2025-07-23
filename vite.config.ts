@@ -7,25 +7,22 @@ export default defineConfig({
     build: {
         target: 'esnext',
         outDir: 'dist',
-        minify: false,
+        minify: true,
         ssr: true,
+        sourcemap: true,
         rollupOptions: {
             input: 'server.ts',
             output: {
                 entryFileNames: '[name].js',
-                format: 'es'
+                format: 'es',
+                inlineDynamicImports: true
             },
-            external: [
-                // External dependencies that should not be bundled
-                /^@fastify/,
-                /^@google-cloud/,
-                /^@tryghost/,
-                /^@opentelemetry/,
-                'fastify',
-                'fastify-plugin',
-                'pino',
-                'ua-parser-js'
-            ]
+            external: () => {
+                return false;
+            }
         }
+    },
+    ssr: {
+        noExternal: true
     }
 });
