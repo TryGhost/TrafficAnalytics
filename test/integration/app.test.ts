@@ -112,11 +112,11 @@ describe('Fastify App', () => {
     });
 
     describe('/', function () {
-        it('should return Hello World on the root route', async function () {
+        it('should return Hello message on the root route', async function () {
             await request(proxyServer)
                 .get('/')
                 .expect(200)
-                .expect('Hello World - Github Actions Deployment Test');
+                .expect('Hello Ghost Traffic Analytics');
         });
 
         it('should respond 404 to other methods on root route', async function () {
@@ -140,7 +140,7 @@ describe('Fastify App', () => {
                 .expect(404);
         });
     });
-    
+
     /* eslint-disable ghost/mocha/no-setup-in-describe */
     describe.each([
         '/tb/web_analytics', '/api/v1/page_hit'
@@ -181,8 +181,8 @@ describe('Fastify App', () => {
                 .set('x-test-header-400', 'true')
                 .expect(400);
         });
-        
-        describe('request validation', function () { 
+
+        describe('request validation', function () {
             it('should accept requests without token parameter', async function () {
                 await request(proxyServer)
                     .post(path)
@@ -193,7 +193,7 @@ describe('Fastify App', () => {
                     .send(eventPayload)
                     .expect(202);
             });
-    
+
             it('should reject requests without name parameter', async function () {
                 await request(proxyServer)
                     .post(path)
@@ -207,7 +207,7 @@ describe('Fastify App', () => {
                         assert.ok(res.body.message === 'querystring must have required property \'name\'');
                     });
             });
-    
+
             it('should reject requests with invalid name parameter', async function () {
                 await request(proxyServer)
                     .post(path)
@@ -221,7 +221,7 @@ describe('Fastify App', () => {
                         assert.ok(res.body.message.includes('querystring/name'));
                     });
             });
-    
+
             it('should reject requests with empty body', async function () {
                 await request(proxyServer)
                     .post(path)
@@ -348,11 +348,11 @@ describe('Fastify App', () => {
                     .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                     .send(eventPayload)
                     .expect(202);
-    
+
                 const targetRequest = targetRequests[0];
                 expect(targetRequest.body.payload.os).toBe('macos');
             });
-    
+
             it('should parse the browser from the user agent and pass it to the upstream server', async function () {
                 await request(proxyServer)
                     .post(path)
@@ -362,11 +362,11 @@ describe('Fastify App', () => {
                     .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                     .send(eventPayload)
                     .expect(202);
-    
+
                 const targetRequest = targetRequests[0];
                 expect(targetRequest.body.payload.browser).toBe('chrome');
             });
-    
+
             it('should parse the device from the user agent and pass it to the upstream server', async function () {
                 await request(proxyServer)
                     .post(path)
@@ -376,7 +376,7 @@ describe('Fastify App', () => {
                     .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36')
                     .send(eventPayload)
                     .expect(202);
-    
+
                 const targetRequest = targetRequests[0];
                 expect(targetRequest.body.payload.device).toBe('desktop');
             });
@@ -392,17 +392,17 @@ describe('Fastify App', () => {
                     .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36')
                     .send(eventPayload)
                     .expect(202);
-    
+
                 const targetRequest = targetRequests[0];
                 expect(targetRequest.body.session_id).toBeDefined();
                 expect(targetRequest.body.session_id).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex format
             });
-    
+
             it('should use client IP from X-Forwarded-For header when present', async function () {
                 const clientIp = '203.0.113.42';
                 const proxyIp = '192.168.1.1';
                 const userAgent = 'Mozilla/5.0 Test Browser';
-                
+
                 await request(proxyServer)
                     .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
@@ -412,7 +412,7 @@ describe('Fastify App', () => {
                     .set('X-Forwarded-For', `${clientIp}, ${proxyIp}`)
                     .send(eventPayload)
                     .expect(202);
-    
+
                 // Verify that the user signature service was called with the client IP, not the proxy IP
                 expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
                     eventPayload.payload.site_uuid,
@@ -420,13 +420,13 @@ describe('Fastify App', () => {
                     userAgent
                 );
             });
-    
+
             it('should handle multiple proxies in X-Forwarded-For header', async function () {
                 const clientIp = '203.0.113.42';
                 const proxy1 = '192.168.1.1';
                 const proxy2 = '10.0.0.1';
                 const userAgent = 'Mozilla/5.0 Test Browser';
-                
+
                 await request(proxyServer)
                     .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
@@ -436,7 +436,7 @@ describe('Fastify App', () => {
                     .set('X-Forwarded-For', `${clientIp}, ${proxy1}, ${proxy2}`)
                     .send(eventPayload)
                     .expect(202);
-    
+
                 // Verify that the user signature service was called with the first IP (client IP)
                 expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
                     eventPayload.payload.site_uuid,
@@ -444,11 +444,11 @@ describe('Fastify App', () => {
                     userAgent
                 );
             });
-    
+
             it('should handle single IP in X-Forwarded-For header', async function () {
                 const clientIp = '203.0.113.42';
                 const userAgent = 'Mozilla/5.0 Test Browser';
-                
+
                 await request(proxyServer)
                     .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
@@ -458,7 +458,7 @@ describe('Fastify App', () => {
                     .set('X-Forwarded-For', clientIp)
                     .send(eventPayload)
                     .expect(202);
-    
+
                 // Verify that the user signature service was called with the client IP from X-Forwarded-For
                 expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
                     eventPayload.payload.site_uuid,
@@ -466,10 +466,10 @@ describe('Fastify App', () => {
                     userAgent
                 );
             });
-    
+
             it('should use connection IP when no proxy headers are present', async function () {
                 const userAgent = 'Mozilla/5.0 Direct Connection';
-                
+
                 await request(proxyServer)
                     .post(path)
                     .query({token: 'abc123', name: 'analytics_events_test'})
@@ -478,7 +478,7 @@ describe('Fastify App', () => {
                     .set('User-Agent', userAgent)
                     .send(eventPayload)
                     .expect(202);
-    
+
                 // Verify that the user signature service was called with some IP
                 // (we can't predict the exact IP for direct connections in test environment)
                 expect(vi.mocked(userSignatureService.generateUserSignature)).toHaveBeenCalledWith(
@@ -486,7 +486,7 @@ describe('Fastify App', () => {
                     expect.any(String), // Should use the connection IP
                     userAgent
                 );
-                
+
                 // Verify the IP is not empty
                 const callArgs = vi.mocked(userSignatureService.generateUserSignature).mock.calls[0];
                 expect(callArgs[1]).toBeTruthy();

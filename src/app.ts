@@ -35,8 +35,7 @@ app.register(v1Routes, {prefix: '/api/v1'});
 
 // Routes
 app.get('/', async () => {
-    return 'Hello World - Github Actions Deployment Test';
+    return 'Hello Ghost Traffic Analytics';
 });
 
 export default app;
-

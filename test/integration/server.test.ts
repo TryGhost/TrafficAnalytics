@@ -19,7 +19,7 @@ describe('Server Conditional Loading', () => {
         beforeEach(async () => {
             process.env.WORKER_MODE = 'false';
             vi.resetModules();
-            
+
             // Import server module which should load main app
             const serverModule = await import('../../server');
             app = serverModule.default;
@@ -32,7 +32,7 @@ describe('Server Conditional Loading', () => {
                 .expect(200);
 
             // Main app returns different response than worker
-            expect(response.text).toBe('Hello World - Github Actions Deployment Test');
+            expect(response.text).toBe('Hello Ghost Traffic Analytics');
         });
 
         it('should have proxy routes available in main app', async () => {
@@ -52,7 +52,7 @@ describe('Server Conditional Loading', () => {
             // Ensure WORKER_MODE is not set
             delete process.env.WORKER_MODE;
             vi.resetModules();
-            
+
             // Import server module which should load main app by default
             const serverModule = await import('../../server');
             app = serverModule.default;
@@ -65,7 +65,7 @@ describe('Server Conditional Loading', () => {
                 .expect(200);
 
             // Main app returns different response than worker
-            expect(response.text).toBe('Hello World - Github Actions Deployment Test');
+            expect(response.text).toBe('Hello Ghost Traffic Analytics');
         });
     });
 
@@ -73,7 +73,7 @@ describe('Server Conditional Loading', () => {
         beforeEach(async () => {
             process.env.WORKER_MODE = 'true';
             vi.resetModules();
-            
+
             // Import server module which should load worker app
             const serverModule = await import('../../server');
             app = serverModule.default;
@@ -116,7 +116,7 @@ describe('Server Conditional Loading', () => {
             // Test that worker app has logging functionality
             expect(app.log).toBeDefined();
             expect(typeof app.log.info).toBe('function');
-            
+
             // Test that we can log without errors
             expect(() => app.log.info('test heartbeat message')).not.toThrow();
         });
@@ -126,7 +126,7 @@ describe('Server Conditional Loading', () => {
         it('should handle WORKER_MODE with different casing', async () => {
             process.env.WORKER_MODE = 'TRUE';
             vi.resetModules();
-            
+
             const serverModule = await import('../../server');
             app = serverModule.default;
             await app.ready();
@@ -136,13 +136,13 @@ describe('Server Conditional Loading', () => {
                 .expect(200);
 
             // Should still load main app since we check for exact 'true'
-            expect(response.text).toBe('Hello World - Github Actions Deployment Test');
+            expect(response.text).toBe('Hello Ghost Traffic Analytics');
         });
 
         it('should handle WORKER_MODE with random values', async () => {
             process.env.WORKER_MODE = 'maybe';
             vi.resetModules();
-            
+
             const serverModule = await import('../../server');
             app = serverModule.default;
             await app.ready();
@@ -152,7 +152,7 @@ describe('Server Conditional Loading', () => {
                 .expect(200);
 
             // Should load main app for any value other than 'true'
-            expect(response.text).toBe('Hello World - Github Actions Deployment Test');
+            expect(response.text).toBe('Hello Ghost Traffic Analytics');
         });
     });
 });
