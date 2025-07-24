@@ -43,7 +43,7 @@ The service follows a modular architecture:
 
 ## Request Flow
 
-1. Requests come to `/tb/web_analytics` or `/.ghost/analytics/tb/web_analytics`
+1. Requests come to `/api/v1/page_hit`
 2. preValidation hook validates query parameters and request body
 3. preHandler hook processes user agent and referrer data
 4. Request is forwarded to `PROXY_TARGET` (default: `http://localhost:3000/local-proxy`)
