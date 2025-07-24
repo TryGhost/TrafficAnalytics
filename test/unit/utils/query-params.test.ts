@@ -5,72 +5,72 @@ const {filterQueryParams} = queryParams;
 
 describe('Query Parameter Filtering', () => {
     it('should filter out unwanted query parameters while keeping token and name', () => {
-        const input = '/tb/web_analytics?token=abc123&name=test&unwanted=param';
-        const expected = '/tb/web_analytics?token=abc123&name=test';
+        const input = '/api/v1/page_hit?token=abc123&name=test&unwanted=param';
+        const expected = '/api/v1/page_hit?token=abc123&name=test';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
 
     it('should remove all parameters if none are allowed', () => {
-        const input = '/tb/web_analytics?unwanted=param';
-        const expected = '/tb/web_analytics';
+        const input = '/api/v1/page_hit?unwanted=param';
+        const expected = '/api/v1/page_hit';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
 
     it('should keep only token parameter if present', () => {
-        const input = '/tb/web_analytics?token=xyz';
-        const expected = '/tb/web_analytics?token=xyz';
+        const input = '/api/v1/page_hit?token=xyz';
+        const expected = '/api/v1/page_hit?token=xyz';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
 
     it('should keep only name parameter if present', () => {
-        const input = '/tb/web_analytics?name=test';
-        const expected = '/tb/web_analytics?name=test';
+        const input = '/api/v1/page_hit?name=test';
+        const expected = '/api/v1/page_hit?name=test';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
 
     // Edge cases for filterQueryParams
     it('should handle URLs with no query parameters', () => {
-        const input = '/tb/web_analytics';
-        const expected = '/tb/web_analytics';
+        const input = '/api/v1/page_hit';
+        const expected = '/api/v1/page_hit';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
 
     it('should handle empty query strings', () => {
-        const input = '/tb/web_analytics?';
-        const expected = '/tb/web_analytics';
+        const input = '/api/v1/page_hit?';
+        const expected = '/api/v1/page_hit';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
 
     it('should reject requests with empty token and name', () => {
-        const input = '/tb/web_analytics?token=&name=';
-        const expected = '/tb/web_analytics';
+        const input = '/api/v1/page_hit?token=&name=';
+        const expected = '/api/v1/page_hit';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
 
     it('should reject whitespace-only token values', () => {
-        const input = '/tb/web_analytics?token=  &name=test';
-        const expected = '/tb/web_analytics?name=test';
+        const input = '/api/v1/page_hit?token=  &name=test';
+        const expected = '/api/v1/page_hit?name=test';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
 
     it('should reject whitespace-only name values', () => {
-        const input = '/tb/web_analytics?token=abc123&name=  ';
-        const expected = '/tb/web_analytics?token=abc123';
+        const input = '/api/v1/page_hit?token=abc123&name=  ';
+        const expected = '/api/v1/page_hit?token=abc123';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });
 
     it('should handle mixed valid and invalid values', () => {
-        const input = '/tb/web_analytics?token=valid&name=&extra=param';
-        const expected = '/tb/web_analytics?token=valid';
+        const input = '/api/v1/page_hit?token=valid&name=&extra=param';
+        const expected = '/api/v1/page_hit?token=valid';
         const result = filterQueryParams(input);
         expect(result).toBe(expected);
     });

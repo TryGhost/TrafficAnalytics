@@ -104,7 +104,7 @@ describe('Server Conditional Loading', () => {
         it('should not have proxy routes in worker app', async () => {
             // Worker app should not have proxy routes
             const response = await request(app.server)
-                .post('/tb/web_analytics?token=test&name=test')
+                .post('/api/v1/page_hit?token=test&name=test')
                 .send({payload: {site_uuid: 'test'}})
                 .set('x-site-uuid', 'test-site');
 
