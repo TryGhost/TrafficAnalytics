@@ -6,7 +6,7 @@ Traffic Analytics Service - A web analytics proxy for Ghost that processes and e
 The following sequence diagram shows a simplified overview of where the Analytics Service fits in to Ghost's traffic analytics features.
 1. A user requests a Ghost site's homepage (or any other page on the site's frontend)
 2. Ghost serves the page's HTML, plus a script called `ghost-stats.js`
-3. The `ghost-stats.js` script executes and sends a `POST` request to the Analytics Service's `POST /tb/web_analytics` endpoint
+3. The `ghost-stats.js` script executes and sends a `POST` request to the Analytics Service's `POST /api/v1/page_hit` endpoint
 4. The Analytics Service receives the request and processes it. This includes parsing the user agent, generating a user signature, etc.
 5. The Analytics Service proxies the request to Tinybird
 6. Tinybird receives the request and stores it in its Clickhouse database
@@ -27,7 +27,7 @@ sequenceDiagram
     
     Note over User: ghost-stats.js executes
     
-    User->>+AS: POST /tb/web_analytics
+    User->>+AS: POST /api/v1/page_hit
     
     AS->>AS: Process Request
     
@@ -75,7 +75,7 @@ Here are the steps to get setup:
         "workspaceId": "${workspaceId}",
         "adminToken": "${adminToken}",
         "tracker": {
-            "endpoint": "http://localhost:3000/tb/web_analytics",
+            "endpoint": "http://localhost:3000/api/v1/page_hit",
             "datasource": "analytics_events"
         },
         "stats": {
@@ -102,7 +102,7 @@ PROXY_TARGET=http://host.docker.internal:7181/v0/events # The URL of your Tinybi
 
 To confirm everything is working: 
 - Load your local Ghost site's frontend in your browser at `http://localhost:2368` 
-    - In your network tab, you should see a successful POST request to `/tb/web_analytics`
+    - In your network tab, you should see a successful POST request to `/api/v1/page_hit`
 - Load Ghost admin in your browser at `http://localhost:2368/ghost` and navigate to the Analytics tab in the sidebar
     - You should see a "Unique Visitor" recorded in the main Overview tab
 
