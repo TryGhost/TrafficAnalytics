@@ -285,6 +285,34 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.browser).toBe('firefox');
             expect(result.device).toBe('desktop');
         });
+
+        it('should detect Googlebot as bot even with Android user agent', () => {
+            const userAgent = 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.119 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
+            const result = transformUserAgent(userAgent);
+        
+            expect(result.os).toBe('android');
+            expect(result.browser).toBe('chrome');
+            expect(result.device).toBe('bot'); // Should be 'bot', not 'mobile-android'
+        });
+
+        it('should detect various bots even with mobile OS user agents', () => {
+            // Googlebot with iOS user agent
+            const googleBotiOS = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.4 Mobile/15E148 Safari/605.1 NAVER(inapp; search; 2000; 12.13.0; 16PROMAX) (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
+            let result = transformUserAgent(googleBotiOS);
+            expect(result.device).toBe('bot');
+            expect(result.os).toBe('ios');
+
+            // AhrefsBot with Android
+            const ahrefsBotAndroid = 'Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Mobile Safari/537.36 AhrefsBot/7.0';
+            result = transformUserAgent(ahrefsBotAndroid);
+            expect(result.device).toBe('bot');
+            expect(result.os).toBe('android');
+
+            // Simple bot patterns should still work
+            const curlBot = 'curl/7.64.1';
+            result = transformUserAgent(curlBot);
+            expect(result.device).toBe('bot');
+        });
     });
 
     describe('transformReferrer', () => {

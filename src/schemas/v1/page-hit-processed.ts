@@ -70,16 +70,16 @@ export function transformUserAgent(userAgent: string): {os: string, browser: str
             osName = 'macos';
         }
 
-        // Normalize device type
+        // Normalize device type - check for bots first
         let deviceType = 'unknown';
-        if (osName === 'ios') {
+        if (isBot(userAgent)) {
+            deviceType = 'bot';
+        } else if (osName === 'ios') {
             deviceType = 'mobile-ios';
         } else if (osName === 'android') {
             deviceType = 'mobile-android';
         } else if (['macos', 'windows', 'linux', 'chrome os', 'chromium os', 'ubuntu'].includes(osName)) {
             deviceType = 'desktop';
-        } else if (isBot(userAgent)) {
-            deviceType = 'bot';
         }
 
         return {
