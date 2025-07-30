@@ -295,6 +295,72 @@ describe('BatchWorker', () => {
             await (batchWorker as any).handleMessage(mockMessage);
             expect(mockMessage.nack).not.toHaveBeenCalled();
         });
+
+        it('should filter bot traffic and acknowledge the message without batching', async () => {
+            const botData = {
+                ...validPageHitRawData,
+                meta: {
+                    ...validPageHitRawData.meta,
+                    'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+                }
+            };
+            const mockMessage = createMockMessage(JSON.stringify(botData));
+
+            await (batchWorker as any).handleMessage(mockMessage);
+
+            // Bot traffic should be acknowledged immediately without being batched
+            expect(mockMessage.ack).toHaveBeenCalled();
+            expect(mockMessage.nack).not.toHaveBeenCalled();
+            expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
+            
+            // Should log bot filtering
+            expect(logger.info).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    event: 'BotEventFiltered',
+                    pageHitProcessed: expect.objectContaining({
+                        payload: expect.objectContaining({
+                            device: 'bot'
+                        })
+                    })
+                })
+            );
+        });
+
+        it('should filter Googlebot with Android user agent and acknowledge', async () => {
+            const googleBotAndroidData = {
+                ...validPageHitRawData,
+                meta: {
+                    ...validPageHitRawData.meta,
+                    'user-agent': 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.119 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+                }
+            };
+            const mockMessage = createMockMessage(JSON.stringify(googleBotAndroidData));
+
+            await (batchWorker as any).handleMessage(mockMessage);
+
+            // Bot traffic should be acknowledged immediately
+            expect(mockMessage.ack).toHaveBeenCalled();
+            expect(mockMessage.nack).not.toHaveBeenCalled();
+            expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
+        });
+
+        it('should process regular traffic and add to batch', async () => {
+            const regularData = {
+                ...validPageHitRawData,
+                meta: {
+                    ...validPageHitRawData.meta,
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+            };
+            const mockMessage = createMockMessage(JSON.stringify(regularData));
+
+            await (batchWorker as any).handleMessage(mockMessage);
+
+            // Regular traffic should not be acknowledged immediately (batched)
+            expect(mockMessage.ack).not.toHaveBeenCalled();
+            expect(mockMessage.nack).not.toHaveBeenCalled();
+            expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
+        });
     });
 
     describe('batch processing', () => {
@@ -430,6 +496,54 @@ describe('BatchWorker', () => {
                 flushInterval: 1000
             });
             expect(customBatchWorker).toBeInstanceOf(BatchWorker);
+        });
+
+        it('should not count bot traffic towards batch size', async () => {
+            const botData = {
+                ...validPageHitRawData,
+                meta: {
+                    ...validPageHitRawData.meta,
+                    'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+                }
+            };
+            const regularData = {
+                ...validPageHitRawData,
+                meta: {
+                    ...validPageHitRawData.meta,
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+            };
+
+            const botMessage = createMockMessage(JSON.stringify(botData));
+            const regularMessage1 = createMockMessage(JSON.stringify(regularData));
+            const regularMessage2 = createMockMessage(JSON.stringify(regularData));
+
+            // Send bot traffic first - should not contribute to batch
+            await (batchWorker as any).handleMessage(botMessage);
+            expect(botMessage.ack).toHaveBeenCalled();
+            expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
+
+            // Send first regular message - should not trigger batch flush yet
+            await (batchWorker as any).handleMessage(regularMessage1);
+            expect(regularMessage1.ack).not.toHaveBeenCalled();
+            expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
+
+            // Send second regular message - should trigger batch flush (batch size is 2)
+            await (batchWorker as any).handleMessage(regularMessage2);
+            expect(mockTinybirdClient.postEventBatch).toHaveBeenCalledWith(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        timestamp: validPageHitRawData.timestamp,
+                        action: validPageHitRawData.action
+                    }),
+                    expect.objectContaining({
+                        timestamp: validPageHitRawData.timestamp,
+                        action: validPageHitRawData.action
+                    })
+                ])
+            );
+            expect(regularMessage1.ack).toHaveBeenCalled();
+            expect(regularMessage2.ack).toHaveBeenCalled();
         });
     });
 });

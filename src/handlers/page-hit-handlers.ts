@@ -32,6 +32,17 @@ export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestT
 export const handlePageHitRequestStrategyInline = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
     const pageHitRaw = pageHitRawPayloadFromRequest(request);
     const pageHitProcessed = await transformPageHitRawToProcessed(pageHitRaw);
+    
+    // Filter bot traffic before proxying
+    if (pageHitProcessed.payload.device === 'bot') {
+        request.log.info({
+            event: 'BotEventFiltered',
+            pageHitProcessed: pageHitProcessed
+        });
+        reply.status(202).send();
+        return;
+    }
+    
     request.body = pageHitProcessed;
 
     // Proxy the request to the upstream target

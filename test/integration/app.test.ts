@@ -382,6 +382,61 @@ describe('Fastify App', () => {
             });
         });
 
+        describe('bot filtering', function () {
+            it('should filter bot traffic and return 202 without proxying to upstream', async function () {
+                const initialRequestCount = targetRequests.length;
+                
+                // Test with Googlebot user agent
+                await request(proxyServer)
+                    .post(path)
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
+                    .send(eventPayload)
+                    .expect(202);
+
+                // Verify no request was sent to upstream
+                expect(targetRequests.length).toBe(initialRequestCount);
+            });
+
+            it('should filter Googlebot with Android user agent', async function () {
+                const initialRequestCount = targetRequests.length;
+                
+                // Test with Googlebot that has Android in user agent
+                await request(proxyServer)
+                    .post(path)
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.119 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
+                    .send(eventPayload)
+                    .expect(202);
+
+                // Verify no request was sent to upstream
+                expect(targetRequests.length).toBe(initialRequestCount);
+            });
+
+            it('should not filter regular traffic', async function () {
+                const initialRequestCount = targetRequests.length;
+                
+                // Test with regular browser user agent
+                await request(proxyServer)
+                    .post(path)
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+                    .send(eventPayload)
+                    .expect(202);
+
+                // Verify request was sent to upstream
+                expect(targetRequests.length).toBe(initialRequestCount + 1);
+                const targetRequest = targetRequests[targetRequests.length - 1];
+                expect(targetRequest.body.payload.device).toBe('desktop');
+            });
+        });
+
         describe('user signature generation', function () {
             it('should generate user signature and pass it to the upstream server', async function () {
                 await request(proxyServer)
