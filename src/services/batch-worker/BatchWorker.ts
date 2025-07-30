@@ -65,6 +65,18 @@ class BatchWorker {
         try {
             const pageHitRaw = await this.parseMessage(message);
             const pageHitProcessed = await this.transformMessage(pageHitRaw);
+            
+            // Filter bot traffic before adding to batch
+            if (pageHitProcessed.payload.device === 'bot') {
+                logger.info({
+                    event: 'BotEventFiltered',
+                    pageHitProcessed: pageHitProcessed
+                });
+                // Acknowledge the message since we successfully processed it (by filtering it out)
+                message.ack();
+                return;
+            }
+            
             // Add to batch instead of posting immediately
             this.batch.push({
                 message,
