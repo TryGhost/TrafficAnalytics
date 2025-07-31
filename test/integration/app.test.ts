@@ -140,11 +140,9 @@ describe('Fastify App', () => {
                 .expect(404);
         });
     });
-
-    /* eslint-disable ghost/mocha/no-setup-in-describe */
-    describe.each([
-        '/tb/web_analytics', '/api/v1/page_hit'
-    ])(`%s`, (path) => {
+    
+    describe('POST /api/v1/page_hit', function () {
+        const path = '/api/v1/page_hit';
         it('should proxy requests to the target server', async function () {
             vi.stubEnv('TINYBIRD_TRACKER_TOKEN', undefined);
             await request(proxyServer)

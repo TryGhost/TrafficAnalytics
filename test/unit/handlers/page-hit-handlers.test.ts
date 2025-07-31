@@ -31,7 +31,7 @@ describe('page-hit-handlers', () => {
         // Create a mock request object
         mockRequest = {
             method: 'POST',
-            url: '/tb/web_analytics?token=test&name=analytics_events',
+            url: '/api/v1/page_hit?token=test&name=analytics_events',
             ip: '192.168.1.1',
             protocol: 'https',
             raw: {

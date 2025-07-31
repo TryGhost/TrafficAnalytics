@@ -16,7 +16,7 @@ MEMBER_UUID="11111111-2222-3333-4444-555555555555"
 # Current timestamp in ISO8601 format
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 
-echo "Sending ${COUNT} requests to: ${URL}/tb/web_analytics"
+echo "Sending ${COUNT} requests to: ${URL}/api/v1/page_hit"
 echo "Using token: ${TOKEN}"
 echo "Timestamp: ${TIMESTAMP}"
 echo ""
@@ -28,7 +28,7 @@ send_request() {
   
   echo "Sending request ${request_num}/${COUNT}..."
   
-  curl -X POST "${URL}/tb/web_analytics?token=${TOKEN}&name=analytics_events" \
+  curl -X POST "${URL}/api/v1/page_hit?token=${TOKEN}&name=analytics_events" \
     -H "Content-Type: application/json" \
     -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" \
     -H "X-Site-UUID: ${SITE_UUID}" \
