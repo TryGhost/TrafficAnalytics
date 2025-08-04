@@ -70,6 +70,8 @@ class BatchWorker {
             if (pageHitProcessed.payload.device === 'bot') {
                 logger.info({
                     event: 'BotEventFiltered',
+                    messageId: message.id,
+                    messageData: this.getMessageData(message),
                     pageHitProcessed: pageHitProcessed
                 });
                 // Acknowledge the message since we successfully processed it (by filtering it out)
@@ -83,37 +85,34 @@ class BatchWorker {
                 processedEvent: pageHitProcessed
             });
             
-            logger.info({pageHitProcessed}, 'Worker processed message and added to batch');
+            logger.info({
+                event: 'WorkerProcessedMessage',
+                messageId: message.id,
+                messageData: this.getMessageData(message),
+                pageHitProcessed
+            });
             
             // Check if batch is full
             if (this.batch.length >= this.batchSize) {
                 await this.flushBatch();
             }
         } catch (error) {
-            logger.error({messageData: message.data.toString(), err: error}, 'Worker unable to process message. Nacking message...');
+            logger.error({event: 'WorkerFailedToProcessMessageError', 
+                messageId: message.id, 
+                messageData: this.getMessageData(message),
+                err: error});
             message.nack();
         }
     }
 
     private async parseMessage(message: Message) {
-        try {
-            const messageData = message.data.toString();
-            const json = JSON.parse(messageData);
-            return Value.Parse(PageHitRawSchema, json);
-        } catch (error) {
-            logger.error({messageData: message.data.toString(), err: error}, 'Worker unable to parse message. Nacking message...');
-            message.nack();
-            throw error;
-        }
+        const messageData = message.data.toString();
+        const json = JSON.parse(messageData);
+        return Value.Parse(PageHitRawSchema, json);
     }
 
     private async transformMessage(pageHitRaw: PageHitRaw) {
-        try {
-            return await transformPageHitRawToProcessed(pageHitRaw);
-        } catch (error) {
-            logger.error({pageHitRaw, err: error}, 'Worker unable to transform message');
-            throw error;
-        }
+        return await transformPageHitRawToProcessed(pageHitRaw);
     }
 
     private async flushBatch() {
@@ -121,7 +120,6 @@ class BatchWorker {
             return;
         }
 
-        logger.info(`Flushing batch of ${this.batch.length} events to Tinybird`);
         const batchToFlush = [...this.batch];
         this.batch = [];
         
@@ -134,9 +132,18 @@ class BatchWorker {
                 item.message.ack();
             });
             
-            logger.info(`Successfully flushed batch of ${batchToFlush.length} events to Tinybird`);
+            logger.info({
+                event: 'WorkerFlushedBatch',
+                batchSize: batchToFlush.length,
+                messageIds: batchToFlush.map(item => item.message.id)
+            });
         } catch (error) {
-            logger.error({batchSize: batchToFlush.length, err: error}, 'Failed to flush batch to Tinybird');
+            logger.error({
+                event: 'WorkerFailedToFlushBatch',
+                batchSize: batchToFlush.length,
+                messageIds: batchToFlush.map(item => item.message.id),
+                err: error
+            });
             
             // Nack all messages in the failed batch
             batchToFlush.forEach((item) => {
@@ -158,7 +165,12 @@ class BatchWorker {
             try {
                 await this.flushBatch();
             } catch (error) {
-                logger.error({err: error}, 'Error during scheduled batch flush');
+                logger.error({
+                    event: 'WorkerFailedToFlushBatch',
+                    batchSize: this.batch.length,
+                    messageIds: this.batch.map(item => item.message.id),
+                    err: error
+                });
             }
             
             // Schedule the next flush if not shutting down
@@ -166,6 +178,14 @@ class BatchWorker {
                 this.scheduleFlush();
             }
         }, this.flushInterval);
+    }
+
+    private getMessageData(message: Message) {
+        try {
+            return JSON.parse(message.data.toString());
+        } catch (_error) {
+            return message.data.toString();
+        }
     }
 }
 

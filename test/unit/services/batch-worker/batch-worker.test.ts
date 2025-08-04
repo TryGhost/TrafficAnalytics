@@ -135,6 +135,9 @@ describe('BatchWorker', () => {
             // Should log debug message for adding to batch
             expect(logger.info).toHaveBeenCalledWith(
                 expect.objectContaining({
+                    event: 'WorkerProcessedMessage',
+                    messageId: mockMessage.id,
+                    messageData: validPageHitRawData,
                     pageHitProcessed: expect.objectContaining({
                         timestamp: validPageHitRawData.timestamp,
                         action: validPageHitRawData.action,
@@ -158,8 +161,7 @@ describe('BatchWorker', () => {
                             device: expect.any(String)
                         })
                     })
-                }),
-                'Worker processed message and added to batch'
+                })
             );
             
             // Message should not be acked yet
@@ -190,18 +192,49 @@ describe('BatchWorker', () => {
 
             await (batchWorker as any).handleMessage(mockMessage);
 
+            expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+                event: 'WorkerFailedToProcessMessageError', 
+                messageId: mockMessage.id, 
+                messageData: invalidJson, 
+                err: expect.any(Object)
+            }));
+
             expectMessageNacked(mockMessage);
         });
 
         it('should handle invalid schema and nack message', async () => {
-            const invalidData = {
-                timestamp: 'invalid-timestamp',
-                action: 'invalid-action',
-                version: '2'
+            const invalidPageHitRawWithEmptyUserAgent = {
+                timestamp: '2024-01-01T12:00:00.000Z',
+                action: 'page_hit',
+                version: '1',
+                site_uuid: '550e8400-e29b-41d4-a716-446655440000',
+                payload: {
+                    event_id: '123e4567-e89b-12d3-a456-426614174000',
+                    member_uuid: 'undefined',
+                    member_status: 'undefined',
+                    post_uuid: 'undefined',
+                    post_type: 'null',
+                    locale: 'en-US',
+                    location: 'New York',
+                    referrer: 'https://example.com',
+                    pathname: '/blog/post',
+                    href: 'https://mysite.com/blog/post'
+                },
+                meta: {
+                    ip: '192.168.1.1',
+                    'user-agent': ''
+                }
             };
-            const mockMessage = createMockMessage(JSON.stringify(invalidData));
+            const mockMessage = createMockMessage(JSON.stringify(invalidPageHitRawWithEmptyUserAgent));
 
             await (batchWorker as any).handleMessage(mockMessage);
+
+            expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+                event: 'WorkerFailedToProcessMessageError', 
+                messageId: mockMessage.id, 
+                messageData: invalidPageHitRawWithEmptyUserAgent,
+                err: expect.any(Object)
+            }));
 
             expectMessageNacked(mockMessage);
         });
@@ -317,6 +350,8 @@ describe('BatchWorker', () => {
             expect(logger.info).toHaveBeenCalledWith(
                 expect.objectContaining({
                     event: 'BotEventFiltered',
+                    messageId: mockMessage.id,
+                    messageData: botData,
                     pageHitProcessed: expect.objectContaining({
                         payload: expect.objectContaining({
                             device: 'bot'
