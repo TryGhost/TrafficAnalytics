@@ -120,7 +120,6 @@ class BatchWorker {
             return;
         }
 
-        logger.info(`Flushing batch of ${this.batch.length} events to Tinybird`);
         const batchToFlush = [...this.batch];
         this.batch = [];
         
@@ -133,9 +132,18 @@ class BatchWorker {
                 item.message.ack();
             });
             
-            logger.info(`Successfully flushed batch of ${batchToFlush.length} events to Tinybird`);
+            logger.info({
+                event: 'WorkerFlushedBatch',
+                batchSize: batchToFlush.length,
+                messageIds: batchToFlush.map(item => item.message.id)
+            });
         } catch (error) {
-            logger.error({batchSize: batchToFlush.length, err: error}, 'Failed to flush batch to Tinybird');
+            logger.error({
+                event: 'WorkerFailedToFlushBatch',
+                batchSize: batchToFlush.length,
+                messageIds: batchToFlush.map(item => item.message.id),
+                err: error
+            });
             
             // Nack all messages in the failed batch
             batchToFlush.forEach((item) => {
@@ -157,7 +165,12 @@ class BatchWorker {
             try {
                 await this.flushBatch();
             } catch (error) {
-                logger.error({err: error}, 'Error during scheduled batch flush');
+                logger.error({
+                    event: 'WorkerFailedToFlushBatch',
+                    batchSize: this.batch.length,
+                    messageIds: this.batch.map(item => item.message.id),
+                    err: error
+                });
             }
             
             // Schedule the next flush if not shutting down
