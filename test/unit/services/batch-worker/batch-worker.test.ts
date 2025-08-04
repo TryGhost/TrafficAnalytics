@@ -112,9 +112,10 @@ describe('BatchWorker', () => {
                 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'
             }
         };
-        const expectMessageNacked = (message: Message) => {
-            expect(message.nack).toHaveBeenCalled();
-            expect(message.ack).not.toHaveBeenCalled();
+
+        const expectMessageAcked = (message: Message) => {
+            expect(message.ack).toHaveBeenCalled();
+            expect(message.nack).not.toHaveBeenCalled();
         };
 
         it('should process valid message and add to batch without immediate ack', async () => {
@@ -186,23 +187,23 @@ describe('BatchWorker', () => {
         // This test is now covered by the batch processing tests
         // since individual message processing doesn't immediately post to Tinybird
 
-        it('should handle invalid JSON and nack message', async () => {
+        it('should handle invalid JSON error and ack message', async () => {
             const invalidJson = 'invalid json';
             const mockMessage = createMockMessage(invalidJson);
 
             await (batchWorker as any).handleMessage(mockMessage);
 
             expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-                event: 'WorkerFailedToProcessMessageError', 
+                event: 'WorkerFailedToParseMessageError', 
                 messageId: mockMessage.id, 
                 messageData: invalidJson, 
                 err: expect.any(Object)
             }));
 
-            expectMessageNacked(mockMessage);
+            expectMessageAcked(mockMessage);
         });
 
-        it('should handle invalid schema and nack message', async () => {
+        it('should handle invalid schema error and ack message', async () => {
             const invalidPageHitRawWithEmptyUserAgent = {
                 timestamp: '2024-01-01T12:00:00.000Z',
                 action: 'page_hit',
@@ -230,16 +231,16 @@ describe('BatchWorker', () => {
             await (batchWorker as any).handleMessage(mockMessage);
 
             expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-                event: 'WorkerFailedToProcessMessageError', 
+                event: 'WorkerFailedToParseMessageError', 
                 messageId: mockMessage.id, 
                 messageData: invalidPageHitRawWithEmptyUserAgent,
                 err: expect.any(Object)
             }));
 
-            expectMessageNacked(mockMessage);
+            expectMessageAcked(mockMessage);
         });
 
-        it('should handle missing required fields and nack message', async () => {
+        it('should handle missing required fields and ack message', async () => {
             const incompleteData = {
                 timestamp: '2024-01-01T12:00:00.000Z',
                 action: 'page_hit'
@@ -249,15 +250,15 @@ describe('BatchWorker', () => {
 
             await (batchWorker as any).handleMessage(mockMessage);
 
-            expectMessageNacked(mockMessage);
+            expectMessageAcked(mockMessage);
         });
 
-        it('should handle empty message data', async () => {
+        it('should handle empty message data and ack message', async () => {
             const mockMessage = createMockMessage('');
 
             await (batchWorker as any).handleMessage(mockMessage);
 
-            expectMessageNacked(mockMessage);
+            expectMessageAcked(mockMessage);
         });
 
         it('should handle valid message with null values in payload', async () => {
@@ -312,7 +313,7 @@ describe('BatchWorker', () => {
 
             await (batchWorker as any).handleMessage(mockMessage);
 
-            expectMessageNacked(mockMessage);
+            expectMessageAcked(mockMessage);
         });
 
         it('should handle invalid URL format in href', async () => {
