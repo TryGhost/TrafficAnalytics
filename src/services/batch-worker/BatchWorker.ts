@@ -112,12 +112,7 @@ class BatchWorker {
     }
 
     private async transformMessage(pageHitRaw: PageHitRaw) {
-        try {
-            return await transformPageHitRawToProcessed(pageHitRaw);
-        } catch (error) {
-            logger.error({pageHitRaw, err: error}, 'Worker unable to transform message');
-            throw error;
-        }
+        return await transformPageHitRawToProcessed(pageHitRaw);
     }
 
     private async flushBatch() {
