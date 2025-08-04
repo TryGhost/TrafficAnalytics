@@ -187,7 +187,7 @@ describe('BatchWorker', () => {
         // This test is now covered by the batch processing tests
         // since individual message processing doesn't immediately post to Tinybird
 
-        it('should handle invalid JSON error andack message', async () => {
+        it('should handle invalid JSON error and ack message', async () => {
             const invalidJson = 'invalid json';
             const mockMessage = createMockMessage(invalidJson);
 
