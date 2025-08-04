@@ -5,7 +5,10 @@ import {FastifyRequest} from 'fastify';
 
 // Common types
 const StringSchema = Type.String();
-const NonEmptyStringSchema = Type.String({minLength: 1});
+const NonEmptyStringSchema = Type.String({
+    minLength: 1,
+    pattern: '^.*\\S.*$' // At least one non-whitespace character
+});
 const UUIDSchema = Type.String({format: 'uuid'});
 const ISO8601DateTimeSchema = Type.String({
     format: 'date-time'
@@ -47,7 +50,7 @@ export type PageHitRequestQueryParamsType = Static<typeof PageHitRequestQueryPar
 export const PageHitRequestHeadersSchema = Type.Object({
     'x-site-uuid': UUIDSchema,
     'content-type': ContentTypeSchema,
-    'user-agent': StringSchema,
+    'user-agent': NonEmptyStringSchema,
     referer: Type.Optional(StringSchema)
 }, {
     additionalProperties: Type.Union([StringSchema, Type.Array(StringSchema)])
