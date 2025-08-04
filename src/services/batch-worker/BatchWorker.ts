@@ -70,6 +70,8 @@ class BatchWorker {
             if (pageHitProcessed.payload.device === 'bot') {
                 logger.info({
                     event: 'BotEventFiltered',
+                    messageId: message.id,
+                    messageData: this.getMessageData(message),
                     pageHitProcessed: pageHitProcessed
                 });
                 // Acknowledge the message since we successfully processed it (by filtering it out)
@@ -83,20 +85,22 @@ class BatchWorker {
                 processedEvent: pageHitProcessed
             });
             
-            logger.info({pageHitProcessed}, 'Worker processed message and added to batch');
+            logger.info({
+                event: 'WorkerProcessedMessage',
+                messageId: message.id,
+                messageData: this.getMessageData(message),
+                pageHitProcessed
+            });
             
             // Check if batch is full
             if (this.batch.length >= this.batchSize) {
                 await this.flushBatch();
             }
         } catch (error) {
-            let messageData;
-            try {
-                messageData = JSON.parse(message.data.toString());
-            } catch (_error) {
-                messageData = message.data.toString();
-            }
-            logger.error({event: 'WorkerFailedToProcessMessageError', messageId: message.id, messageData, err: error});
+            logger.error({event: 'WorkerFailedToProcessMessageError', 
+                messageId: message.id, 
+                messageData: this.getMessageData(message),
+                err: error});
             message.nack();
         }
     }
@@ -166,6 +170,14 @@ class BatchWorker {
                 this.scheduleFlush();
             }
         }, this.flushInterval);
+    }
+
+    private getMessageData(message: Message) {
+        try {
+            return JSON.parse(message.data.toString());
+        } catch (_error) {
+            return message.data.toString();
+        }
     }
 }
 

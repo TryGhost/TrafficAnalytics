@@ -135,6 +135,9 @@ describe('BatchWorker', () => {
             // Should log debug message for adding to batch
             expect(logger.info).toHaveBeenCalledWith(
                 expect.objectContaining({
+                    event: 'WorkerProcessedMessage',
+                    messageId: mockMessage.id,
+                    messageData: validPageHitRawData,
                     pageHitProcessed: expect.objectContaining({
                         timestamp: validPageHitRawData.timestamp,
                         action: validPageHitRawData.action,
@@ -158,8 +161,7 @@ describe('BatchWorker', () => {
                             device: expect.any(String)
                         })
                     })
-                }),
-                'Worker processed message and added to batch'
+                })
             );
             
             // Message should not be acked yet
@@ -348,6 +350,8 @@ describe('BatchWorker', () => {
             expect(logger.info).toHaveBeenCalledWith(
                 expect.objectContaining({
                     event: 'BotEventFiltered',
+                    messageId: mockMessage.id,
+                    messageData: botData,
                     pageHitProcessed: expect.objectContaining({
                         payload: expect.objectContaining({
                             device: 'bot'
