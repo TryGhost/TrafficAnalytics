@@ -90,7 +90,13 @@ class BatchWorker {
                 await this.flushBatch();
             }
         } catch (error) {
-            logger.error({messageData: message.data.toString(), err: error}, 'Worker unable to process message. Nacking message...');
+            let messageData;
+            try {
+                messageData = JSON.parse(message.data.toString());
+            } catch (_error) {
+                messageData = message.data.toString();
+            }
+            logger.error({event: 'WorkerFailedToProcessMessageError', messageId: message.id, messageData, err: error});
             message.nack();
         }
     }
