@@ -96,15 +96,9 @@ class BatchWorker {
     }
 
     private async parseMessage(message: Message) {
-        try {
-            const messageData = message.data.toString();
-            const json = JSON.parse(messageData);
-            return Value.Parse(PageHitRawSchema, json);
-        } catch (error) {
-            logger.error({messageData: message.data.toString(), err: error}, 'Worker unable to parse message. Nacking message...');
-            message.nack();
-            throw error;
-        }
+        const messageData = message.data.toString();
+        const json = JSON.parse(messageData);
+        return Value.Parse(PageHitRawSchema, json);
     }
 
     private async transformMessage(pageHitRaw: PageHitRaw) {
