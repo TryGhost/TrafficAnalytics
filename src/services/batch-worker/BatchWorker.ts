@@ -64,6 +64,9 @@ class BatchWorker {
     private async handleMessage(message: Message) {
         try {
             const pageHitRaw = await this.parseMessage(message);
+            if (!pageHitRaw) {
+                return;
+            }
             const pageHitProcessed = await this.transformMessage(pageHitRaw);
             
             // Filter bot traffic before adding to batch
@@ -106,9 +109,21 @@ class BatchWorker {
     }
 
     private async parseMessage(message: Message) {
-        const messageData = message.data.toString();
-        const json = JSON.parse(messageData);
-        return Value.Parse(PageHitRawSchema, json);
+        try {
+            const messageData = message.data.toString();
+            const parsedMessageData = JSON.parse(messageData);
+            return Value.Parse(PageHitRawSchema, parsedMessageData);
+        } catch (error) {
+            logger.error({
+                event: 'WorkerFailedToParseMessageError', 
+                messageId: message.id, 
+                messageData: this.getMessageData(message),
+                err: error
+            });
+            // Ack the message. If we failed to parse it, we won't succeed next time.
+            message.ack();
+            return null;
+        }
     }
 
     private async transformMessage(pageHitRaw: PageHitRaw) {
