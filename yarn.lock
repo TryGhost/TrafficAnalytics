@@ -426,10 +426,10 @@
   dependencies:
     extend "^3.0.2"
 
-"@google-cloud/pino-logging-gcp-config@1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@google-cloud/pino-logging-gcp-config/-/pino-logging-gcp-config-1.0.6.tgz#6edc41cb1f727fba41efce336b591636edeef2e5"
-  integrity sha512-nVtHgMynMYuMqzIm3O+V6dZH6PgXf6+Ed/0jHnftTarYKGYn58HFsGRRnLc/W8Eyh4ArK6asvqz5GilNXCUURw==
+"@google-cloud/pino-logging-gcp-config@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/pino-logging-gcp-config/-/pino-logging-gcp-config-1.1.0.tgz#0dae8fc5f266eaf2a12526a54dc42c5728408583"
+  integrity sha512-a22JSc5zTkSVQyqzgdBE/dW6Xal1m/owI/OxnwJacPaG2tWrB8xJ4Urd4oz4r1WcxvVW/J4SRqN1VfYNrcmqRw==
   dependencies:
     "@google-cloud/logging" "^11.2.0"
     eventid "^2.0.1"
