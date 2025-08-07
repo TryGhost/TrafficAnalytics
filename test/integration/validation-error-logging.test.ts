@@ -71,7 +71,7 @@ describe('Validation Error Logging', () => {
     describe('Query Parameter Validation Errors', () => {
         it('should return structured validation error when name parameter is missing', async () => {
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?token=abc123')
+                .post('/api/v1/page_hit?token=abc123')
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -94,7 +94,7 @@ describe('Validation Error Logging', () => {
 
         it('should return structured validation error for invalid name parameter value', async () => {
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?token=abc123&name=invalid_event_name')
+                .post('/api/v1/page_hit?token=abc123&name=invalid_event_name')
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -117,7 +117,7 @@ describe('Validation Error Logging', () => {
     describe('Header Validation Errors', () => {
         it('should return structured validation error when x-site-uuid header is missing', async () => {
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?token=abc123&name=analytics_events_test')
+                .post('/api/v1/page_hit?token=abc123&name=analytics_events_test')
                 .set('Content-Type', 'application/json')
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
                 .send(validEventPayload)
@@ -137,7 +137,7 @@ describe('Validation Error Logging', () => {
 
         it('should return structured validation error when x-site-uuid header is not a valid UUID', async () => {
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?token=abc123&name=analytics_events_test')
+                .post('/api/v1/page_hit?token=abc123&name=analytics_events_test')
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', 'not-a-uuid')
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -166,7 +166,7 @@ describe('Validation Error Logging', () => {
             };
 
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?token=abc123&name=analytics_events_test')
+                .post('/api/v1/page_hit?token=abc123&name=analytics_events_test')
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -193,7 +193,7 @@ describe('Validation Error Logging', () => {
             };
 
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?token=abc123&name=analytics_events_test')
+                .post('/api/v1/page_hit?token=abc123&name=analytics_events_test')
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -225,7 +225,7 @@ describe('Validation Error Logging', () => {
             };
 
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?token=abc123&name=analytics_events_test')
+                .post('/api/v1/page_hit?token=abc123&name=analytics_events_test')
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -247,7 +247,7 @@ describe('Validation Error Logging', () => {
     describe('Error Response Structure', () => {
         it('should include validation context in error message', async () => {
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?name=invalid_name') // Invalid name instead of missing token
+                .post('/api/v1/page_hit?name=invalid_name') // Invalid name instead of missing token
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -292,7 +292,7 @@ describe('Validation Error Logging', () => {
             };
 
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?name=invalid_name&token=abc123') // Invalid query param
+                .post('/api/v1/page_hit?name=invalid_name&token=abc123') // Invalid query param
                 .set('Content-Type', 'application/json') // Valid content type to focus on other errors
                 .set('x-site-uuid', 'not-a-uuid') // Invalid UUID
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
@@ -318,7 +318,7 @@ describe('Validation Error Logging', () => {
             // (which is what logs the structured error data)
             
             const response = await request(proxyServer)
-                .post('/tb/web_analytics?name=analytics_events_test')
+                .post('/api/v1/page_hit?name=analytics_events_test')
                 .set('Content-Type', 'application/json')
                 .set('x-site-uuid', 'invalid-uuid')
                 .set('User-Agent', 'Mozilla/5.0 Test Browser')
