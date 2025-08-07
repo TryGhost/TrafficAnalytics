@@ -252,10 +252,10 @@
   dependencies:
     dequal "^2.0.3"
 
-"@fastify/otel@0.9.2":
-  version "0.9.2"
-  resolved "https://registry.yarnpkg.com/@fastify/otel/-/otel-0.9.2.tgz#02576fc53ccf2aafb53e00d4dc42b87b0ae74d55"
-  integrity sha512-YY2eTU2TSrniUh4YF93VFsSnCI6IFYQ5cvXnmBedRBYX9UWdoGfvFlof5Sglgvt44YqMZXjxA/6i+FoNVLQofQ==
+"@fastify/otel@0.9.3":
+  version "0.9.3"
+  resolved "https://registry.yarnpkg.com/@fastify/otel/-/otel-0.9.3.tgz#e70dfa41109bce8451df8478728782dcd3f5d95b"
+  integrity sha512-CJVhRA9y+BD3/sC42aQCvn6gr4eoZ3qbMPGvgt3xzvCNyNM5Hgxqa8k+DmHLR8w1mO6PneMHYBvJ0zK14YHunQ==
   dependencies:
     "@opentelemetry/core" "^2.0.0"
     "@opentelemetry/instrumentation" "^0.202.0"
