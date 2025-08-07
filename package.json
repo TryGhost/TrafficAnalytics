@@ -52,7 +52,7 @@
     "playwright": "1.54.2",
     "supertest": "6.3.4",
     "tsx": "4.20.3",
-    "typescript": "5.8.3",
+    "typescript": "5.9.2",
     "vite": "6.3.5",
     "vite-plugin-node": "5.0.1",
     "vitest": "3.2.4"
