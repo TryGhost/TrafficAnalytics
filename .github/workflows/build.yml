@@ -133,7 +133,7 @@ jobs:
           git push origin "v${{ needs.check-version-change.outputs.current-version }}"
 
       - name: Send slack notification for new version release
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v2.1.1
         if: success()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -229,7 +229,7 @@ jobs:
     if: always()
     steps:
       - name: Send consolidated slack notification for staging
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -282,7 +282,7 @@ jobs:
           environment_name: ${{ matrix.environment.name }}
 
       - name: Send slack notification if health checks fail
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v2.1.1
         if: failure()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -334,7 +334,7 @@ jobs:
           environment_name: ${{ matrix.environment.name }}
 
       - name: Send slack notification if health checks fail
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v2.1.1
         if: failure()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -365,7 +365,7 @@ jobs:
     if: always() && needs.deploy-production.result != 'skipped'
     steps:
       - name: Send consolidated slack notification for production
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v2.1.1
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook

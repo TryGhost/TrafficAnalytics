@@ -73,7 +73,7 @@ jobs:
           image: ${{ env.DOCKER_IMAGE }}:${{ inputs.tag }}
 
       - name: Send slack notification for rollback
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v2.1.1
         if: always()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}

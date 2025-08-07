@@ -38,7 +38,7 @@ jobs:
           environment_name: ${{ matrix.environment.name }}
 
       - name: Send slack notification if health checks fail
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v2.1.1
         if: failure() && github.ref == 'refs/heads/main'
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
