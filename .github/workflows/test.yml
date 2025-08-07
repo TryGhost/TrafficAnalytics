@@ -3,9 +3,22 @@ name: Test
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: write
+  actions: write
+
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Test!"
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'docker-hub.yml',
+              ref: 'main'
+            });
