@@ -51,7 +51,7 @@
     "pino-pretty": "13.1.1",
     "playwright": "1.54.2",
     "supertest": "6.3.4",
-    "tsx": "4.20.3",
+    "tsx": "4.20.4",
     "typescript": "5.9.2",
     "vite": "6.3.5",
     "vite-plugin-node": "5.0.1",
