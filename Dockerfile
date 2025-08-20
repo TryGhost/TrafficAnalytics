@@ -16,3 +16,13 @@ COPY . .
 RUN yarn build
 
 CMD ["node", "--enable-source-maps", "dist/server.js"]
+
+# ----------------------------------------------------
+
+FROM node:${NODE_VERSION}-alpine AS production
+
+WORKDIR /app
+
+COPY --from=base /app/dist /app/dist
+
+CMD ["node", "--enable-source-maps", "dist/server.js"]

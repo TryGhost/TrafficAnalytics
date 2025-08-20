@@ -8,22 +8,44 @@ inputs:
   image-name:
     description: What to tag the built image as
     required: true
-    default: traffic-analytics:latest
+    default: traffic-analytics
+  build-production:
+    description: Whether to build the full image when no targets are specified
+    required: false
+    default: 'true'
 
 outputs:
-  image-name:
-    description: The tag used for the built image
-    value: ${{ inputs.image-name }}
+  production-image-name:
+    description: The tag used for the built production image
+    value: ${{ inputs.image-name }}:latest
+  base-image-name:
+    description: The tag used for the built base image
+    value: ${{ inputs.image-name }}:base
+  production-image-built:
+    description: Whether the production image was built
+    value: ${{ inputs.build-production }}
 
 runs:
   using: composite
   steps:
     - uses: actions/checkout@v4
-    - name: Build Docker image
-      id: build-docker-image
+
+    - name: Build base docker image
+      id: build-base-docker-image
       uses: docker/build-push-action@v5
       with:
         context: .
-        tags: ${{ inputs.image-name }}
+        target: base
+        tags: ${{ inputs.image-name }}:base
+        build-args: |
+          NODE_VERSION=${{ inputs.node-version }}
+
+    - name: Build production docker image
+      id: build-production-docker-image
+      if: ${{ inputs.build-production == 'true' }}
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        tags: ${{ inputs.image-name }}:latest
         build-args: |
           NODE_VERSION=${{ inputs.node-version }}
