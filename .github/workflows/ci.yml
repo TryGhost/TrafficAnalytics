@@ -20,8 +20,9 @@ jobs:
         uses: ./.github/actions/docker-build
         with:
           node-version: ${{ matrix.node }}
-          image-name: traffic-analytics-${{ matrix.node }}:latest
+          image-name: traffic-analytics-${{ matrix.node }}
+          build-production: false
       - name: Lint & Test
         uses: ./.github/actions/lint-and-test
         with:
-          docker-image: ${{ steps.docker-build.outputs.image-name }}
+          docker-image: ${{ steps.docker-build.outputs.base-image-name }}

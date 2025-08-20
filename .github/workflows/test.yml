@@ -8,4 +8,21 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Test!"
+      - uses: actions/checkout@v4
+
+      - name: Extract node version
+        id: extract-node-version
+        uses: ./.github/actions/extract-node-version
+
+      - name: Build Docker Image
+        id: docker-build
+        uses: ./.github/actions/docker-build
+        with:
+          node-version: ${{ fromJSON(steps.extract-node-version.outputs.node-version) }}
+
+      - shell: bash
+        run: |
+          docker images
+          echo "Base Name: ${{ steps.docker-build.outputs.base-image-name }}"
+          echo "Production Name: ${{ steps.docker-build.outputs.production-image-name }}"
+          echo "Prod Built: ${{ steps.docker-build.outputs.production-image-built }}"
