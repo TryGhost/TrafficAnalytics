@@ -58,8 +58,8 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag "v${{ needs.handle-version-change.outputs.current-version }}"
-          git push origin "v${{ needs.handle-version-change.outputs.current-version }}"
+          git tag "v${{ steps.check-version.outputs.version }}"
+          git push origin "v${{ steps.check-version.outputs.version }}"
 
       - name: Send slack notification for new version release
         uses: slackapi/slack-github-action@v2.1.1
@@ -68,7 +68,7 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "New Traffic Analytics Version Released: v${{ needs.handle-version-change.outputs.current-version }}"
+            text: "New Traffic Analytics Version Released: v${{ steps.check-version.outputs.version }}"
             blocks:
               - type: "section"
                 text:
@@ -77,16 +77,16 @@ jobs:
               - type: "section"
                 fields:
                   - type: "mrkdwn"
-                    text: "*Version:*\n:label: v${{ needs.handle-version-change.outputs.current-version }}"
+                    text: "*Version:*\n:label: v${{ steps.check-version.outputs.version }}"
                   - type: "mrkdwn"
                     text: "*Status:*\n:large_green_circle: Released"
                   - type: "mrkdwn"
-                    text: "*Tag:*\n:bookmark: <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.handle-version-change.outputs.current-version }}|v${{ needs.handle-version-change.outputs.current-version }}>"
+                    text: "*Tag:*\n:bookmark: <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.check-version.outputs.version }}|v${{ steps.check-version.outputs.version }}>"
                   - type: "mrkdwn"
                     text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
             attachments:
               - color: "good"
-                fallback: "New Traffic Analytics Version Released: v${{ needs.handle-version-change.outputs.current-version }}"
+                fallback: "New Traffic Analytics Version Released: v${{ steps.check-version.outputs.version }}"
 
   build:
     name: Build
