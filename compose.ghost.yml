@@ -1,0 +1,27 @@
+# Override file to allow running Ghost locally against the analytics service in this repo
+# Usage: `docker compose -f compose.ghost.yml -f compose.yml up`
+
+services:
+  analytics-service:
+    volumes:
+      - ghost_shared-config:/mnt/shared-config:ro
+    networks:
+      - ghost_default
+  worker:
+    volumes:
+      - ghost_shared-config:/mnt/shared-config:ro
+    networks:
+      - ghost_default
+  analytics-service-proxy:
+    volumes:
+      - ghost_shared-config:/mnt/shared-config:ro
+    networks:
+      - ghost_default
+
+volumes:
+  ghost_shared-config:
+    external: true
+
+networks:
+  ghost_default:
+    external: true
