@@ -17,9 +17,81 @@ env:
   DOCKER_IMAGE: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics
 
 jobs:
+  handle-version-change:
+    name: Handle Version Change
+    runs-on: ubuntu-latest
+    outputs:
+      version-changed: ${{ steps.check-version.outputs.changed }}
+      current-version: ${{ steps.check-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if version changed
+        id: check-version
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+          # Get previous commit's version (if it exists)
+          if git show HEAD~1:package.json > /dev/null 2>&1; then
+            PREVIOUS_VERSION=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version")
+            echo "Previous version: $PREVIOUS_VERSION"
+            echo "Current version: $CURRENT_VERSION"
+
+            if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+              echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "Version unchanged: $CURRENT_VERSION"
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "No previous commit found, assuming version change"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "Create Release Tag"
+        if: steps.check-version.outputs.changed == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag "v${{ needs.handle-version-change.outputs.current-version }}"
+          git push origin "v${{ needs.handle-version-change.outputs.current-version }}"
+
+      - name: Send slack notification for new version release
+        uses: slackapi/slack-github-action@v2.1.1
+        if: success() && steps.check-version.outputs.changed == 'true'
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "New Traffic Analytics Version Released: v${{ needs.handle-version-change.outputs.current-version }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: ":tada: *New Traffic Analytics Version Released*"
+              - type: "section"
+                fields:
+                  - type: "mrkdwn"
+                    text: "*Version:*\n:label: v${{ needs.handle-version-change.outputs.current-version }}"
+                  - type: "mrkdwn"
+                    text: "*Status:*\n:large_green_circle: Released"
+                  - type: "mrkdwn"
+                    text: "*Tag:*\n:bookmark: <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.handle-version-change.outputs.current-version }}|v${{ needs.handle-version-change.outputs.current-version }}>"
+                  - type: "mrkdwn"
+                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+            attachments:
+              - color: "good"
+                fallback: "New Traffic Analytics Version Released: v${{ needs.handle-version-change.outputs.current-version }}"
+
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: handle-version-change
     outputs:
       version: ${{ steps.traffic-analytics-docker-metadata.outputs.version }}
     steps:
@@ -89,88 +161,11 @@ jobs:
             docker push $tag
           done
 
-  check-version-change:
-    name: Check Version Change
-    runs-on: ubuntu-latest
-    outputs:
-      version-changed: ${{ steps.check-version.outputs.changed }}
-      current-version: ${{ steps.check-version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check if version changed
-        id: check-version
-        run: |
-          # Get current version from package.json
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-
-          # Get previous commit's version (if it exists)
-          if git show HEAD~1:package.json > /dev/null 2>&1; then
-            PREVIOUS_VERSION=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version")
-            echo "Previous version: $PREVIOUS_VERSION"
-            echo "Current version: $CURRENT_VERSION"
-
-            if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
-              echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
-              echo "changed=true" >> $GITHUB_OUTPUT
-            else
-              echo "Version unchanged: $CURRENT_VERSION"
-              echo "changed=false" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "No previous commit found, assuming version change"
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
-  create-release-tag:
-    name: Create Release Tag
-    runs-on: ubuntu-latest
-    needs: check-version-change
-    if: needs.check-version-change.outputs.version-changed == 'true'
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: "Create Release Tag"
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag "v${{ needs.check-version-change.outputs.current-version }}"
-          git push origin "v${{ needs.check-version-change.outputs.current-version }}"
-
-      - name: Send slack notification for new version release
-        uses: slackapi/slack-github-action@v2.1.1
-        if: success()
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            text: "New Traffic Analytics Version Released: v${{ needs.check-version-change.outputs.current-version }}"
-            blocks:
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: ":tada: *New Traffic Analytics Version Released*"
-              - type: "section"
-                fields:
-                  - type: "mrkdwn"
-                    text: "*Version:*\n:label: v${{ needs.check-version-change.outputs.current-version }}"
-                  - type: "mrkdwn"
-                    text: "*Status:*\n:large_green_circle: Released"
-                  - type: "mrkdwn"
-                    text: "*Tag:*\n:bookmark: <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.check-version-change.outputs.current-version }}|v${{ needs.check-version-change.outputs.current-version }}>"
-                  - type: "mrkdwn"
-                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
-            attachments:
-              - color: "good"
-                fallback: "New Traffic Analytics Version Released: v${{ needs.check-version-change.outputs.current-version }}"
-
   deploy-docker-hub:
     name: Deploy to Docker Hub
     runs-on: ubuntu-latest
-    needs: [create-release-tag]
+    needs: handle-version-change
+    if: needs.handle-version-change.outputs.version-changed == 'true'
     steps:
       - uses: actions/github-script@v7
         with:
@@ -185,7 +180,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: [build, check-version-change]
+    needs: [build, handle-version-change]
     strategy:
       matrix:
         region: [europe-west4]
@@ -205,12 +200,11 @@ jobs:
           service: stg-${{ matrix.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
           image: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
 
-
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [build, check-version-change]
-    if: needs.check-version-change.outputs.version-changed == 'true'
+    needs: [build, handle-version-change]
+    if: needs.handle-version-change.outputs.version-changed == 'true'
     strategy:
       matrix:
         region: [europe-west4]
