@@ -60,51 +60,14 @@ Pre-requisites:
 
 ## Develop locally with Ghost
 
-It is possible to run this Analytics Service locally alongside your local development instance of Ghost. This can be useful to test the full end-to-end flow from Ghost > `ghost-stats.js` > Analytics Service > Tinybird and back.
+If you want to manually test the Analytics Service + Ghost together locally, there are just a few more steps to follow. You'll need this repo and TryGhost/Ghost cloned locally.
 
-Here are the steps to get setup:
-1. In the Ghost repo, run `yarn tb` to run Tinybird local and deploy the Tinybird schema defined in Ghost.
-2. Now we need to retrieve some values from our tinybird-local container. :
-    - `workspaceId`: run `tb info` in your Tinybird shell, and copy the `workspace_id` value
-    - `adminToken`: run `tb token ls` and copy the token that is named "admin token"
-    - `trackerToken`: run `tb token ls` and copy the token that is named "tracker"
-3. Update your Ghost configuration in `ghost/core/config.local.json` or `ghost/core/config.local.jsonc` with the following. Make sure to replace the `${workspaceId}` and `${adminToken}` with the values from step 2:
-```json
-{
-    "tinybird": {
-        "workspaceId": "${workspaceId}",
-        "adminToken": "${adminToken}",
-        "tracker": {
-            "endpoint": "http://localhost:3000/api/v1/page_hit",
-            "datasource": "analytics_events"
-        },
-        "stats": {
-            "endpoint": "http://localhost:7181"
-        }
-    }
-}
-```
-4. Ensure you've set the `trafficAnalytics` labs flag in Ghost. This can be done through the Admin UI in settings, or more simply via config:
-```json
-{
-    "labs": {
-        "trafficAnalytics": true
-    }
-}
-```
-5. Add the following to your `.env` file in the root of this repo. Make sure to replace `${trackerToken}` with the value from step 2:
-```bash
-TINYBIRD_TRACKER_TOKEN=${trackerToken} # From step 2
-PROXY_TARGET=http://host.docker.internal:7181/v0/events # The URL of your Tinybird-local container
-```
-6. Start the Analytics Service with `yarn dev` from the root of this repo.
-7. Start Ghost with `yarn dev` in a new terminal window from the root of your Ghost repo.
+1. In Ghost, add `ANALYTICS_PROXY_TARGET=traffic-analytics-analytics-service-1:3000` to your `.env` file. This tells Ghost's `caddy` service to route requests to `/.ghost/analytics/**` to this instance of the analytics service instead of the instance in Ghost's compose project.
+1. In Ghost, run `docker compose --profile analytics up -d`. This starts `tinybird-local`, deploys the Tinybird schema, and stored required tokens in a `shared-config` named volume.
+1. In Ghost, run `docker compose --profile split up`. This runs Caddy, Ghost's backend and Ghost Admin. Ghost will be available at `http://localhost:2368`
+1. In this repo, run `yarn dev:ghost` instead of `yarn dev`. This runs the analytics service within Ghost's docker network, and mounts the `shared-config` volume so it can access the tokens it needs to send events to `tinybird-local`.
 
-To confirm everything is working: 
-- Load your local Ghost site's frontend in your browser at `http://localhost:2368` 
-    - In your network tab, you should see a successful POST request to `/api/v1/page_hit`
-- Load Ghost admin in your browser at `http://localhost:2368/ghost` and navigate to the Analytics tab in the sidebar
-    - You should see a "Unique Visitor" recorded in the main Overview tab
+That's it! Now when you visit Ghost at `http://localhost:2368`, you should see the requests to `/.ghost/analytics/api/v1/page_hit` in the request logs in this repo, and the `worker` service will send the events to the `tinybird-local` service running in the Ghost project.
 
 ## Test
 
