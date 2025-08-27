@@ -12,7 +12,7 @@ on:
           - production
           - both
       tag:
-        description: 'Docker tag to rollback to'
+        description: 'Docker tag (from GCP Artifact Registry) to rollback to'
         required: true
         type: string
 
