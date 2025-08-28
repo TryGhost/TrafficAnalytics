@@ -15,8 +15,4 @@ COPY . .
 
 RUN yarn build
 
-RUN chmod +x ./scripts/entrypoint.sh
-
-ENTRYPOINT ["./scripts/entrypoint.sh"]
-
 CMD ["node", "--enable-source-maps", "dist/server.js"]
