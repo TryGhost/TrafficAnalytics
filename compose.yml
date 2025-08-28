@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    entrypoint: ["/app/scripts/entrypoint.sh"]
     command: ["yarn","tsx", "watch", "server.ts"]
     ports:
       - ${ANALYTICS_PORT:-3000}:3000
@@ -42,6 +43,7 @@ services:
   worker:
     image: local/traffic-analytics:development
     pull_policy: never
+    entrypoint: ["/app/scripts/entrypoint.sh"]
     command: ["yarn", "tsx", "watch", "server.ts"]
     ports:
       - ${WORKER_PORT:-3001}:3000
@@ -113,7 +115,7 @@ services:
         condition: service_healthy
       fake-tinybird:
         condition: service_healthy
-  
+
   firestore:
     image: google/cloud-sdk:emulators
     command: ["/app/firestore-wrapper.sh"]
