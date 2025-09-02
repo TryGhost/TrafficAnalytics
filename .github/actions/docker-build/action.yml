@@ -13,6 +13,10 @@ inputs:
     description: Whether to build the full image when no targets are specified
     required: false
     default: 'true'
+  build-multiarchitecture:
+    description: Wether to build a multi-architecture image or not
+    required: true
+    default: 'false'
 
 outputs:
   production-image-name:
@@ -30,6 +34,26 @@ runs:
   steps:
     - uses: actions/checkout@v4
 
+    - name: Set up Docker
+      uses: docker/setup-docker-action@v4
+      if: inputs.build-multiarchitecture == 'true'
+      with:
+        daemon-config: |
+          {
+            "debug": true,
+            "features": {
+              "containerd-snapshotter": true
+            }
+          }
+
+    - name: Setup QEMU
+      uses: docker/setup-qemu-action@v3
+      if: inputs.build-multiarchitecture == 'true'
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      if: inputs.build-multiarchitecture == 'true'
+
     - name: Build base docker image
       id: build-base-docker-image
       uses: docker/build-push-action@v5
@@ -39,6 +63,8 @@ runs:
         tags: ${{ inputs.image-name }}:base
         build-args: |
           NODE_VERSION=${{ inputs.node-version }}
+        platforms: ${{ inputs.build-multiarchitecture == 'true' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+        load: ${{ inputs.build-multiarchitecture == 'true' && true || false }}
 
     - name: Build production docker image
       id: build-production-docker-image
@@ -49,3 +75,5 @@ runs:
         tags: ${{ inputs.image-name }}:latest
         build-args: |
           NODE_VERSION=${{ inputs.node-version }}
+        platforms: ${{ inputs.build-multiarchitecture == 'true' && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+        load: ${{ inputs.build-multiarchitecture == 'true' && true || false }}
