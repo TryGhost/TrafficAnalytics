@@ -112,7 +112,7 @@ jobs:
       - name: Lint & Test
         uses: ./.github/actions/lint-and-test
         with:
-          docker-image: ${{ steps.docker-build.outputs.image-name }}
+          docker-image: ${{ steps.docker-build.outputs.base-image-name }}
 
       - name: "Auth with Google Cloud"
         id: gcp-auth
@@ -153,7 +153,7 @@ jobs:
         run: |
           for tag in $(echo "${{ steps.traffic-analytics-docker-metadata.outputs.tags }}"); do
             echo "Tagging: $tag"
-            docker tag ${{ steps.docker-build.outputs.image-name }} $tag
+            docker tag ${{ steps.docker-build.outputs.production-image-name }} $tag
           done
 
           for tag in $(echo "${{ steps.traffic-analytics-docker-metadata.outputs.tags }}"); do
