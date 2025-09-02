@@ -82,6 +82,7 @@ jobs:
         uses: ./.github/actions/docker-build
         with:
           node-version: ${{ fromJSON(steps.extract-node-version.outputs.node-version) }}
+          build-multiarchitecture: true
 
       - name: Lint & Test
         uses: ./.github/actions/lint-and-test

@@ -174,7 +174,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'docker-hub.yml',
-              ref: 'main'
+              ref: 'v${{ needs.handle-version-change.outputs.current-version }}'
             });
 
   deploy-staging:
