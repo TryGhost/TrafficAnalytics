@@ -15,8 +15,8 @@ runs:
     - name: Wake up site
       shell: bash
       run: |
-        curl -s -o /dev/null "${{ inputs.base_url }}" &
-        
+        curl -s --max-time 30 -o /dev/null "${{ inputs.base_url }}" &
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
@@ -27,39 +27,26 @@ runs:
       shell: bash
       run: yarn install --frozen-lockfile
 
-    - name: Disable man-db trigger refreshes
-      shell: bash
-      run: |
-        echo 'set man-db/auto-update false' | sudo debconf-communicate >/dev/null
-        sudo dpkg-reconfigure man-db
-
     - name: Get Playwright version
       id: playwright-version
       shell: bash
       run: echo "version=$(node -p "require('./package.json').devDependencies['@playwright/test']")" >> $GITHUB_OUTPUT
 
-    - name: Cache Playwright browsers
-      uses: actions/cache@v4
-      id: playwright-cache
-      with:
-        path: ~/.cache/ms-playwright
-        key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
-
-    - name: Install Playwright browsers
-      if: steps.playwright-cache.outputs.cache-hit != 'true'
-      shell: bash
-      run: yarn playwright install --with-deps
-      
-    - name: Install Playwright system dependencies
-      if: steps.playwright-cache.outputs.cache-hit == 'true'
-      shell: bash
-      run: yarn playwright install-deps
-
-    - name: Run health checks
+    - name: Run health checks in Docker
       shell: bash
       env:
         TEST_BASE_URL: ${{ inputs.base_url }}
-      run: yarn playwright test
+      run: |
+        # Use the official Playwright image with all dependencies pre-installed
+        docker run --rm \
+          -v ${{ github.workspace }}:/work \
+          -w /work \
+          -e TEST_BASE_URL="${TEST_BASE_URL}" \
+          -e CI=true \
+          -e PW_TEST_HTML_REPORT_OPEN=never \
+          --network host \
+          mcr.microsoft.com/playwright:v${{ steps.playwright-version.outputs.version }} \
+          bash -c "yarn playwright test --reporter=list --reporter=html"
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
