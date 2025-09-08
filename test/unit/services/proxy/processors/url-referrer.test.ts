@@ -91,4 +91,87 @@ describe('Referrer Parser', () => {
         expect(testRequest.body.payload.referrerUrl).toBeUndefined();
         expect(testRequest.body.payload.referrerMedium).toBeUndefined();
     });
+
+    it('should parse UTM parameters from parsedReferrer', () => {
+        const testRequest = structuredClone(request);
+        testRequest.body.payload.parsedReferrer = {
+            url: 'https://example.com',
+            source: 'newsletter',
+            medium: 'email',
+            utmSource: 'newsletter',
+            utmMedium: 'email',
+            utmCampaign: 'summer-sale',
+            utmTerm: 'ghost-cms',
+            utmContent: 'header-link'
+        };
+
+        urlReferrerModule.parseReferrer(testRequest);
+
+        expect(testRequest.body.payload.utmSource).toBe('newsletter');
+        expect(testRequest.body.payload.utmMedium).toBe('email');
+        expect(testRequest.body.payload.utmCampaign).toBe('summer-sale');
+        expect(testRequest.body.payload.utmTerm).toBe('ghost-cms');
+        expect(testRequest.body.payload.utmContent).toBe('header-link');
+    });
+
+    it('should handle UTM parameters with null values', () => {
+        const testRequest = structuredClone(request);
+        testRequest.body.payload.parsedReferrer = {
+            url: 'https://example.com',
+            source: 'direct',
+            medium: null,
+            utmSource: null,
+            utmMedium: null,
+            utmCampaign: null,
+            utmTerm: null,
+            utmContent: null
+        };
+
+        urlReferrerModule.parseReferrer(testRequest);
+
+        expect(testRequest.body.payload.utmSource).toBeNull();
+        expect(testRequest.body.payload.utmMedium).toBeNull();
+        expect(testRequest.body.payload.utmCampaign).toBeNull();
+        expect(testRequest.body.payload.utmTerm).toBeNull();
+        expect(testRequest.body.payload.utmContent).toBeNull();
+    });
+
+    it('should handle partial UTM parameters', () => {
+        const testRequest = structuredClone(request);
+        testRequest.body.payload.parsedReferrer = {
+            url: 'https://example.com',
+            source: 'google',
+            medium: 'cpc',
+            utmSource: 'google',
+            utmMedium: 'cpc',
+            utmCampaign: 'brand-awareness'
+            // utmTerm and utmContent are missing
+        };
+
+        urlReferrerModule.parseReferrer(testRequest);
+
+        expect(testRequest.body.payload.utmSource).toBe('google');
+        expect(testRequest.body.payload.utmMedium).toBe('cpc');
+        expect(testRequest.body.payload.utmCampaign).toBe('brand-awareness');
+        expect(testRequest.body.payload.utmTerm).toBeNull();
+        expect(testRequest.body.payload.utmContent).toBeNull();
+    });
+
+    it('should handle missing UTM parameters gracefully', () => {
+        const testRequest = structuredClone(request);
+        // parsedReferrer without any UTM fields
+        testRequest.body.payload.parsedReferrer = {
+            url: 'https://www.google.com/search?q=ghost+cms',
+            source: 'Google',
+            medium: 'search'
+        };
+
+        urlReferrerModule.parseReferrer(testRequest);
+
+        expect(testRequest.body.payload.utmSource).toBeNull();
+        expect(testRequest.body.payload.utmMedium).toBeNull();
+        expect(testRequest.body.payload.utmCampaign).toBeNull();
+        expect(testRequest.body.payload.utmTerm).toBeNull();
+        expect(testRequest.body.payload.utmContent).toBeNull();
+    });
 });
