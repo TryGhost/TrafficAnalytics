@@ -6,6 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: base
     entrypoint: ["/app/scripts/entrypoint.sh"]
     command: ["yarn","tsx", "watch", "server.ts"]
     ports:
@@ -86,6 +87,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: base
     command: ["yarn", "tsx", "watch", "server.ts"]
     ports:
       - 4000:3000
