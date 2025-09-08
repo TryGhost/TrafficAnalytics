@@ -54,7 +54,7 @@
     "supertest": "6.3.4",
     "tsx": "4.20.5",
     "typescript": "5.9.2",
-    "vite": "6.3.5",
+    "vite": "6.3.6",
     "vite-plugin-node": "5.0.1",
     "vitest": "3.2.4"
   },
