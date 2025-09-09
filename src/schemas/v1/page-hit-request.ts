@@ -132,7 +132,12 @@ export const PageHitRequestPayloadDefaults = {
     parsedReferrer: {
         source: null,
         medium: null,
-        url: null
+        url: null,
+        utmSource: null,
+        utmMedium: null,
+        utmTerm: null,
+        utmCampaign: null,
+        utmContent: null
     },
     pathname: '',
     href: '',
