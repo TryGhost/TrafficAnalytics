@@ -62,7 +62,12 @@ export type PageHitRequestHeadersType = Static<typeof PageHitRequestHeadersSchem
 const ParsedReferrerSchema = Type.Object({
     source: Type.Union([StringSchema, Type.Null()]),
     medium: Type.Union([StringSchema, Type.Null()]),
-    url: Type.Union([StringSchema, Type.Null()])
+    url: Type.Union([StringSchema, Type.Null()]),
+    utmSource: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmMedium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmTerm: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmCampaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmContent: Type.Optional(Type.Union([StringSchema, Type.Null()]))
 });
 
 // Payload schema
@@ -127,7 +132,12 @@ export const PageHitRequestPayloadDefaults = {
     parsedReferrer: {
         source: null,
         medium: null,
-        url: null
+        url: null,
+        utmSource: null,
+        utmMedium: null,
+        utmTerm: null,
+        utmCampaign: null,
+        utmContent: null
     },
     pathname: '',
     href: '',

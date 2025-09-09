@@ -9,6 +9,11 @@ export interface Payload {
         source: string | null;
         medium: string | null;
         url: string | null;
+        utmSource?: string | null;
+        utmMedium?: string | null;
+        utmTerm?: string | null;
+        utmCampaign?: string | null;
+        utmContent?: string | null;
     };
     pathname: string;
     href: string;
@@ -24,6 +29,11 @@ export interface Payload {
     referrerSource?: string | null;
     referrerUrl?: string | null;
     referrerMedium?: string | null;
+    utmSource?: string | null;
+    utmMedium?: string | null;
+    utmTerm?: string | null;
+    utmCampaign?: string | null;
+    utmContent?: string | null;
     meta?: {
         userSignature?: string;
         [key: string]: unknown;

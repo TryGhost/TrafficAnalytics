@@ -350,6 +350,73 @@ describe('PageHitRequestSchema v1', () => {
             expect(Value.Check(PageHitRequestPayloadSchema, payloadWithIncompleteParsedReferrer)).toBe(false);
         });
 
+        it('should validate parsedReferrer with UTM parameters', () => {
+            const payloadWithUTMParams = {
+                ...validPayload,
+                parsedReferrer: {
+                    source: 'newsletter',
+                    medium: 'email',
+                    url: 'https://example.com',
+                    utmSource: 'newsletter',
+                    utmMedium: 'email',
+                    utmCampaign: 'summer-sale',
+                    utmTerm: 'ghost-cms',
+                    utmContent: 'header-link'
+                }
+            };
+
+            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithUTMParams)).toBe(true);
+        });
+
+        it('should validate parsedReferrer with partial UTM parameters', () => {
+            const payloadWithPartialUTM = {
+                ...validPayload,
+                parsedReferrer: {
+                    source: 'google',
+                    medium: 'cpc',
+                    url: 'https://example.com',
+                    utmSource: 'google',
+                    utmMedium: 'cpc',
+                    utmCampaign: 'brand-awareness'
+                    // utmTerm and utmContent are omitted
+                }
+            };
+
+            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithPartialUTM)).toBe(true);
+        });
+
+        it('should validate parsedReferrer with null UTM parameters', () => {
+            const payloadWithNullUTM = {
+                ...validPayload,
+                parsedReferrer: {
+                    source: 'direct',
+                    medium: null,
+                    url: 'https://example.com',
+                    utmSource: null,
+                    utmMedium: null,
+                    utmCampaign: null,
+                    utmTerm: null,
+                    utmContent: null
+                }
+            };
+
+            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithNullUTM)).toBe(true);
+        });
+
+        it('should validate parsedReferrer without UTM parameters', () => {
+            const payloadWithoutUTM = {
+                ...validPayload,
+                parsedReferrer: {
+                    source: 'organic',
+                    medium: 'search',
+                    url: 'https://google.com'
+                    // no UTM fields
+                }
+            };
+
+            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithoutUTM)).toBe(true);
+        });
+
         it('should reject parsedReferrer with invalid field types', () => {
             const payloadWithInvalidParsedReferrer = {
                 ...validPayload,
