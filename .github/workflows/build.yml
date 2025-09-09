@@ -200,30 +200,6 @@ jobs:
           service: stg-${{ matrix.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
           image: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
 
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: [build, handle-version-change]
-    if: needs.handle-version-change.outputs.version-changed == 'true'
-    strategy:
-      matrix:
-        region: [europe-west4]
-        service: [analytics, worker]
-        include:
-          - region: europe-west4
-            region_name: netherlands
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: "Deploy to Production (${{ matrix.region }}) - ${{ matrix.service }}"
-        id: deploy-production
-        uses: "./.github/actions/deploy-gcp-cloud-run"
-        with:
-          environment: production
-          region: ${{ matrix.region }}
-          service: prd-${{ matrix.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
-          image: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
-
   notify-staging-complete:
     name: Notify Staging Deployment Complete
     runs-on: ubuntu-latest
@@ -307,6 +283,30 @@ jobs:
             attachments:
               - color: "danger"
                 fallback: "Analytics Service Health Check Failed After Staging Deployment"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, handle-version-change, healthcheck-staging]
+    if: needs.handle-version-change.outputs.version-changed == 'true'
+    strategy:
+      matrix:
+        region: [europe-west4]
+        service: [analytics, worker]
+        include:
+          - region: europe-west4
+            region_name: netherlands
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Deploy to Production (${{ matrix.region }}) - ${{ matrix.service }}"
+        id: deploy-production
+        uses: "./.github/actions/deploy-gcp-cloud-run"
+        with:
+          environment: production
+          region: ${{ matrix.region }}
+          service: prd-${{ matrix.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
+          image: ${{ env.DOCKER_IMAGE }}:${{ needs.build.outputs.version }}
 
   healthcheck-production:
     name: Health Check Production
