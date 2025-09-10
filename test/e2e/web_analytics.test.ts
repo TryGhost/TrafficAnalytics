@@ -121,7 +121,18 @@ describe('E2E Tests with Fake Tinybird', () => {
                     // Should have parsed user agent info
                     browser: expect.any(String),
                     os: expect.any(String),
-                    device: expect.any(String)
+                    device: expect.any(String),
+                    // Referrer fields (null when no referrer)
+                    referrerUrl: null,
+                    referrerSource: null,
+                    referrerMedium: null,
+                    parsedReferrer: null,
+                    // UTM fields
+                    utm_source: null,
+                    utm_medium: null,
+                    utm_campaign: null,
+                    utm_term: null,
+                    utm_content: null
                 })
             });
         });
@@ -157,7 +168,18 @@ describe('E2E Tests with Fake Tinybird', () => {
                     // Should have parsed user agent info
                     browser: expect.any(String),
                     os: expect.any(String),
-                    device: expect.any(String)
+                    device: expect.any(String),
+                    // Referrer fields (null when no referrer)
+                    referrerUrl: null,
+                    referrerSource: null,
+                    referrerMedium: null,
+                    parsedReferrer: null,
+                    // UTM fields
+                    utm_source: null,
+                    utm_medium: null,
+                    utm_campaign: null,
+                    utm_term: null,
+                    utm_content: null
                 })
             });
         });    
