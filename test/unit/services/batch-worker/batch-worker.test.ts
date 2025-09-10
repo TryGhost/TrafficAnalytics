@@ -165,11 +165,11 @@ describe('BatchWorker', () => {
                             browser: expect.any(String),
                             device: expect.any(String),
                             // UTM fields from raw data
-                            utmSource: validPageHitRawData.payload.utmSource,
-                            utmMedium: validPageHitRawData.payload.utmMedium,
-                            utmCampaign: validPageHitRawData.payload.utmCampaign,
-                            utmTerm: validPageHitRawData.payload.utmTerm,
-                            utmContent: validPageHitRawData.payload.utmContent,
+                            utm_source: validPageHitRawData.payload.utmSource,
+                            utm_medium: validPageHitRawData.payload.utmMedium,
+                            utm_campaign: validPageHitRawData.payload.utmCampaign,
+                            utm_term: validPageHitRawData.payload.utmTerm,
+                            utm_content: validPageHitRawData.payload.utmContent,
                             // parsedReferrer should be undefined since no parsedReferrer in raw data
                             parsedReferrer: undefined
                         })

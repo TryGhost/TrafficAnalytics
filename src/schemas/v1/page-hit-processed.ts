@@ -36,11 +36,11 @@ export const PageHitProcessedSchema = Type.Object({
         referrerUrl: Type.Optional(Type.Union([Type.String(), Type.Null()])),
         referrerSource: Type.Optional(Type.Union([Type.String(), Type.Null()])),
         referrerMedium: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utmSource: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utmMedium: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utmCampaign: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utmTerm: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utmContent: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+        utm_source: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+        utm_medium: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+        utm_campaign: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+        utm_term: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+        utm_content: Type.Optional(Type.Union([Type.String(), Type.Null()])),
         'user-agent': Type.String()
 
     })
@@ -166,11 +166,11 @@ export async function transformPageHitRawToProcessed(
             parsedReferrer: pageHitRaw.payload.parsedReferrer, // for auditing purposes
             ...userAgentData,
             ...referrerData,
-            utmSource: pageHitRaw.payload.utmSource,
-            utmMedium: pageHitRaw.payload.utmMedium,
-            utmCampaign: pageHitRaw.payload.utmCampaign,
-            utmTerm: pageHitRaw.payload.utmTerm,
-            utmContent: pageHitRaw.payload.utmContent,
+            utm_source: pageHitRaw.payload.utmSource,
+            utm_medium: pageHitRaw.payload.utmMedium,
+            utm_campaign: pageHitRaw.payload.utmCampaign,
+            utm_term: pageHitRaw.payload.utmTerm,
+            utm_content: pageHitRaw.payload.utmContent,
             'user-agent': pageHitRaw.meta['user-agent']
         }
     };
