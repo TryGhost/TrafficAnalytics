@@ -84,7 +84,12 @@ export const PageHitRequestPayloadSchema = Type.Object({
     post_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
     post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
     member_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
-    member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')])
+    member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')]),
+    utmSource: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmMedium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmCampaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmTerm: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmContent: Type.Optional(Type.Union([StringSchema, Type.Null()]))
 }, {
     additionalProperties: true // Allow processors to add os, browser, device, etc.
 });
@@ -132,12 +137,7 @@ export const PageHitRequestPayloadDefaults = {
     parsedReferrer: {
         source: null,
         medium: null,
-        url: null,
-        utmSource: null,
-        utmMedium: null,
-        utmTerm: null,
-        utmCampaign: null,
-        utmContent: null
+        url: null
     },
     pathname: '',
     href: '',
@@ -145,5 +145,10 @@ export const PageHitRequestPayloadDefaults = {
     post_uuid: 'undefined',
     post_type: 'null',
     member_uuid: 'undefined',
-    member_status: 'undefined'
+    member_status: 'undefined',
+    utmSource: null,
+    utmMedium: null,
+    utmCampaign: null,
+    utmTerm: null,
+    utmContent: null
 };
