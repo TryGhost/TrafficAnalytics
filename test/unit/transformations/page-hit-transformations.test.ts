@@ -60,7 +60,12 @@ describe('pageHitRawPayloadFromRequest', () => {
                     url: 'https://google.com'
                 },
                 pathname: '/blog/post',
-                href: 'https://example.com/blog/post'
+                href: 'https://example.com/blog/post',
+                utmSource: null,
+                utmMedium: null,
+                utmCampaign: null,
+                utmTerm: null,
+                utmContent: null
             },
             meta: {
                 ip: '192.168.1.1',
@@ -333,5 +338,94 @@ describe('pageHitRawPayloadFromRequest', () => {
         expect(result.payload.href).toBe('https://traffic-analytics.ghst.pro/');
         expect(result.meta.ip).toBe('203.0.113.42');
         expect(result.meta['user-agent']).toBe('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.23 Safari/537.36');
+    });
+
+    describe('UTM parameter handling', () => {
+        it('should extract UTM parameters from top level payload', () => {
+            const request = createPageHitRequest();
+            request.body.payload.parsedReferrer = {
+                source: 'google',
+                medium: 'cpc',
+                url: 'https://google.com'
+            };
+            request.body.payload.utmSource = 'google';
+            request.body.payload.utmMedium = 'cpc';
+            request.body.payload.utmCampaign = 'brand-campaign';
+            request.body.payload.utmTerm = 'ghost-cms';
+            request.body.payload.utmContent = 'ad-1';
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            // UTM params should be at top level
+            expect(result.payload.utmSource).toBe('google');
+            expect(result.payload.utmMedium).toBe('cpc');
+            expect(result.payload.utmCampaign).toBe('brand-campaign');
+            expect(result.payload.utmTerm).toBe('ghost-cms');
+            expect(result.payload.utmContent).toBe('ad-1');
+
+            // parsedReferrer should contain only referrer data
+            expect(result.payload.parsedReferrer).toEqual({
+                source: 'google',
+                medium: 'cpc',
+                url: 'https://google.com'
+            });
+        });
+
+        it('should handle null UTM parameters', () => {
+            const request = createPageHitRequest();
+            request.body.payload.parsedReferrer = {
+                source: 'direct',
+                medium: null,
+                url: null
+            };
+            request.body.payload.utmSource = null;
+            request.body.payload.utmMedium = null;
+            request.body.payload.utmCampaign = null;
+            request.body.payload.utmTerm = null;
+            request.body.payload.utmContent = null;
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            // UTM params should be null at top level
+            expect(result.payload.utmSource).toBeNull();
+            expect(result.payload.utmMedium).toBeNull();
+            expect(result.payload.utmCampaign).toBeNull();
+            expect(result.payload.utmTerm).toBeNull();
+            expect(result.payload.utmContent).toBeNull();
+        });
+
+        it('should handle missing UTM parameters', () => {
+            const request = createPageHitRequest();
+            request.body.payload.parsedReferrer = {
+                source: 'twitter',
+                medium: 'social',
+                url: 'https://twitter.com'
+            };
+            // Don't set UTM params - they should default to null
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            // UTM params should be null when missing
+            expect(result.payload.utmSource).toBeNull();
+            expect(result.payload.utmMedium).toBeNull();
+            expect(result.payload.utmCampaign).toBeNull();
+            expect(result.payload.utmTerm).toBeNull();
+            expect(result.payload.utmContent).toBeNull();
+        });
+
+        it('should handle undefined parsedReferrer', () => {
+            const request = createPageHitRequest();
+            request.body.payload.parsedReferrer = undefined;
+            // Don't set UTM params - they should default to null
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            // UTM params should be null when not provided
+            expect(result.payload.utmSource).toBeNull();
+            expect(result.payload.utmMedium).toBeNull();
+            expect(result.payload.utmCampaign).toBeNull();
+            expect(result.payload.utmTerm).toBeNull();
+            expect(result.payload.utmContent).toBeNull();
+        });
     });
 });

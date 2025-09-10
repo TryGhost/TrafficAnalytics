@@ -44,7 +44,12 @@ const validPageHitRaw: PageHitRaw = {
             medium: 'search'
         },
         pathname: '/blog/post',
-        href: 'https://example.com/blog/post'
+        href: 'https://example.com/blog/post',
+        utmSource: 'newsletter',
+        utmMedium: 'email',
+        utmCampaign: 'summer-sale',
+        utmTerm: 'ghost-cms',
+        utmContent: 'header-link'
     },
     meta: {
         ip: '192.168.1.1',
@@ -73,12 +78,22 @@ describe('PageHitProcessedSchema v1', () => {
             location: 'homepage',
             pathname: '/blog/post',
             href: 'https://example.com/blog/post',
+            parsedReferrer: {
+                url: 'https://www.google.com/search?q=ghost+cms',
+                source: 'Google',
+                medium: 'search'
+            },
             os: 'macos',
             browser: 'chrome',
             device: 'desktop',
             referrerUrl: 'https://www.google.com/search?q=ghost+cms',
             referrerSource: 'Google',
             referrerMedium: 'search',
+            utmSource: 'newsletter',
+            utmMedium: 'email',
+            utmCampaign: 'summer-sale',
+            utmTerm: 'ghost-cms',
+            utmContent: 'header-link',
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
     };
@@ -400,6 +415,21 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.payload.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
             expect(result.payload.referrerSource).toBe('Google');
             expect(result.payload.referrerMedium).toBe('search');
+            
+            // Check that parsedReferrer contains original referrer data (without UTM)
+            expect(result.payload.parsedReferrer).toEqual({
+                url: 'https://www.google.com/search?q=ghost+cms',
+                source: 'Google',
+                medium: 'search'
+            });
+            
+            // Check that UTM params are at top level
+            expect(result.payload.utmSource).toBe('newsletter');
+            expect(result.payload.utmMedium).toBe('email');
+            expect(result.payload.utmCampaign).toBe('summer-sale');
+            expect(result.payload.utmTerm).toBe('ghost-cms');
+            expect(result.payload.utmContent).toBe('header-link');
+            
             expect((result.payload as any).referrer).toBeUndefined();
             expect(result.payload['user-agent']).toBe(validPageHitRaw.meta['user-agent']);
         
@@ -461,6 +491,36 @@ describe('PageHitProcessedSchema v1', () => {
             const result2 = await transformPageHitRawToProcessed(pageHitRaw2);
         
             expect(result1.session_id).not.toBe(result2.session_id);
+        });
+
+        it('should handle page hit raw without UTM parameters', async () => {
+            const pageHitRawWithoutUTM: PageHitRaw = {
+                ...validPageHitRaw,
+                payload: {
+                    ...validPageHitRaw.payload,
+                    utmSource: null,
+                    utmMedium: null,
+                    utmCampaign: null,
+                    utmTerm: null,
+                    utmContent: null
+                }
+            };
+        
+            const result = await transformPageHitRawToProcessed(pageHitRawWithoutUTM);
+        
+            // Check that UTM params are null at top level
+            expect(result.payload.utmSource).toBeNull();
+            expect(result.payload.utmMedium).toBeNull();
+            expect(result.payload.utmCampaign).toBeNull();
+            expect(result.payload.utmTerm).toBeNull();
+            expect(result.payload.utmContent).toBeNull();
+            
+            // Check that parsedReferrer still contains original referrer data
+            expect(result.payload.parsedReferrer).toEqual({
+                url: 'https://www.google.com/search?q=ghost+cms',
+                source: 'Google',
+                medium: 'search'
+            });
         });
 
         it('should produce valid PageHitProcessed schema', async () => {

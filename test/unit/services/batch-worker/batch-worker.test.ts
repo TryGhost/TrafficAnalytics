@@ -105,7 +105,12 @@ describe('BatchWorker', () => {
                 location: 'New York',
                 referrer: 'https://example.com',
                 pathname: '/blog/post',
-                href: 'https://mysite.com/blog/post'
+                href: 'https://mysite.com/blog/post',
+                utmSource: null,
+                utmMedium: null,
+                utmCampaign: null,
+                utmTerm: null,
+                utmContent: null
             },
             meta: {
                 ip: '192.168.1.1',
@@ -153,13 +158,20 @@ describe('BatchWorker', () => {
                             post_type: validPageHitRawData.payload.post_type,
                             locale: validPageHitRawData.payload.locale,
                             location: validPageHitRawData.payload.location,
-                            referrer: validPageHitRawData.payload.referrer,
                             pathname: validPageHitRawData.payload.pathname,
                             href: validPageHitRawData.payload.href,
                             // Processed fields
                             os: expect.any(String),
                             browser: expect.any(String),
-                            device: expect.any(String)
+                            device: expect.any(String),
+                            // UTM fields from raw data
+                            utmSource: validPageHitRawData.payload.utmSource,
+                            utmMedium: validPageHitRawData.payload.utmMedium,
+                            utmCampaign: validPageHitRawData.payload.utmCampaign,
+                            utmTerm: validPageHitRawData.payload.utmTerm,
+                            utmContent: validPageHitRawData.payload.utmContent,
+                            // parsedReferrer should be undefined since no parsedReferrer in raw data
+                            parsedReferrer: undefined
                         })
                     })
                 })
