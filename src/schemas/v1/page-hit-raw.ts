@@ -33,7 +33,12 @@ const PayloadSchema = Type.Object({
     referrer: Type.Optional(Type.Union([StringSchema, Type.Null()])),
     parsedReferrer: Type.Optional(ParsedReferrerSchema),
     pathname: NonEmptyStringSchema,
-    href: Type.String()
+    href: Type.String(),
+    utmSource: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmMedium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmCampaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmTerm: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utmContent: Type.Optional(Type.Union([StringSchema, Type.Null()]))
 });
 
 // Meta schema for page hit raw events
