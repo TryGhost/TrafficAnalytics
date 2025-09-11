@@ -61,11 +61,11 @@ describe('pageHitRawPayloadFromRequest', () => {
                 },
                 pathname: '/blog/post',
                 href: 'https://example.com/blog/post',
-                utmSource: null,
-                utmMedium: null,
-                utmCampaign: null,
-                utmTerm: null,
-                utmContent: null
+                utm_source: null,
+                utm_medium: null,
+                utm_campaign: null,
+                utm_term: null,
+                utm_content: null
             },
             meta: {
                 ip: '192.168.1.1',
@@ -348,20 +348,20 @@ describe('pageHitRawPayloadFromRequest', () => {
                 medium: 'cpc',
                 url: 'https://google.com'
             };
-            request.body.payload.utmSource = 'google';
-            request.body.payload.utmMedium = 'cpc';
-            request.body.payload.utmCampaign = 'brand-campaign';
-            request.body.payload.utmTerm = 'ghost-cms';
-            request.body.payload.utmContent = 'ad-1';
+            request.body.payload.utm_source = 'google';
+            request.body.payload.utm_medium = 'cpc';
+            request.body.payload.utm_campaign = 'brand-campaign';
+            request.body.payload.utm_term = 'ghost-cms';
+            request.body.payload.utm_content = 'ad-1';
 
             const result = pageHitRawPayloadFromRequest(request);
 
             // UTM params should be at top level
-            expect(result.payload.utmSource).toBe('google');
-            expect(result.payload.utmMedium).toBe('cpc');
-            expect(result.payload.utmCampaign).toBe('brand-campaign');
-            expect(result.payload.utmTerm).toBe('ghost-cms');
-            expect(result.payload.utmContent).toBe('ad-1');
+            expect(result.payload.utm_source).toBe('google');
+            expect(result.payload.utm_medium).toBe('cpc');
+            expect(result.payload.utm_campaign).toBe('brand-campaign');
+            expect(result.payload.utm_term).toBe('ghost-cms');
+            expect(result.payload.utm_content).toBe('ad-1');
 
             // parsedReferrer should contain only referrer data
             expect(result.payload.parsedReferrer).toEqual({
@@ -378,20 +378,20 @@ describe('pageHitRawPayloadFromRequest', () => {
                 medium: null,
                 url: null
             };
-            request.body.payload.utmSource = null;
-            request.body.payload.utmMedium = null;
-            request.body.payload.utmCampaign = null;
-            request.body.payload.utmTerm = null;
-            request.body.payload.utmContent = null;
+            request.body.payload.utm_source = null;
+            request.body.payload.utm_medium = null;
+            request.body.payload.utm_campaign = null;
+            request.body.payload.utm_term = null;
+            request.body.payload.utm_content = null;
 
             const result = pageHitRawPayloadFromRequest(request);
 
             // UTM params should be null at top level
-            expect(result.payload.utmSource).toBeNull();
-            expect(result.payload.utmMedium).toBeNull();
-            expect(result.payload.utmCampaign).toBeNull();
-            expect(result.payload.utmTerm).toBeNull();
-            expect(result.payload.utmContent).toBeNull();
+            expect(result.payload.utm_source).toBeNull();
+            expect(result.payload.utm_medium).toBeNull();
+            expect(result.payload.utm_campaign).toBeNull();
+            expect(result.payload.utm_term).toBeNull();
+            expect(result.payload.utm_content).toBeNull();
         });
 
         it('should handle missing UTM parameters', () => {
@@ -406,11 +406,11 @@ describe('pageHitRawPayloadFromRequest', () => {
             const result = pageHitRawPayloadFromRequest(request);
 
             // UTM params should be null when missing
-            expect(result.payload.utmSource).toBeNull();
-            expect(result.payload.utmMedium).toBeNull();
-            expect(result.payload.utmCampaign).toBeNull();
-            expect(result.payload.utmTerm).toBeNull();
-            expect(result.payload.utmContent).toBeNull();
+            expect(result.payload.utm_source).toBeNull();
+            expect(result.payload.utm_medium).toBeNull();
+            expect(result.payload.utm_campaign).toBeNull();
+            expect(result.payload.utm_term).toBeNull();
+            expect(result.payload.utm_content).toBeNull();
         });
 
         it('should handle undefined parsedReferrer', () => {
@@ -421,11 +421,11 @@ describe('pageHitRawPayloadFromRequest', () => {
             const result = pageHitRawPayloadFromRequest(request);
 
             // UTM params should be null when not provided
-            expect(result.payload.utmSource).toBeNull();
-            expect(result.payload.utmMedium).toBeNull();
-            expect(result.payload.utmCampaign).toBeNull();
-            expect(result.payload.utmTerm).toBeNull();
-            expect(result.payload.utmContent).toBeNull();
+            expect(result.payload.utm_source).toBeNull();
+            expect(result.payload.utm_medium).toBeNull();
+            expect(result.payload.utm_campaign).toBeNull();
+            expect(result.payload.utm_term).toBeNull();
+            expect(result.payload.utm_content).toBeNull();
         });
     });
 });

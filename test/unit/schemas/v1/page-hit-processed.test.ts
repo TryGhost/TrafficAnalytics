@@ -45,11 +45,11 @@ const validPageHitRaw: PageHitRaw = {
         },
         pathname: '/blog/post',
         href: 'https://example.com/blog/post',
-        utmSource: 'newsletter',
-        utmMedium: 'email',
-        utmCampaign: 'summer-sale',
-        utmTerm: 'ghost-cms',
-        utmContent: 'header-link'
+        utm_source: 'newsletter',
+        utm_medium: 'email',
+        utm_campaign: 'summer-sale',
+        utm_term: 'ghost-cms',
+        utm_content: 'header-link'
     },
     meta: {
         ip: '192.168.1.1',
@@ -498,11 +498,11 @@ describe('PageHitProcessedSchema v1', () => {
                 ...validPageHitRaw,
                 payload: {
                     ...validPageHitRaw.payload,
-                    utmSource: null,
-                    utmMedium: null,
-                    utmCampaign: null,
-                    utmTerm: null,
-                    utmContent: null
+                    utm_source: null,
+                    utm_medium: null,
+                    utm_campaign: null,
+                    utm_term: null,
+                    utm_content: null
                 }
             };
         

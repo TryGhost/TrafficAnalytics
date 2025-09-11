@@ -166,11 +166,11 @@ export async function transformPageHitRawToProcessed(
             parsedReferrer: pageHitRaw.payload.parsedReferrer, // for auditing purposes
             ...userAgentData,
             ...referrerData,
-            utm_source: pageHitRaw.payload.utmSource,
-            utm_medium: pageHitRaw.payload.utmMedium,
-            utm_campaign: pageHitRaw.payload.utmCampaign,
-            utm_term: pageHitRaw.payload.utmTerm,
-            utm_content: pageHitRaw.payload.utmContent,
+            utm_source: pageHitRaw.payload.utm_source,
+            utm_medium: pageHitRaw.payload.utm_medium,
+            utm_campaign: pageHitRaw.payload.utm_campaign,
+            utm_term: pageHitRaw.payload.utm_term,
+            utm_content: pageHitRaw.payload.utm_content,
             'user-agent': pageHitRaw.meta['user-agent']
         }
     };

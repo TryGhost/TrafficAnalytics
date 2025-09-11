@@ -85,11 +85,11 @@ export const PageHitRequestPayloadSchema = Type.Object({
     post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
     member_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
     member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')]),
-    utmSource: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utmMedium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utmCampaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utmTerm: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utmContent: Type.Optional(Type.Union([StringSchema, Type.Null()]))
+    utm_source: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utm_medium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utm_campaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utm_term: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utm_content: Type.Optional(Type.Union([StringSchema, Type.Null()]))
 }, {
     additionalProperties: true // Allow processors to add os, browser, device, etc.
 });
@@ -146,9 +146,9 @@ export const PageHitRequestPayloadDefaults = {
     post_type: 'null',
     member_uuid: 'undefined',
     member_status: 'undefined',
-    utmSource: null,
-    utmMedium: null,
-    utmCampaign: null,
-    utmTerm: null,
-    utmContent: null
+    utm_source: null,
+    utm_medium: null,
+    utm_campaign: null,
+    utm_term: null,
+    utm_content: null
 };

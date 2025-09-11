@@ -106,11 +106,11 @@ describe('BatchWorker', () => {
                 referrer: 'https://example.com',
                 pathname: '/blog/post',
                 href: 'https://mysite.com/blog/post',
-                utmSource: null,
-                utmMedium: null,
-                utmCampaign: null,
-                utmTerm: null,
-                utmContent: null
+                utm_source: null,
+                utm_medium: null,
+                utm_campaign: null,
+                utm_term: null,
+                utm_content: null
             },
             meta: {
                 ip: '192.168.1.1',
@@ -165,11 +165,11 @@ describe('BatchWorker', () => {
                             browser: expect.any(String),
                             device: expect.any(String),
                             // UTM fields from raw data
-                            utm_source: validPageHitRawData.payload.utmSource,
-                            utm_medium: validPageHitRawData.payload.utmMedium,
-                            utm_campaign: validPageHitRawData.payload.utmCampaign,
-                            utm_term: validPageHitRawData.payload.utmTerm,
-                            utm_content: validPageHitRawData.payload.utmContent,
+                            utm_source: validPageHitRawData.payload.utm_source,
+                            utm_medium: validPageHitRawData.payload.utm_medium,
+                            utm_campaign: validPageHitRawData.payload.utm_campaign,
+                            utm_term: validPageHitRawData.payload.utm_term,
+                            utm_content: validPageHitRawData.payload.utm_content,
                             // parsedReferrer should be undefined since no parsedReferrer in raw data
                             parsedReferrer: undefined
                         })
