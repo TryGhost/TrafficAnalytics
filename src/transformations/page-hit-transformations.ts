@@ -18,7 +18,12 @@ export const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageH
             referrer: request.body.payload.referrer ?? null,
             parsedReferrer: request.body.payload.parsedReferrer,
             pathname: request.body.payload.pathname,
-            href: request.body.payload.href
+            href: request.body.payload.href,
+            utm_source: request.body.payload.utm_source ?? null,
+            utm_medium: request.body.payload.utm_medium ?? null,
+            utm_campaign: request.body.payload.utm_campaign ?? null,
+            utm_term: request.body.payload.utm_term ?? null,
+            utm_content: request.body.payload.utm_content ?? null
         },
         meta: {
             ip: request.ip,

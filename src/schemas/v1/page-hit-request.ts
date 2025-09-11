@@ -62,12 +62,7 @@ export type PageHitRequestHeadersType = Static<typeof PageHitRequestHeadersSchem
 const ParsedReferrerSchema = Type.Object({
     source: Type.Union([StringSchema, Type.Null()]),
     medium: Type.Union([StringSchema, Type.Null()]),
-    url: Type.Union([StringSchema, Type.Null()]),
-    utmSource: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utmMedium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utmTerm: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utmCampaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utmContent: Type.Optional(Type.Union([StringSchema, Type.Null()]))
+    url: Type.Union([StringSchema, Type.Null()])
 });
 
 // Payload schema
@@ -84,7 +79,12 @@ export const PageHitRequestPayloadSchema = Type.Object({
     post_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
     post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
     member_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
-    member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')])
+    member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')]),
+    utm_source: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utm_medium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utm_campaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utm_term: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    utm_content: Type.Optional(Type.Union([StringSchema, Type.Null()]))
 }, {
     additionalProperties: true // Allow processors to add os, browser, device, etc.
 });
@@ -132,12 +132,7 @@ export const PageHitRequestPayloadDefaults = {
     parsedReferrer: {
         source: null,
         medium: null,
-        url: null,
-        utmSource: null,
-        utmMedium: null,
-        utmTerm: null,
-        utmCampaign: null,
-        utmContent: null
+        url: null
     },
     pathname: '',
     href: '',
@@ -145,5 +140,10 @@ export const PageHitRequestPayloadDefaults = {
     post_uuid: 'undefined',
     post_type: 'null',
     member_uuid: 'undefined',
-    member_status: 'undefined'
+    member_status: 'undefined',
+    utm_source: null,
+    utm_medium: null,
+    utm_campaign: null,
+    utm_term: null,
+    utm_content: null
 };

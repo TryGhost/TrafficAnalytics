@@ -24,6 +24,11 @@ const DEFAULT_BODY = {
         locale: 'en-US',
         location: 'US',
         referrer: null,
+        parsedReferrer: {
+            source: null,
+            medium: null,
+            url: null
+        },
         pathname: '/test-page',
         href: 'https://example.com/test-page',
         site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
@@ -121,7 +126,19 @@ describe('E2E Tests with Fake Tinybird', () => {
                     // Should have parsed user agent info
                     browser: expect.any(String),
                     os: expect.any(String),
-                    device: expect.any(String)
+                    device: expect.any(String),
+                    // Referrer audit data (when no referrer)
+                    parsedReferrer: {
+                        source: '',
+                        medium: '',
+                        url: ''
+                    },
+                    // UTM fields
+                    utm_source: null,
+                    utm_medium: null,
+                    utm_campaign: null,
+                    utm_term: null,
+                    utm_content: null
                 })
             });
         });
@@ -157,7 +174,19 @@ describe('E2E Tests with Fake Tinybird', () => {
                     // Should have parsed user agent info
                     browser: expect.any(String),
                     os: expect.any(String),
-                    device: expect.any(String)
+                    device: expect.any(String),
+                    // Referrer audit data (when no referrer)
+                    parsedReferrer: {
+                        source: '',
+                        medium: '',
+                        url: ''
+                    },
+                    // UTM fields
+                    utm_source: null,
+                    utm_medium: null,
+                    utm_campaign: null,
+                    utm_term: null,
+                    utm_content: null
                 })
             });
         });    
