@@ -24,6 +24,11 @@ const DEFAULT_BODY = {
         locale: 'en-US',
         location: 'US',
         referrer: null,
+        parsedReferrer: {
+            source: null,
+            medium: null,
+            url: null
+        },
         pathname: '/test-page',
         href: 'https://example.com/test-page',
         site_uuid: '940b73e9-4952-4752-b23d-9486f999c47e',
@@ -122,11 +127,12 @@ describe('E2E Tests with Fake Tinybird', () => {
                     browser: expect.any(String),
                     os: expect.any(String),
                     device: expect.any(String),
-                    // Referrer fields (null when no referrer)
-                    referrerUrl: null,
-                    referrerSource: null,
-                    referrerMedium: null,
-                    parsedReferrer: null,
+                    // Referrer audit data (when no referrer)
+                    parsedReferrer: {
+                        source: '',
+                        medium: '',
+                        url: ''
+                    },
                     // UTM fields
                     utm_source: null,
                     utm_medium: null,
@@ -169,11 +175,12 @@ describe('E2E Tests with Fake Tinybird', () => {
                     browser: expect.any(String),
                     os: expect.any(String),
                     device: expect.any(String),
-                    // Referrer fields (null when no referrer)
-                    referrerUrl: null,
-                    referrerSource: null,
-                    referrerMedium: null,
-                    parsedReferrer: null,
+                    // Referrer audit data (when no referrer)
+                    parsedReferrer: {
+                        source: '',
+                        medium: '',
+                        url: ''
+                    },
                     // UTM fields
                     utm_source: null,
                     utm_medium: null,
