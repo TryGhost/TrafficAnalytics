@@ -357,11 +357,11 @@ describe('PageHitRequestSchema v1', () => {
                     source: 'newsletter',
                     medium: 'email',
                     url: 'https://example.com',
-                    utmSource: 'newsletter',
-                    utmMedium: 'email',
-                    utmCampaign: 'summer-sale',
-                    utmTerm: 'ghost-cms',
-                    utmContent: 'header-link'
+                    utm_source: 'newsletter',
+                    utm_medium: 'email',
+                    utm_campaign: 'summer-sale',
+                    utm_term: 'ghost-cms',
+                    utm_content: 'header-link'
                 }
             };
 
@@ -375,9 +375,9 @@ describe('PageHitRequestSchema v1', () => {
                     source: 'google',
                     medium: 'cpc',
                     url: 'https://example.com',
-                    utmSource: 'google',
-                    utmMedium: 'cpc',
-                    utmCampaign: 'brand-awareness'
+                    utm_source: 'google',
+                    utm_medium: 'cpc',
+                    utm_campaign: 'brand-awareness'
                     // utmTerm and utmContent are omitted
                 }
             };
@@ -392,11 +392,11 @@ describe('PageHitRequestSchema v1', () => {
                     source: 'direct',
                     medium: null,
                     url: 'https://example.com',
-                    utmSource: null,
-                    utmMedium: null,
-                    utmCampaign: null,
-                    utmTerm: null,
-                    utmContent: null
+                    utm_source: null,
+                    utm_medium: null,
+                    utm_campaign: null,
+                    utm_term: null,
+                    utm_content: null
                 }
             };
 
