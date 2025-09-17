@@ -27,7 +27,7 @@ export class TinybirdClient {
     }
 
     async postEvent(event: TinybirdEvent): Promise<void> {
-        const url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}`;
+        const url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}&wait=true`;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -49,7 +49,7 @@ export class TinybirdClient {
             return;
         }
 
-        const url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}`;
+        const url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}&wait=true`;
         
         // Convert events to newline-delimited JSON format for batch insertion
         const batchPayload = events.map(event => JSON.stringify(event)).join('\n');
