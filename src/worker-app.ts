@@ -3,6 +3,7 @@ import fastify from 'fastify';
 import loggingPlugin from './plugins/logging';
 import workerPlugin from './plugins/worker-plugin';
 import {getLoggerConfig} from './utils/logger';
+import proxyPlugin from './plugins/proxy';
 
 const app = fastify({
     logger: getLoggerConfig(),
@@ -15,6 +16,9 @@ app.register(loggingPlugin);
 
 // Register worker plugin for heartbeat logging
 app.register(workerPlugin);
+
+// Register proxy plugin
+app.register(proxyPlugin);
 
 // Health endpoints for Cloud Run deployment
 app.get('/', async () => {
