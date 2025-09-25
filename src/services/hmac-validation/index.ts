@@ -5,6 +5,7 @@ export interface HmacValidationResult {
     isValid: boolean;
     cleanedUrl: string;
     originalUrl: string;
+    timestampValue?: Date;
     hmacValue?: string;
     error?: string;
 }
@@ -23,28 +24,27 @@ export class HmacValidationService {
      * Extracts HMAC from URL parameters (assumes it's the last parameter)
      * and returns the cleaned URL without the HMAC parameter
      */
-    private extractHmacFromUrl(url: string): {hmac?: string; cleanedUrl: string} {
+    private extractHmacFromUrl(url: string): {hmac?: string; timestamp?: Date, cleanedUrl: string} {
         const urlObj = new URL(url, 'http://localhost'); // Base URL for relative URLs
         const params = new URLSearchParams(urlObj.search);
-        const paramEntries = Array.from(params.entries());
 
-        if (paramEntries.length === 0) {
-            return {cleanedUrl: url};
+        const givenTimestamp = params.get('t');
+        let timestamp = null;
+        if (givenTimestamp) {
+            timestamp = new Date(parseInt(givenTimestamp));
         }
 
-        // Get the last parameter as HMAC
-        const lastParam = paramEntries[paramEntries.length - 1];
-        const [hmacKey, hmacValue] = lastParam;
+        const hmac = params.get('hmac');
 
-        // Remove the HMAC parameter from the URL
-        params.delete(hmacKey);
+        params.delete('hmac');
 
         // Reconstruct the cleaned URL
         const cleanedSearch = params.toString();
         const cleanedUrl = urlObj.pathname + (cleanedSearch ? `?${cleanedSearch}` : '');
 
         return {
-            hmac: hmacValue,
+            hmac: hmac || undefined,
+            timestamp: timestamp || undefined,
             cleanedUrl
         };
     }
@@ -78,13 +78,40 @@ export class HmacValidationService {
     }
 
     /**
+     * Validates timestamp for a given request
+     */
+    private validateTimestamp(timestamp: Date): { timestampValid: boolean, timestampError?: string } {
+        if (isNaN(timestamp.getTime())) {
+            return {
+                timestampValid: false,
+                timestampError: 'Invalid timestamp'
+            };
+        }
+
+        const currentTime = Date.now();
+        const oldestTime = new Date(currentTime - (5 * 60 * 1000)); // 5 minutes ago
+        const newestTime = new Date(currentTime + (5 * 1000)); // 5 seconds from now;
+
+        if (timestamp <= newestTime && timestamp >= oldestTime) {
+            return {
+                timestampValid: true
+            };
+        }
+
+        return {
+            timestampValid: false,
+            timestampError: 'Timestamp is not within the allowed range'
+        };
+    }
+
+    /**
      * Validates HMAC for a given request
      * The HMAC is calculated based on: method + cleaned_url + body_hash
      */
     async validateRequest(request: FastifyRequest): Promise<HmacValidationResult> {
         try {
             const fullUrl = request.url;
-            const {hmac: providedHmac, cleanedUrl} = this.extractHmacFromUrl(fullUrl);
+            const {hmac: providedHmac, timestamp: providedTimestamp, cleanedUrl} = this.extractHmacFromUrl(fullUrl);
 
             if (!providedHmac) {
                 return {
@@ -95,15 +122,28 @@ export class HmacValidationService {
                 };
             }
 
+            if (!providedTimestamp) {
+                return {
+                    isValid: false,
+                    cleanedUrl,
+                    originalUrl: request.url,
+                    error: 'Timestamp (t) parameter not found'
+                };
+            }
+
             const expectedHmac = this.generateHmac(cleanedUrl);
 
-            const isValid = this.timingSafeEqual(providedHmac, expectedHmac);
+            const hmacValid = this.timingSafeEqual(providedHmac, expectedHmac);
+            const {timestampValid, timestampError} = this.validateTimestamp(providedTimestamp);
+            const isValid = hmacValid && timestampValid;
 
             return {
                 isValid,
                 cleanedUrl,
                 originalUrl: request.url,
-                hmacValue: providedHmac
+                hmacValue: providedHmac,
+                timestampValue: providedTimestamp,
+                error: timestampError || undefined
             };
         } catch (error) {
             return {

@@ -44,7 +44,7 @@ The service follows a modular architecture:
 ## Request Flow
 
 1. Requests come to `/api/v1/page_hit`
-2. Global HMAC validation plugin extracts and validates HMAC signature from URL parameters
+2. Global HMAC validation plugin extracts and validates HMAC signature and timestamp from URL parameters
 3. preValidation hook validates hmac
 4. preHandler hook processes user agent and referrer data
 5. Request is forwarded to `PROXY_TARGET` (default: `http://localhost:3000/local-proxy`)
