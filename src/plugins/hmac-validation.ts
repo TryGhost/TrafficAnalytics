@@ -37,7 +37,7 @@ async function hmacValidationPlugin(fastify: FastifyInstance) {
                 // Return 401 Unauthorized
                 reply.status(401).send({
                     error: 'Unauthorized',
-                    message: 'Invalid or missing HMAC signature'
+                    message: validationResult.error || 'HMAC validation failed'
                 });
                 return;
             }
