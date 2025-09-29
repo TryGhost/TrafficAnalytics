@@ -52,7 +52,7 @@ export class HmacValidationService {
     /**
      * Generates HMAC signature for the given data
      */
-    private generateHmac(data: string): string {
+    generateHmac(data: string): string {
         return crypto
             .createHmac('sha1', this.secret)
             .update(data)
