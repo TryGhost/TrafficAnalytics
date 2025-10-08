@@ -51,6 +51,7 @@ export const PageHitRequestHeadersSchema = Type.Object({
     'x-site-uuid': UUIDSchema,
     'content-type': ContentTypeSchema,
     'user-agent': NonEmptyStringSchema,
+    'x-ghost-analytics-start': Type.Optional(StringSchema),
     referer: Type.Optional(StringSchema)
 }, {
     additionalProperties: Type.Union([StringSchema, Type.Array(StringSchema)])

@@ -250,7 +250,10 @@ describe('page-hit-handlers', () => {
                 pathname: '/test',
                 href: 'https://example.com/test',
                 parsedReferrer: undefined,
-                referrer: null
+                referrer: null,
+                meta: {
+                    received_timestamp: '2023-01-01T00:00:00.000Z'
+                }
             },
             meta: {
                 ip: '192.168.1.1',
@@ -281,7 +284,10 @@ describe('page-hit-handlers', () => {
                 referrerUrl: null,
                 referrerSource: null,
                 referrerMedium: null,
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                meta: {
+                    received_timestamp: '2023-01-01T00:00:00.000Z'
+                }
             }
         };
 
@@ -333,7 +339,7 @@ describe('page-hit-handlers', () => {
             expect(fromSpy).toHaveBeenCalled();
             const fromCall = fromSpy.mock.calls[0];
             const options = fromCall[1];
-            
+
             // Test the queryString function
             const mockReq = {
                 query: {
@@ -343,7 +349,7 @@ describe('page-hit-handlers', () => {
                 }
             };
             const result = (options?.queryString as any)('', '', mockReq);
-            
+
             expect(result).toBe('name=analytics_events&other=param');
             expect(result).not.toContain('token');
         });
@@ -358,7 +364,7 @@ describe('page-hit-handlers', () => {
             expect(fromSpy).toHaveBeenCalled();
             const fromCall = fromSpy.mock.calls[0];
             const options = fromCall[1];
-            
+
             // Test the queryString function
             const mockReq = {
                 query: {
@@ -368,7 +374,7 @@ describe('page-hit-handlers', () => {
                 }
             };
             const result = (options?.queryString as any)('', '', mockReq);
-            
+
             expect(result).toBe('token=original-token&name=analytics_events&other=param');
         });
 
@@ -384,7 +390,7 @@ describe('page-hit-handlers', () => {
             expect(fromSpy).toHaveBeenCalled();
             const fromCall = fromSpy.mock.calls[0];
             const options = fromCall[1];
-            
+
             // Test the rewriteRequestHeaders function
             const mockReq = mockRequest;
             const originalHeaders = {
@@ -392,7 +398,7 @@ describe('page-hit-handlers', () => {
                 'user-agent': 'test-agent'
             };
             const result = options?.rewriteRequestHeaders!(mockReq, originalHeaders);
-            
+
             expect(result).toEqual({
                 'content-type': 'application/json',
                 'user-agent': 'test-agent',
@@ -410,7 +416,7 @@ describe('page-hit-handlers', () => {
             expect(fromSpy).toHaveBeenCalled();
             const fromCall = fromSpy.mock.calls[0];
             const options = fromCall[1];
-            
+
             // Test the rewriteRequestHeaders function
             const mockReq = mockRequest;
             const originalHeaders = {
@@ -418,7 +424,7 @@ describe('page-hit-handlers', () => {
                 'user-agent': 'test-agent'
             };
             const result = options?.rewriteRequestHeaders!(mockReq, originalHeaders);
-            
+
             expect(result).toBe(originalHeaders);
         });
 
@@ -432,7 +438,7 @@ describe('page-hit-handlers', () => {
             expect(fromSpy).toHaveBeenCalled();
             const fromCall = fromSpy.mock.calls[0];
             const options = fromCall[1];
-            
+
             // Test the onError function with Error object
             const testError = new Error('Proxy connection failed');
             const mockReplyInstance = {
@@ -443,9 +449,9 @@ describe('page-hit-handlers', () => {
                 send: vi.fn(),
                 request: mockRequest
             } as any;
-            
+
             options?.onError!(mockReplyInstance, testError as any);
-            
+
             expect(mockReplyInstance.log.error).toHaveBeenCalledWith({
                 err: {
                     message: 'Proxy connection failed',
@@ -478,7 +484,7 @@ describe('page-hit-handlers', () => {
             expect(fromSpy).toHaveBeenCalled();
             const fromCall = fromSpy.mock.calls[0];
             const options = fromCall[1];
-            
+
             // Test the onError function with wrapped error
             const innerError = new Error('Connection timeout');
             const wrappedError = {error: innerError};
@@ -490,9 +496,9 @@ describe('page-hit-handlers', () => {
                 send: vi.fn(),
                 request: mockRequest
             } as any;
-            
+
             options?.onError!(mockReplyInstance, wrappedError as any);
-            
+
             expect(mockReplyInstance.log.error).toHaveBeenCalledWith({
                 err: {
                     message: 'Connection timeout',

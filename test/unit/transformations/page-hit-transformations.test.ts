@@ -65,7 +65,10 @@ describe('pageHitRawPayloadFromRequest', () => {
                 utm_medium: null,
                 utm_campaign: null,
                 utm_term: null,
-                utm_content: null
+                utm_content: null,
+                meta: {
+                    received_timestamp: null
+                }
             },
             meta: {
                 ip: '192.168.1.1',
@@ -338,6 +341,53 @@ describe('pageHitRawPayloadFromRequest', () => {
         expect(result.payload.href).toBe('https://traffic-analytics.ghst.pro/');
         expect(result.meta.ip).toBe('203.0.113.42');
         expect(result.meta['user-agent']).toBe('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.23 Safari/537.36');
+    });
+
+    describe('x-ghost-analytics-start header handling', () => {
+        it('should parse x-ghost-analytics-start header into received_timestamp when present', () => {
+            const request = createPageHitRequest();
+            request.headers['x-ghost-analytics-start'] = '1704067200000'; // Jan 1, 2024 00:00:00 UTC
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            expect(result.payload.meta.received_timestamp).toBe('2024-01-01T00:00:00.000Z');
+        });
+
+        it('should set received_timestamp to null when x-ghost-analytics-start header is missing', () => {
+            const request = createPageHitRequest();
+            // Don't set x-ghost-analytics-start header
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            expect(result.payload.meta.received_timestamp).toBeNull();
+        });
+
+        it('should set received_timestamp to null when x-ghost-analytics-start header is undefined', () => {
+            const request = createPageHitRequest();
+            request.headers['x-ghost-analytics-start'] = undefined;
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            expect(result.payload.meta.received_timestamp).toBeNull();
+        });
+
+        it('should set received_timestamp to null when x-ghost-analytics-start header is invalid', () => {
+            const request = createPageHitRequest();
+            request.headers['x-ghost-analytics-start'] = 'invalid-timestamp';
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            expect(result.payload.meta.received_timestamp).toBeNull();
+        });
+
+        it('should handle different valid timestamp values', () => {
+            const request = createPageHitRequest();
+            request.headers['x-ghost-analytics-start'] = '1705315800000'; // Jan 15, 2024 10:50:00 UTC
+
+            const result = pageHitRawPayloadFromRequest(request);
+
+            expect(result.payload.meta.received_timestamp).toBe('2024-01-15T10:50:00.000Z');
+        });
     });
 
     describe('UTM parameter handling', () => {

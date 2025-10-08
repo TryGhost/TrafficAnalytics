@@ -18,7 +18,10 @@ describe('PageHitRawSchema v1', () => {
             location: 'homepage',
             referrer: 'https://google.com',
             pathname: '/blog/post',
-            href: 'https://example.com/blog/post'
+            href: 'https://example.com/blog/post',
+            meta: {
+                received_timestamp: '2025-01-01T00:00:00.000Z'
+            }
         },
         meta: {
             ip: '192.168.1.1',
@@ -168,7 +171,7 @@ describe('PageHitRawSchema v1', () => {
 
         it('should validate all post_type values', () => {
             const postTypes = ['null', 'post', 'page'];
-            
+
             postTypes.forEach((postType) => {
                 const validData = {
                     ...validPageHitRaw,
@@ -485,14 +488,17 @@ describe('PageHitRawSchema v1', () => {
                     location: null,
                     referrer: null,
                     pathname: '/',
-                    href: 'https://example.com/'
+                    href: 'https://example.com/',
+                    meta: {
+                        received_timestamp: null
+                    }
                 },
                 meta: {
                     ip: '203.0.113.42',
                     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.23 Safari/537.36'
                 }
             };
-            
+
             expect(Value.Check(PageHitRawSchema, realWorldPayload)).toBe(true);
         });
 
@@ -517,14 +523,17 @@ describe('PageHitRawSchema v1', () => {
                         url: 'https://google.com'
                     },
                     pathname: '/blog/post',
-                    href: 'https://example.com/blog/post'
+                    href: 'https://example.com/blog/post',
+                    meta: {
+                        received_timestamp: '2024-06-24T10:30:00.000Z'
+                    }
                 },
                 meta: {
                     ip: '203.0.113.42',
                     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.23 Safari/537.36'
                 }
             };
-            
+
             expect(Value.Check(PageHitRawSchema, realWorldPayloadWithParsedReferrer)).toBe(true);
         });
     });
