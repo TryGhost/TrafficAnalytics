@@ -23,6 +23,32 @@ describe('TinybirdClient', () => {
         });
     });
 
+    describe('endpoint getter', () => {
+        it('should return the correct endpoint URL', () => {
+            expect(client.endpoint).toBe('https://api.tinybird.co/v0/events?name=test_datasource');
+        });
+
+        it('should URL encode the datasource name', () => {
+            const clientWithSpecialChars = new TinybirdClient({
+                ...mockConfig,
+                datasource: 'test datasource with spaces & symbols'
+            });
+            expect(clientWithSpecialChars.endpoint).toBe(
+                'https://api.tinybird.co/v0/events?name=test%20datasource%20with%20spaces%20%26%20symbols'
+            );
+        });
+
+        it('should append wait=true if configured', () => {
+            const clientWithWait = new TinybirdClient({
+                ...mockConfig,
+                wait: true
+            });
+            expect(clientWithWait.endpoint).toBe(
+                'https://api.tinybird.co/v0/events?name=test_datasource&wait=true'
+            );
+        });
+    });
+
     describe('postEvent', () => {
         it('should make a POST request to the correct URL with proper headers', async () => {
             const mockEvent = {
@@ -42,7 +68,7 @@ describe('TinybirdClient', () => {
             await client.postEvent(mockEvent);
 
             expect(fetch).toHaveBeenCalledWith(
-                'https://api.tinybird.co/v0/events?name=test_datasource&wait=true',
+                'https://api.tinybird.co/v0/events?name=test_datasource',
                 {
                     method: 'POST',
                     headers: {
@@ -51,30 +77,6 @@ describe('TinybirdClient', () => {
                     },
                     body: JSON.stringify(mockEvent)
                 }
-            );
-        });
-
-        it('should URL encode the datasource name', async () => {
-            const clientWithSpecialChars = new TinybirdClient({
-                ...mockConfig,
-                datasource: 'test datasource with spaces & symbols'
-            });
-
-            const mockResponse = {
-                ok: true,
-                status: 200,
-                statusText: 'OK'
-            };
-
-            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockResponse);
-
-            await clientWithSpecialChars.postEvent({test: 'data'});
-
-            expect(fetch).toHaveBeenCalledWith(
-                'https://api.tinybird.co/v0/events?name=test%20datasource%20with%20spaces%20%26%20symbols&wait=true',
-                expect.objectContaining({
-                    method: 'POST'
-                })
             );
         });
 
@@ -217,7 +219,7 @@ describe('TinybirdClient', () => {
             await customClient.postEvent({test: 'data'});
 
             expect(fetch).toHaveBeenCalledWith(
-                'https://custom.tinybird.instance.com/v0/events?name=custom_events&wait=true',
+                'https://custom.tinybird.instance.com/v0/events?name=custom_events',
                 expect.objectContaining({
                     headers: expect.objectContaining({
                         Authorization: 'Bearer custom-token'
@@ -267,7 +269,7 @@ describe('TinybirdClient', () => {
             await client.postEventBatch(mockEvents);
 
             expect(fetch).toHaveBeenCalledWith(
-                'https://api.tinybird.co/v0/events?name=test_datasource&wait=true',
+                'https://api.tinybird.co/v0/events?name=test_datasource',
                 {
                     method: 'POST',
                     headers: {
@@ -297,7 +299,7 @@ describe('TinybirdClient', () => {
             await client.postEventBatch([mockEvent]);
 
             expect(fetch).toHaveBeenCalledWith(
-                'https://api.tinybird.co/v0/events?name=test_datasource&wait=true',
+                'https://api.tinybird.co/v0/events?name=test_datasource',
                 {
                     method: 'POST',
                     headers: {
@@ -344,7 +346,7 @@ describe('TinybirdClient', () => {
             await client.postEventBatch(largeEventBatch);
 
             expect(fetch).toHaveBeenCalledWith(
-                'https://api.tinybird.co/v0/events?name=test_datasource&wait=true',
+                'https://api.tinybird.co/v0/events?name=test_datasource',
                 expect.objectContaining({
                     method: 'POST',
                     body: expect.stringContaining('batch_event')
@@ -383,7 +385,7 @@ describe('TinybirdClient', () => {
 
             const expectedBody = complexEvents.map(event => JSON.stringify(event)).join('\n');
             expect(fetch).toHaveBeenCalledWith(
-                'https://api.tinybird.co/v0/events?name=test_datasource&wait=true',
+                'https://api.tinybird.co/v0/events?name=test_datasource',
                 expect.objectContaining({
                     body: expectedBody
                 })

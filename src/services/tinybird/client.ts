@@ -8,12 +8,14 @@ export interface TinybirdClientConfig {
     apiUrl: string;
     apiToken: string;
     datasource: string;
+    wait?: boolean;
 }
 
 export class TinybirdClient {
     private apiUrl: string;
     private apiToken: string;
     private datasource: string;
+    private wait: boolean;
 
     constructor(config: TinybirdClientConfig) {
         if (!config.apiUrl || !config.apiToken || !config.datasource) {
@@ -23,13 +25,20 @@ export class TinybirdClient {
         this.apiUrl = config.apiUrl.replace(/\/v0\/events$/, '');
         this.apiToken = config.apiToken;
         this.datasource = config.datasource;
+        this.wait = config.wait ?? false;
         logger.info({apiUrl: this.apiUrl, datasource: this.datasource}, 'TinybirdClient constructor');
     }
 
+    get endpoint(): string {
+        let url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}`;
+        if (this.wait) {
+            url += '&wait=true';
+        }
+        return url;
+    }
+
     async postEvent(event: TinybirdEvent): Promise<void> {
-        const url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}&wait=true`;
-        
-        const response = await fetch(url, {
+        const response = await fetch(this.endpoint, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${this.apiToken}`,
@@ -49,12 +58,10 @@ export class TinybirdClient {
             return;
         }
 
-        const url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}&wait=true`;
-        
         // Convert events to newline-delimited JSON format for batch insertion
         const batchPayload = events.map(event => JSON.stringify(event)).join('\n');
-        
-        const response = await fetch(url, {
+
+        const response = await fetch(this.endpoint, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${this.apiToken}`,
