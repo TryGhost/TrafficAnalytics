@@ -2,6 +2,18 @@ import {randomUUID} from 'crypto';
 import {PageHitRequestType, PageHitRaw} from '../schemas';
 
 export const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageHitRaw => {
+    const parseReceivedTimestamp = (value: string | undefined) => {
+        if (value === undefined) {
+            return null;
+        }
+
+        try {
+            return (new Date(parseInt(value))).toISOString();
+        } catch {
+            return null;
+        }
+    };
+
     return {
         timestamp: request.body.timestamp,
         action: request.body.action,
@@ -23,7 +35,10 @@ export const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageH
             utm_medium: request.body.payload.utm_medium ?? null,
             utm_campaign: request.body.payload.utm_campaign ?? null,
             utm_term: request.body.payload.utm_term ?? null,
-            utm_content: request.body.payload.utm_content ?? null
+            utm_content: request.body.payload.utm_content ?? null,
+            meta: {
+                received_timestamp: parseReceivedTimestamp(request.headers['x-ghost-analytics-start'])
+            }
         },
         meta: {
             ip: request.ip,

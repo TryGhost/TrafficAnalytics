@@ -49,7 +49,10 @@ const validPageHitRaw: PageHitRaw = {
         utm_medium: 'email',
         utm_campaign: 'summer-sale',
         utm_term: 'ghost-cms',
-        utm_content: 'header-link'
+        utm_content: 'header-link',
+        meta: {
+            received_timestamp: '2024-01-01T00:00:00.000Z'
+        }
     },
     meta: {
         ip: '192.168.1.1',
@@ -94,7 +97,10 @@ describe('PageHitProcessedSchema v1', () => {
             utm_campaign: 'summer-sale',
             utm_term: 'ghost-cms',
             utm_content: 'header-link',
-            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            meta: {
+                received_timestamp: '2024-01-01T00:00:00.000Z'
+            }
         }
     };
 
@@ -197,7 +203,7 @@ describe('PageHitProcessedSchema v1', () => {
         it('should parse Chrome on macOS correctly', () => {
             const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
             const result = transformUserAgent(userAgent);
-        
+
             expect(result.os).toBe('macos');
             expect(result.browser).toBe('chrome');
             expect(result.device).toBe('desktop');
@@ -206,7 +212,7 @@ describe('PageHitProcessedSchema v1', () => {
         it('should parse Safari on iOS correctly', () => {
             const userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15';
             const result = transformUserAgent(userAgent);
-        
+
             expect(result.os).toBe('ios');
             expect(result.browser).toBe('safari');
             expect(result.device).toBe('mobile-ios');
@@ -215,7 +221,7 @@ describe('PageHitProcessedSchema v1', () => {
         it('should parse Chrome on Android correctly', () => {
             const userAgent = 'Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36';
             const result = transformUserAgent(userAgent);
-        
+
             expect(result.os).toBe('android');
             expect(result.browser).toBe('chrome');
             expect(result.device).toBe('mobile-android');
@@ -224,7 +230,7 @@ describe('PageHitProcessedSchema v1', () => {
         it('should parse Firefox on Windows correctly', () => {
             const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0';
             const result = transformUserAgent(userAgent);
-        
+
             expect(result.os).toBe('windows');
             expect(result.browser).toBe('firefox');
             expect(result.device).toBe('desktop');
@@ -233,7 +239,7 @@ describe('PageHitProcessedSchema v1', () => {
         it('should parse Firefox on Linux correctly', () => {
             const userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0';
             const result = transformUserAgent(userAgent);
-        
+
             expect(result.os).toBe('linux');
             expect(result.browser).toBe('firefox');
             expect(result.device).toBe('desktop');
@@ -256,20 +262,20 @@ describe('PageHitProcessedSchema v1', () => {
         it('should normalize mobile browser names', () => {
             const mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1';
             const result = transformUserAgent(mobileUserAgent);
-        
+
             expect(result.browser).toBe('safari');
         });
 
         it('should normalize Mac OS to macOS', () => {
             const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
             const result = transformUserAgent(userAgent);
-        
+
             expect(result.os).toBe('macos');
         });
 
         it('should handle empty user agent', () => {
             const result = transformUserAgent('');
-        
+
             expect(result.os).toBe('unknown');
             expect(result.browser).toBe('unknown');
             expect(result.device).toBe('unknown');
@@ -277,7 +283,7 @@ describe('PageHitProcessedSchema v1', () => {
 
         it('should handle malformed user agent', () => {
             const result = transformUserAgent('invalid-user-agent');
-        
+
             expect(result.os).toBe('unknown');
             expect(result.browser).toBe('unknown');
             expect(result.device).toBe('unknown');
@@ -286,7 +292,7 @@ describe('PageHitProcessedSchema v1', () => {
         it('should handle Chrome OS correctly', () => {
             const userAgent = 'Mozilla/5.0 (X11; CrOS x86_64 13816.64.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.100 Safari/537.36';
             const result = transformUserAgent(userAgent);
-        
+
             expect(result.os).toBe('chromium os');
             expect(result.browser).toBe('chrome');
             expect(result.device).toBe('desktop');
@@ -295,7 +301,7 @@ describe('PageHitProcessedSchema v1', () => {
         it('should handle Ubuntu correctly', () => {
             const userAgent = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0';
             const result = transformUserAgent(userAgent);
-        
+
             expect(result.os).toBe('ubuntu');
             expect(result.browser).toBe('firefox');
             expect(result.device).toBe('desktop');
@@ -304,7 +310,7 @@ describe('PageHitProcessedSchema v1', () => {
         it('should detect Googlebot as bot even with Android user agent', () => {
             const userAgent = 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.7151.119 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
             const result = transformUserAgent(userAgent);
-        
+
             expect(result.os).toBe('android');
             expect(result.browser).toBe('chrome');
             expect(result.device).toBe('bot'); // Should be 'bot', not 'mobile-android'
@@ -338,7 +344,7 @@ describe('PageHitProcessedSchema v1', () => {
                 medium: 'search'
             };
             const result = transformReferrer(referrer);
-        
+
             expect(result.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
             expect(result.referrerSource).toBe('Google');
             expect(result.referrerMedium).toBe('search');
@@ -367,10 +373,10 @@ describe('PageHitProcessedSchema v1', () => {
             const siteUuid = '12345678-1234-1234-1234-123456789012';
             const ipAddress = '192.168.1.1';
             const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
-        
+
             const signature1 = await generateUserSignature(siteUuid, ipAddress, userAgent);
             const signature2 = await generateUserSignature(siteUuid, ipAddress, userAgent);
-        
+
             expect(signature1).toBe(signature2);
             expect(signature1).toHaveLength(64); // SHA-256 hex string length
         });
@@ -380,10 +386,10 @@ describe('PageHitProcessedSchema v1', () => {
             const ipAddress1 = '192.168.1.1';
             const ipAddress2 = '192.168.1.2';
             const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
-        
+
             const signature1 = await generateUserSignature(siteUuid, ipAddress1, userAgent);
             const signature2 = await generateUserSignature(siteUuid, ipAddress2, userAgent);
-        
+
             expect(signature1).not.toBe(signature2);
         });
     });
@@ -391,7 +397,7 @@ describe('PageHitProcessedSchema v1', () => {
     describe('transformPageHitRawToProcessed', () => {
         it('should transform complete page hit raw to processed', async () => {
             const result = await transformPageHitRawToProcessed(validPageHitRaw);
-        
+
             expect(result.timestamp).toBe(validPageHitRaw.timestamp);
             expect(result.action).toBe(validPageHitRaw.action);
             expect(result.version).toBe(validPageHitRaw.version);
@@ -399,14 +405,14 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.session_id).toBeDefined();
             expect(typeof result.session_id).toBe('string');
             expect(result.session_id).toHaveLength(64);
-        
+
             // Check original payload fields are preserved
             expect(result.payload.site_uuid).toBe(validPageHitRaw.site_uuid);
             expect(result.payload.member_uuid).toBe(validPageHitRaw.payload.member_uuid);
             expect(result.payload.member_status).toBe(validPageHitRaw.payload.member_status);
             expect(result.payload.pathname).toBe(validPageHitRaw.payload.pathname);
             expect(result.payload.href).toBe(validPageHitRaw.payload.href);
-        
+
             // Check processed fields are added
             expect(result.payload.os).toBe('macos');
             expect(result.payload.browser).toBe('chrome');
@@ -415,24 +421,24 @@ describe('PageHitProcessedSchema v1', () => {
             expect(result.payload.referrerUrl).toBe('https://www.google.com/search?q=ghost+cms');
             expect(result.payload.referrerSource).toBe('Google');
             expect(result.payload.referrerMedium).toBe('search');
-            
+
             // Check that parsedReferrer contains original referrer data (without UTM)
             expect(result.payload.parsedReferrer).toEqual({
                 url: 'https://www.google.com/search?q=ghost+cms',
                 source: 'Google',
                 medium: 'search'
             });
-            
+
             // Check that UTM params are at top level
             expect(result.payload.utm_source).toBe('newsletter');
             expect(result.payload.utm_medium).toBe('email');
             expect(result.payload.utm_campaign).toBe('summer-sale');
             expect(result.payload.utm_term).toBe('ghost-cms');
             expect(result.payload.utm_content).toBe('header-link');
-            
+
             expect((result.payload as any).referrer).toBeUndefined();
             expect(result.payload['user-agent']).toBe(validPageHitRaw.meta['user-agent']);
-        
+
             // Check meta is not included in processed output
             expect(result).not.toHaveProperty('meta');
         });
@@ -445,9 +451,9 @@ describe('PageHitProcessedSchema v1', () => {
                     'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
                 }
             };
-        
+
             const result = await transformPageHitRawToProcessed(pageHitRawWithBot);
-        
+
             expect(result.payload.device).toBe('bot');
             expect(result.payload.os).toBe('unknown');
             expect(result.payload.browser).toBe('unknown');
@@ -462,9 +468,9 @@ describe('PageHitProcessedSchema v1', () => {
                     'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15'
                 }
             };
-        
+
             const result = await transformPageHitRawToProcessed(pageHitRawWithMobile);
-        
+
             expect(result.payload.device).toBe('mobile-ios');
             expect(result.payload.os).toBe('ios');
             expect(result.payload.browser).toBe('safari');
@@ -486,10 +492,10 @@ describe('PageHitProcessedSchema v1', () => {
                     ip: '192.168.1.2'
                 }
             };
-        
+
             const result1 = await transformPageHitRawToProcessed(pageHitRaw1);
             const result2 = await transformPageHitRawToProcessed(pageHitRaw2);
-        
+
             expect(result1.session_id).not.toBe(result2.session_id);
         });
 
@@ -505,16 +511,16 @@ describe('PageHitProcessedSchema v1', () => {
                     utm_content: null
                 }
             };
-        
+
             const result = await transformPageHitRawToProcessed(pageHitRawWithoutUTM);
-        
+
             // Check that UTM params are null at top level
             expect(result.payload.utm_source).toBeNull();
             expect(result.payload.utm_medium).toBeNull();
             expect(result.payload.utm_campaign).toBeNull();
             expect(result.payload.utm_term).toBeNull();
             expect(result.payload.utm_content).toBeNull();
-            
+
             // Check that parsedReferrer still contains original referrer data
             expect(result.payload.parsedReferrer).toEqual({
                 url: 'https://www.google.com/search?q=ghost+cms',
@@ -525,7 +531,7 @@ describe('PageHitProcessedSchema v1', () => {
 
         it('should produce valid PageHitProcessed schema', async () => {
             const result = await transformPageHitRawToProcessed(validPageHitRaw);
-        
+
             expect(Value.Check(PageHitProcessedSchema, result)).toBe(true);
         });
     });

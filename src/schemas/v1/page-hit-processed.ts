@@ -41,8 +41,10 @@ export const PageHitProcessedSchema = Type.Object({
         utm_campaign: Type.Optional(Type.Union([Type.String(), Type.Null()])),
         utm_term: Type.Optional(Type.Union([Type.String(), Type.Null()])),
         utm_content: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        'user-agent': Type.String()
-
+        'user-agent': Type.String(),
+        meta: Type.Object({
+            received_timestamp: Type.Union([Type.String({format: 'date-time'}), Type.Null()])
+        })
     })
 });
 
@@ -171,7 +173,10 @@ export async function transformPageHitRawToProcessed(
             utm_campaign: pageHitRaw.payload.utm_campaign,
             utm_term: pageHitRaw.payload.utm_term,
             utm_content: pageHitRaw.payload.utm_content,
-            'user-agent': pageHitRaw.meta['user-agent']
+            'user-agent': pageHitRaw.meta['user-agent'],
+            meta: {
+                received_timestamp: pageHitRaw.payload.meta.received_timestamp
+            }
         }
     };
     return pageHitProcessed;

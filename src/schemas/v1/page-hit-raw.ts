@@ -38,7 +38,10 @@ const PayloadSchema = Type.Object({
     utm_medium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
     utm_campaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
     utm_term: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utm_content: Type.Optional(Type.Union([StringSchema, Type.Null()]))
+    utm_content: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+    meta: Type.Object({
+        received_timestamp: Type.Union([ISO8601DateTimeSchema, Type.Null()])
+    })
 });
 
 // Meta schema for page hit raw events

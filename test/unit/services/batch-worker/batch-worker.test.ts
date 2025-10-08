@@ -34,7 +34,7 @@ describe('BatchWorker', () => {
     let mockSubscriber: EventSubscriber;
     let mockTinybirdClient: TinybirdClient;
     const testTopic = 'test-topic';
-    
+
     const sleep = (ms: number) => new Promise<void>((resolve) => {
         setTimeout(() => resolve(), ms);
     });
@@ -110,7 +110,10 @@ describe('BatchWorker', () => {
                 utm_medium: null,
                 utm_campaign: null,
                 utm_term: null,
-                utm_content: null
+                utm_content: null,
+                meta: {
+                    received_timestamp: null
+                }
             },
             meta: {
                 ip: '192.168.1.1',
@@ -171,12 +174,15 @@ describe('BatchWorker', () => {
                             utm_term: validPageHitRawData.payload.utm_term,
                             utm_content: validPageHitRawData.payload.utm_content,
                             // parsedReferrer should be undefined since no parsedReferrer in raw data
-                            parsedReferrer: undefined
+                            parsedReferrer: undefined,
+                            meta: {
+                                received_timestamp: validPageHitRawData.payload.meta.received_timestamp
+                            }
                         })
                     })
                 })
             );
-            
+
             // Message should not be acked yet
             expect(mockMessage.ack).not.toHaveBeenCalled();
             expect(mockMessage.nack).not.toHaveBeenCalled();
@@ -206,9 +212,9 @@ describe('BatchWorker', () => {
             await (batchWorker as any).handleMessage(mockMessage);
 
             expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-                event: 'WorkerFailedToParseMessageError', 
-                messageId: mockMessage.id, 
-                messageData: invalidJson, 
+                event: 'WorkerFailedToParseMessageError',
+                messageId: mockMessage.id,
+                messageData: invalidJson,
                 err: expect.any(Object)
             }));
 
@@ -231,7 +237,10 @@ describe('BatchWorker', () => {
                     location: 'New York',
                     referrer: 'https://example.com',
                     pathname: '/blog/post',
-                    href: 'https://mysite.com/blog/post'
+                    href: 'https://mysite.com/blog/post',
+                    meta: {
+                        received_timestamp: '2024-01-01T12:00:00.000Z'
+                    }
                 },
                 meta: {
                     ip: '192.168.1.1',
@@ -243,8 +252,8 @@ describe('BatchWorker', () => {
             await (batchWorker as any).handleMessage(mockMessage);
 
             expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-                event: 'WorkerFailedToParseMessageError', 
-                messageId: mockMessage.id, 
+                event: 'WorkerFailedToParseMessageError',
+                messageId: mockMessage.id,
                 messageData: invalidPageHitRawWithEmptyUserAgent,
                 err: expect.any(Object)
             }));
@@ -294,7 +303,7 @@ describe('BatchWorker', () => {
         it('should handle valid message with different post types', async () => {
             const testCases = ['null', 'post', 'page'];
             const messages = [];
-            
+
             for (const postType of testCases) {
                 const dataWithPostType = {
                     ...validPageHitRawData,
@@ -358,7 +367,7 @@ describe('BatchWorker', () => {
             expect(mockMessage.ack).toHaveBeenCalled();
             expect(mockMessage.nack).not.toHaveBeenCalled();
             expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
-            
+
             // Should log bot filtering
             expect(logger.info).toHaveBeenCalledWith(
                 expect.objectContaining({
@@ -427,7 +436,10 @@ describe('BatchWorker', () => {
                 location: 'New York',
                 referrer: 'https://example.com',
                 pathname: '/blog/post',
-                href: 'https://mysite.com/blog/post'
+                href: 'https://mysite.com/blog/post',
+                meta: {
+                    received_timestamp: '2024-01-01T12:00:00.000Z'
+                }
             },
             meta: {
                 ip: '192.168.1.1',
@@ -475,9 +487,9 @@ describe('BatchWorker', () => {
 
             // Start the worker to initialize the timer
             await batchWorker.start();
-            
+
             await (batchWorker as any).handleMessage(mockMessage);
-            
+
             // Wait for timer to expire
             await sleep(150);
 
@@ -490,7 +502,7 @@ describe('BatchWorker', () => {
                 ])
             );
             expect(mockMessage.ack).toHaveBeenCalled();
-            
+
             await batchWorker.stop();
         });
 
@@ -515,11 +527,11 @@ describe('BatchWorker', () => {
             const mockMessage1 = createMockMessage(JSON.stringify(validPageHitRawData));
             const mockMessage2 = createMockMessage(JSON.stringify(validPageHitRawData));
             const tinybirdError = new Error('Tinybird batch API error');
-            
+
             (mockTinybirdClient.postEventBatch as any).mockRejectedValueOnce(tinybirdError);
 
             await (batchWorker as any).handleMessage(mockMessage1);
-            
+
             await (batchWorker as any).handleMessage(mockMessage2);
 
             expect(mockMessage1.nack).toHaveBeenCalled();
