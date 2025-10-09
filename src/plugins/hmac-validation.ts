@@ -9,6 +9,9 @@ async function hmacValidationPlugin(fastify: FastifyInstance) {
         return;
     }
 
+    // Check if we should only log failures instead of rejecting requests
+    const logOnlyMode = process.env.HMAC_VALIDATION_LOG_ONLY === 'true';
+
     // Register global preValidation hook to intercept all requests
     fastify.addHook('preValidation', async (request: FastifyRequest, reply: FastifyReply) => {
         try {
@@ -31,8 +34,16 @@ async function hmacValidationPlugin(fastify: FastifyInstance) {
                     ip: request.ip,
                     userAgent: request.headers['user-agent'],
                     error: validationResult.error,
-                    type: 'security_validation_error'
+                    type: 'security_validation_error',
+                    logOnlyMode
                 }, 'HMAC validation failed');
+
+                // If in log-only mode, allow the request to continue
+                if (logOnlyMode) {
+                    // Update request.url to the cleaned version for downstream processing
+                    request.raw.url = validationResult.cleanedUrl;
+                    return;
+                }
 
                 // Return 401 Unauthorized
                 reply.status(401).send({
