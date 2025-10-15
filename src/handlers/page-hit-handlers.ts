@@ -55,6 +55,9 @@ export const handlePageHitRequestStrategyInline = async (request: PageHitRequest
                 // Remove token from query string when using env var
                 params.delete('token');
             }
+            if (process.env.TINYBIRD_WAIT === 'true') {
+                params.set('wait', 'true');
+            }
             return params.toString();
         },
         rewriteRequestHeaders: (req, headers) => {
