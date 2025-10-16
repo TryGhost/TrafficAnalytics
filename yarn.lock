@@ -252,13 +252,13 @@
   dependencies:
     dequal "^2.0.3"
 
-"@fastify/otel@0.9.3":
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/@fastify/otel/-/otel-0.9.3.tgz#e70dfa41109bce8451df8478728782dcd3f5d95b"
-  integrity sha512-CJVhRA9y+BD3/sC42aQCvn6gr4eoZ3qbMPGvgt3xzvCNyNM5Hgxqa8k+DmHLR8w1mO6PneMHYBvJ0zK14YHunQ==
+"@fastify/otel@0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@fastify/otel/-/otel-0.11.0.tgz#33d12edbee0699ff80f9fb815a9bd3dada7b191c"
+  integrity sha512-luIQCE6roIlIsgjXD3QGOir/0Gsu2hlE4I0Lzjj2QELfGohi63CGciwVYK+7TM1zKt/INeq+yLmb0WsnCLNZiw==
   dependencies:
     "@opentelemetry/core" "^2.0.0"
-    "@opentelemetry/instrumentation" "^0.202.0"
+    "@opentelemetry/instrumentation" "^0.205.0"
     "@opentelemetry/semantic-conventions" "^1.28.0"
     minimatch "^10.0.3"
 
@@ -626,6 +626,13 @@
   version "0.203.0"
   resolved "https://registry.yarnpkg.com/@opentelemetry/api-logs/-/api-logs-0.203.0.tgz#3309a76c51a848ea820cd7f00ee62daf36b06380"
   integrity sha512-9B9RU0H7Ya1Dx/Rkyc4stuBZSGVQF27WigitInx2QQoj6KUpEFYPKoWjdFTunJYxmXmh17HeBvbMa1EhGyPmqQ==
+  dependencies:
+    "@opentelemetry/api" "^1.3.0"
+
+"@opentelemetry/api-logs@0.205.0":
+  version "0.205.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/api-logs/-/api-logs-0.205.0.tgz#7d334958c0eaa0725a1fe51aadc9b39ed7d4b6f2"
+  integrity sha512-wBlPk1nFB37Hsm+3Qy73yQSobVn28F4isnWIBvKpd5IUH/eat8bwcL02H9yzmHyyPmukeccSl2mbN5sDQZYnPg==
   dependencies:
     "@opentelemetry/api" "^1.3.0"
 
@@ -1495,7 +1502,7 @@
     "@opentelemetry/api-logs" "^0.203.0"
     "@opentelemetry/instrumentation" "^0.203.0"
 
-"@opentelemetry/instrumentation@0.202.0", "@opentelemetry/instrumentation@^0.202.0":
+"@opentelemetry/instrumentation@0.202.0":
   version "0.202.0"
   resolved "https://registry.yarnpkg.com/@opentelemetry/instrumentation/-/instrumentation-0.202.0.tgz#9468829b23039e1d675635c63f18c8676dce3079"
   integrity sha512-Uz3BxZWPgDwgHM2+vCKEQRh0R8WKrd/q6Tus1vThRClhlPO39Dyz7mDrOr6KuqGXAlBQ1e5Tnymzri4RMZNaWA==
@@ -1524,6 +1531,15 @@
     require-in-the-middle "^7.1.1"
     semver "^7.5.2"
     shimmer "^1.2.1"
+
+"@opentelemetry/instrumentation@^0.205.0":
+  version "0.205.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/instrumentation/-/instrumentation-0.205.0.tgz#cf936288b14311212619ba80df96b2404d1acf14"
+  integrity sha512-cgvm7tvQdu9Qo7VurJP84wJ7ZV9F6WqDDGZpUc6rUEXwjV7/bXWs0kaYp9v+1Vh1+3TZCD3i6j/lUBcPhu8NhA==
+  dependencies:
+    "@opentelemetry/api-logs" "0.205.0"
+    import-in-the-middle "^1.8.1"
+    require-in-the-middle "^7.1.1"
 
 "@opentelemetry/otlp-exporter-base@0.202.0":
   version "0.202.0"
