@@ -38,42 +38,48 @@ describe('pageHitRawPayloadFromRequest', () => {
 
     it('should transform request to PageHitRaw with all fields present', () => {
         const request = createPageHitRequest();
+        const beforeTimestamp = new Date();
         const result = pageHitRawPayloadFromRequest(request);
+        const afterTimestamp = new Date();
 
-        expect(result).toEqual({
-            timestamp: '2024-01-01T00:00:00.000Z',
-            action: 'page_hit',
-            version: '1',
-            site_uuid: '12345678-1234-1234-1234-123456789012',
-            payload: {
-                event_id: 'test-event-id',
-                member_uuid: 'member-uuid-123',
-                member_status: 'free',
-                post_uuid: 'post-uuid-456',
-                post_type: 'post',
-                locale: 'en-US',
-                location: 'homepage',
-                referrer: 'https://google.com',
-                parsedReferrer: {
-                    source: 'google',
-                    medium: 'organic',
-                    url: 'https://google.com'
-                },
-                pathname: '/blog/post',
-                href: 'https://example.com/blog/post',
-                utm_source: null,
-                utm_medium: null,
-                utm_campaign: null,
-                utm_term: null,
-                utm_content: null,
-                meta: {
-                    received_timestamp: null
-                }
+        // Verify timestamp is a valid ISO8601 string representing server time
+        expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        const resultDate = new Date(result.timestamp);
+        expect(resultDate.getTime()).toBeGreaterThanOrEqual(beforeTimestamp.getTime());
+        expect(resultDate.getTime()).toBeLessThanOrEqual(afterTimestamp.getTime());
+
+        // Verify other fields
+        expect(result.action).toBe('page_hit');
+        expect(result.version).toBe('1');
+        expect(result.site_uuid).toBe('12345678-1234-1234-1234-123456789012');
+        expect(result.payload).toEqual({
+            event_id: 'test-event-id',
+            member_uuid: 'member-uuid-123',
+            member_status: 'free',
+            post_uuid: 'post-uuid-456',
+            post_type: 'post',
+            locale: 'en-US',
+            location: 'homepage',
+            referrer: 'https://google.com',
+            parsedReferrer: {
+                source: 'google',
+                medium: 'organic',
+                url: 'https://google.com'
             },
+            pathname: '/blog/post',
+            href: 'https://example.com/blog/post',
+            utm_source: null,
+            utm_medium: null,
+            utm_campaign: null,
+            utm_term: null,
+            utm_content: null,
             meta: {
-                ip: '192.168.1.1',
-                'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+                received_timestamp: null
             }
+        });
+        expect(result.meta).toEqual({
+            ip: '192.168.1.1',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
         });
     });
 
@@ -318,9 +324,15 @@ describe('pageHitRawPayloadFromRequest', () => {
             }
         } as PageHitRequestType;
 
+        const beforeTimestamp = new Date();
         const result = pageHitRawPayloadFromRequest(request);
+        const afterTimestamp = new Date();
 
-        expect(result.timestamp).toBe('2024-03-15T14:30:25.123Z');
+        // Verify timestamp is server time, not client time
+        expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        const resultDate = new Date(result.timestamp);
+        expect(resultDate.getTime()).toBeGreaterThanOrEqual(beforeTimestamp.getTime());
+        expect(resultDate.getTime()).toBeLessThanOrEqual(afterTimestamp.getTime());
         expect(result.action).toBe('page_hit');
         expect(result.version).toBe('1');
         expect(result.site_uuid).toBe('c7929de8-27d7-404e-b714-0fc774f701e6');
