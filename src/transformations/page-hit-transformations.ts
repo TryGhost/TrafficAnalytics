@@ -15,7 +15,7 @@ export const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageH
     };
 
     return {
-        timestamp: new Date().toISOString(),
+        timestamp: request.serverReceivedAt.toISOString(),
         action: request.body.action,
         version: request.body.version,
         site_uuid: request.headers['x-site-uuid'],

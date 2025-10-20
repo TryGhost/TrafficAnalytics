@@ -3,9 +3,10 @@ import {pageHitRawPayloadFromRequest} from '../../../src/transformations/page-hi
 import {PageHitRequestType} from '../../../src/schemas';
 
 describe('pageHitRawPayloadFromRequest', () => {
-    function createPageHitRequest() {
+    function createPageHitRequest(serverReceivedAt: Date = new Date()) {
         return {
             ip: '192.168.1.1',
+            serverReceivedAt,
             headers: {
                 'x-site-uuid': '12345678-1234-1234-1234-123456789012',
                 'content-type': 'application/json',
@@ -37,18 +38,11 @@ describe('pageHitRawPayloadFromRequest', () => {
     }
 
     it('should transform request to PageHitRaw with all fields present', () => {
-        const request = createPageHitRequest();
-        const beforeTimestamp = new Date();
+        const serverTime = new Date('2024-01-15T10:30:00.000Z');
+        const request = createPageHitRequest(serverTime);
         const result = pageHitRawPayloadFromRequest(request);
-        const afterTimestamp = new Date();
 
-        // Verify timestamp is a valid ISO8601 string representing server time
-        expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-        const resultDate = new Date(result.timestamp);
-        expect(resultDate.getTime()).toBeGreaterThanOrEqual(beforeTimestamp.getTime());
-        expect(resultDate.getTime()).toBeLessThanOrEqual(afterTimestamp.getTime());
-
-        // Verify other fields
+        expect(result.timestamp).toBe(serverTime.toISOString());
         expect(result.action).toBe('page_hit');
         expect(result.version).toBe('1');
         expect(result.site_uuid).toBe('12345678-1234-1234-1234-123456789012');
@@ -293,8 +287,10 @@ describe('pageHitRawPayloadFromRequest', () => {
     });
 
     it('should handle complex real-world request', () => {
+        const serverTime = new Date('2024-03-15T14:30:25.123Z');
         const request = {
             ip: '203.0.113.42',
+            serverReceivedAt: serverTime,
             headers: {
                 'x-site-uuid': 'c7929de8-27d7-404e-b714-0fc774f701e6',
                 'content-type': 'application/json',
@@ -324,15 +320,9 @@ describe('pageHitRawPayloadFromRequest', () => {
             }
         } as PageHitRequestType;
 
-        const beforeTimestamp = new Date();
         const result = pageHitRawPayloadFromRequest(request);
-        const afterTimestamp = new Date();
 
-        // Verify timestamp is server time, not client time
-        expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-        const resultDate = new Date(result.timestamp);
-        expect(resultDate.getTime()).toBeGreaterThanOrEqual(beforeTimestamp.getTime());
-        expect(resultDate.getTime()).toBeLessThanOrEqual(afterTimestamp.getTime());
+        expect(result.timestamp).toBe(serverTime.toISOString());
         expect(result.action).toBe('page_hit');
         expect(result.version).toBe('1');
         expect(result.site_uuid).toBe('c7929de8-27d7-404e-b714-0fc774f701e6');

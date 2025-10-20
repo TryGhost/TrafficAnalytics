@@ -2,6 +2,7 @@
 import fastify from 'fastify';
 import {TypeBoxTypeProvider} from '@fastify/type-provider-typebox';
 import loggingPlugin from './plugins/logging';
+import timestampPlugin from './plugins/timestamp';
 import corsPlugin from './plugins/cors';
 import proxyPlugin from './plugins/proxy';
 import hmacValidationPlugin from './plugins/hmac-validation';
@@ -16,28 +17,24 @@ const app = fastify({
     trustProxy: process.env.TRUST_PROXY !== 'false'
 }).withTypeProvider<TypeBoxTypeProvider>();
 
-// Register global validation error handler
+// Global error handler
 app.setErrorHandler(errorHandler());
-
-// Register reply-from plugin
 app.register(replyFrom);
-
-// Register CORS plugin
 app.register(corsPlugin);
-
-// Register logging plugin
 app.register(loggingPlugin);
 
 // Register HMAC validation plugin (before all other business logic)
 app.register(hmacValidationPlugin);
 
 // Register proxy plugin
+// Captures request arrival time
+app.register(timestampPlugin);
+
+// Local proxy endpoint for development/testing
 app.register(proxyPlugin);
 
-// Register v1 routes
+// Register routes
 app.register(v1Routes, {prefix: '/api/v1'});
-
-// Routes
 app.get('/', async () => {
     return 'Hello Ghost Traffic Analytics';
 });
