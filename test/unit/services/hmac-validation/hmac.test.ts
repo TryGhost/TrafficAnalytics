@@ -56,10 +56,21 @@ describe('HmacValidationService', () => {
             expect(hmac1).not.toBe(hmac2);
         });
 
-        it('should generate valid hex string', () => {
+        it('should generate valid base64url string', () => {
             const data = '/api/v1/page_hit?token=abc123';
             const hmac = service.generateHmac(data);
-            expect(hmac).toMatch(/^[a-f0-9]{40}$/); // SHA-1 produces 40 hex characters
+            expect(hmac).toMatch(/^[=A-Za-z0-9_-]+$/); // Valid base64url format (no padding)
+        });
+
+        it('should generate the correct known hmac with more real secret and path', () => {
+            const hmacService = new HmacValidationService('c2c5e6a3e644b6f41b947b1f651a4b569eaece5b');
+
+            const value = '/api/v1/page_hit?name=analytics_events&e=ff2e3da1-2a15-49a4-bb4f-f2ab96efb4fe&t=1761145346';
+            const correctHmac = 'z_uCanKB53mHc2LheZVwY6rzM2k=';
+
+            const generatedHmac = hmacService.generateHmac(value);
+
+            expect(generatedHmac).toBe(correctHmac);
         });
     });
 
