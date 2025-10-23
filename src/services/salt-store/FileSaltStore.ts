@@ -1,5 +1,6 @@
 import {promises as fs} from 'fs';
 import * as path from 'path';
+import * as Lockfile from 'proper-lockfile';
 import {ISaltStore, SaltRecord} from './ISaltStore';
 import logger from '../../utils/logger';
 
@@ -112,10 +113,33 @@ export class FileSaltStore implements ISaltStore {
 
     /**
      * Executes a file operation with queuing to prevent concurrent writes.
+     * Uses both per-instance queuing and cross-instance file locking.
      */
     private async executeFileOperation<T>(operation: () => Promise<T>): Promise<T> {
-        // Queue operations to prevent concurrent file access issues
-        const currentOperation = this.fileOperationPromise.then(operation);
+        // Queue operations to prevent concurrent file access issues within this instance
+        const currentOperation = this.fileOperationPromise.then(async () => {
+            // Acquire cross-instance lock before accessing file
+            let release: (() => Promise<void>) | undefined;
+            try {
+                release = await Lockfile.lock(this.filePath, {
+                    retries: {
+                        retries: 10,
+                        minTimeout: 50,
+                        maxTimeout: 500
+                    },
+                    stale: 10000, // Consider lock stale after 10s
+                    realpath: false // Don't resolve symlinks
+                });
+
+                // Execute operation while holding lock
+                return await operation();
+            } finally {
+                // Always release lock
+                if (release) {
+                    await release();
+                }
+            }
+        });
         this.fileOperationPromise = currentOperation.then(() => {}, () => {});
         return currentOperation;
     }

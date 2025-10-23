@@ -15,11 +15,16 @@ describe('FileSaltStore', () => {
     });
 
     afterEach(async () => {
-        // Clean up test file
+        // Clean up test file and lock directory
         try {
             await fs.unlink(testFilePath);
         } catch {
             // Ignore errors if file doesn't exist
+        }
+        try {
+            await fs.rm(`${testFilePath}.lock`, {recursive: true, force: true});
+        } catch {
+            // Ignore errors if lock directory doesn't exist
         }
     });
 
@@ -542,6 +547,7 @@ describe('FileSaltStore', () => {
 
             // Clean up
             await fs.rm(path.dirname(nestedPath), {recursive: true, force: true});
+            await fs.rm(`${nestedPath}.lock`, {recursive: true, force: true}).catch(() => {});
         });
 
         it('should handle concurrent writes correctly', async () => {
@@ -630,6 +636,8 @@ describe('FileSaltStore', () => {
             // Clean up
             await fs.unlink(store1Path);
             await fs.unlink(store2Path);
+            await fs.rm(`${store1Path}.lock`, {recursive: true, force: true}).catch(() => {});
+            await fs.rm(`${store2Path}.lock`, {recursive: true, force: true}).catch(() => {});
         });
 
         it('should work correctly with multiple instances using same file', async () => {
