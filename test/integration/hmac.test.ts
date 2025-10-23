@@ -139,7 +139,7 @@ describe('Fastify App (HMAC)', () => {
             const queryString = new URLSearchParams(query);
 
             if (addTimestamp) {
-                queryString.append('t', Date.now().toString());
+                queryString.append('t', Math.floor(Date.now() / 1000).toString());
             }
 
             const url = `${path}?${queryString.toString()}`;

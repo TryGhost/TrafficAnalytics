@@ -77,7 +77,7 @@ describe('HmacValidationService', () => {
     describe('validateRequest', () => {
         it('should validate request with correct HMAC and timestamp', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -91,13 +91,13 @@ describe('HmacValidationService', () => {
             expect(result.cleanedUrl).toBe(baseUrl); // Cleaned URL keeps timestamp
             expect(result.originalUrl).toBe(fullUrl);
             expect(result.hmacValue).toBe(hmac);
-            expect(result.timestampValue).toEqual(new Date(timestamp));
+            expect(result.timestampValue).toEqual(new Date(timestamp * 1000));
             expect(result.error).toBeUndefined();
         });
 
         it('should reject request with missing HMAC parameter', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const fullUrl = `${baseUrl}&t=${timestamp}`;
 
             const request = {
@@ -127,7 +127,7 @@ describe('HmacValidationService', () => {
 
         it('should reject request with incorrect HMAC', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const wrongHmac = 'wrong1234567890123456789012345678901234';
             const fullUrl = `${baseUrl}&t=${timestamp}&hmac=${wrongHmac}`;
 
@@ -142,7 +142,7 @@ describe('HmacValidationService', () => {
 
         it('should reject request with timestamp too old', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const oldTimestamp = Date.now() - (6 * 60 * 1000); // 6 minutes ago
+            const oldTimestamp = Math.floor(Date.now() - (6 * 60 * 1000)) / 1000; // 6 minutes ago
             const urlWithTimestamp = `${baseUrl}&t=${oldTimestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -158,7 +158,7 @@ describe('HmacValidationService', () => {
 
         it('should reject request with timestamp too far in future', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const futureTimestamp = Date.now() + (10 * 1000); // 10 seconds in future
+            const futureTimestamp = Math.floor(Date.now() + (10 * 1000)) / 1000; // 10 seconds in future
             const urlWithTimestamp = `${baseUrl}&t=${futureTimestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -174,7 +174,7 @@ describe('HmacValidationService', () => {
 
         it('should accept request with timestamp within 5 minutes ago', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const timestamp = Date.now() - (4 * 60 * 1000); // 4 minutes ago
+            const timestamp = Math.floor(Date.now() - (4 * 60 * 1000)) / 1000; // 4 minutes ago
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -190,7 +190,7 @@ describe('HmacValidationService', () => {
 
         it('should accept request with timestamp within 5 seconds in future', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const timestamp = Date.now() + (4 * 1000); // 4 seconds in future
+            const timestamp = Math.floor(Date.now() + (4 * 1000)) / 1000; // 4 seconds in future
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -221,7 +221,7 @@ describe('HmacValidationService', () => {
 
         it('should handle URL with multiple query parameters in different order', async () => {
             const baseUrl = '/api/v1/page_hit?name=test&token=abc123&foo=bar';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -237,7 +237,7 @@ describe('HmacValidationService', () => {
 
         it('should properly remove hmac parameter from cleaned URL', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -254,7 +254,7 @@ describe('HmacValidationService', () => {
 
         it('should handle URL with no query parameters except hmac and timestamp', async () => {
             const baseUrl = '/api/v1/page_hit';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const urlWithTimestamp = `${baseUrl}?t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -270,7 +270,7 @@ describe('HmacValidationService', () => {
 
         it('should handle URL with encoded characters', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test%20page';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -287,7 +287,7 @@ describe('HmacValidationService', () => {
 
         it('should use timing-safe comparison for HMAC validation', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const correctHmac = service.generateHmac(urlWithTimestamp);
             // Create an HMAC that differs only in the last character
@@ -304,7 +304,7 @@ describe('HmacValidationService', () => {
 
         it('should reject HMAC with different length', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&name=test';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const shortHmac = 'abc123';
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const fullUrl = `${urlWithTimestamp}&hmac=${shortHmac}`;
@@ -330,7 +330,7 @@ describe('HmacValidationService', () => {
 
         it('should handle URL with only path', async () => {
             const baseUrl = '/api/v1/page_hit';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const urlWithTimestamp = `${baseUrl}?t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -346,7 +346,7 @@ describe('HmacValidationService', () => {
 
         it('should handle duplicate query parameters', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc123&token=xyz789';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;
@@ -361,7 +361,7 @@ describe('HmacValidationService', () => {
 
         it('should handle special characters in query parameters', async () => {
             const baseUrl = '/api/v1/page_hit?token=abc&name=test&special=%26%3D%3F';
-            const timestamp = Date.now();
+            const timestamp = Math.floor(Date.now() / 1000);
             const urlWithTimestamp = `${baseUrl}&t=${timestamp}`;
             const hmac = service.generateHmac(urlWithTimestamp);
             const fullUrl = `${urlWithTimestamp}&hmac=${hmac}`;

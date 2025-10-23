@@ -31,7 +31,7 @@ export class HmacValidationService {
         const givenTimestamp = params.get('t');
         let timestamp = null;
         if (givenTimestamp) {
-            timestamp = new Date(parseInt(givenTimestamp));
+            timestamp = new Date(parseInt(givenTimestamp) * 1000);
         }
 
         const hmac = params.get('hmac');
