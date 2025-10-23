@@ -4,6 +4,7 @@ import {TypeBoxTypeProvider} from '@fastify/type-provider-typebox';
 import loggingPlugin from './plugins/logging';
 import corsPlugin from './plugins/cors';
 import proxyPlugin from './plugins/proxy';
+import hmacValidationPlugin from './plugins/hmac-validation';
 import {getLoggerConfig} from './utils/logger';
 import {errorHandler} from './utils/error-handler';
 import v1Routes from './routes/v1';
@@ -26,6 +27,9 @@ app.register(corsPlugin);
 
 // Register logging plugin
 app.register(loggingPlugin);
+
+// Register HMAC validation plugin (before all other business logic)
+app.register(hmacValidationPlugin);
 
 // Register proxy plugin
 app.register(proxyPlugin);

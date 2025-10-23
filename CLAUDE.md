@@ -44,9 +44,10 @@ The service follows a modular architecture:
 ## Request Flow
 
 1. Requests come to `/api/v1/page_hit`
-2. preValidation hook validates query parameters and request body
-3. preHandler hook processes user agent and referrer data
-4. Request is forwarded to `PROXY_TARGET` (default: `http://localhost:3000/local-proxy`)
+2. Global HMAC validation plugin extracts and validates HMAC signature and timestamp from URL parameters
+3. preValidation hook validates hmac
+4. preHandler hook processes user agent and referrer data
+5. Request is forwarded to `PROXY_TARGET` (default: `http://localhost:3000/local-proxy`)
 
 ## Environment Variables
 
@@ -57,6 +58,8 @@ The service follows a modular architecture:
 - `SALT_STORE_TYPE` - Salt store implementation (default: memory)
 - `ENABLE_SALT_CLEANUP_SCHEDULER` - Enable automatic daily salt cleanup (default: true, set to 'false' to disable)
 - `TRUST_PROXY` - Enable trust proxy to resolve client IPs from X-Forwarded-For headers (default: true, set to 'false' to disable)
+- `HMAC_SECRET` - Secret key for HMAC validation (Optional. Disabled if missing.)
+- `HMAC_VALIDATION_LOG_ONLY` - When set to 'true', HMAC validation failures are logged but requests are not rejected (default: false)
 - `OTEL_TRACE_EXPORTER` - OpenTelemetry trace exporter type: 'jaeger' (default) or 'gcp' for Google Cloud Trace
 - `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` - Custom OTLP traces endpoint (default: http://jaeger:4318/v1/traces)
 - `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` - Custom OTLP metrics endpoint (default: http://jaeger:4318/v1/metrics)
