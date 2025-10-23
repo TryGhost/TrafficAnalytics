@@ -23,12 +23,11 @@ app.register(replyFrom);
 app.register(corsPlugin);
 app.register(loggingPlugin);
 
+// Record timestamp request was received as early as possible
+app.register(timestampPlugin);
+
 // Register HMAC validation plugin (before all other business logic)
 app.register(hmacValidationPlugin);
-
-// Register proxy plugin
-// Captures request arrival time
-app.register(timestampPlugin);
 
 // Local proxy endpoint for development/testing
 app.register(proxyPlugin);
