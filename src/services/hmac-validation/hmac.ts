@@ -24,7 +24,7 @@ export class HmacValidationService {
      * Extracts HMAC from URL parameters (assumes it's the last parameter)
      * and returns the cleaned URL without the HMAC parameter
      */
-    private extractHmacFromUrl(url: string): {hmac?: string; timestamp?: Date, cleanedUrl: string} {
+    private extractHmacFromUrl(url: string): {hmac?: string; timestamp?: Date, validationUrl: string, cleanedUrl: string} {
         const urlObj = new URL(url, 'http://localhost'); // Base URL for relative URLs
         const params = new URLSearchParams(urlObj.search);
 
@@ -36,15 +36,20 @@ export class HmacValidationService {
 
         const hmac = params.get('hmac');
 
+        // Reconstruct the validation URL
         params.delete('hmac');
+        const validationSearch = params.toString();
+        const validationUrl = urlObj.pathname + (validationSearch ? `?${validationSearch}` : '');
 
-        // Reconstruct the cleaned URL
+        // Reconstruct the validation URL
+        params.delete('t');
         const cleanedSearch = params.toString();
         const cleanedUrl = urlObj.pathname + (cleanedSearch ? `?${cleanedSearch}` : '');
 
         return {
             hmac: hmac || undefined,
             timestamp: timestamp || undefined,
+            validationUrl,
             cleanedUrl
         };
     }
@@ -113,7 +118,7 @@ export class HmacValidationService {
     async validateRequest(request: FastifyRequest): Promise<HmacValidationResult> {
         try {
             const fullUrl = request.url;
-            const {hmac: providedHmac, timestamp: providedTimestamp, cleanedUrl} = this.extractHmacFromUrl(fullUrl);
+            const {hmac: providedHmac, timestamp: providedTimestamp, validationUrl, cleanedUrl} = this.extractHmacFromUrl(fullUrl);
 
             if (!providedHmac) {
                 return {
@@ -133,7 +138,7 @@ export class HmacValidationService {
                 };
             }
 
-            const expectedHmac = this.generateHmac(cleanedUrl);
+            const expectedHmac = this.generateHmac(validationUrl);
 
             const hmacValid = this.timingSafeEqual(providedHmac, expectedHmac);
             const {timestampValid, timestampError} = this.validateTimestamp(providedTimestamp);

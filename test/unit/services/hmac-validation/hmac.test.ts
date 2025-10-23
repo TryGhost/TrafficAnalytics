@@ -88,7 +88,7 @@ describe('HmacValidationService', () => {
 
             const result = await service.validateRequest(request);
             expect(result.isValid).toBe(true);
-            expect(result.cleanedUrl).toBe(urlWithTimestamp); // Cleaned URL keeps timestamp
+            expect(result.cleanedUrl).toBe(baseUrl); // Cleaned URL keeps timestamp
             expect(result.originalUrl).toBe(fullUrl);
             expect(result.hmacValue).toBe(hmac);
             expect(result.timestampValue).toEqual(new Date(timestamp));
@@ -107,7 +107,7 @@ describe('HmacValidationService', () => {
             const result = await service.validateRequest(request);
             expect(result.isValid).toBe(false);
             expect(result.error).toBe('HMAC parameter not found');
-            expect(result.cleanedUrl).toBe(fullUrl); // Cleaned URL still has timestamp
+            expect(result.cleanedUrl).toBe(baseUrl); // Cleaned URL still has timestamp
         });
 
         it('should reject request with missing timestamp parameter', async () => {
@@ -137,7 +137,7 @@ describe('HmacValidationService', () => {
 
             const result = await service.validateRequest(request);
             expect(result.isValid).toBe(false);
-            expect(result.cleanedUrl).toBe(`${baseUrl}&t=${timestamp}`);
+            expect(result.cleanedUrl).toBe(baseUrl);
         });
 
         it('should reject request with timestamp too old', async () => {
@@ -232,7 +232,7 @@ describe('HmacValidationService', () => {
 
             const result = await service.validateRequest(request);
             expect(result.isValid).toBe(true);
-            expect(result.cleanedUrl).toBe(urlWithTimestamp);
+            expect(result.cleanedUrl).toBe(baseUrl);
         });
 
         it('should properly remove hmac parameter from cleaned URL', async () => {
@@ -248,8 +248,8 @@ describe('HmacValidationService', () => {
 
             const result = await service.validateRequest(request);
             expect(result.cleanedUrl).not.toContain('hmac=');
-            expect(result.cleanedUrl).toContain('t='); // Timestamp is preserved
-            expect(result.cleanedUrl).toBe(urlWithTimestamp);
+            expect(result.cleanedUrl).not.toContain('t='); // Timestamp is preserved
+            expect(result.cleanedUrl).toBe(baseUrl);
         });
 
         it('should handle URL with no query parameters except hmac and timestamp', async () => {
@@ -265,7 +265,7 @@ describe('HmacValidationService', () => {
 
             const result = await service.validateRequest(request);
             expect(result.isValid).toBe(true);
-            expect(result.cleanedUrl).toBe(urlWithTimestamp);
+            expect(result.cleanedUrl).toBe(baseUrl);
         });
 
         it('should handle URL with encoded characters', async () => {
@@ -341,7 +341,7 @@ describe('HmacValidationService', () => {
 
             const result = await service.validateRequest(request);
             expect(result.isValid).toBe(true);
-            expect(result.cleanedUrl).toBe(urlWithTimestamp);
+            expect(result.cleanedUrl).toBe(baseUrl);
         });
 
         it('should handle duplicate query parameters', async () => {
