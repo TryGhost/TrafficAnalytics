@@ -113,8 +113,11 @@ describe('E2E Tests with Fake Tinybird', () => {
             // Verify the request body was processed and enriched
             const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
     
+            // Verify timestamp is server time (not client time)
+            expect(requestBody.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+            expect(requestBody.timestamp).not.toBe(DEFAULT_BODY.timestamp); // Should be overwritten with server time
+
             expect(requestBody).toMatchObject({
-                timestamp: DEFAULT_BODY.timestamp,
                 action: 'page_hit',
                 version: '1',
                 // Should have session_id added by processing
@@ -161,8 +164,11 @@ describe('E2E Tests with Fake Tinybird', () => {
             // Verify the request body was processed and enriched
             const requestBody = wireMock.parseRequestBody(tinybirdRequests[0]);
     
+            // Verify timestamp is server time (not client time)
+            expect(requestBody.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+            expect(requestBody.timestamp).not.toBe(DEFAULT_BODY.timestamp); // Should be overwritten with server time
+
             expect(requestBody).toMatchObject({
-                timestamp: DEFAULT_BODY.timestamp,
                 action: 'page_hit',
                 version: '1',
                 // Should have session_id added by processing
