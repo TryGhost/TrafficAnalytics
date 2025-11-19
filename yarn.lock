@@ -2916,10 +2916,10 @@
     "@stdlib/utils-copy" "^0.2.0"
     uuid "^9.0.0"
 
-"@tryghost/referrer-parser@0.1.8":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@tryghost/referrer-parser/-/referrer-parser-0.1.8.tgz#ad48b8a81e30e0aed9afdd0ee34dfa2ef84f775c"
-  integrity sha512-+RQQo/nG4E/uxbvm1OeWA0a58CHuF5RxBKHjc9qiiBIi9VhMsLGNcJzsyj9Q+2Sa7fZzMSlmvDHUQKaHHc6wCg==
+"@tryghost/referrer-parser@0.1.10":
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/@tryghost/referrer-parser/-/referrer-parser-0.1.10.tgz#be84ab984110795373f9b48d81fa9fe7bd0d5aa0"
+  integrity sha512-jb1PcFCikQw5yLo3GrArezeeBVgj0/aWXnzhwUBxkde2XTJd64p5+CILLoeqmT/CbE5q+1MAKsvIEJimJ2WIeQ==
 
 "@tryghost/tpl@^0.1.35":
   version "0.1.35"
