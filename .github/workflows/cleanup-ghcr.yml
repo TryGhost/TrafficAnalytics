@@ -1,0 +1,23 @@
+name: Cleanup GHCR Images
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # Every night at 3am UTC
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    name: Cleanup Old Container Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old container images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: trafficanalytics
+          package-type: container
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: false
+          token: ${{ secrets.GITHUB_TOKEN }}
