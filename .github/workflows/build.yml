@@ -100,26 +100,33 @@ jobs:
           fetch-tags: true
 
       - name: Pull already built docker image
+        id: pull-cache
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ github.sha }}
         run: |
           IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
-          docker pull "$IMAGE_NAME_LOWER" || echo "Image not found, proceeding to build."
-          echo "-----------------------"
-          docker images
-          echo "-----------------------"
+          if docker pull "$IMAGE_NAME_LOWER"; then
+            echo "cache-hit=true" >> $GITHUB_OUTPUT
+            echo "cached-image=$IMAGE_NAME_LOWER" >> $GITHUB_OUTPUT
+          else
+            echo "cache-hit=false" >> $GITHUB_OUTPUT
+            echo "Image not found, proceeding to build."
+          fi
 
       - name: Extract node version
         id: extract-node-version
+        if: steps.pull-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/extract-node-version
 
       - name: Build Docker Image
         id: docker-build
+        if: steps.pull-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/docker-build
         with:
           node-version: ${{ fromJSON(steps.extract-node-version.outputs.node-version) }}
 
       - name: Lint & Test
+        if: steps.pull-cache.outputs.cache-hit != 'true'
         uses: ./.github/actions/lint-and-test
         with:
           docker-image: ${{ steps.docker-build.outputs.base-image-name }}
@@ -160,10 +167,12 @@ jobs:
             type=sha,format=long
 
       - name: Retag & Push Docker Image
+        env:
+          SOURCE_IMAGE: ${{ steps.pull-cache.outputs.cache-hit == 'true' && steps.pull-cache.outputs.cached-image || steps.docker-build.outputs.production-image-name }}
         run: |
           for tag in $(echo "${{ steps.traffic-analytics-docker-metadata.outputs.tags }}"); do
             echo "Tagging: $tag"
-            docker tag ${{ steps.docker-build.outputs.production-image-name }} $tag
+            docker tag $SOURCE_IMAGE $tag
           done
 
           for tag in $(echo "${{ steps.traffic-analytics-docker-metadata.outputs.tags }}"); do
