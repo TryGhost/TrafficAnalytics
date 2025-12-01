@@ -99,6 +99,16 @@ jobs:
         with:
           fetch-tags: true
 
+      - name: Pull already built docker image
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ github.sha }}
+        run: |
+          IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
+          docker pull "$IMAGE_NAME_LOWER" || echo "Image not found, proceeding to build."
+          echo "-----------------------"
+          docker images
+          echo "-----------------------"
+
       - name: Extract node version
         id: extract-node-version
         uses: ./.github/actions/extract-node-version
