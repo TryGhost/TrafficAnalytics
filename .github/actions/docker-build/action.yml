@@ -9,10 +9,6 @@ inputs:
     description: What to tag the built image as
     required: true
     default: traffic-analytics
-  build-production:
-    description: Whether to build the full image when no targets are specified
-    required: false
-    default: 'true'
   build-multiarchitecture:
     description: Wether to build a multi-architecture image or not
     required: true
@@ -25,9 +21,6 @@ outputs:
   base-image-name:
     description: The tag used for the built base image
     value: ${{ inputs.image-name }}:base
-  production-image-built:
-    description: Whether the production image was built
-    value: ${{ inputs.build-production }}
 
 runs:
   using: composite
@@ -68,7 +61,6 @@ runs:
 
     - name: Build production docker image
       id: build-production-docker-image
-      if: ${{ inputs.build-production == 'true' }}
       uses: docker/build-push-action@v5
       with:
         context: .
