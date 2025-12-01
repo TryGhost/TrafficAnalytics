@@ -43,7 +43,7 @@ jobs:
       - name: Retag & Push Docker Image
         if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
         env:
-          IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          IMAGE_NAME: ghcr.io/${{ github.repository }}:${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
           docker tag ${{ steps.docker-build.outputs.production-image-name }} "$IMAGE_NAME_LOWER"
