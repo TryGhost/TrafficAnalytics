@@ -21,7 +21,7 @@ if (isWorkerMode) {
 if (isMainModule) {
     const start = async (): Promise<void> => {
         try {
-            await app.listen({host: '0.0.0.0', port});
+            await app.listen({host: '::', port});
         } catch (err) {
             // Use app.log if available, otherwise fallback to console
             if (app && app.log) {
