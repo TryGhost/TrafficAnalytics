@@ -1,0 +1,37 @@
+name: Deploy Staging
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'deploy-staging'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for CI workflow if running
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking for running CI workflow..."
+          
+          # Get the CI workflow run for this PR's head SHA
+          RUN_ID=$(gh run list \
+            --workflow=ci.yml \
+            --branch="${{ github.head_ref }}" \
+            --json databaseId,status,headSha \
+            --jq '.[] | select(.headSha == "${{ github.event.pull_request.head.sha }}") | select(.status == "in_progress" or .status == "queued") | .databaseId' \
+            | head -n 1)
+          
+          if [ -n "$RUN_ID" ]; then
+            echo "CI workflow run $RUN_ID is in progress, waiting for completion..."
+            gh run watch "$RUN_ID" --exit-status
+          else
+            echo "No CI workflow currently running for this commit"
+          fi
+
+      - name: Deploy
+        run: echo "hello world"
