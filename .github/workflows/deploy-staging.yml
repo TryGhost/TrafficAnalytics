@@ -3,21 +3,48 @@ name: Deploy Staging
 on:
   pull_request:
     types: [labeled]
+  workflow_dispatch:
 
 jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    if: github.event.label.name == 'deploy-staging'
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'deploy-staging'
     steps:
       - uses: actions/checkout@v4
 
-      - name: Wait for CI workflow if running
+      - name: Verify PR has deploy-staging label
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find PR for this branch
+          PR_NUMBER=$(gh pr list --head "${{ github.ref_name }}" --json number --jq '.[0].number')
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR found for branch ${{ github.ref_name }}, cancelling workflow..."
+            gh run cancel ${{ github.run_id }}
+            exit 0
+          fi
+
+          # Check if PR has deploy-staging label
+          HAS_LABEL=$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name | select(. == "deploy-staging")')
+
+          if [ -z "$HAS_LABEL" ]; then
+            echo "PR #$PR_NUMBER does not have the deploy-staging label, cancelling workflow..."
+            gh run cancel ${{ github.run_id }}
+            exit 0
+          fi
+
+          echo "PR #$PR_NUMBER has deploy-staging label, proceeding with deploy"
+
+      - name: Check CI workflow is not running
+        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Checking for running CI workflow..."
-          
+
           # Get the CI workflow run for this PR's head SHA
           RUN_ID=$(gh run list \
             --workflow=ci.yml \
@@ -25,13 +52,14 @@ jobs:
             --json databaseId,status,headSha \
             --jq '.[] | select(.headSha == "${{ github.event.pull_request.head.sha }}") | select(.status == "in_progress" or .status == "queued") | .databaseId' \
             | head -n 1)
-          
+
           if [ -n "$RUN_ID" ]; then
-            echo "CI workflow run $RUN_ID is in progress, waiting for completion..."
-            gh run watch "$RUN_ID" --exit-status
+            echo "CI workflow run $RUN_ID is in progress. Cancelling - CI will trigger deploy when complete."
+            gh run cancel ${{ github.run_id }}
+            exit 0
           else
             echo "No CI workflow currently running for this commit"
           fi
 
       - name: Deploy
-        run: echo "hello world"
+        run: echo "This should deploy to staging environment, something changed!"

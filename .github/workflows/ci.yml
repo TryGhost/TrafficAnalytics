@@ -51,3 +51,18 @@ jobs:
           IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
           docker tag ${{ steps.docker-build.outputs.production-image-name }} "$IMAGE_NAME_LOWER"
           docker push "$IMAGE_NAME_LOWER"
+
+      - name: Trigger staging deploy if labeled
+        if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if PR has deploy-staging label
+          HAS_LABEL=$(gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name | select(. == "deploy-staging")')
+
+          if [ -n "$HAS_LABEL" ]; then
+            echo "PR has deploy-staging label, triggering deploy workflow..."
+            gh workflow run deploy-staging.yml --ref ${{ github.head_ref }}
+          else
+            echo "PR does not have deploy-staging label, skipping deploy"
+          fi
