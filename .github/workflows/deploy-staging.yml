@@ -17,7 +17,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Checking for running CI workflow..."
-          
+
           # Get the CI workflow run for this PR's head SHA
           RUN_ID=$(gh run list \
             --workflow=ci.yml \
@@ -25,7 +25,7 @@ jobs:
             --json databaseId,status,headSha \
             --jq '.[] | select(.headSha == "${{ github.event.pull_request.head.sha }}") | select(.status == "in_progress" or .status == "queued") | .databaseId' \
             | head -n 1)
-          
+
           if [ -n "$RUN_ID" ]; then
             echo "CI workflow run $RUN_ID is in progress, waiting for completion..."
             gh run watch "$RUN_ID" --exit-status
@@ -34,4 +34,5 @@ jobs:
           fi
 
       - name: Deploy
-        run: echo "hello world"
+        run: echo "This should deploy to staging environment"
+
