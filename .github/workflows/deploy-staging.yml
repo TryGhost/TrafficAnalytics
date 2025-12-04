@@ -10,10 +10,13 @@ jobs:
     name: Setup
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'deploy-staging'
+    outputs:
+      should_deploy: ${{ steps.check-ci.outputs.should_deploy }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Check CI workflow is not running
+        id: check-ci
         if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -29,15 +32,20 @@ jobs:
             | head -n 1)
 
           if [ -n "$RUN_ID" ]; then
-            echo "CI workflow run $RUN_ID is in progress. Cancelling - CI will trigger deploy when complete."
-            gh run cancel ${{ github.run_id }}
-            exit 0
+            echo "CI workflow run $RUN_ID is in progress. Skipping deploy - CI will trigger deploy when complete."
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
           else
             echo "No CI workflow currently running for this commit"
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Set default output for workflow_dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "should_deploy=true" >> $GITHUB_OUTPUT
 
   deploy-image-to-gcp:
     name: Deploy Image to GCP
     needs: setup
+    if: needs.setup.outputs.should_deploy == 'true'
     uses: ./.github/workflows/deploy-image-to-gcp.yml
     secrets: inherit
