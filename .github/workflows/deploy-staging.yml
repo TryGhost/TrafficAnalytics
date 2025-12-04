@@ -4,6 +4,11 @@ on:
   pull_request:
     types: [labeled]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to checkout (branch name for PRs)'
+        required: false
+        type: string
 
 jobs:
   setup:
@@ -49,4 +54,6 @@ jobs:
     needs: setup
     if: needs.setup.outputs.should_deploy == 'true'
     uses: ./.github/workflows/deploy-image-to-gcp.yml
+    with:
+      ref: ${{ inputs.ref || github.head_ref }}
     secrets: inherit

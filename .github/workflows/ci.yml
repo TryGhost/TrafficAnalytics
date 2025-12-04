@@ -67,7 +67,7 @@ jobs:
 
           if [ -n "$HAS_LABEL" ]; then
             echo "PR has deploy-staging label, triggering deploy workflow..."
-            gh workflow run deploy-staging.yml --ref ${{ github.head_ref }}
+            gh workflow run deploy-staging.yml --ref ${{ github.head_ref }} -f ref=${{ github.head_ref }}
           else
             echo "PR does not have deploy-staging label, skipping deploy"
           fi
