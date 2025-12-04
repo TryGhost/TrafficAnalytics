@@ -16,10 +16,6 @@ jobs:
     name: Run
     runs-on: ubuntu-latest
     steps:
-      - name: Show ref name
-        run: |
-          echo ${{ github.ref_name }}
-
       - uses: actions/checkout@v4
         with:
           fetch-tags: true

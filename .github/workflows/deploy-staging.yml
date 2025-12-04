@@ -11,10 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'deploy-staging'
     steps:
-      - name: Show ref name
-        run: |
-          echo ${{ github.ref_name }}
-
       - uses: actions/checkout@v4
 
       - name: Check CI workflow is not running
