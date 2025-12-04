@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'deploy-staging'
     outputs:
-      should_deploy: ${{ steps.check-ci.outputs.should_deploy }}
+      should_deploy: ${{ steps.check-ci.outputs.should_deploy || steps.workflow-dispatch.outputs.should_deploy }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +40,7 @@ jobs:
           fi
 
       - name: Set default output for workflow_dispatch
+        id: workflow-dispatch
         if: github.event_name == 'workflow_dispatch'
         run: echo "should_deploy=true" >> $GITHUB_OUTPUT
 
