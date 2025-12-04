@@ -7,7 +7,7 @@ on:
 
 jobs:
   setup:
-    name: Deploy to Staging
+    name: Setup
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'deploy-staging'
     steps:
