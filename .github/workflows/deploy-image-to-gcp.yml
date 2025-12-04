@@ -24,6 +24,10 @@ jobs:
         id: tree
         run: echo "sha=$(git rev-parse HEAD^{tree})" >> $GITHUB_OUTPUT
 
+      - name: Output tree SHA
+        run: |
+          echo "Tree SHA: ${{ steps.tree.outputs.sha }}"
+
       - name: Pull already built docker image
         id: pull-cache
         env:
