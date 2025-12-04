@@ -22,7 +22,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        if: ${{ !inputs.ref }}
         with:
+          fetch-tags: true
+
+      - uses: actions/checkout@v4
+        if: ${{ inputs.ref }}
+        with:
+          ref: ${{ inputs.ref }}
           fetch-tags: true
 
       - name: Get tree SHA

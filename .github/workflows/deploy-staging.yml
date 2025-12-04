@@ -3,6 +3,7 @@ name: Deploy Staging
 on:
   pull_request:
     types: [labeled]
+  workflow_call:
   workflow_dispatch:
     inputs:
       ref:
@@ -14,7 +15,7 @@ jobs:
   setup:
     name: Setup
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'deploy-staging'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call' || github.event.label.name == 'deploy-staging'
     outputs:
       should_deploy: ${{ steps.check-ci.outputs.should_deploy || steps.workflow-dispatch.outputs.should_deploy }}
     steps:
@@ -44,9 +45,9 @@ jobs:
             echo "should_deploy=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set default output for workflow_dispatch
+      - name: Set default output for workflow_dispatch/workflow_call
         id: workflow-dispatch
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call'
         run: echo "should_deploy=true" >> $GITHUB_OUTPUT
 
   deploy-image-to-gcp:
@@ -55,5 +56,5 @@ jobs:
     if: needs.setup.outputs.should_deploy == 'true'
     uses: ./.github/workflows/deploy-image-to-gcp.yml
     with:
-      ref: ${{ inputs.ref || github.head_ref }}
+      ref: ${{ inputs.ref || '' }}
     secrets: inherit
