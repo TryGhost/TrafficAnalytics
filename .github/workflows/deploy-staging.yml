@@ -36,3 +36,19 @@ jobs:
     needs: setup
     uses: ./.github/workflows/deploy-image-to-gcp.yml
     secrets: inherit
+
+  finalize:
+    name: Finalize Deployment
+    needs: deploy-image-to-gcp
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on PR and remove label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "Deployed to staging"
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --remove-label "deploy-staging"
