@@ -35,6 +35,4 @@ jobs:
     name: Deploy Image to GCP
     needs: setup
     uses: ./.github/workflows/deploy-image-to-gcp.yml
-    with:
-      ref: ${{ inputs.ref || '' }}
     secrets: inherit

@@ -2,11 +2,6 @@ name: Build & Push Docker Image (GCP)
 
 on:
   workflow_call:
-    inputs:
-      ref:
-        description: 'Git ref to checkout (branch, tag, or SHA)'
-        required: false
-        type: string
 
 permissions:
   id-token: write
@@ -22,15 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        if: ${{ !inputs.ref }}
-        with:
-          fetch-tags: true
-
-      - uses: actions/checkout@v4
-        if: ${{ inputs.ref }}
-        with:
-          ref: ${{ inputs.ref }}
-          fetch-tags: true
 
       - name: Get tree SHA
         id: tree
