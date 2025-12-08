@@ -57,10 +57,3 @@ jobs:
           docker tag ${{ steps.docker-build.outputs.production-image-name }} "$IMAGE_NAME_LOWER"
           docker push "$IMAGE_NAME_LOWER"
 
-  deploy-staging:
-    name: Deploy to Staging
-    needs: lint-and-test
-    if: contains(github.event.pull_request.labels.*.name, 'deploy-staging')
-    uses: ./.github/workflows/deploy-staging.yml
-    secrets: inherit
-
