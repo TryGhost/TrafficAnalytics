@@ -2,6 +2,10 @@ name: Build & Push Docker Image (GCP)
 
 on:
   workflow_call:
+    outputs:
+      image:
+        description: "The Docker image with SHA tag"
+        value: ${{ jobs.run.outputs.image }}
 
 permissions:
   id-token: write
@@ -15,6 +19,8 @@ jobs:
   run:
     name: Run
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ env.DOCKER_IMAGE }}:sha-${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
 
