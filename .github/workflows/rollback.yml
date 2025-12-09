@@ -20,11 +20,6 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  GCP_PROJECT_ID: ghost-traffic-analytics
-  GCP_WORKFLOW_IDENTITY_PROVIDER: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
-  DOCKER_IMAGE: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics
-
 jobs:
   generate-environments:
     name: "Generate Environments"
@@ -70,7 +65,9 @@ jobs:
           region: ${{ matrix.region }}
           service: >-
             ${{ contains(matrix.environment, 'staging') && 'stg' || 'prd' }}-${{ matrix.region_name }}-traffic-analytics
-          image: ${{ env.DOCKER_IMAGE }}:${{ inputs.tag }}
+          image: ${{ vars.DOCKER_IMAGE }}:${{ inputs.tag }}
+          gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+          gcp_workload_identity_provider: ${{ vars.GCP_WORKFLOW_IDENTITY_PROVIDER }}
 
       - name: Send slack notification for rollback
         uses: slackapi/slack-github-action@v2.1.1

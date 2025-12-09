@@ -13,17 +13,12 @@ on:
 permissions:
   id-token: write
 
-env:
-  GCP_PROJECT_ID: ghost-traffic-analytics
-  GCP_WORKFLOW_IDENTITY_PROVIDER: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
-  DOCKER_IMAGE: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics
-
 jobs:
   run:
     name: Run
     runs-on: ubuntu-latest
     outputs:
-      image: ${{ env.DOCKER_IMAGE }}:sha-${{ github.sha }}
+      image: ${{ vars.DOCKER_IMAGE }}:sha-${{ github.sha }}
       version: ${{ steps.traffic-analytics-docker-metadata.outputs.version }}
     steps:
       - uses: actions/checkout@v4
@@ -74,9 +69,9 @@ jobs:
         id: gcp-auth
         uses: google-github-actions/auth@v2
         with:
-          project_id: ${{ env.GCP_PROJECT_ID }}
+          project_id: ${{ vars.GCP_PROJECT_ID }}
           token_format: access_token
-          workload_identity_provider: ${{ env.GCP_WORKFLOW_IDENTITY_PROVIDER }}
+          workload_identity_provider: ${{ vars.GCP_WORKFLOW_IDENTITY_PROVIDER }}
           service_account: gh-artifact-manager@ghost-traffic-analytics.iam.gserviceaccount.com
 
       - name: "Login to GCP Artifact Registry"
@@ -97,7 +92,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.DOCKER_IMAGE }}
+            ${{ vars.DOCKER_IMAGE }}
           tags: |
             ${{ github.ref == 'refs/heads/main' && 'type=edge,branch=main' || '' }}
             type=semver,pattern={{version}},value=${{ steps.get-version-tag.outputs.version-tag }}

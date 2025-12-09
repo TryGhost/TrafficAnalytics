@@ -31,10 +31,6 @@ on:
 permissions:
   id-token: write
 
-env:
-  GCP_PROJECT_ID: ghost-traffic-analytics
-  GCP_WORKFLOW_IDENTITY_PROVIDER: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
-
 jobs:
   deploy:
     name: Deploy (${{ inputs.environment }})
@@ -52,6 +48,8 @@ jobs:
           region: ${{ inputs.region }}
           service: ${{ inputs.environment == 'staging' && 'stg' || 'prd' }}-${{ inputs.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
           image: ${{ inputs.image }}
+          gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+          gcp_workload_identity_provider: ${{ vars.GCP_WORKFLOW_IDENTITY_PROVIDER }}
 
   notify:
     name: Notify (${{ inputs.environment }})

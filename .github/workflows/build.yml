@@ -11,11 +11,6 @@ permissions:
   contents: write
   actions: write
 
-env:
-  GCP_PROJECT_ID: ghost-traffic-analytics
-  GCP_WORKFLOW_IDENTITY_PROVIDER: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
-  DOCKER_IMAGE: europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics
-
 jobs:
   handle-version-change:
     name: Handle Version Change
