@@ -112,7 +112,7 @@ jobs:
     secrets: inherit
     with:
       environment: staging
-      image: ${{ needs.build.outputs.version && format('europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:{0}', needs.build.outputs.version) || '' }}
+      image: ${{ needs.build.outputs.version && format('{0}:{1}', vars.DOCKER_IMAGE, needs.build.outputs.version) || '' }}
       region: europe-west4
       region_name: netherlands
       services: '["analytics", "worker"]'
@@ -134,7 +134,7 @@ jobs:
     secrets: inherit
     with:
       environment: production
-      image: ${{ needs.build.outputs.version && format('europe-docker.pkg.dev/ghost-traffic-analytics/traffic-analytics/traffic-analytics:{0}', needs.build.outputs.version) || '' }}
+      image: ${{ needs.build.outputs.version && format('{0}:{1}', vars.DOCKER_IMAGE, needs.build.outputs.version) || '' }}
       region: europe-west4
       region_name: netherlands
       services: '["analytics", "worker"]'
