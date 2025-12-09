@@ -52,6 +52,15 @@ jobs:
       region: europe-west4
       region_name: netherlands
       services: '["analytics", "worker"]'
+
+  healthchecks:
+    name: Healthchecks
+    needs: deploy-staging
+    if: needs.deploy-staging.outputs.result == 'success'
+    uses: ./.github/workflows/run-healthchecks.yml
+    secrets: inherit
+    with:
+      environment: staging
       healthcheck_urls: '[{"name":"staging-subdomain","base_url":"https://traffic-analytics-subdomain.ghost.is/"},{"name":"staging-custom-domain","base_url":"https://traffic-analytics.ghst.pro/"},{"name":"staging-subdirectory","base_url":"https://traffic-analytics-subdirectory.ghost.is/blog/"}]'
 
   finalize:
@@ -70,7 +79,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ needs.deploy-staging.outputs.deploy_result }}" == "success" ]; then
+          if [ "${{ needs.deploy-staging.outputs.result }}" == "success" ]; then
             gh pr comment ${{ github.event.pull_request.number }} \
               --repo ${{ github.repository }} \
               --body "✅ Deployed to staging (tree: ${{ steps.tree.outputs.sha }})"
@@ -87,3 +96,4 @@ jobs:
           gh pr edit ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
             --remove-label "deploy-staging"
+

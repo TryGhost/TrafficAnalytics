@@ -211,6 +211,15 @@ jobs:
       region: europe-west4
       region_name: netherlands
       services: '["analytics", "worker"]'
+
+  healthcheck-staging:
+    name: Healthcheck Staging
+    needs: deploy-staging
+    if: needs.deploy-staging.outputs.result == 'success'
+    uses: ./.github/workflows/run-healthchecks.yml
+    secrets: inherit
+    with:
+      environment: staging
       healthcheck_urls: '[{"name":"staging-subdomain","base_url":"https://traffic-analytics-subdomain.ghost.is/"},{"name":"staging-custom-domain","base_url":"https://traffic-analytics.ghst.pro/"},{"name":"staging-subdirectory","base_url":"https://traffic-analytics-subdirectory.ghost.is/blog/"}]'
 
   deploy-production:
@@ -224,4 +233,13 @@ jobs:
       region: europe-west4
       region_name: netherlands
       services: '["analytics", "worker"]'
+
+  healthcheck-production:
+    name: Healthcheck Production
+    needs: deploy-production
+    if: needs.deploy-production.outputs.result == 'success'
+    uses: ./.github/workflows/run-healthchecks.yml
+    secrets: inherit
+    with:
+      environment: production
       healthcheck_urls: '[{"name":"production-subdomain","base_url":"https://traffic-analytics-subdomain.ghost.io/"},{"name":"production-custom-domain","base_url":"https://traffic-analytics.ghost.org/"},{"name":"production-subdirectory","base_url":"https://traffic-analytics-subdirectory.ghost.io/blog/"}]'
