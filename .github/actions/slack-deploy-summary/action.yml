@@ -1,0 +1,48 @@
+name: "Slack Deploy Summary"
+description: "Send a Slack notification summarizing a deployment"
+
+inputs:
+  environment:
+    description: "The environment that was deployed (staging/production)"
+    required: true
+  result:
+    description: "The deployment result (success/failure/cancelled)"
+    required: true
+  region_name:
+    description: "Human-readable region name"
+    required: true
+  services:
+    description: "Comma-separated list of services deployed"
+    required: true
+  webhook_url:
+    description: "Slack webhook URL"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Send Slack notification
+      uses: slackapi/slack-github-action@v2.1.1
+      with:
+        webhook: ${{ inputs.webhook_url }}
+        webhook-type: incoming-webhook
+        payload: |
+          text: "Traffic Analytics ${{ inputs.environment == 'production' && 'Production' || 'Staging' }} Deployment: ${{ inputs.result }} (${{ inputs.region_name }})"
+          blocks:
+            - type: "section"
+              text:
+                type: "mrkdwn"
+                text: "${{ inputs.result == 'success' && (inputs.environment == 'production' && ':rocket:' || ':white_check_mark:') || ':x:' }} *Traffic Analytics ${{ inputs.environment == 'production' && 'Production' || 'Staging' }} Deployment*"
+            - type: "section"
+              fields:
+                - type: "mrkdwn"
+                  text: "*Services:*\n:gear: ${{ inputs.services }}"
+                - type: "mrkdwn"
+                  text: "*Region:*\n:earth_americas: ${{ inputs.region_name }}"
+                - type: "mrkdwn"
+                  text: "*Status:*\n${{ inputs.result == 'success' && ':large_green_circle: Success' || ':red_circle: Failed' }}"
+                - type: "mrkdwn"
+                  text: "*Workflow:*\n:link: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+          attachments:
+            - color: "${{ inputs.result == 'success' && 'good' || 'danger' }}"
+              fallback: "Traffic Analytics ${{ inputs.environment == 'production' && 'Production' || 'Staging' }} Deployment: ${{ inputs.result }}"

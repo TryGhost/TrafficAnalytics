@@ -1,0 +1,103 @@
+name: Deploy Environment
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "The environment to deploy to (staging/production)"
+        type: string
+        required: true
+      image:
+        description: "The Docker image to deploy"
+        type: string
+        required: true
+      region:
+        description: "The GCP region to deploy to"
+        type: string
+        required: true
+      region_name:
+        description: "Human-readable region name"
+        type: string
+        required: true
+      services:
+        description: "JSON array of services to deploy"
+        type: string
+        required: true
+      healthcheck_urls:
+        description: "JSON array of healthcheck configs [{name, base_url}]"
+        type: string
+        required: true
+    outputs:
+      deploy_result:
+        description: "The result of the deployment job"
+        value: ${{ jobs.deploy.result }}
+
+permissions:
+  id-token: write
+
+env:
+  GCP_PROJECT_ID: ghost-traffic-analytics
+  GCP_WORKFLOW_IDENTITY_PROVIDER: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
+
+jobs:
+  deploy:
+    name: Deploy (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJSON(inputs.services) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Deploy to ${{ inputs.environment }} (${{ inputs.region }}) - ${{ matrix.service }}"
+        uses: "./.github/actions/deploy-gcp-cloud-run"
+        with:
+          environment: ${{ inputs.environment }}
+          region: ${{ inputs.region }}
+          service: ${{ inputs.environment == 'staging' && 'stg' || 'prd' }}-${{ inputs.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
+          image: ${{ inputs.image }}
+
+  healthchecks:
+    name: Health Checks (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: needs.deploy.result == 'success'
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJSON(inputs.healthcheck_urls) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run health checks
+        uses: ./.github/actions/run-healthchecks
+        with:
+          base_url: ${{ matrix.environment.base_url }}
+          environment_name: ${{ matrix.environment.name }}
+
+      - name: Send Slack notification if health checks fail
+        if: failure()
+        uses: ./.github/actions/slack-healthcheck-failed
+        with:
+          environment: ${{ inputs.environment }}
+          environment_name: ${{ matrix.environment.name }}
+          base_url: ${{ matrix.environment.base_url }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  notify:
+    name: Notify (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Send deployment summary
+        uses: ./.github/actions/slack-deploy-summary
+        with:
+          environment: ${{ inputs.environment }}
+          result: ${{ needs.deploy.result }}
+          region_name: ${{ inputs.region_name }}
+          services: ${{ join(fromJSON(inputs.services), ', ') }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
