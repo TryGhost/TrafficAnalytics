@@ -6,6 +6,9 @@ on:
       image:
         description: "The Docker image with SHA tag"
         value: ${{ jobs.run.outputs.image }}
+      version:
+        description: "The Docker image version tag"
+        value: ${{ jobs.run.outputs.version }}
 
 permissions:
   id-token: write
@@ -21,8 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image: ${{ env.DOCKER_IMAGE }}:sha-${{ github.sha }}
+      version: ${{ steps.traffic-analytics-docker-metadata.outputs.version }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
 
       - name: Get tree SHA
         id: tree

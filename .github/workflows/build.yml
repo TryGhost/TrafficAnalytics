@@ -88,102 +88,6 @@ jobs:
               - color: "good"
                 fallback: "New Traffic Analytics Version Released: v${{ steps.check-version.outputs.version }}"
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: handle-version-change
-    outputs:
-      version: ${{ steps.traffic-analytics-docker-metadata.outputs.version }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-
-      - name: Get tree SHA
-        id: tree
-        run: echo "sha=$(git rev-parse HEAD^{tree})" >> $GITHUB_OUTPUT
-
-      - name: Pull already built docker image
-        id: pull-cache
-        env:
-          IMAGE_NAME: ghcr.io/${{ github.repository }}:tree-${{ steps.tree.outputs.sha }}
-        run: |
-          IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
-          if docker pull "$IMAGE_NAME_LOWER"; then
-            echo "cache-hit=true" >> $GITHUB_OUTPUT
-            echo "cached-image=$IMAGE_NAME_LOWER" >> $GITHUB_OUTPUT
-          else
-            echo "cache-hit=false" >> $GITHUB_OUTPUT
-            echo "Image not found, proceeding to build."
-          fi
-
-      - name: Extract node version
-        id: extract-node-version
-        if: steps.pull-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/extract-node-version
-
-      - name: Build Docker Image
-        id: docker-build
-        if: steps.pull-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/docker-build
-        with:
-          node-version: ${{ fromJSON(steps.extract-node-version.outputs.node-version) }}
-
-      - name: Lint & Test
-        if: steps.pull-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/lint-and-test
-        with:
-          docker-image: ${{ steps.docker-build.outputs.base-image-name }}
-
-      - name: "Auth with Google Cloud"
-        id: gcp-auth
-        uses: google-github-actions/auth@v2
-        with:
-          project_id: ${{ env.GCP_PROJECT_ID }}
-          token_format: access_token
-          workload_identity_provider: ${{ env.GCP_WORKFLOW_IDENTITY_PROVIDER }}
-          service_account: gh-artifact-manager@ghost-traffic-analytics.iam.gserviceaccount.com
-      - name: "Login to GCP Artifact Registry"
-        uses: docker/login-action@v3
-        with:
-          registry: europe-docker.pkg.dev
-          username: oauth2accesstoken
-          password: ${{ steps.gcp-auth.outputs.access_token }}
-
-      - name: Get Version Tag
-        id: get-version-tag
-        run: |
-          TAG=$(git tag --points-at HEAD | grep -E '^v[0-9.]+' | sort -r | head -n 1)
-          echo "version-tag=$TAG" >> $GITHUB_OUTPUT
-
-      - name: Generate Docker Tags
-        id: traffic-analytics-docker-metadata
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.DOCKER_IMAGE }}
-          tags: |
-            ${{ github.ref == 'refs/heads/main' && 'type=edge,branch=main' || '' }}
-            type=semver,pattern={{version}},value=${{ steps.get-version-tag.outputs.version-tag }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.get-version-tag.outputs.version-tag }}
-            type=semver,pattern={{major}},value=${{ steps.get-version-tag.outputs.version-tag }}
-            type=sha,priority=1100
-            type=sha,format=long
-
-      - name: Retag & Push Docker Image
-        env:
-          SOURCE_IMAGE: ${{ steps.pull-cache.outputs.cache-hit == 'true' && steps.pull-cache.outputs.cached-image || steps.docker-build.outputs.production-image-name }}
-        run: |
-          for tag in $(echo "${{ steps.traffic-analytics-docker-metadata.outputs.tags }}"); do
-            echo "Tagging: $tag"
-            docker tag $SOURCE_IMAGE $tag
-          done
-
-          for tag in $(echo "${{ steps.traffic-analytics-docker-metadata.outputs.tags }}"); do
-            echo "Pushing: $tag"
-            docker push $tag
-          done
-
   trigger-docker-hub-deploy:
     name: Trigger Docker Hub Deploy
     runs-on: ubuntu-latest
@@ -199,6 +103,12 @@ jobs:
               workflow_id: 'docker-hub.yml',
               ref: 'v${{ needs.handle-version-change.outputs.current-version }}'
             });
+
+  build:
+    name: Build
+    needs: handle-version-change
+    uses: ./.github/workflows/deploy-image-to-gcp.yml
+    secrets: inherit
 
   deploy-staging:
     name: Deploy Staging
