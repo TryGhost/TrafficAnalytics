@@ -4,9 +4,17 @@ on:
   pull_request:
     types: [labeled]
 
+permissions:
+  id-token: write
+  pull-requests: write
+
+env:
+  GCP_PROJECT_ID: ghost-traffic-analytics
+  GCP_WORKFLOW_IDENTITY_PROVIDER: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
+
 jobs:
-  deploy-staging:
-    name: Deploy to Staging
+  setup:
+    name: Setup
     runs-on: ubuntu-latest
     if: github.event.label.name == 'deploy-staging'
     steps:
@@ -17,21 +25,172 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Checking for running CI workflow..."
-          
-          # Get the CI workflow run for this PR's head SHA
+
           RUN_ID=$(gh run list \
             --workflow=ci.yml \
             --branch="${{ github.head_ref }}" \
             --json databaseId,status,headSha \
             --jq '.[] | select(.headSha == "${{ github.event.pull_request.head.sha }}") | select(.status == "in_progress" or .status == "queued") | .databaseId' \
             | head -n 1)
-          
+
           if [ -n "$RUN_ID" ]; then
-            echo "CI workflow run $RUN_ID is in progress, waiting for completion..."
+            echo "CI workflow run $RUN_ID is in progress. Waiting for it to complete..."
             gh run watch "$RUN_ID" --exit-status
-          else
-            echo "No CI workflow currently running for this commit"
+            echo "CI workflow completed successfully"
           fi
 
-      - name: Deploy
-        run: echo "hello world"
+  deploy-image-to-gcp:
+    name: Deploy Image to GCP
+    needs: setup
+    uses: ./.github/workflows/deploy-image-to-gcp.yml
+    secrets: inherit
+
+  deploy-to-gcp:
+    name: Deploy to GCP
+    runs-on: ubuntu-latest
+    needs: deploy-image-to-gcp
+    strategy:
+      matrix:
+        region: [europe-west4]
+        service: [analytics, worker]
+        include:
+          - region: europe-west4
+            region_name: netherlands
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Auth with Google Cloud"
+        id: gcp-auth
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          token_format: access_token
+          workload_identity_provider: ${{ env.GCP_WORKFLOW_IDENTITY_PROVIDER }}
+          service_account: gh-artifact-manager@ghost-traffic-analytics.iam.gserviceaccount.com
+
+      - name: "Deploy to Staging (${{ matrix.region }}) - ${{ matrix.service }}"
+        id: deploy-staging
+        uses: "./.github/actions/deploy-gcp-cloud-run"
+        with:
+          environment: staging
+          region: ${{ matrix.region }}
+          service: stg-${{ matrix.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
+          image: ${{ needs.deploy-image-to-gcp.outputs.image }}
+
+  notify-complete:
+    name: Notify Deployment Complete
+    runs-on: ubuntu-latest
+    needs: deploy-to-gcp
+    if: always()
+    steps:
+      - name: Send consolidated slack notification
+        uses: slackapi/slack-github-action@v2.1.1
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Traffic Analytics Staging Deployment: ${{ needs.deploy-to-gcp.result }} (netherlands)"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "${{ needs.deploy-to-gcp.result == 'success' && ':white_check_mark: *Traffic Analytics Staging Deployment*' || ':x: *Traffic Analytics Staging Deployment*' }}"
+              - type: "section"
+                fields:
+                  - type: "mrkdwn"
+                    text: "*Services:*\n:gear: analytics, worker"
+                  - type: "mrkdwn"
+                    text: "*Region:*\n:earth_americas: netherlands"
+                  - type: "mrkdwn"
+                    text: "*Status:*\n${{ needs.deploy-to-gcp.result == 'success' && ':large_green_circle: Success' || ':red_circle: Failed' }}"
+                  - type: "mrkdwn"
+                    text: "*Workflow:*\n:link: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+            attachments:
+              - color: "${{ needs.deploy-to-gcp.result == 'success' && 'good' || 'danger' }}"
+                fallback: "Traffic Analytics Staging Deployment: ${{ needs.deploy-to-gcp.result }}"
+
+  finalize:
+    name: Finalize Deployment
+    needs: deploy-to-gcp
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get tree SHA
+        id: tree
+        run: echo "sha=$(git rev-parse HEAD^{tree})" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ needs.deploy-to-gcp.result }}" == "success" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} \
+              --repo ${{ github.repository }} \
+              --body "✅ Deployed to staging (tree: ${{ steps.tree.outputs.sha }})"
+          else
+            gh pr comment ${{ github.event.pull_request.number }} \
+              --repo ${{ github.repository }} \
+              --body "❌ Staging deployment failed (tree: ${{ steps.tree.outputs.sha }})"
+          fi
+
+      - name: Remove label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --remove-label "deploy-staging"
+
+  healthchecks:
+    name: Health Checks
+    runs-on: ubuntu-latest
+    needs: deploy-to-gcp
+    if: needs.deploy-to-gcp.result == 'success'
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          - name: staging-subdomain
+            base_url: https://traffic-analytics-subdomain.ghost.is/
+          - name: staging-custom-domain
+            base_url: https://traffic-analytics.ghst.pro/
+          - name: staging-subdirectory
+            base_url: https://traffic-analytics-subdirectory.ghost.is/blog/
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run health checks
+        uses: ./.github/actions/run-healthchecks
+        with:
+          base_url: ${{ matrix.environment.base_url }}
+          environment_name: ${{ matrix.environment.name }}
+
+      - name: Send slack notification if health checks fail
+        uses: slackapi/slack-github-action@v2.1.1
+        if: failure()
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "Analytics Service Health Check Failed After Staging Deployment"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: ":rotating_light: *Analytics Service Health Check Failed After Staging Deployment*"
+              - type: "section"
+                fields:
+                  - type: "mrkdwn"
+                    text: "*Environment:*\n:computer: ${{ matrix.environment.name }}"
+                  - type: "mrkdwn"
+                    text: "*Target URL:*\n:globe_with_meridians: ${{ matrix.environment.base_url }}"
+                  - type: "mrkdwn"
+                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+            attachments:
+              - color: "danger"
+                fallback: "Analytics Service Health Check Failed After Staging Deployment"

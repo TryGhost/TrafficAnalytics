@@ -35,6 +35,11 @@ jobs:
         if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
         run: echo "sha=$(git rev-parse HEAD^{tree})" >> $GITHUB_OUTPUT
 
+      - name: Output tree SHA
+        if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
+        run: |
+          echo "Tree SHA: ${{ steps.tree.outputs.sha }}"
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
@@ -51,3 +56,4 @@ jobs:
           IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
           docker tag ${{ steps.docker-build.outputs.production-image-name }} "$IMAGE_NAME_LOWER"
           docker push "$IMAGE_NAME_LOWER"
+
