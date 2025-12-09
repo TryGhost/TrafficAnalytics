@@ -38,4 +38,8 @@ app.get('/', async () => {
     return 'Hello Ghost Traffic Analytics';
 });
 
+app.get('/info', async () => {
+    return {build: process.env.BUILD_LABEL ?? ''};
+});
+
 export default app;
