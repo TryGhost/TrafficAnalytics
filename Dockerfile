@@ -21,6 +21,9 @@ CMD ["node", "--enable-source-maps", "dist/server.js"]
 
 FROM node:${NODE_VERSION}-alpine AS production
 
+ARG BUILD_LABEL
+ENV BUILD_LABEL=${BUILD_LABEL}
+
 WORKDIR /app
 
 COPY --from=base /app/dist /app/dist

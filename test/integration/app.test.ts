@@ -126,6 +126,30 @@ describe('Fastify App', () => {
         });
     });
 
+    describe('/info', function () {
+        it('should return build_label from environment variable', async function () {
+            vi.stubEnv('BUILD_LABEL', 'test-build-123');
+            const response = await request(proxyServer)
+                .get('/info')
+                .expect(200);
+            expect(response.body).toEqual({build: 'test-build-123'});
+        });
+
+        it('should return empty string when BUILD_LABEL is not set', async function () {
+            vi.stubEnv('BUILD_LABEL', undefined);
+            const response = await request(proxyServer)
+                .get('/info')
+                .expect(200);
+            expect(response.body).toEqual({build: ''});
+        });
+
+        it('should respond 404 to POST on /info', async function () {
+            await request(proxyServer)
+                .post('/info')
+                .expect(404);
+        });
+    });
+
     describe('/local-proxy', function () {
         it('should handle requests to local-proxy path', async function () {
             await request(proxyServer)
@@ -140,7 +164,7 @@ describe('Fastify App', () => {
                 .expect(404);
         });
     });
-    
+
     describe('POST /api/v1/page_hit', function () {
         const path = '/api/v1/page_hit';
         it('should proxy requests to the target server', async function () {
@@ -397,7 +421,7 @@ describe('Fastify App', () => {
         describe('bot filtering', function () {
             it('should filter bot traffic and return 202 without proxying to upstream', async function () {
                 const initialRequestCount = targetRequests.length;
-                
+
                 // Test with Googlebot user agent
                 await request(proxyServer)
                     .post(path)
@@ -414,7 +438,7 @@ describe('Fastify App', () => {
 
             it('should filter Googlebot with Android user agent', async function () {
                 const initialRequestCount = targetRequests.length;
-                
+
                 // Test with Googlebot that has Android in user agent
                 await request(proxyServer)
                     .post(path)
@@ -431,7 +455,7 @@ describe('Fastify App', () => {
 
             it('should not filter regular traffic', async function () {
                 const initialRequestCount = targetRequests.length;
-                
+
                 // Test with regular browser user agent
                 await request(proxyServer)
                     .post(path)
