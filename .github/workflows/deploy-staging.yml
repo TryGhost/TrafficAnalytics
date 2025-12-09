@@ -115,14 +115,25 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Get tree SHA
+        id: tree
+        run: echo "sha=$(git rev-parse HEAD^{tree})" >> $GITHUB_OUTPUT
+
       - name: Comment on PR
-        if: needs.deploy-to-gcp.result == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} \
-            --repo ${{ github.repository }} \
-            --body "Deployed to staging"
+          if [ "${{ needs.deploy-to-gcp.result }}" == "success" ]; then
+            gh pr comment ${{ github.event.pull_request.number }} \
+              --repo ${{ github.repository }} \
+              --body "✅ Deployed to staging (tree: ${{ steps.tree.outputs.sha }})"
+          else
+            gh pr comment ${{ github.event.pull_request.number }} \
+              --repo ${{ github.repository }} \
+              --body "❌ Staging deployment failed (tree: ${{ steps.tree.outputs.sha }})"
+          fi
 
       - name: Remove label
         env:
