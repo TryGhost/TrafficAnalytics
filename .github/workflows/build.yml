@@ -12,58 +12,44 @@ permissions:
   actions: write
 
 jobs:
-  handle-version-change:
-    name: Handle Version Change
+  bump-version:
+    name: Bump Version
     runs-on: ubuntu-latest
     outputs:
-      version-changed: ${{ steps.check-version.outputs.changed }}
-      current-version: ${{ steps.check-version.outputs.version }}
+      version: ${{ steps.bump-version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check if version changed
-        id: check-version
-        run: |
-          # Get current version from package.json
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-
-          # Get previous commit's version (if it exists)
-          if git show HEAD~1:package.json > /dev/null 2>&1; then
-            PREVIOUS_VERSION=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8')).version")
-            echo "Previous version: $PREVIOUS_VERSION"
-            echo "Current version: $CURRENT_VERSION"
-
-            if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
-              echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
-              echo "changed=true" >> $GITHUB_OUTPUT
-            else
-              echo "Version unchanged: $CURRENT_VERSION"
-              echo "changed=false" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "No previous commit found, assuming version change"
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: "Create Release Tag"
-        if: steps.check-version.outputs.changed == 'true'
+      - name: Bump patch version
+        id: bump-version
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag "v${{ steps.check-version.outputs.version }}"
-          git push origin "v${{ steps.check-version.outputs.version }}"
+
+          # Bump patch version and capture the new version
+          NEW_VERSION=$(npm version patch --no-git-tag-version | sed 's/^v//')
+          echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+          # Commit the version bump
+          git add package.json
+          git commit -m "v$NEW_VERSION [skip ci]"
+          git push origin main
+
+          # Create and push the tag
+          git tag "v$NEW_VERSION"
+          git push origin "v$NEW_VERSION"
 
       - name: Send slack notification for new version release
         uses: slackapi/slack-github-action@v2.1.1
-        if: success() && steps.check-version.outputs.changed == 'true'
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "New Traffic Analytics Version Released: v${{ steps.check-version.outputs.version }}"
+            text: "New Traffic Analytics Version Released: v${{ steps.bump-version.outputs.version }}"
             blocks:
               - type: "section"
                 text:
@@ -72,22 +58,21 @@ jobs:
               - type: "section"
                 fields:
                   - type: "mrkdwn"
-                    text: "*Version:*\n:label: v${{ steps.check-version.outputs.version }}"
+                    text: "*Version:*\n:label: v${{ steps.bump-version.outputs.version }}"
                   - type: "mrkdwn"
                     text: "*Status:*\n:large_green_circle: Released"
                   - type: "mrkdwn"
-                    text: "*Tag:*\n:bookmark: <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.check-version.outputs.version }}|v${{ steps.check-version.outputs.version }}>"
+                    text: "*Tag:*\n:bookmark: <${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ steps.bump-version.outputs.version }}|v${{ steps.bump-version.outputs.version }}>"
                   - type: "mrkdwn"
                     text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
             attachments:
               - color: "good"
-                fallback: "New Traffic Analytics Version Released: v${{ steps.check-version.outputs.version }}"
+                fallback: "New Traffic Analytics Version Released: v${{ steps.bump-version.outputs.version }}"
 
   trigger-docker-hub-deploy:
     name: Trigger Docker Hub Deploy
     runs-on: ubuntu-latest
-    needs: handle-version-change
-    if: needs.handle-version-change.outputs.version-changed == 'true'
+    needs: bump-version
     steps:
       - uses: actions/github-script@v7
         with:
@@ -96,12 +81,12 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'docker-hub.yml',
-              ref: 'v${{ needs.handle-version-change.outputs.current-version }}'
+              ref: 'v${{ needs.bump-version.outputs.version }}'
             });
 
   build:
     name: Build
-    needs: handle-version-change
+    needs: bump-version
     uses: ./.github/workflows/deploy-image-to-gcp.yml
     secrets: inherit
 
