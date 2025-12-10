@@ -1,0 +1,69 @@
+name: Deploy Environment
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "The environment to deploy to (staging/production)"
+        type: string
+        required: true
+      image:
+        description: "The Docker image to deploy"
+        type: string
+        required: true
+      region:
+        description: "The GCP region to deploy to"
+        type: string
+        required: true
+      region_name:
+        description: "Human-readable region name"
+        type: string
+        required: true
+      services:
+        description: "JSON array of services to deploy"
+        type: string
+        required: true
+    outputs:
+      result:
+        description: "The result of the deployment job"
+        value: ${{ jobs.deploy.result }}
+
+permissions:
+  id-token: write
+
+jobs:
+  deploy:
+    name: Deploy (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJSON(inputs.services) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Deploy to ${{ inputs.environment }} (${{ inputs.region }}) - ${{ matrix.service }}"
+        uses: "./.github/actions/deploy-gcp-cloud-run"
+        with:
+          environment: ${{ inputs.environment }}
+          region: ${{ inputs.region }}
+          service: ${{ inputs.environment == 'staging' && 'stg' || 'prd' }}-${{ inputs.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
+          image: ${{ inputs.image }}
+          gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+          gcp_workload_identity_provider: ${{ vars.GCP_WORKFLOW_IDENTITY_PROVIDER }}
+
+  notify:
+    name: Notify (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Send deployment summary
+        uses: ./.github/actions/slack-deploy-summary
+        with:
+          environment: ${{ inputs.environment }}
+          result: ${{ needs.deploy.result }}
+          region_name: ${{ inputs.region_name }}
+          services: ${{ join(fromJSON(inputs.services), ', ') }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}

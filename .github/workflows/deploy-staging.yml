@@ -8,10 +8,6 @@ permissions:
   id-token: write
   pull-requests: write
 
-env:
-  GCP_PROJECT_ID: ghost-traffic-analytics
-  GCP_WORKFLOW_IDENTITY_PROVIDER: projects/460065119042/locations/global/workloadIdentityPools/github-oidc-analytics/providers/github-provider-analytics
-
 jobs:
   setup:
     name: Setup
@@ -45,73 +41,31 @@ jobs:
     uses: ./.github/workflows/deploy-image-to-gcp.yml
     secrets: inherit
 
-  deploy-to-gcp:
-    name: Deploy to GCP
-    runs-on: ubuntu-latest
+  deploy-staging:
+    name: Deploy Staging
     needs: deploy-image-to-gcp
-    strategy:
-      matrix:
-        region: [europe-west4]
-        service: [analytics, worker]
-        include:
-          - region: europe-west4
-            region_name: netherlands
-    steps:
-      - uses: actions/checkout@v4
+    uses: ./.github/workflows/deploy-environment.yml
+    secrets: inherit
+    with:
+      environment: staging
+      image: ${{ needs.deploy-image-to-gcp.outputs.image }}
+      region: europe-west4
+      region_name: netherlands
+      services: '["analytics", "worker"]'
 
-      - name: "Auth with Google Cloud"
-        id: gcp-auth
-        uses: google-github-actions/auth@v2
-        with:
-          project_id: ${{ env.GCP_PROJECT_ID }}
-          token_format: access_token
-          workload_identity_provider: ${{ env.GCP_WORKFLOW_IDENTITY_PROVIDER }}
-          service_account: gh-artifact-manager@ghost-traffic-analytics.iam.gserviceaccount.com
-
-      - name: "Deploy to Staging (${{ matrix.region }}) - ${{ matrix.service }}"
-        id: deploy-staging
-        uses: "./.github/actions/deploy-gcp-cloud-run"
-        with:
-          environment: staging
-          region: ${{ matrix.region }}
-          service: stg-${{ matrix.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
-          image: ${{ needs.deploy-image-to-gcp.outputs.image }}
-
-  notify-complete:
-    name: Notify Deployment Complete
-    runs-on: ubuntu-latest
-    needs: deploy-to-gcp
-    if: always()
-    steps:
-      - name: Send consolidated slack notification
-        uses: slackapi/slack-github-action@v2.1.1
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            text: "Traffic Analytics Staging Deployment: ${{ needs.deploy-to-gcp.result }} (netherlands)"
-            blocks:
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: "${{ needs.deploy-to-gcp.result == 'success' && ':white_check_mark: *Traffic Analytics Staging Deployment*' || ':x: *Traffic Analytics Staging Deployment*' }}"
-              - type: "section"
-                fields:
-                  - type: "mrkdwn"
-                    text: "*Services:*\n:gear: analytics, worker"
-                  - type: "mrkdwn"
-                    text: "*Region:*\n:earth_americas: netherlands"
-                  - type: "mrkdwn"
-                    text: "*Status:*\n${{ needs.deploy-to-gcp.result == 'success' && ':large_green_circle: Success' || ':red_circle: Failed' }}"
-                  - type: "mrkdwn"
-                    text: "*Workflow:*\n:link: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
-            attachments:
-              - color: "${{ needs.deploy-to-gcp.result == 'success' && 'good' || 'danger' }}"
-                fallback: "Traffic Analytics Staging Deployment: ${{ needs.deploy-to-gcp.result }}"
+  healthchecks:
+    name: Healthchecks
+    needs: deploy-staging
+    if: needs.deploy-staging.outputs.result == 'success'
+    uses: ./.github/workflows/run-healthchecks.yml
+    secrets: inherit
+    with:
+      environment: staging
+      healthcheck_urls: '[{"name":"staging-subdomain","base_url":"https://traffic-analytics-subdomain.ghost.is/"},{"name":"staging-custom-domain","base_url":"https://traffic-analytics.ghst.pro/"},{"name":"staging-subdirectory","base_url":"https://traffic-analytics-subdirectory.ghost.is/blog/"}]'
 
   finalize:
     name: Finalize Deployment
-    needs: deploy-to-gcp
+    needs: deploy-staging
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -125,7 +79,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ needs.deploy-to-gcp.result }}" == "success" ]; then
+          if [ "${{ needs.deploy-staging.outputs.result }}" == "success" ]; then
             gh pr comment ${{ github.event.pull_request.number }} \
               --repo ${{ github.repository }} \
               --body "✅ Deployed to staging (tree: ${{ steps.tree.outputs.sha }})"
@@ -143,54 +97,3 @@ jobs:
             --repo ${{ github.repository }} \
             --remove-label "deploy-staging"
 
-  healthchecks:
-    name: Health Checks
-    runs-on: ubuntu-latest
-    needs: deploy-to-gcp
-    if: needs.deploy-to-gcp.result == 'success'
-    timeout-minutes: 10
-
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          - name: staging-subdomain
-            base_url: https://traffic-analytics-subdomain.ghost.is/
-          - name: staging-custom-domain
-            base_url: https://traffic-analytics.ghst.pro/
-          - name: staging-subdirectory
-            base_url: https://traffic-analytics-subdirectory.ghost.is/blog/
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run health checks
-        uses: ./.github/actions/run-healthchecks
-        with:
-          base_url: ${{ matrix.environment.base_url }}
-          environment_name: ${{ matrix.environment.name }}
-
-      - name: Send slack notification if health checks fail
-        uses: slackapi/slack-github-action@v2.1.1
-        if: failure()
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            text: "Analytics Service Health Check Failed After Staging Deployment"
-            blocks:
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: ":rotating_light: *Analytics Service Health Check Failed After Staging Deployment*"
-              - type: "section"
-                fields:
-                  - type: "mrkdwn"
-                    text: "*Environment:*\n:computer: ${{ matrix.environment.name }}"
-                  - type: "mrkdwn"
-                    text: "*Target URL:*\n:globe_with_meridians: ${{ matrix.environment.base_url }}"
-                  - type: "mrkdwn"
-                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
-            attachments:
-              - color: "danger"
-                fallback: "Analytics Service Health Check Failed After Staging Deployment"

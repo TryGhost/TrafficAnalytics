@@ -14,6 +14,12 @@ inputs:
   image:
     description: The image to deploy to the cloudrun service
     required: true
+  gcp_project_id:
+    description: The GCP project ID
+    required: true
+  gcp_workload_identity_provider:
+    description: The GCP workload identity provider
+    required: true
 
 runs:
   using: composite
@@ -21,9 +27,9 @@ runs:
     - name: "Auth with Google Cloud"
       uses: google-github-actions/auth@v2
       with:
-        project_id: ${{ env.GCP_PROJECT_ID }}
+        project_id: ${{ inputs.gcp_project_id }}
         token_format: access_token
-        workload_identity_provider: ${{ env.GCP_WORKFLOW_IDENTITY_PROVIDER }}
+        workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
         service_account: ${{ contains(inputs.environment, 'staging') && 'stg' || 'prd' }}-gh-deploy@ghost-traffic-analytics.iam.gserviceaccount.com
     - name: "Deploy to Cloud Run"
       uses: google-github-actions/deploy-cloudrun@v2

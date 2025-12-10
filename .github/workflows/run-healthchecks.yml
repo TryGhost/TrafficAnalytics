@@ -1,0 +1,40 @@
+name: Run Healthchecks
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "The deployment environment (staging/production)"
+        type: string
+        required: true
+      healthcheck_urls:
+        description: "JSON array of healthcheck configs [{name, base_url}]"
+        type: string
+        required: true
+
+jobs:
+  healthchecks:
+    name: Health Checks (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(inputs.healthcheck_urls) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run health checks
+        uses: ./.github/actions/run-healthchecks
+        with:
+          base_url: ${{ matrix.target.base_url }}
+          environment_name: ${{ matrix.target.name }}
+
+      - name: Send Slack notification if health checks fail
+        if: failure()
+        uses: ./.github/actions/slack-healthcheck-failed
+        with:
+          environment: ${{ inputs.environment }}
+          environment_name: ${{ matrix.target.name }}
+          base_url: ${{ matrix.target.base_url }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
