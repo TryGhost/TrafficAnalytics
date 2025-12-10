@@ -7,57 +7,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  healthchecks:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        environment:
-          - name: staging-subdomain
-            base_url: https://traffic-analytics-subdomain.ghost.is/
-          - name: staging-custom-domain
-            base_url: https://traffic-analytics.ghst.pro/
-          - name: staging-subdirectory
-            base_url: https://traffic-analytics-subdirectory.ghost.is/blog/
-          - name: production-subdomain
-            base_url: https://traffic-analytics-subdomain.ghost.io/
-          - name: production-custom-domain
-            base_url: https://traffic-analytics.ghost.org/
-          - name: production-subdirectory
-            base_url: https://traffic-analytics-subdirectory.ghost.io/blog/
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run health checks
-        uses: ./.github/actions/run-healthchecks
-        with:
-          base_url: ${{ github.event.inputs.target_url || matrix.environment.base_url }}
-          environment_name: ${{ matrix.environment.name }}
+  healthcheck-staging:
+    name: Healthcheck Staging
+    uses: ./.github/workflows/run-healthchecks.yml
+    secrets: inherit
+    with:
+      environment: staging
 
-      - name: Send slack notification if health checks fail
-        uses: slackapi/slack-github-action@v2.1.1
-        if: failure() && github.ref == 'refs/heads/main'
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            text: "Analytics Service Health Check Failed"
-            blocks:
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: ":rotating_light: *Analytics Service Health Check Failed*"
-              - type: "section"
-                fields:
-                  - type: "mrkdwn"
-                    text: "*Environment:*\n:computer: ${{ matrix.environment.name }}"
-                  - type: "mrkdwn"
-                    text: "*Target URL:*\n:globe_with_meridians: ${{ github.event.inputs.target_url || matrix.environment.base_url }}"
-                  - type: "mrkdwn"
-                    text: "*Workflow:*\n:gear: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
-            attachments:
-              - color: "danger"
-                fallback: "Analytics Service Health Check Failed"
+  healthcheck-production:
+    name: Healthcheck Production
+    uses: ./.github/workflows/run-healthchecks.yml
+    secrets: inherit
+    with:
+      environment: production

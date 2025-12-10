@@ -1,4 +1,4 @@
-name: Build & Deploy
+name: Deploy
 
 on:
   workflow_dispatch:
@@ -110,11 +110,10 @@ jobs:
     secrets: inherit
     with:
       environment: staging
-      healthcheck_urls: '[{"name":"staging-subdomain","base_url":"https://traffic-analytics-subdomain.ghost.is/"},{"name":"staging-custom-domain","base_url":"https://traffic-analytics.ghst.pro/"},{"name":"staging-subdirectory","base_url":"https://traffic-analytics-subdirectory.ghost.is/blog/"}]'
 
   deploy-production:
     name: Deploy Production
-    needs: [build, deploy-staging]
+    needs: build
     uses: ./.github/workflows/deploy-environment.yml
     secrets: inherit
     with:
@@ -132,4 +131,3 @@ jobs:
     secrets: inherit
     with:
       environment: production
-      healthcheck_urls: '[{"name":"production-subdomain","base_url":"https://traffic-analytics-subdomain.ghost.io/"},{"name":"production-custom-domain","base_url":"https://traffic-analytics.ghost.org/"},{"name":"production-subdirectory","base_url":"https://traffic-analytics-subdirectory.ghost.io/blog/"}]'

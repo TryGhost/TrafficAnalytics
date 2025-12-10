@@ -128,12 +128,29 @@ docker compose up
 
 ## Deployment
 
-Merging to `main` automatically deploys to staging. Production deployments only happen when the version in `package.json` changes.
+### Development Workflow
 
-To ship to production:
-1. `yarn ship` - creates a release branch with version bump
-2. Create PR using the provided link
-3. Merge the PR - this triggers production deployment
+1. **Create a branch** and make your changes
+2. **Open a PR** against `main`
+3. **Optionally test on staging** by adding the `deploy-staging` label to your PR
+   - This deploys your branch to staging without merging
+   - The label is automatically removed after deployment
+4. **Merge to main** when ready
+
+### What happens on merge
+
+When a PR is merged to `main`, the following happens automatically:
+
+1. **Version bump** — The patch version is automatically incremented (e.g., 1.2.3 → 1.2.4)
+2. **Tag creation** — A git tag is created and pushed (e.g., `v1.2.4`)
+3. **Docker Hub** — The image is published to Docker Hub
+4. **Deploy to staging and production** — Both environments are deployed in parallel
+5. **Health checks** — Automated health checks run against both environments
+6. **Slack notification** — The team is notified of the new release
+
+### Manual deployment
+
+You can manually trigger a deployment via the GitHub Actions UI by running the "Deploy" workflow with `workflow_dispatch`.
 
 # Copyright & License 
 
