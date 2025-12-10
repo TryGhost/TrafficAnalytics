@@ -114,7 +114,7 @@ jobs:
 
   deploy-production:
     name: Deploy Production
-    needs: [build, deploy-staging]
+    needs: build
     uses: ./.github/workflows/deploy-environment.yml
     secrets: inherit
     with:
