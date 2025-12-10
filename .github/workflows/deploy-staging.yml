@@ -61,7 +61,6 @@ jobs:
     secrets: inherit
     with:
       environment: staging
-      healthcheck_urls: '[{"name":"staging-subdomain","base_url":"https://traffic-analytics-subdomain.ghost.is/"},{"name":"staging-custom-domain","base_url":"https://traffic-analytics.ghst.pro/"},{"name":"staging-subdirectory","base_url":"https://traffic-analytics-subdirectory.ghost.is/blog/"}]'
 
   finalize:
     name: Finalize Deployment
@@ -96,4 +95,3 @@ jobs:
           gh pr edit ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
             --remove-label "deploy-staging"
-

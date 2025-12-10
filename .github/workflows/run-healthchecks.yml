@@ -7,20 +7,32 @@ on:
         description: "The deployment environment (staging/production)"
         type: string
         required: true
-      healthcheck_urls:
-        description: "JSON array of healthcheck configs [{name, base_url}]"
-        type: string
-        required: true
 
 jobs:
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    outputs:
+      healthcheck_urls: ${{ steps.set-urls.outputs.urls }}
+    steps:
+      - name: Set healthcheck URLs
+        id: set-urls
+        run: |
+          if [ "${{ inputs.environment }}" == "staging" ]; then
+            echo 'urls=[{"name":"staging-subdomain","base_url":"https://traffic-analytics-subdomain.ghost.is/"},{"name":"staging-custom-domain","base_url":"https://traffic-analytics.ghst.pro/"},{"name":"staging-subdirectory","base_url":"https://traffic-analytics-subdirectory.ghost.is/blog/"}]' >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.environment }}" == "production" ]; then
+            echo 'urls=[{"name":"production-subdomain","base_url":"https://traffic-analytics-subdomain.ghost.io/"},{"name":"production-custom-domain","base_url":"https://traffic-analytics.ghost.org/"},{"name":"production-subdirectory","base_url":"https://traffic-analytics-subdirectory.ghost.io/blog/"}]' >> $GITHUB_OUTPUT
+          fi
+
   healthchecks:
     name: Health Checks (${{ inputs.environment }})
     runs-on: ubuntu-latest
+    needs: prepare
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(inputs.healthcheck_urls) }}
+        target: ${{ fromJSON(needs.prepare.outputs.healthcheck_urls) }}
     steps:
       - uses: actions/checkout@v4
 
