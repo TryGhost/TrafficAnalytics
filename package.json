@@ -59,7 +59,7 @@
     "vitest": "3.2.4"
   },
   "dependencies": {
-    "@fastify/cors": "11.1.0",
+    "@fastify/cors": "11.2.0",
     "@fastify/otel": "0.9.3",
     "@fastify/reply-from": "11.0.2",
     "@fastify/type-provider-typebox": "5.2.0",
