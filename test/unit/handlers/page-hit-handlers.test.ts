@@ -83,11 +83,13 @@ describe('page-hit-handlers', () => {
 
     describe('handlePageHitRequestStrategyBatch', () => {
         it('should publish page hit event and return 202 on success', async () => {
+            const mockPayload = {test: 'payload'};
+            vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
             const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockResolvedValue();
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
-            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest);
+            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockReply.status).toHaveBeenCalledWith(202);
             expect(mockReply.send).toHaveBeenCalledWith({message: 'Page hit event received'});
             expect(mockRequest.log.error).not.toHaveBeenCalled();
@@ -95,13 +97,13 @@ describe('page-hit-handlers', () => {
 
         it('should log error and continue when publishPageHitRaw throws an Error', async () => {
             const testError = new Error('Test error message');
-            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
             const mockPayload = {test: 'payload'};
             vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
-            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest);
+            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
                     err: {
@@ -129,13 +131,13 @@ describe('page-hit-handlers', () => {
 
         it('should log error and continue when publishPageHitRaw throws a non-Error', async () => {
             const testError = 'String error';
-            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
             const mockPayload = {test: 'payload'};
             vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
-            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest);
+            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
                     err: 'String error',
@@ -159,13 +161,13 @@ describe('page-hit-handlers', () => {
 
         it('should log error and continue when publishPageHitRaw throws null', async () => {
             const testError = null;
-            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
             const mockPayload = {test: 'payload'};
             vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
-            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest);
+            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
                     err: null,
@@ -189,13 +191,13 @@ describe('page-hit-handlers', () => {
 
         it('should log error and continue when publishPageHitRaw throws undefined', async () => {
             const testError = undefined;
-            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
             const mockPayload = {test: 'payload'};
             vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
-            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest);
+            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
                     err: undefined,
@@ -219,13 +221,13 @@ describe('page-hit-handlers', () => {
 
         it('should handle complex error objects', async () => {
             const complexError = {message: 'Complex error', code: 500, details: {nested: 'data'}};
-            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(complexError);
             const mockPayload = {test: 'payload'};
             vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
+            const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(complexError);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
-            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest);
+            expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
                     err: complexError,

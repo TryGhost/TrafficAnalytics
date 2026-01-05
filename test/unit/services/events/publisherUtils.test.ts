@@ -1,19 +1,15 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {publishPageHitRaw} from '../../../../src/services/events/publisherUtils';
-import {PageHitRequestType} from '../../../../src/schemas';
+import {PageHitRaw, PageHitRequestType} from '../../../../src/schemas';
 import * as publisherModule from '../../../../src/services/events/publisher';
-import * as transformationsModule from '../../../../src/transformations/page-hit-transformations';
 
 vi.mock('../../../../src/services/events/publisher', () => ({
     publishEvent: vi.fn()
 }));
 
-vi.mock('../../../../src/transformations/page-hit-transformations', () => ({
-    pageHitRawPayloadFromRequest: vi.fn()
-}));
-
 describe('publisherUtils', () => {
     let mockRequest: PageHitRequestType;
+    let mockPayload: PageHitRaw;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -25,22 +21,27 @@ describe('publisherUtils', () => {
             }
         } as unknown as PageHitRequestType;
 
+        mockPayload = {
+            payload: {
+                event_id: 'test-event-123'
+            }
+        } as unknown as PageHitRaw;
+
         process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'test-topic';
     });
 
     describe('publishPageHitRaw', () => {
         it('should log info message with only event_id on successful publish', async () => {
-            const mockPayload = {
+            const payload = {
                 payload: {
                     event_id: 'test-event-123',
                     sensitive: 'data'
                 },
                 other: 'info'
-            };
-            vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
+            } as unknown as PageHitRaw;
             vi.spyOn(publisherModule, 'publishEvent').mockResolvedValue('message-id');
 
-            await publishPageHitRaw(mockRequest);
+            await publishPageHitRaw(mockRequest, payload);
 
             expect(mockRequest.log.info).toHaveBeenCalledWith(
                 {event_id: 'test-event-123'},
@@ -53,21 +54,17 @@ describe('publisherUtils', () => {
         });
 
         it('should not log error on successful publish', async () => {
-            const mockPayload = {payload: {event_id: 'test-123'}};
-            vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
             vi.spyOn(publisherModule, 'publishEvent').mockResolvedValue('message-id');
 
-            await publishPageHitRaw(mockRequest);
+            await publishPageHitRaw(mockRequest, mockPayload);
 
             expect(mockRequest.log.error).not.toHaveBeenCalled();
         });
 
         it('should call publishEvent with correct parameters', async () => {
-            const mockPayload = {payload: {event_id: 'test-123'}};
-            vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
             const publishEventSpy = vi.spyOn(publisherModule, 'publishEvent').mockResolvedValue('message-id');
 
-            await publishPageHitRaw(mockRequest);
+            await publishPageHitRaw(mockRequest, mockPayload);
 
             expect(publishEventSpy).toHaveBeenCalledWith({
                 topic: 'test-topic',
@@ -80,7 +77,7 @@ describe('publisherUtils', () => {
             delete process.env.PUBSUB_TOPIC_PAGE_HITS_RAW;
             const publishEventSpy = vi.spyOn(publisherModule, 'publishEvent');
 
-            await publishPageHitRaw(mockRequest);
+            await publishPageHitRaw(mockRequest, mockPayload);
 
             expect(publishEventSpy).not.toHaveBeenCalled();
             expect(mockRequest.log.info).not.toHaveBeenCalled();
