@@ -96,6 +96,8 @@ describe('page-hit-handlers', () => {
         it('should log error and continue when publishPageHitRaw throws an Error', async () => {
             const testError = new Error('Test error message');
             const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
+            const mockPayload = {test: 'payload'};
+            vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -107,6 +109,7 @@ describe('page-hit-handlers', () => {
                         stack: testError.stack,
                         name: 'Error'
                     },
+                    payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
                         requestUrl: mockRequest.url,
@@ -127,6 +130,8 @@ describe('page-hit-handlers', () => {
         it('should log error and continue when publishPageHitRaw throws a non-Error', async () => {
             const testError = 'String error';
             const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
+            const mockPayload = {test: 'payload'};
+            vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -134,6 +139,7 @@ describe('page-hit-handlers', () => {
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
                     err: 'String error',
+                    payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
                         requestUrl: mockRequest.url,
@@ -154,6 +160,8 @@ describe('page-hit-handlers', () => {
         it('should log error and continue when publishPageHitRaw throws null', async () => {
             const testError = null;
             const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
+            const mockPayload = {test: 'payload'};
+            vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -161,6 +169,7 @@ describe('page-hit-handlers', () => {
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
                     err: null,
+                    payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
                         requestUrl: mockRequest.url,
@@ -181,6 +190,8 @@ describe('page-hit-handlers', () => {
         it('should log error and continue when publishPageHitRaw throws undefined', async () => {
             const testError = undefined;
             const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(testError);
+            const mockPayload = {test: 'payload'};
+            vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -188,6 +199,7 @@ describe('page-hit-handlers', () => {
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
                     err: undefined,
+                    payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
                         requestUrl: mockRequest.url,
@@ -208,6 +220,8 @@ describe('page-hit-handlers', () => {
         it('should handle complex error objects', async () => {
             const complexError = {message: 'Complex error', code: 500, details: {nested: 'data'}};
             const publishPageHitRawSpy = vi.spyOn(publisherUtilsModule, 'publishPageHitRaw').mockRejectedValue(complexError);
+            const mockPayload = {test: 'payload'};
+            vi.spyOn(transformationsModule, 'pageHitRawPayloadFromRequest').mockReturnValue(mockPayload as any);
 
             await handlePageHitRequestStrategyBatch(mockRequest, mockReply);
 
@@ -215,6 +229,7 @@ describe('page-hit-handlers', () => {
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
                     err: complexError,
+                    payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
                         requestUrl: mockRequest.url,

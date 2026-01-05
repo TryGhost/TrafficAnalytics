@@ -8,12 +8,14 @@ export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestT
         await publishPageHitRaw(request);
         reply.status(202).send({message: 'Page hit event received'});
     } catch (error) {
+        const payload = pageHitRawPayloadFromRequest(request);
         request.log.error({
             err: error instanceof Error ? {
                 message: error.message,
                 stack: error.stack,
                 name: error.name
             } : error,
+            payload,
             httpRequest: {
                 requestMethod: request.method,
                 requestUrl: request.url,
@@ -139,4 +141,3 @@ export const pageHitRouteOptions = {
     preHandler: populateAndTransformPageHitRequest,
     handler: pageHitRequestHandler
 };
-

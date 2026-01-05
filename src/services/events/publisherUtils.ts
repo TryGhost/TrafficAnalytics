@@ -6,7 +6,7 @@ export const publishPageHitRaw = async (request: PageHitRequestType): Promise<vo
     const topic = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW as string;
     if (topic) {
         const payload = pageHitRawPayloadFromRequest(request);
-        request.log.info({payload}, 'Publishing page hit raw event');
+        request.log.info({event_id: payload.payload.event_id}, 'Publishing page hit raw event');
         await publishEvent({
             topic,
             payload,
