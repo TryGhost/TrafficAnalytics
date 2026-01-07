@@ -4,8 +4,9 @@ import {publishPageHitRaw} from '../services/events/publisherUtils';
 import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations';
 
 export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
+    const payload = pageHitRawPayloadFromRequest(request);
     try {
-        await publishPageHitRaw(request);
+        await publishPageHitRaw(request, payload);
         reply.status(202).send({message: 'Page hit event received'});
     } catch (error) {
         request.log.error({
@@ -14,6 +15,7 @@ export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestT
                 stack: error.stack,
                 name: error.name
             } : error,
+            payload,
             httpRequest: {
                 requestMethod: request.method,
                 requestUrl: request.url,
@@ -139,4 +141,3 @@ export const pageHitRouteOptions = {
     preHandler: populateAndTransformPageHitRequest,
     handler: pageHitRequestHandler
 };
-
