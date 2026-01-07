@@ -17,6 +17,7 @@ describe('publisherUtils', () => {
         mockRequest = {
             log: {
                 info: vi.fn(),
+                debug: vi.fn(),
                 error: vi.fn()
             }
         } as unknown as PageHitRequestType;
