@@ -91,6 +91,12 @@ class BatchWorker {
             logger.info({
                 event: 'WorkerProcessedMessage',
                 messageId: message.id,
+                eventId: pageHitProcessed.payload.event_id
+            });
+            
+            logger.debug({
+                event: 'WorkerProcessedMessage',
+                messageId: message.id,
                 messageData: this.getMessageData(message),
                 pageHitProcessed
             });
