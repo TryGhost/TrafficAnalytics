@@ -10,7 +10,8 @@ export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestT
         reply.status(202).send({message: 'Page hit event received'});
     } catch (error) {
         request.log.error({
-            err: error instanceof Error ? {
+            event: 'PageHitPublishFailed',
+            error: error instanceof Error ? {
                 message: error.message,
                 stack: error.stack,
                 name: error.name
@@ -26,7 +27,7 @@ export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestT
                 status: 500
             },
             type: 'batch_processing_error'
-        }, 'Failed to publish page hit event to batch queue');
+        });
         reply.status(500).send({error: 'Failed to process page hit event'});
     }
 };
@@ -34,17 +35,17 @@ export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestT
 export const handlePageHitRequestStrategyInline = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
     const pageHitRaw = pageHitRawPayloadFromRequest(request);
     const pageHitProcessed = await transformPageHitRawToProcessed(pageHitRaw);
-    
+
     // Filter bot traffic before proxying
     if (pageHitProcessed.payload.device === 'bot') {
         request.log.info({
             event: 'BotEventFiltered',
-            pageHitProcessed: pageHitProcessed
+            pageHitProcessed
         });
         reply.status(202).send();
         return;
     }
-    
+
     request.body = pageHitProcessed;
 
     // Proxy the request to the upstream target
@@ -76,7 +77,8 @@ export const handlePageHitRequestStrategyInline = async (request: PageHitRequest
             // Log proxy errors with proper structure for GCP
             const unwrappedError = 'error' in error ? error.error : error;
             replyInstance.log.error({
-                err: {
+                event: 'ProxyError',
+                error: {
                     message: unwrappedError.message,
                     stack: unwrappedError.stack,
                     name: unwrappedError.name
@@ -90,9 +92,9 @@ export const handlePageHitRequestStrategyInline = async (request: PageHitRequest
                     protocol: `${replyInstance.request.protocol.toUpperCase()}/${replyInstance.request.raw.httpVersion}`,
                     status: 502
                 },
-                upstream: upstream,
+                upstream,
                 type: 'proxy_error'
-            }, 'Proxy error occurred');
+            });
             replyInstance.status(502).send({error: 'Proxy error'});
         }
     });
@@ -112,7 +114,8 @@ export const pageHitRequestHandler = async (request: FastifyRequest<{
         }
     } catch (error) {
         reply.log.error({
-            err: error instanceof Error ? {
+            event: 'RequestProcessingError',
+            error: error instanceof Error ? {
                 message: error.message,
                 stack: error.stack,
                 name: error.name
@@ -127,7 +130,7 @@ export const pageHitRequestHandler = async (request: FastifyRequest<{
                 status: 500
             },
             type: 'processing_error'
-        }, 'Request processing error occurred');
+        });
         reply.status(500).send({error: 'Internal server error'});
     }
 };

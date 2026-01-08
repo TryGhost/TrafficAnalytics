@@ -67,7 +67,7 @@ describe('BatchWorker', () => {
         it('should create an instance with the provided topic', () => {
             expect(batchWorker).toBeInstanceOf(BatchWorker);
             expect(EventSubscriber).toHaveBeenCalledWith(testTopic);
-            expect(logger.info).toHaveBeenCalledWith('Creating batch worker for topic: %s', testTopic);
+            expect(logger.info).toHaveBeenCalledWith({event: 'BatchWorkerCreating', topic: testTopic});
         });
     });
 
@@ -75,7 +75,7 @@ describe('BatchWorker', () => {
         it('should start the subscriber with handleMessage callback', async () => {
             await batchWorker.start();
 
-            expect(logger.info).toHaveBeenCalledWith('Starting batch worker for topic: %s', testTopic);
+            expect(logger.info).toHaveBeenCalledWith({event: 'BatchWorkerStarting', topic: testTopic});
             expect(mockSubscriber.subscribe).toHaveBeenCalledWith(expect.any(Function));
         });
     });
@@ -84,7 +84,7 @@ describe('BatchWorker', () => {
         it('should stop the subscriber', async () => {
             await batchWorker.stop();
 
-            expect(logger.info).toHaveBeenCalledWith('Stopping batch worker for topic: %s', testTopic);
+            expect(logger.info).toHaveBeenCalledWith({event: 'BatchWorkerStopping', topic: testTopic});
             expect(mockSubscriber.close).toHaveBeenCalled();
         });
     });
@@ -153,7 +153,7 @@ describe('BatchWorker', () => {
             // Should log debug message with full payload
             expect(logger.debug).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    event: 'WorkerProcessedMessage',
+                    event: 'WorkerProcessedMessageDetails',
                     messageId: mockMessage.id,
                     messageData: validPageHitRawData,
                     pageHitProcessed: expect.objectContaining({
@@ -221,10 +221,10 @@ describe('BatchWorker', () => {
             await (batchWorker as any).handleMessage(mockMessage);
 
             expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-                event: 'WorkerFailedToParseMessageError',
+                event: 'WorkerMessageParsingFailed',
                 messageId: mockMessage.id,
                 messageData: invalidJson,
-                err: expect.any(Object)
+                error: expect.any(Object)
             }));
 
             expectMessageAcked(mockMessage);
@@ -261,10 +261,10 @@ describe('BatchWorker', () => {
             await (batchWorker as any).handleMessage(mockMessage);
 
             expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
-                event: 'WorkerFailedToParseMessageError',
+                event: 'WorkerMessageParsingFailed',
                 messageId: mockMessage.id,
                 messageData: invalidPageHitRawWithEmptyUserAgent,
-                err: expect.any(Object)
+                error: expect.any(Object)
             }));
 
             expectMessageAcked(mockMessage);

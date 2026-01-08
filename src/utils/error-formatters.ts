@@ -3,7 +3,7 @@ import {FastifyError, FastifyRequest} from 'fastify';
 export class ErrorDataFormatter {
     static formatValidationError(error: FastifyError, request: FastifyRequest) {
         return {
-            err: {
+            error: {
                 message: error.message,
                 name: error.name,
                 code: error.code,
@@ -21,7 +21,7 @@ export class ErrorDataFormatter {
 
     static formatUnhandledError(error: FastifyError, request: FastifyRequest) {
         return {
-            err: {
+            error: {
                 message: error.message,
                 name: error.name,
                 code: error.code,

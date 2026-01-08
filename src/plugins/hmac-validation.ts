@@ -5,7 +5,7 @@ import {getHmacValidationService} from '../services/hmac-validation';
 async function hmacValidationPlugin(fastify: FastifyInstance) {
     // Skip HMAC validation if HMAC_SECRET is not set (for development/testing)
     if (!process.env.HMAC_SECRET) {
-        fastify.log.warn('HMAC_SECRET not set - HMAC validation disabled');
+        fastify.log.warn({event: 'HmacValidationDisabled'});
         return;
     }
 
@@ -36,7 +36,7 @@ async function hmacValidationPlugin(fastify: FastifyInstance) {
                     error: validationResult.error,
                     type: 'security_validation_error',
                     logOnlyMode
-                }, 'HMAC validation failed');
+                });
 
                 // If in log-only mode, allow the request to continue
                 if (logOnlyMode) {
@@ -63,10 +63,11 @@ async function hmacValidationPlugin(fastify: FastifyInstance) {
                 cleanedUrl: validationResult.cleanedUrl,
                 method: request.method,
                 ip: request.ip
-            }, 'HMAC validation successful');
+            });
         } catch (error) {
             request.log.error({
-                err: error instanceof Error ? {
+                event: 'HmacValidationError',
+                error: error instanceof Error ? {
                     message: error.message,
                     stack: error.stack,
                     name: error.name
@@ -75,7 +76,7 @@ async function hmacValidationPlugin(fastify: FastifyInstance) {
                 method: request.method,
                 ip: request.ip,
                 type: 'hmac_validation_error'
-            }, 'Error during HMAC validation');
+            });
 
             // Return 500 for internal errors
             reply.status(500).send({

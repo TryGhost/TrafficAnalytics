@@ -32,21 +32,23 @@ class EventPublisher {
             };
 
             const messageId = await this.pubsub.topic(topic).publishMessage(message);
-            
+
             logger.info({
+                event: 'EventPublishSuccessful',
                 messageId,
                 topic,
                 payloadSize: message.data.length
-            }, 'Event published successfully');
+            });
 
             return messageId;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             logger.error({
+                event: 'EventPublishFailed',
                 error: errorMessage,
                 topic,
                 payload
-            }, 'Failed to publish event');
+            });
             throw error;
         }
     }

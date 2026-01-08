@@ -11,11 +11,11 @@ async function workerPlugin(fastify: FastifyInstance) {
     // Start the worker process before the app starts listening for requests
     // app.listen() will run after all .ready() hooks have completed
     fastify.ready(() => {
-        fastify.log.info('Worker app started - beginning heartbeat logging');
+        fastify.log.info({event: 'WorkerAppStarted'});
         
         // Log heartbeat every 10 seconds
         heartbeatInterval = setInterval(() => {
-            fastify.log.info('Worker heartbeat - processing events...');
+            fastify.log.info({event: 'WorkerHeartbeat'});
         }, 10000);
 
         // Extract base URL from PROXY_TARGET by removing /v0/events path

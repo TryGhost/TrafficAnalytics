@@ -26,7 +26,7 @@ export class TinybirdClient {
         this.apiToken = config.apiToken;
         this.datasource = config.datasource;
         this.wait = config.wait ?? false;
-        logger.info({apiUrl: this.apiUrl, datasource: this.datasource}, 'TinybirdClient constructor');
+        logger.info({event: 'TinybirdClientInitialized', apiUrl: this.apiUrl, datasource: this.datasource});
     }
 
     get endpoint(): string {
@@ -75,6 +75,6 @@ export class TinybirdClient {
             throw new Error(`Tinybird batch API error: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
-        logger.info(`Successfully posted batch of ${events.length} events to Tinybird`);
+        logger.info({event: 'TinybirdBatchPosted', eventCount: events.length});
     }
 }

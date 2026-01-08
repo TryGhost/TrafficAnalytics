@@ -56,7 +56,7 @@ export class FileSaltStore implements ISaltStore {
                 await this.writeFile({});
             }
         } catch (error) {
-            logger.warn({error}, 'FileSaltStore initialization failed');
+            logger.warn({event: 'FileSaltStoreInitializationFailed', error});
         }
     }
 
@@ -85,7 +85,7 @@ export class FileSaltStore implements ISaltStore {
                 return {};
             }
             // Handle corrupted file
-            logger.error({err: error}, 'FileSaltStore: Failed to read file, starting fresh');
+            logger.error({event: 'FileSaltStoreReadFailed', error});
             await this.writeFile({});
             return {};
         }
@@ -248,7 +248,7 @@ export class FileSaltStore implements ISaltStore {
                 
                 return deletedCount;
             } catch (error) {
-                logger.error('FileSaltStore cleanup failed:', error);
+                logger.error({event: 'FileSaltStoreCleanupFailed', error});
                 throw error;
             }
         });
