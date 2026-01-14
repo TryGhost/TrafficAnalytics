@@ -6,8 +6,18 @@ async function loggingPlugin(fastify: FastifyInstance) {
     fastify.addHook('onRequest', async (request) => {
         // Extract trace context for GCP log correlation
         const traceContext = extractTraceContext(request);
-        if (Object.keys(traceContext).length > 0) {
-            request.log = request.log.child(traceContext);
+
+        // Extract request ID if present
+        const rawRequestId = request.headers['x-request-id'];
+        const requestId = Array.isArray(rawRequestId) ? rawRequestId[0] : rawRequestId;
+
+        const childContext: Record<string, unknown> = {
+            ...traceContext,
+            ...(requestId && {requestId})
+        };
+
+        if (Object.keys(childContext).length > 0) {
+            request.log = request.log.child(childContext);
         }
 
         request.log.info({
