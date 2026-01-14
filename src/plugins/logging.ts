@@ -21,6 +21,7 @@ async function loggingPlugin(fastify: FastifyInstance) {
         }
 
         request.log.info({
+            event: 'IncomingRequest',
             httpRequest: {
                 requestMethod: request.method,
                 requestUrl: request.url,
@@ -30,11 +31,12 @@ async function loggingPlugin(fastify: FastifyInstance) {
                 protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
                 requestSize: String(request.raw.headers['content-length'] || 0)
             }
-        }, 'incoming request');
+        });
     });
 
     fastify.addHook('onResponse', async (request, reply) => {
         request.log.info({
+            event: 'RequestCompleted',
             httpRequest: {
                 requestMethod: request.method,
                 requestUrl: request.url,
@@ -47,7 +49,7 @@ async function loggingPlugin(fastify: FastifyInstance) {
                 status: reply.statusCode,
                 latency: `${(reply.elapsedTime / 1000).toFixed(9)}s`
             }
-        }, 'request completed');
+        });
     });
 }
 

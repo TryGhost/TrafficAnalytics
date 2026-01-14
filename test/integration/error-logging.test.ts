@@ -54,13 +54,14 @@ describe('Error Logging', () => {
         // Verify validation error was logged with stack trace and useful request data
         expect(mockWarn).toHaveBeenCalledWith(
             expect.objectContaining({
-                err: expect.objectContaining({
+                error: expect.objectContaining({
                     message: 'querystring must have required property "name"',
                     name: 'FastifyError',
                     code: 'FST_ERR_VALIDATION',
                     stack: expect.stringContaining('at Object.validateInput'),
                     validation: expect.any(Array)
                 }),
+                event: 'SchemaValidationFailed',
                 httpRequest: expect.objectContaining({
                     userAgent: expect.any(String),
                     referer: expect.any(String)
@@ -72,14 +73,13 @@ describe('Error Logging', () => {
                 query: expect.any(Object),
                 requestBody: expect.any(Object),
                 type: 'validation_error'
-            }),
-            'Schema validation failed'
+            })
         );
 
         // Verify the logged data structure
         const loggedData = mockWarn.mock.calls[0][0];
-        expect(loggedData).toHaveProperty('err.stack');
-        expect(loggedData).toHaveProperty('err.code');
+        expect(loggedData).toHaveProperty('error.stack');
+        expect(loggedData).toHaveProperty('error.code');
         expect(loggedData).toHaveProperty('headers');
         expect(loggedData).toHaveProperty('query');
         expect(loggedData).toHaveProperty('requestBody');
@@ -103,13 +103,14 @@ describe('Error Logging', () => {
         // Verify unhandled error was logged with stack trace and useful request data
         expect(mockError).toHaveBeenCalledWith(
             expect.objectContaining({
-                err: expect.objectContaining({
+                error: expect.objectContaining({
                     message: 'Database connection failed',
                     name: 'DatabaseError',
                     code: 'DATABASE_ERROR',
                     stack: expect.stringContaining('at DatabaseService.connect'),
                     statusCode: 500
                 }),
+                event: 'UnhandledError',
                 httpRequest: expect.objectContaining({
                     userAgent: expect.any(String),
                     referer: expect.any(String)
@@ -121,14 +122,13 @@ describe('Error Logging', () => {
                 query: expect.any(Object),
                 requestBody: expect.any(Object),
                 type: 'unhandled_error'
-            }),
-            'Database connection failed'
+            })
         );
 
         // Verify the logged data structure
         const loggedData = mockError.mock.calls[0][0];
-        expect(loggedData).toHaveProperty('err.stack');
-        expect(loggedData).toHaveProperty('err.code');
+        expect(loggedData).toHaveProperty('error.stack');
+        expect(loggedData).toHaveProperty('error.code');
         expect(loggedData).toHaveProperty('headers');
         expect(loggedData).toHaveProperty('query');
         expect(loggedData).toHaveProperty('requestBody');
@@ -152,8 +152,8 @@ describe('Error Logging', () => {
 
         // Verify the new logging is cleaner and includes stack trace
         const loggedData = mockError.mock.calls[0][0];
-        expect(loggedData).toHaveProperty('err.stack');
-        expect(loggedData).toHaveProperty('err.code');
+        expect(loggedData).toHaveProperty('error.stack');
+        expect(loggedData).toHaveProperty('error.code');
         expect(loggedData).toHaveProperty('headers');
         expect(loggedData).toHaveProperty('query');
         expect(loggedData).toHaveProperty('requestBody');

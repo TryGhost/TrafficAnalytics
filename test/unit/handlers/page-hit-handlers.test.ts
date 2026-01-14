@@ -106,7 +106,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    err: {
+                    error: {
                         message: 'Test error message',
                         stack: testError.stack,
                         name: 'Error'
@@ -121,9 +121,9 @@ describe('page-hit-handlers', () => {
                         protocol: `${mockRequest.protocol.toUpperCase()}/${mockRequest.raw.httpVersion}`,
                         status: 500
                     },
+                    event: 'PageHitPublishFailed',
                     type: 'batch_processing_error'
-                },
-                'Failed to publish page hit event to batch queue'
+                }
             );
             expect(mockReply.status).toHaveBeenCalledWith(500);
             expect(mockReply.send).toHaveBeenCalledWith({error: 'Failed to process page hit event'});
@@ -140,7 +140,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    err: 'String error',
+                    error: 'String error',
                     payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
@@ -151,9 +151,9 @@ describe('page-hit-handlers', () => {
                         protocol: `${mockRequest.protocol.toUpperCase()}/${mockRequest.raw.httpVersion}`,
                         status: 500
                     },
+                    event: 'PageHitPublishFailed',
                     type: 'batch_processing_error'
-                },
-                'Failed to publish page hit event to batch queue'
+                }
             );
             expect(mockReply.status).toHaveBeenCalledWith(500);
             expect(mockReply.send).toHaveBeenCalledWith({error: 'Failed to process page hit event'});
@@ -170,7 +170,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    err: null,
+                    error: null,
                     payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
@@ -181,9 +181,9 @@ describe('page-hit-handlers', () => {
                         protocol: `${mockRequest.protocol.toUpperCase()}/${mockRequest.raw.httpVersion}`,
                         status: 500
                     },
+                    event: 'PageHitPublishFailed',
                     type: 'batch_processing_error'
-                },
-                'Failed to publish page hit event to batch queue'
+                }
             );
             expect(mockReply.status).toHaveBeenCalledWith(500);
             expect(mockReply.send).toHaveBeenCalledWith({error: 'Failed to process page hit event'});
@@ -200,7 +200,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    err: undefined,
+                    error: undefined,
                     payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
@@ -211,9 +211,9 @@ describe('page-hit-handlers', () => {
                         protocol: `${mockRequest.protocol.toUpperCase()}/${mockRequest.raw.httpVersion}`,
                         status: 500
                     },
+                    event: 'PageHitPublishFailed',
                     type: 'batch_processing_error'
-                },
-                'Failed to publish page hit event to batch queue'
+                }
             );
             expect(mockReply.status).toHaveBeenCalledWith(500);
             expect(mockReply.send).toHaveBeenCalledWith({error: 'Failed to process page hit event'});
@@ -230,7 +230,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    err: complexError,
+                    error: complexError,
                     payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
@@ -241,9 +241,9 @@ describe('page-hit-handlers', () => {
                         protocol: `${mockRequest.protocol.toUpperCase()}/${mockRequest.raw.httpVersion}`,
                         status: 500
                     },
+                    event: 'PageHitPublishFailed',
                     type: 'batch_processing_error'
-                },
-                'Failed to publish page hit event to batch queue'
+                }
             );
             expect(mockReply.status).toHaveBeenCalledWith(500);
             expect(mockReply.send).toHaveBeenCalledWith({error: 'Failed to process page hit event'});
@@ -470,7 +470,7 @@ describe('page-hit-handlers', () => {
             options?.onError!(mockReplyInstance, testError as any);
 
             expect(mockReplyInstance.log.error).toHaveBeenCalledWith({
-                err: {
+                error: {
                     message: 'Proxy connection failed',
                     stack: testError.stack,
                     name: 'Error'
@@ -485,8 +485,9 @@ describe('page-hit-handlers', () => {
                     status: 502
                 },
                 upstream: 'http://localhost:3000/local-proxy',
+                event: 'ProxyError',
                 type: 'proxy_error'
-            }, 'Proxy error occurred');
+            });
             expect(mockReplyInstance.status).toHaveBeenCalledWith(502);
             expect(mockReplyInstance.send).toHaveBeenCalledWith({error: 'Proxy error'});
         });
@@ -517,7 +518,7 @@ describe('page-hit-handlers', () => {
             options?.onError!(mockReplyInstance, wrappedError as any);
 
             expect(mockReplyInstance.log.error).toHaveBeenCalledWith({
-                err: {
+                error: {
                     message: 'Connection timeout',
                     stack: innerError.stack,
                     name: 'Error'
@@ -532,8 +533,9 @@ describe('page-hit-handlers', () => {
                     status: 502
                 },
                 upstream: 'http://localhost:3000/local-proxy',
+                event: 'ProxyError',
                 type: 'proxy_error'
-            }, 'Proxy error occurred');
+            });
             expect(mockReplyInstance.status).toHaveBeenCalledWith(502);
             expect(mockReplyInstance.send).toHaveBeenCalledWith({error: 'Proxy error'});
         });

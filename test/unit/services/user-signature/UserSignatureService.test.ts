@@ -288,7 +288,7 @@ describe('UserSignatureService', () => {
                 await timeoutCallback();
                 
                 expect(cleanupSpy).toHaveBeenCalledOnce();
-                expect(loggerInfoSpy).toHaveBeenCalledWith('Salt cleanup completed: 5 old salts deleted');
+                expect(loggerInfoSpy).toHaveBeenCalledWith({event: 'SaltCleanupCompleted', deletedCount: 5});
                 
                 service.stopCleanupScheduler();
             });
@@ -309,7 +309,7 @@ describe('UserSignatureService', () => {
                 await timeoutCallback();
                 
                 expect(cleanupSpy).toHaveBeenCalledOnce();
-                expect(loggerErrorSpy).toHaveBeenCalledWith('Salt cleanup failed:', error);
+                expect(loggerErrorSpy).toHaveBeenCalledWith({event: 'SaltCleanupFailed', error});
                 
                 service.stopCleanupScheduler();
             });

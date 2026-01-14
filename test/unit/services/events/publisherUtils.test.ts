@@ -45,8 +45,7 @@ describe('publisherUtils', () => {
             await publishPageHitRaw(mockRequest, payload);
 
             expect(mockRequest.log.info).toHaveBeenCalledWith(
-                {event_id: 'test-event-123'},
-                'Publishing page hit raw event'
+                {event: 'PublishingPageHitRawEvent', event_id: 'test-event-123'}
             );
             expect(mockRequest.log.info).not.toHaveBeenCalledWith(
                 expect.objectContaining({payload: expect.anything()}),

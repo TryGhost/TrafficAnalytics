@@ -37,9 +37,9 @@ export class UserSignatureService {
         const runCleanup = async () => {
             try {
                 const deletedCount = await this.saltStore.cleanup();
-                logger.info(`Salt cleanup completed: ${deletedCount} old salts deleted`);
+                logger.info({event: 'SaltCleanupCompleted', deletedCount});
             } catch (error) {
-                logger.error('Salt cleanup failed:', error);
+                logger.error({event: 'SaltCleanupFailed', error});
             }
         };
         
@@ -47,7 +47,7 @@ export class UserSignatureService {
         const randomDelayMinutes = Math.floor(Math.random() * 60);
         const randomDelayMs = randomDelayMinutes * 60 * 1000;
         
-        logger.info(`Salt cleanup scheduler will start in ${randomDelayMinutes} minutes`);
+        logger.info({event: 'SaltCleanupSchedulerStarting', delayMinutes: randomDelayMinutes});
         
         // Schedule first cleanup with random delay
         setTimeout(async () => {

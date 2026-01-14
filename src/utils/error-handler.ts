@@ -18,12 +18,12 @@ export function errorHandler() {
             const structuredLogData = ErrorDataFormatter.formatValidationError(error, request);
             const structuredResponseData = ErrorResponseFormatter.formatResponse(error);
 
-            reply.log.warn(structuredLogData, 'Schema validation failed');
+            reply.log.warn({event: 'SchemaValidationFailed', ...structuredLogData});
             return reply.status(400).send(structuredResponseData);
         }
 
         const structuredLogData = ErrorDataFormatter.formatUnhandledError(error, request);
-        reply.log.error(structuredLogData, error.message);
+        reply.log.error({event: 'UnhandledError', ...structuredLogData});
         reply.send(error);
     };
 }

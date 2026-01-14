@@ -57,7 +57,7 @@ export class FirestoreSaltStore implements ISaltStore {
             await this.firestore.collection(this.collectionName).limit(1).get();
         } catch (error) {
             // Log warning but don't throw - allow graceful degradation
-            logger.warn({error}, 'FirestoreSaltStore health check failed');
+            logger.warn({event: 'FirestoreSaltStoreHealthCheckFailed', error});
         }
     }
 
@@ -229,7 +229,7 @@ export class FirestoreSaltStore implements ISaltStore {
             await batch.commit();
             return snapshot.size;
         } catch (error) {
-            logger.error('FirestoreSaltStore cleanup failed:', error);
+            logger.error({event: 'FirestoreSaltStoreCleanupFailed', error});
             throw error;
         }
     }
@@ -269,7 +269,7 @@ export class FirestoreSaltStore implements ISaltStore {
             }
             
             // Re-throw other errors
-            logger.error({err: error}, 'FirestoreSaltStore getOrCreate failed');
+            logger.error({event: 'FirestoreSaltStoreGetOrCreateFailed', error});
             throw error;
         }
     }

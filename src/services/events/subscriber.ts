@@ -25,8 +25,9 @@ export class EventSubscriber {
         try {
             this.subscription = this.pubsub.subscription(subscriptionName);
             logger.info({
+                event: 'EventSubscriberCreated',
                 subscriptionName: this.subscription.name
-            }, 'Event subscriber created successfully');
+            });
         } catch (error) {
             throw new errors.IncorrectUsageError({
                 message: `Failed to create an event subscriber: ${subscriptionName}`
@@ -36,8 +37,9 @@ export class EventSubscriber {
 
     subscribe(handler: (message: Message) => void): void {
         logger.info({
+            event: 'SubscribingToEvent',
             subscriptionName: this.subscription.name
-        }, `Subscribing to event`);
+        });
         this.subscription.on('message', handler);
     }
 
