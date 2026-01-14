@@ -501,15 +501,15 @@
     google-gax "^4.3.3"
     protobufjs "^7.2.6"
 
-"@google-cloud/logging@^11.2.0":
-  version "11.2.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/logging/-/logging-11.2.0.tgz#d282f136467cc4500932f1fa6d4fe58325eb2db2"
-  integrity sha512-Ma94jvuoMpbgNniwtelOt8w82hxK62FuOXZonEv0Hyk3B+/YVuLG/SWNyY9yMso/RXnPEc1fP2qo9kDrjf/b2w==
+"@google-cloud/logging@^11.2.1":
+  version "11.2.1"
+  resolved "https://registry.yarnpkg.com/@google-cloud/logging/-/logging-11.2.1.tgz#5fe9d7a093e717d071994f95c398d4fadd57ea96"
+  integrity sha512-2h9HBJG3OAsvzXmb81qXmaTPfXYU7KJTQUxunoOKFGnY293YQ/eCkW1Y5mHLocwpEqeqQYT/Qvl6Tk+Q7PfStw==
   dependencies:
     "@google-cloud/common" "^5.0.0"
     "@google-cloud/paginator" "^5.0.0"
     "@google-cloud/projectify" "^4.0.0"
-    "@google-cloud/promisify" "^4.0.0"
+    "@google-cloud/promisify" "4.0.0"
     "@opentelemetry/api" "^1.7.0"
     arrify "^2.0.1"
     dot-prop "^6.0.0"
@@ -556,15 +556,14 @@
   dependencies:
     extend "^3.0.2"
 
-"@google-cloud/pino-logging-gcp-config@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/pino-logging-gcp-config/-/pino-logging-gcp-config-1.1.0.tgz#0dae8fc5f266eaf2a12526a54dc42c5728408583"
-  integrity sha512-a22JSc5zTkSVQyqzgdBE/dW6Xal1m/owI/OxnwJacPaG2tWrB8xJ4Urd4oz4r1WcxvVW/J4SRqN1VfYNrcmqRw==
+"@google-cloud/pino-logging-gcp-config@1.3.1":
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/@google-cloud/pino-logging-gcp-config/-/pino-logging-gcp-config-1.3.1.tgz#3530a06ad2c885a9891dca25c98ba09a0b79c4b0"
+  integrity sha512-hsxdbrtx4pmvzSr9VSZTD8n8JxoCfDbr/RTtfhWcW9H+XtAwJF3ojH92oavjQxAxh+LasbVUum/aFVQnU0rZYA==
   dependencies:
-    "@google-cloud/logging" "^11.2.0"
+    "@google-cloud/logging" "^11.2.1"
     eventid "^2.0.1"
-    google-gax "^4.6.1"
-    pino "^9.7.0"
+    pino "^10.1.0"
 
 "@google-cloud/precise-date@^5.0.0":
   version "5.0.0"
@@ -580,6 +579,11 @@
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/@google-cloud/projectify/-/projectify-5.0.0.tgz#9e8ab37e8826fb6678019879111759ab3ca64548"
   integrity sha512-XXQLaIcLrOAMWvRrzz+mlUGtN6vlVNja3XQbMqRi/V7XJTAVwib3VcKd7oRwyZPkp7rBVlHGcaqdyGRrcnkhlA==
+
+"@google-cloud/promisify@4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/promisify/-/promisify-4.0.0.tgz#a906e533ebdd0f754dca2509933334ce58b8c8b1"
+  integrity sha512-Orxzlfb9c67A15cq2JQEyVc7wEsmFBmHjZWZYQMUyJ1qivXyMwdyNOs9odi79hze+2zqdTtu1E19IM/FtqZ10g==
 
 "@google-cloud/promisify@^4.0.0":
   version "4.1.0"
@@ -5262,7 +5266,7 @@ google-auth-library@^9.0.0, google-auth-library@^9.3.0:
     gtoken "^7.0.0"
     jws "^4.0.0"
 
-google-gax@^4.0.3, google-gax@^4.3.3, google-gax@^4.6.1:
+google-gax@^4.0.3, google-gax@^4.3.3:
   version "4.6.1"
   resolved "https://registry.yarnpkg.com/google-gax/-/google-gax-4.6.1.tgz#57f8e3d893d4c708a71167cdcf47eb3afab95929"
   integrity sha512-V6eky/xz2mcKfAd1Ioxyd6nmA61gao3n01C+YeuIwu3vzM9EDR6wcVzMSIbLMDXWeoi9SHYctXuKYC5uJUT3eQ==
@@ -6566,7 +6570,7 @@ pino-std-serializers@^7.0.0:
   resolved "https://registry.yarnpkg.com/pino-std-serializers/-/pino-std-serializers-7.0.0.tgz#7c625038b13718dbbd84ab446bd673dc52259e3b"
   integrity sha512-e906FRY0+tV27iq4juKzSYPbUj2do2X2JX4EzSca1631EB2QJQUqGbDuERal7LCtOpxl6x3+nvo9NPZcmjkiFA==
 
-pino@9.14.0, pino@^9.7.0:
+pino@9.14.0:
   version "9.14.0"
   resolved "https://registry.yarnpkg.com/pino/-/pino-9.14.0.tgz#673d9711c2d1e64d18670c1ec05ef7ba14562556"
   integrity sha512-8OEwKp5juEvb/MjpIc4hjqfgCNysrS94RIOMXYvpYCdm/jglrKEiAYmiumbmGhCvs+IcInsphYDFwqrjr7398w==
