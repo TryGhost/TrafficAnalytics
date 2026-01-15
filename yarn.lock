@@ -2214,10 +2214,10 @@
   resolved "https://registry.yarnpkg.com/@simple-dom/interface/-/interface-1.4.0.tgz#e8feea579232017f89b0138e2726facda6fbb71f"
   integrity sha512-l5qumKFWU0S+4ZzMaLXFU8tQZsicHEMEyAxI5kDFGhJsRqDwe0a7/iPA/GdxlGyDKseQQAgIz5kzU7eXTrlSpA==
 
-"@sinclair/typebox@0.34.41":
-  version "0.34.41"
-  resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.34.41.tgz#aa51a6c1946df2c5a11494a2cdb9318e026db16c"
-  integrity sha512-6gS8pZzSXdyRHTIqoqSVknxolr1kzfy4/CeDnrzsVz8TTIWUbOBr6gnzOmTYJ3eXQNh4IYHIGi5aIL7sOZ2G/g==
+"@sinclair/typebox@0.34.47":
+  version "0.34.47"
+  resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.34.47.tgz#61b684d8a20d2890b9f1f7b0d4f76b4b39f5bc0d"
+  integrity sha512-ZGIBQ+XDvO5JQku9wmwtabcVTHJsgSWAHYtVuM9pBNNR5E88v6Jcj/llpmsjivig5X8A8HHOb4/mbEKPS5EvAw==
 
 "@stdlib/array-float32@^0.2.1", "@stdlib/array-float32@^0.2.2":
   version "0.2.2"
