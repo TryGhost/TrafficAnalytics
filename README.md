@@ -154,4 +154,4 @@ You can manually trigger a deployment via the GitHub Actions UI by running the "
 
 # Copyright & License 
 
-Copyright (c) 2013-2025 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2013-2026 Ghost Foundation - Released under the [MIT license](LICENSE).
