@@ -3519,10 +3519,10 @@
     "@stdlib/utils-copy" "^0.2.0"
     uuid "^9.0.0"
 
-"@tryghost/referrer-parser@0.1.8":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@tryghost/referrer-parser/-/referrer-parser-0.1.8.tgz#ad48b8a81e30e0aed9afdd0ee34dfa2ef84f775c"
-  integrity sha512-+RQQo/nG4E/uxbvm1OeWA0a58CHuF5RxBKHjc9qiiBIi9VhMsLGNcJzsyj9Q+2Sa7fZzMSlmvDHUQKaHHc6wCg==
+"@tryghost/referrer-parser@0.1.12":
+  version "0.1.12"
+  resolved "https://registry.yarnpkg.com/@tryghost/referrer-parser/-/referrer-parser-0.1.12.tgz#9c14924e3127d5cce1fae2839e8041741a8d5c6a"
+  integrity sha512-kAeS4aTT7pltOBVneU0xnkCZ05f7On5MstUT/ZpgCbEGP3KCtC0yS5tOYCZ/N2paErzJb4ClVCA8yi/q27kCNw==
 
 "@tryghost/tpl@^0.1.35":
   version "0.1.35"
