@@ -11,7 +11,7 @@ jobs:
     outputs:
       node-versions: ${{ steps.set-matrix.outputs.node-versions }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Extract node version
         id: extract-node-version
@@ -32,7 +32,7 @@ jobs:
       matrix:
         node: ${{ fromJSON(needs.prepare.outputs.node-versions) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Extract node version
         id: extract-node-version

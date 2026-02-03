@@ -39,7 +39,7 @@ jobs:
       matrix:
         service: ${{ fromJSON(inputs.services) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: "Deploy to ${{ inputs.environment }} (${{ inputs.region }}) - ${{ matrix.service }}"
         uses: "./.github/actions/deploy-gcp-cloud-run"
@@ -57,7 +57,7 @@ jobs:
     needs: deploy
     if: always()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Send deployment summary
         uses: ./.github/actions/slack-deploy-summary

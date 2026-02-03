@@ -57,7 +57,7 @@ jobs:
           - region: europe-west4
             region_name: netherlands
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: "Deploy (${{ matrix.environment }} | ${{ matrix.region }})"
         uses: "./.github/actions/deploy-gcp-cloud-run"
         with:

@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.label.name == 'deploy-staging'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Wait for CI workflow if running
         env:
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Get tree SHA
         id: tree
