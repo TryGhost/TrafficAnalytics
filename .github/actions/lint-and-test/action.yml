@@ -65,7 +65,7 @@ runs:
 
     # Upload coverage reports
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       if: success() && inputs.node-version == 20
       with:
         files: ./cobertura-coverage.xml
