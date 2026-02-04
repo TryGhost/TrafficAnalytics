@@ -54,7 +54,7 @@ runs:
 
     - name: Build base docker image
       id: build-base-docker-image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: .
         target: base
@@ -67,7 +67,7 @@ runs:
 
     - name: Build production docker image
       id: build-production-docker-image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: .
         tags: ${{ inputs.image-name }}:latest
