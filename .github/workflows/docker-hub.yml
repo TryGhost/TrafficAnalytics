@@ -18,7 +18,7 @@ jobs:
       version: ${{ steps.check-trigger.outputs.version }}
       tag: ${{ steps.check-trigger.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.use-main && 'main' || github.ref }}
           fetch-depth: 5
@@ -53,7 +53,7 @@ jobs:
     needs: check-trigger
     if: needs.check-trigger.outputs.release-to-dockerhub == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.use-main && 'main' || github.ref }}
           fetch-depth: 5

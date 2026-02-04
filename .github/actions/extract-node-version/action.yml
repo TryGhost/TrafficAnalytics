@@ -9,7 +9,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Extract Node version from Dockerfile
       id: node-version
       shell: bash

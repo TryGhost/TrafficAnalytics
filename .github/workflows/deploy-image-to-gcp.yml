@@ -21,7 +21,7 @@ jobs:
       image: ${{ vars.DOCKER_IMAGE }}:sha-${{ github.sha }}
       version: ${{ steps.traffic-analytics-docker-metadata.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-tags: true
 

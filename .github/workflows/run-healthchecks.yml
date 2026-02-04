@@ -34,7 +34,7 @@ jobs:
       matrix:
         target: ${{ fromJSON(needs.prepare.outputs.healthcheck_urls) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run health checks
         uses: ./.github/actions/run-healthchecks
