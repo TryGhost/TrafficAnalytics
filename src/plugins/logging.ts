@@ -34,6 +34,13 @@ async function loggingPlugin(fastify: FastifyInstance) {
         });
     });
 
+    fastify.addHook('preHandler', async (request) => {
+        request.log.debug({
+            event: 'IncomingRequestBody',
+            body: request.body
+        });
+    });
+
     fastify.addHook('onResponse', async (request, reply) => {
         request.log.info({
             event: 'RequestCompleted',
