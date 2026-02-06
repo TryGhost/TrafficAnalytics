@@ -54,8 +54,8 @@
     "supertest": "7.2.2",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
-    "vite": "7.3.1",
-    "vite-plugin-node": "7.0.0",
+    "vite": "6.4.1",
+    "vite-plugin-node": "5.0.1",
     "vitest": "3.2.4"
   },
   "dependencies": {
