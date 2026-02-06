@@ -1,5 +1,6 @@
 # Traffic Analytics
 
+
 Traffic Analytics Service - A web analytics proxy for Ghost that processes and enriches traffic data before forwarding it to Tinybird's analytics API.
 
 ## How it Works
