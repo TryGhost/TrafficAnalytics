@@ -46,7 +46,7 @@
     "@types/supertest": "6.0.3",
     "@types/ua-parser-js": "0.7.39",
     "@vitest/coverage-v8": "3.2.4",
-    "eslint": "8.57.1",
+    "eslint": "10.0.0",
     "eslint-plugin-ghost": "3.4.3",
     "husky": "9.1.7",
     "pino-pretty": "13.1.3",
