@@ -50,7 +50,7 @@ async function loggingPlugin(fastify: FastifyInstance) {
     fastify.addHook('preHandler', async (request) => {
         const contentLength = getContentLength(request.headers['content-length']);
         if (contentLength && contentLength > REQUEST_BODY_LOG_THRESHOLD_BYTES) {
-            request.log.info({
+            request.log.debug({
                 event: 'IncomingRequestBody',
                 requestBodySize: contentLength,
                 body: request.body
