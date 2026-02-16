@@ -1,6 +1,6 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
-import {extractTraceContext} from '../utils/logger';
+import {extractTraceContext} from '../utils/trace-context';
 
 async function loggingPlugin(fastify: FastifyInstance) {
     fastify.addHook('onRequest', async (request) => {
