@@ -1,11 +1,11 @@
 import {describe, it, expect, beforeEach, afterEach} from 'vitest';
-import Fastify, {FastifyInstance} from 'fastify';
+import Fastify from 'fastify';
 import pino from 'pino';
 import {Writable} from 'node:stream';
 import loggingPlugin from '../../../src/plugins/logging';
 
 describe('Logging Plugin', () => {
-    let app: FastifyInstance;
+    let app: ReturnType<typeof Fastify>;
     let logLines: string[];
     let logBuffer: string;
 
