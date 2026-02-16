@@ -2,6 +2,19 @@ import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import {extractTraceContext} from '../utils/logger';
 
+const REQUEST_BODY_LOG_THRESHOLD_BYTES = 3 * 1024;
+
+const getContentLength = (contentLengthHeader: string | string[] | undefined): number | undefined => {
+    if (!contentLengthHeader) {
+        return undefined;
+    }
+
+    const contentLength = Array.isArray(contentLengthHeader) ? contentLengthHeader[0] : contentLengthHeader;
+    const parsedLength = Number.parseInt(contentLength, 10);
+
+    return Number.isNaN(parsedLength) ? undefined : parsedLength;
+};
+
 async function loggingPlugin(fastify: FastifyInstance) {
     fastify.addHook('onRequest', async (request) => {
         // Extract trace context for GCP log correlation
@@ -32,6 +45,17 @@ async function loggingPlugin(fastify: FastifyInstance) {
                 requestSize: String(request.raw.headers['content-length'] || 0)
             }
         });
+    });
+
+    fastify.addHook('preHandler', async (request) => {
+        const contentLength = getContentLength(request.headers['content-length']);
+        if (contentLength && contentLength > REQUEST_BODY_LOG_THRESHOLD_BYTES) {
+            request.log.info({
+                event: 'IncomingRequestBody',
+                requestBodySize: contentLength,
+                body: request.body
+            });
+        }
     });
 
     fastify.addHook('onResponse', async (request, reply) => {
