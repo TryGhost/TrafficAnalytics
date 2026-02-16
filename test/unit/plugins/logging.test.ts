@@ -124,7 +124,7 @@ describe('Logging Plugin', () => {
 
                 expect(incomingRequestLog).toBeDefined();
                 expect(incomingRequestLog?.requestId).toBe(requestId);
-                expect(incomingRequestLog).toHaveProperty('logging.googleapis.com/trace');
+                expect(incomingRequestLog).toHaveProperty(['logging.googleapis.com/trace']);
             } finally {
                 process.env.GOOGLE_CLOUD_PROJECT = originalProject;
             }
