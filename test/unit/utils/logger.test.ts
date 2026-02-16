@@ -1,5 +1,5 @@
 import {describe, it, expect, beforeEach, afterEach} from 'vitest';
-import {getLoggerConfig} from '../../../src/utils/logger';
+import {getLoggerConfig} from '../../../src/utils/logger-config';
 
 describe('Logger Config', () => {
     let originalEnv: typeof process.env;

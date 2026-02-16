@@ -2,7 +2,7 @@
 import fastify from 'fastify';
 import loggingPlugin from './plugins/logging';
 import workerPlugin from './plugins/worker-plugin';
-import {getLoggerConfig} from './utils/logger';
+import {getLoggerConfig} from './utils/logger-config';
 import proxyPlugin from './plugins/proxy';
 
 const app = fastify({
