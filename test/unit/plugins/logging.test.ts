@@ -1,32 +1,54 @@
 import {describe, it, expect, beforeEach, afterEach} from 'vitest';
 import Fastify, {FastifyInstance} from 'fastify';
+import pino from 'pino';
+import {Writable} from 'node:stream';
 import loggingPlugin from '../../../src/plugins/logging';
 
 describe('Logging Plugin', () => {
     let app: FastifyInstance;
-    let logOutput: Record<string, unknown>[] = [];
+    let logLines: string[];
+    let logBuffer: string;
+
+    const parseLogs = (): Record<string, unknown>[] => {
+        const parsedLogs: Record<string, unknown>[] = [];
+
+        if (logBuffer.trim().length > 0) {
+            throw new Error(`Incomplete non-empty log buffer found: ${logBuffer}`);
+        }
+
+        for (const line of logLines) {
+            if (line.trim().length === 0) {
+                continue;
+            }
+
+            try {
+                parsedLogs.push(JSON.parse(line) as Record<string, unknown>);
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                throw new Error(`Non-JSON log line emitted: ${line}\nParse error: ${message}`);
+            }
+        }
+
+        return parsedLogs;
+    };
 
     beforeEach(async () => {
-        logOutput = [];
+        logLines = [];
+        logBuffer = '';
 
-        app = Fastify({
-            logger: {
-                level: 'info',
-                transport: {
-                    target: 'pino-pretty',
-                    options: {
-                        sync: true
-                    }
-                }
+        const logStream = new Writable({
+            write(chunk, _encoding, callback) {
+                logBuffer += chunk.toString();
+                const lines = logBuffer.split('\n');
+                logBuffer = lines.pop() ?? '';
+                logLines.push(...lines.filter(Boolean));
+                callback();
             }
         });
 
-        // Capture log output by intercepting the child logger
-        const originalChild = app.log.child.bind(app.log);
-        app.log.child = (bindings: Record<string, unknown>) => {
-            logOutput.push(bindings);
-            return originalChild(bindings);
-        };
+        app = Fastify({
+            loggerInstance: pino({level: 'info'}, logStream)
+        });
 
         await app.register(loggingPlugin);
 
@@ -56,12 +78,12 @@ describe('Logging Plugin', () => {
                 }
             });
 
-            const childLoggerBindings = logOutput.find(
-                bindings => bindings.requestId === requestId
+            const incomingRequestLog = parseLogs().find(
+                log => log.event === 'IncomingRequest'
             );
 
-            expect(childLoggerBindings).toBeDefined();
-            expect(childLoggerBindings?.requestId).toBe(requestId);
+            expect(incomingRequestLog).toBeDefined();
+            expect(incomingRequestLog?.requestId).toBe(requestId);
         });
 
         it('should not include requestId in logs when x-request-id header is not provided', async () => {
@@ -70,11 +92,12 @@ describe('Logging Plugin', () => {
                 url: '/test'
             });
 
-            const childLoggerBindings = logOutput.find(
-                bindings => 'requestId' in bindings
+            const incomingRequestLog = parseLogs().find(
+                log => log.event === 'IncomingRequest'
             );
 
-            expect(childLoggerBindings).toBeUndefined();
+            expect(incomingRequestLog).toBeDefined();
+            expect(incomingRequestLog).not.toHaveProperty('requestId');
         });
 
         it('should include requestId alongside trace context when both are provided', async () => {
@@ -95,13 +118,13 @@ describe('Logging Plugin', () => {
                     }
                 });
 
-                const childLoggerBindings = logOutput.find(
-                    bindings => bindings.requestId === requestId
+                const incomingRequestLog = parseLogs().find(
+                    log => log.event === 'IncomingRequest'
                 );
 
-                expect(childLoggerBindings).toBeDefined();
-                expect(childLoggerBindings?.requestId).toBe(requestId);
-                expect(childLoggerBindings).toHaveProperty('logging.googleapis.com/trace');
+                expect(incomingRequestLog).toBeDefined();
+                expect(incomingRequestLog?.requestId).toBe(requestId);
+                expect(incomingRequestLog).toHaveProperty('logging.googleapis.com/trace');
             } finally {
                 process.env.GOOGLE_CLOUD_PROJECT = originalProject;
             }
