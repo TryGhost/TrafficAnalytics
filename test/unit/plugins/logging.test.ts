@@ -138,11 +138,9 @@ describe('Logging Plugin', () => {
                 method: 'POST',
                 url: '/test',
                 headers: {
-                    'content-length': '1234'
+                    'content-type': 'text/plain'
                 },
-                payload: {
-                    payload: 'x'
-                }
+                payload: 'x'.repeat(1234)
             });
 
             const incomingRequestLog = parseLogs().find(
@@ -151,11 +149,104 @@ describe('Logging Plugin', () => {
 
             expect(incomingRequestLog).toBeDefined();
             expect(incomingRequestLog?.contentLengthHeader).toBe('1234');
+
+            const incomingRequestParsedLog = parseLogs().find(
+                log => log.event === 'IncomingRequestParsed'
+            );
+
+            expect(incomingRequestParsedLog).toBeDefined();
+            expect(incomingRequestParsedLog?.declaredContentLength).toBe(1234);
+            expect(incomingRequestParsedLog?.measuredRawBodyBytes).toBe(1234);
+        });
+
+        it('should include measured raw body bytes in IncomingRequestParsed logs', async () => {
+            await app.inject({
+                method: 'POST',
+                url: '/test',
+                headers: {
+                    'content-type': 'text/plain'
+                },
+                payload: 'x'.repeat(64)
+            });
+
+            const incomingRequestParsedLog = parseLogs().find(
+                log => log.event === 'IncomingRequestParsed'
+            );
+
+            expect(incomingRequestParsedLog).toBeDefined();
+            expect(incomingRequestParsedLog?.declaredContentLength).toBe(64);
+            expect(incomingRequestParsedLog?.measuredRawBodyBytes).toBe(64);
+        });
+
+        it('should always include declaredContentLength and measuredRawBodyBytes keys in IncomingRequestParsed', async () => {
+            await app.inject({
+                method: 'GET',
+                url: '/test'
+            });
+
+            const incomingRequestParsedLog = parseLogs().find(
+                log => log.event === 'IncomingRequestParsed'
+            );
+
+            expect(incomingRequestParsedLog).toBeDefined();
+            expect(incomingRequestParsedLog).toHaveProperty('declaredContentLength');
+            expect(incomingRequestParsedLog).toHaveProperty('measuredRawBodyBytes');
+            expect(incomingRequestParsedLog?.declaredContentLength).toBeNull();
+            expect(typeof incomingRequestParsedLog?.measuredRawBodyBytes).toBe('number');
+        });
+
+        it('should not include measured body fields when debug logging is disabled', async () => {
+            const infoLevelLogs: string[] = [];
+            let infoLevelBuffer = '';
+
+            const infoLevelLogStream = new Writable({
+                write(chunk, _encoding, callback) {
+                    infoLevelBuffer += chunk.toString();
+                    const lines = infoLevelBuffer.split('\n');
+                    infoLevelBuffer = lines.pop() ?? '';
+                    infoLevelLogs.push(...lines.filter(Boolean));
+                    callback();
+                }
+            });
+
+            const infoApp = Fastify({
+                loggerInstance: pino({level: 'info'}, infoLevelLogStream)
+            });
+
+            await infoApp.register(loggingPlugin);
+            infoApp.post('/test', async () => ({ok: true}));
+            await infoApp.ready();
+
+            try {
+                await infoApp.inject({
+                    method: 'POST',
+                    url: '/test',
+                    headers: {
+                        'content-type': 'text/plain'
+                    },
+                    payload: 'x'.repeat(64)
+                });
+            } finally {
+                await infoApp.close();
+            }
+
+            const incomingRequestLog = infoLevelLogs
+                .map(line => JSON.parse(line) as Record<string, unknown>)
+                .find(log => log.event === 'IncomingRequest');
+
+            expect(incomingRequestLog).toBeDefined();
+            expect(incomingRequestLog?.contentLengthHeader).toBe('64');
+
+            const incomingRequestParsedLog = infoLevelLogs
+                .map(line => JSON.parse(line) as Record<string, unknown>)
+                .find(log => log.event === 'IncomingRequestParsed');
+
+            expect(incomingRequestParsedLog).toBeUndefined();
         });
     });
 
-    describe('request body logging', () => {
-        it('should log request body for requests over 3 KB', async () => {
+    describe('parsed request logging', () => {
+        it('should log request body in IncomingRequestParsed for requests over 3 KB', async () => {
             const largeBody = {
                 payload: 'x'.repeat(3073)
             };
@@ -166,16 +257,16 @@ describe('Logging Plugin', () => {
                 payload: largeBody
             });
 
-            const incomingRequestBodyLog = parseLogs().find(
-                log => log.event === 'IncomingRequestBody'
+            const incomingRequestParsedLog = parseLogs().find(
+                log => log.event === 'IncomingRequestParsed'
             );
 
-            expect(incomingRequestBodyLog).toBeDefined();
-            expect(incomingRequestBodyLog?.requestBodySize).toBeGreaterThan(3072);
-            expect(incomingRequestBodyLog?.body).toEqual(largeBody);
+            expect(incomingRequestParsedLog).toBeDefined();
+            expect(incomingRequestParsedLog?.requestBodySize).toBeGreaterThan(3072);
+            expect(incomingRequestParsedLog?.body).toEqual(largeBody);
         });
 
-        it('should not log request body for requests at or under 3 KB', async () => {
+        it('should not include request body in IncomingRequestParsed for requests at or under 3 KB', async () => {
             await app.inject({
                 method: 'POST',
                 url: '/test',
@@ -184,11 +275,13 @@ describe('Logging Plugin', () => {
                 }
             });
 
-            const incomingRequestBodyLog = parseLogs().find(
-                log => log.event === 'IncomingRequestBody'
+            const incomingRequestParsedLog = parseLogs().find(
+                log => log.event === 'IncomingRequestParsed'
             );
 
-            expect(incomingRequestBodyLog).toBeUndefined();
+            expect(incomingRequestParsedLog).toBeDefined();
+            expect(incomingRequestParsedLog).not.toHaveProperty('requestBodySize');
+            expect(incomingRequestParsedLog).not.toHaveProperty('body');
         });
     });
 });
