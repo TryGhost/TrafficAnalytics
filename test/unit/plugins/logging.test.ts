@@ -283,5 +283,55 @@ describe('Logging Plugin', () => {
             expect(incomingRequestParsedLog).not.toHaveProperty('requestBodySize');
             expect(incomingRequestParsedLog).not.toHaveProperty('body');
         });
+
+        it('should use the larger of declared and measured body size when deciding to log request body', async () => {
+            const mutatedHeaderLogs: string[] = [];
+            let mutatedHeaderLogBuffer = '';
+
+            const mutatedHeaderLogStream = new Writable({
+                write(chunk, _encoding, callback) {
+                    mutatedHeaderLogBuffer += chunk.toString();
+                    const lines = mutatedHeaderLogBuffer.split('\n');
+                    mutatedHeaderLogBuffer = lines.pop() ?? '';
+                    mutatedHeaderLogs.push(...lines.filter(Boolean));
+                    callback();
+                }
+            });
+
+            const mutatedHeaderApp = Fastify({
+                loggerInstance: pino({level: 'debug'}, mutatedHeaderLogStream)
+            });
+
+            // Simulate a proxy or intermediary sending an incorrect smaller declared length.
+            mutatedHeaderApp.addHook('preValidation', async (request) => {
+                request.headers['content-length'] = '1024';
+            });
+
+            await mutatedHeaderApp.register(loggingPlugin);
+            mutatedHeaderApp.post('/test', async () => ({ok: true}));
+            await mutatedHeaderApp.ready();
+
+            const largeBody = {payload: 'x'.repeat(3073)};
+
+            try {
+                await mutatedHeaderApp.inject({
+                    method: 'POST',
+                    url: '/test',
+                    payload: largeBody
+                });
+            } finally {
+                await mutatedHeaderApp.close();
+            }
+
+            const incomingRequestParsedLog = mutatedHeaderLogs
+                .map(line => JSON.parse(line) as Record<string, unknown>)
+                .find(log => log.event === 'IncomingRequestParsed');
+
+            expect(incomingRequestParsedLog).toBeDefined();
+            expect(incomingRequestParsedLog?.declaredContentLength).toBe(1024);
+            expect(incomingRequestParsedLog?.measuredRawBodyBytes).toBeGreaterThan(3072);
+            expect(incomingRequestParsedLog?.requestBodySize).toBe(incomingRequestParsedLog?.measuredRawBodyBytes);
+            expect(incomingRequestParsedLog?.body).toEqual(largeBody);
+        });
     });
 });

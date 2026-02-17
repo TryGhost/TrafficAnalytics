@@ -89,14 +89,18 @@ async function loggingPlugin(fastify: FastifyInstance) {
         if (measuredRequest.isDebugLoggingEnabled) {
             const declaredContentLength = getContentLength(request.headers['content-length']);
             const measuredRawBodyBytes = measuredRequest.measuredRawBodyBytes;
-            const requestBodySize = declaredContentLength ?? measuredRawBodyBytes;
+            const requestBodySizeCandidates = [declaredContentLength, measuredRawBodyBytes]
+                .filter((value): value is number => value !== undefined);
+            const requestBodySize = requestBodySizeCandidates.length > 0
+                ? Math.max(...requestBodySizeCandidates)
+                : undefined;
             const logFields: Record<string, unknown> = {
                 event: 'IncomingRequestParsed',
                 declaredContentLength: declaredContentLength ?? null,
                 measuredRawBodyBytes: measuredRawBodyBytes ?? null
             };
 
-            if (requestBodySize && requestBodySize > REQUEST_BODY_LOG_THRESHOLD_BYTES) {
+            if (requestBodySize !== undefined && requestBodySize > REQUEST_BODY_LOG_THRESHOLD_BYTES) {
                 logFields.requestBodySize = requestBodySize;
                 logFields.body = request.body;
             }
