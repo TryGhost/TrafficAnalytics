@@ -152,7 +152,17 @@ describe('Logging Plugin', () => {
 
             expect(incomingRequestBodyLog).toBeDefined();
             expect(incomingRequestBodyLog?.requestBodySize).toBeGreaterThan(3072);
-            expect(incomingRequestBodyLog?.body).toEqual(largeBody);
+            expect(incomingRequestBodyLog?.parsedBodySize).toBeGreaterThan(3072);
+            expect(incomingRequestBodyLog?.bodySummary).toEqual({
+                type: 'object',
+                keyCount: 1,
+                keys: {
+                    payload: {
+                        type: 'string',
+                        length: 3073
+                    }
+                }
+            });
         });
 
         it('should not log request body for requests at or under 3 KB', async () => {

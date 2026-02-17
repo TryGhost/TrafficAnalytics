@@ -1,6 +1,7 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import {extractTraceContext} from '../utils/logger';
+import {getSerializedSizeBytes, summarizeRequestBody} from '../utils/body-summary';
 
 const REQUEST_BODY_LOG_THRESHOLD_BYTES = 3 * 1024;
 
@@ -53,7 +54,8 @@ async function loggingPlugin(fastify: FastifyInstance) {
             request.log.debug({
                 event: 'IncomingRequestBody',
                 requestBodySize: contentLength,
-                body: request.body
+                parsedBodySize: getSerializedSizeBytes(request.body),
+                bodySummary: summarizeRequestBody(request.body)
             });
         }
     });
