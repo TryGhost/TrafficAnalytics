@@ -47,13 +47,16 @@ describe('Logging Plugin', () => {
         });
 
         app = Fastify({
-            loggerInstance: pino({level: 'info'}, logStream)
+            loggerInstance: pino({level: 'debug'}, logStream)
         });
 
         await app.register(loggingPlugin);
 
         // Add a test route
         app.get('/test', async () => {
+            return {ok: true};
+        });
+        app.post('/test', async () => {
             return {ok: true};
         });
 
@@ -128,6 +131,44 @@ describe('Logging Plugin', () => {
             } finally {
                 process.env.GOOGLE_CLOUD_PROJECT = originalProject;
             }
+        });
+    });
+
+    describe('request body logging', () => {
+        it('should log request body for requests over 3 KB', async () => {
+            const largeBody = {
+                payload: 'x'.repeat(3073)
+            };
+
+            await app.inject({
+                method: 'POST',
+                url: '/test',
+                payload: largeBody
+            });
+
+            const incomingRequestBodyLog = parseLogs().find(
+                log => log.event === 'IncomingRequestBody'
+            );
+
+            expect(incomingRequestBodyLog).toBeDefined();
+            expect(incomingRequestBodyLog?.requestBodySize).toBeGreaterThan(3072);
+            expect(incomingRequestBodyLog?.body).toEqual(largeBody);
+        });
+
+        it('should not log request body for requests at or under 3 KB', async () => {
+            await app.inject({
+                method: 'POST',
+                url: '/test',
+                payload: {
+                    payload: 'x'.repeat(2800)
+                }
+            });
+
+            const incomingRequestBodyLog = parseLogs().find(
+                log => log.event === 'IncomingRequestBody'
+            );
+
+            expect(incomingRequestBodyLog).toBeUndefined();
         });
     });
 });
