@@ -6,7 +6,7 @@ import timestampPlugin from './plugins/timestamp';
 import corsPlugin from './plugins/cors';
 import proxyPlugin from './plugins/proxy';
 import hmacValidationPlugin from './plugins/hmac-validation';
-import {getLoggerConfig} from './utils/logger';
+import {getLoggerConfig} from './utils/logger-config';
 import {errorHandler} from './utils/error-handler';
 import v1Routes from './routes/v1';
 import replyFrom from '@fastify/reply-from';
