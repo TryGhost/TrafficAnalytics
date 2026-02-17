@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@fastify/cors": "11.2.0",
-    "@fastify/otel": "0.9.3",
+    "@fastify/otel": "0.16.0",
     "@fastify/reply-from": "11.0.2",
     "@fastify/type-provider-typebox": "5.2.0",
     "@google-cloud/firestore": "7.11.6",
