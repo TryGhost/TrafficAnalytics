@@ -132,26 +132,6 @@ describe('Logging Plugin', () => {
                 process.env.GOOGLE_CLOUD_PROJECT = originalProject;
             }
         });
-
-        it('should include content-length header value in IncomingRequest logs', async () => {
-            await app.inject({
-                method: 'POST',
-                url: '/test',
-                headers: {
-                    'content-length': '1234'
-                },
-                payload: {
-                    payload: 'x'
-                }
-            });
-
-            const incomingRequestLog = parseLogs().find(
-                log => log.event === 'IncomingRequest'
-            );
-
-            expect(incomingRequestLog).toBeDefined();
-            expect(incomingRequestLog?.contentLengthHeader).toBe('1234');
-        });
     });
 
     describe('request body logging', () => {

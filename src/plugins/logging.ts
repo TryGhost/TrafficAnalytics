@@ -43,8 +43,7 @@ async function loggingPlugin(fastify: FastifyInstance) {
                 referer: request.headers.referer,
                 protocol: `${request.protocol.toUpperCase()}/${request.raw.httpVersion}`,
                 requestSize: String(request.raw.headers['content-length'] || 0)
-            },
-            contentLengthHeader: request.headers['content-length']
+            }
         });
     });
 
