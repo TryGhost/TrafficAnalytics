@@ -1,5 +1,6 @@
 import {FastifyInstance, FastifyRequest} from 'fastify';
 import fp from 'fastify-plugin';
+import type {Logger as PinoLogger} from 'pino';
 import {Transform} from 'node:stream';
 import {extractTraceContext} from '../utils/logger';
 
@@ -22,10 +23,7 @@ interface RequestWithMeasuredBody extends FastifyRequest {
 }
 
 const isDebugLevelEnabled = (request: FastifyRequest): boolean => {
-    const logger = request.log as {levelVal?: number; levels?: {values?: {debug?: number}}};
-    const debugLevel = logger.levels?.values?.debug;
-
-    return debugLevel !== undefined && logger.levelVal !== undefined && logger.levelVal <= debugLevel;
+    return (request.log as PinoLogger).isLevelEnabled('debug');
 };
 
 async function loggingPlugin(fastify: FastifyInstance) {
