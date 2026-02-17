@@ -1,7 +1,5 @@
-import {FastifyInstance, FastifyRequest} from 'fastify';
+import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
-import type {Logger as PinoLogger} from 'pino';
-import {Transform} from 'node:stream';
 import {extractTraceContext} from '../utils/logger';
 
 const REQUEST_BODY_LOG_THRESHOLD_BYTES = 3 * 1024;
@@ -17,20 +15,8 @@ const getContentLength = (contentLengthHeader: string | string[] | undefined): n
     return Number.isNaN(parsedLength) ? undefined : parsedLength;
 };
 
-interface RequestWithMeasuredBody extends FastifyRequest {
-    measuredRawBodyBytes?: number;
-    isDebugLoggingEnabled?: boolean;
-}
-
-const isDebugLevelEnabled = (request: FastifyRequest): boolean => {
-    return (request.log as PinoLogger).isLevelEnabled('debug');
-};
-
 async function loggingPlugin(fastify: FastifyInstance) {
     fastify.addHook('onRequest', async (request) => {
-        const measuredRequest = request as RequestWithMeasuredBody;
-        measuredRequest.isDebugLoggingEnabled = isDebugLevelEnabled(request);
-
         // Extract trace context for GCP log correlation
         const traceContext = extractTraceContext(request);
 
@@ -62,48 +48,14 @@ async function loggingPlugin(fastify: FastifyInstance) {
         });
     });
 
-    fastify.addHook('preParsing', async (request, _reply, payload) => {
-        const measuredRequest = request as RequestWithMeasuredBody;
-        if (!measuredRequest.isDebugLoggingEnabled) {
-            return payload;
-        }
-
-        measuredRequest.measuredRawBodyBytes = 0;
-
-        const countingStream = new Transform({
-            transform(chunk, _encoding, callback) {
-                const chunkSize = Buffer.isBuffer(chunk) ? chunk.length : Buffer.byteLength(String(chunk));
-                measuredRequest.measuredRawBodyBytes = (measuredRequest.measuredRawBodyBytes ?? 0) + chunkSize;
-                callback(null, chunk);
-            }
-        });
-
-        payload.pipe(countingStream);
-        return countingStream;
-    });
-
-    fastify.addHook('preValidation', async (request) => {
-        const measuredRequest = request as RequestWithMeasuredBody;
-        if (measuredRequest.isDebugLoggingEnabled) {
-            const declaredContentLength = getContentLength(request.headers['content-length']);
-            const measuredRawBodyBytes = measuredRequest.measuredRawBodyBytes;
-            const requestBodySizeCandidates = [declaredContentLength, measuredRawBodyBytes]
-                .filter((value): value is number => value !== undefined);
-            const requestBodySize = requestBodySizeCandidates.length > 0
-                ? Math.max(...requestBodySizeCandidates)
-                : undefined;
-            const logFields: Record<string, unknown> = {
-                event: 'IncomingRequestParsed',
-                declaredContentLength: declaredContentLength ?? null,
-                measuredRawBodyBytes: measuredRawBodyBytes ?? null
-            };
-
-            if (requestBodySize !== undefined && requestBodySize > REQUEST_BODY_LOG_THRESHOLD_BYTES) {
-                logFields.requestBodySize = requestBodySize;
-                logFields.body = request.body;
-            }
-
-            request.log.debug(logFields);
+    fastify.addHook('preHandler', async (request) => {
+        const contentLength = getContentLength(request.headers['content-length']);
+        if (contentLength && contentLength > REQUEST_BODY_LOG_THRESHOLD_BYTES) {
+            request.log.debug({
+                event: 'IncomingRequestBody',
+                requestBodySize: contentLength,
+                body: request.body
+            });
         }
     });
 
