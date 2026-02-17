@@ -135,9 +135,9 @@ describe('Logging Plugin', () => {
     });
 
     describe('request body logging', () => {
-        it('should log request body for requests over 3 KB', async () => {
+        it('should log request body for requests over 600 KB', async () => {
             const largeBody = {
-                payload: 'x'.repeat(3073)
+                payload: 'x'.repeat((600 * 1024) + 1)
             };
 
             await app.inject({
@@ -151,26 +151,26 @@ describe('Logging Plugin', () => {
             );
 
             expect(incomingRequestBodyLog).toBeDefined();
-            expect(incomingRequestBodyLog?.requestBodySize).toBeGreaterThan(3072);
-            expect(incomingRequestBodyLog?.parsedBodySize).toBeGreaterThan(3072);
+            expect(incomingRequestBodyLog?.requestBodySize).toBeGreaterThan(600 * 1024);
+            expect(incomingRequestBodyLog?.parsedBodySize).toBeGreaterThan(600 * 1024);
             expect(incomingRequestBodyLog?.bodySummary).toEqual({
                 type: 'object',
                 keyCount: 1,
                 keys: {
                     payload: {
                         type: 'string',
-                        length: 3073
+                        length: (600 * 1024) + 1
                     }
                 }
             });
         });
 
-        it('should not log request body for requests at or under 3 KB', async () => {
+        it('should not log request body for requests at or under 600 KB', async () => {
             await app.inject({
                 method: 'POST',
                 url: '/test',
                 payload: {
-                    payload: 'x'.repeat(2800)
+                    payload: 'x'.repeat((600 * 1024) - 200)
                 }
             });
 

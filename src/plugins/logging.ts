@@ -3,7 +3,7 @@ import fp from 'fastify-plugin';
 import {extractTraceContext} from '../utils/logger';
 import {getSerializedSizeBytes, summarizeRequestBody} from '../utils/body-summary';
 
-const REQUEST_BODY_LOG_THRESHOLD_BYTES = 3 * 1024;
+const REQUEST_BODY_LOG_THRESHOLD_BYTES = 600 * 1024;
 
 const getContentLength = (contentLengthHeader: string | string[] | undefined): number | undefined => {
     if (!contentLengthHeader) {
