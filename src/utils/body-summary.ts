@@ -36,12 +36,9 @@ const summarizeValue = (value: unknown, depth: number, maxDepth: number, maxKeys
     if (Array.isArray(value)) {
         const summary: ValueSummary = {
             type: 'array',
-            length: value.length
+            length: value.length,
+            truncated: true
         };
-
-        if (depth >= maxDepth) {
-            summary.truncated = true;
-        }
 
         return summary;
     }

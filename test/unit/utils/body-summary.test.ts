@@ -29,7 +29,8 @@ describe('body-summary utils', () => {
                 },
                 tags: {
                     type: 'array',
-                    length: 2
+                    length: 2,
+                    truncated: true
                 },
                 metadata: {
                     type: 'object',
