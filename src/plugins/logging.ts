@@ -1,6 +1,6 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
-import {extractTraceContext} from '../utils/logger';
+import {extractTraceContext} from '../utils/trace-context';
 import {getSerializedSizeBytes, summarizeRequestBody} from '../utils/body-summary';
 
 const REQUEST_BODY_LOG_THRESHOLD_BYTES = 600 * 1024;
