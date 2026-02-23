@@ -65,6 +65,12 @@ export function getLoggerConfig(): LoggerOptions {
         ...gcpConfig,
         level: process.env.LOG_LEVEL || 'info',
         formatters: {
+            ...gcpConfig.formatters,
+            level(label: string): Record<string, string> {
+                return {
+                    severity: label.toUpperCase()
+                };
+            },
             log(object: LogRecord): Record<string, unknown> {
                 // Add trace context attributes following Cloud Logging structured log format described
                 // in https://cloud.google.com/logging/docs/structured-logging#special-payload-fields
