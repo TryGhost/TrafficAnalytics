@@ -61,7 +61,7 @@
   "dependencies": {
     "@fastify/cors": "11.2.0",
     "@fastify/otel": "0.9.3",
-    "@fastify/reply-from": "12.5.0",
+    "@fastify/reply-from": "12.6.0",
     "@fastify/type-provider-typebox": "5.2.0",
     "@google-cloud/firestore": "7.11.6",
     "@google-cloud/opentelemetry-cloud-trace-exporter": "2.4.1",
