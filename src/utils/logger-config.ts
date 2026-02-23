@@ -10,6 +10,15 @@ interface LogRecord {
     [key: string]: unknown;
 }
 
+function serializeError(error: Error): Record<string, unknown> {
+    return {
+        message: error.message,
+        name: error.name,
+        code: 'code' in error ? (error as Error & {code: string}).code : undefined,
+        stack: error.stack
+    };
+}
+
 /**
  * Get logger configuration based on environment
  */
@@ -45,14 +54,7 @@ export function getLoggerConfig(): LoggerOptions {
                         statusCode: reply.statusCode
                     };
                 },
-                err(error: Error) {
-                    return {
-                        message: error.message,
-                        name: error.name,
-                        code: 'code' in error ? (error as Error & {code: string}).code : undefined,
-                        stack: error.stack
-                    };
-                }
+                err: serializeError
             }
         };
     }
@@ -82,14 +84,7 @@ export function getLoggerConfig(): LoggerOptions {
         },
         serializers: {
             ...gcpConfig.serializers,
-            err(error: Error) {
-                return {
-                    message: error.message,
-                    name: error.name,
-                    code: 'code' in error ? (error as Error & {code: string}).code : undefined,
-                    stack: error.stack
-                };
-            }
+            err: serializeError
         }
     };
 }
