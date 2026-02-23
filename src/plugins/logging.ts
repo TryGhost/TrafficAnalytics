@@ -1,6 +1,20 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
 import {extractTraceContext} from '../utils/trace-context';
+import {getSerializedSizeBytes, summarizeRequestBody} from '../utils/body-summary';
+
+const REQUEST_BODY_LOG_THRESHOLD_BYTES = 600 * 1024;
+
+const getContentLength = (contentLengthHeader: string | string[] | undefined): number | undefined => {
+    if (!contentLengthHeader) {
+        return undefined;
+    }
+
+    const contentLength = Array.isArray(contentLengthHeader) ? contentLengthHeader[0] : contentLengthHeader;
+    const parsedLength = Number.parseInt(contentLength, 10);
+
+    return Number.isNaN(parsedLength) ? undefined : parsedLength;
+};
 
 async function loggingPlugin(fastify: FastifyInstance) {
     fastify.addHook('onRequest', async (request) => {
