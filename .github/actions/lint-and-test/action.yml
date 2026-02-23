@@ -18,6 +18,13 @@ runs:
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test yarn _lint
 
+    # Dependency check
+    - name: Depcheck
+      shell: bash
+      run: |
+        export DOCKER_IMAGE=${{ inputs.docker-image }}
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test npx depcheck
+
     # Test with compose (includes Firestore emulator)
     - name: Test
       shell: bash
