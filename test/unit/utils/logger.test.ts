@@ -14,10 +14,11 @@ describe('Logger Config', () => {
 
     it('should return pretty logger config in development', () => {
         vi.stubEnv('NODE_ENV', 'development');
+        vi.stubEnv('LOG_LEVEL', 'warn');
 
         const config = getLoggerConfig();
 
-        expect(config.level).toBe(process.env.LOG_LEVEL || 'info');
+        expect(config.level).toBe('warn');
         expect(config.transport).toMatchObject({
             target: 'pino-pretty'
         });
@@ -28,10 +29,11 @@ describe('Logger Config', () => {
 
     it('should return gcp logger config outside development and test', () => {
         vi.stubEnv('NODE_ENV', 'production');
+        vi.stubEnv('LOG_LEVEL', 'info');
 
         const config = getLoggerConfig();
 
-        expect(config.level).toBe(process.env.LOG_LEVEL || 'info');
+        expect(config.level).toBe('info');
         expect(config.formatters).toHaveProperty('log');
         expect(config.serializers).toHaveProperty('err');
     });
