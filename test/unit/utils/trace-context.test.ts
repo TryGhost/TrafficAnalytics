@@ -1,18 +1,14 @@
-import {describe, it, expect, beforeEach, afterEach} from 'vitest';
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
 import {extractTraceContext} from '../../../src/utils/trace-context';
 import type {FastifyRequest} from 'fastify';
 
 describe('Trace Context Utilities', () => {
-    let originalEnv: typeof process.env;
-
     beforeEach(() => {
-        originalEnv = process.env;
-        process.env = {...originalEnv};
-        process.env.GOOGLE_CLOUD_PROJECT = 'test-project';
+        vi.stubEnv('GOOGLE_CLOUD_PROJECT', 'test-project');
     });
 
     afterEach(() => {
-        process.env = originalEnv;
+        vi.unstubAllEnvs();
     });
 
     describe('extractTraceContext', () => {
@@ -123,7 +119,7 @@ describe('Trace Context Utilities', () => {
         });
 
         it('should return empty object when GOOGLE_CLOUD_PROJECT is not set', () => {
-            delete process.env.GOOGLE_CLOUD_PROJECT;
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
 
             const mockRequest = {
                 headers: {

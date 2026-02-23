@@ -1,26 +1,19 @@
-import {describe, it, expect, beforeEach, afterEach} from 'vitest';
+import {describe, it, expect, afterEach, vi} from 'vitest';
 import {getLoggerConfig} from '../../../src/utils/logger-config';
 
 describe('Logger Config', () => {
-    let originalEnv: typeof process.env;
-
-    beforeEach(() => {
-        originalEnv = process.env;
-        process.env = {...originalEnv};
-    });
-
     afterEach(() => {
-        process.env = originalEnv;
+        vi.unstubAllEnvs();
     });
 
     it('should disable logging in test environment', () => {
-        process.env.NODE_ENV = 'testing';
+        vi.stubEnv('NODE_ENV', 'testing');
 
         expect(getLoggerConfig()).toEqual({level: 'silent'});
     });
 
     it('should return pretty logger config in development', () => {
-        process.env.NODE_ENV = 'development';
+        vi.stubEnv('NODE_ENV', 'development');
 
         const config = getLoggerConfig();
 
@@ -34,7 +27,7 @@ describe('Logger Config', () => {
     });
 
     it('should return gcp logger config outside development and test', () => {
-        process.env.NODE_ENV = 'production';
+        vi.stubEnv('NODE_ENV', 'production');
 
         const config = getLoggerConfig();
 
