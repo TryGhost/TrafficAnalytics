@@ -57,3 +57,9 @@ runs:
           playwright-report/
           test-results/
         retention-days: 30
+
+    - name: View Test Report command
+      if: failure()
+      shell: bash
+      run: |
+        echo -e "::notice::To view the Playwright report locally, run:\n\nREPORT_DIR=\$(mktemp -d) && gh run download ${{ github.run_id }} -n playwright-results-${{ inputs.environment_name }} -D \"\$REPORT_DIR\" && npx playwright show-report \"\$REPORT_DIR/playwright-report\""
