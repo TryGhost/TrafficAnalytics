@@ -241,6 +241,49 @@ describe('Logger Config', () => {
             expect(appLog).not.toHaveProperty('msg');
         });
 
+        it('should map generic trace fields to GCP trace fields', async () => {
+            vi.stubEnv('LOG_LEVEL', 'info');
+
+            const {logger, flushLogs} = createLoggerHarness();
+            logger.info({
+                event: 'trace-map',
+                trace_id: '105445aa7843bc8bf206b12000100000',
+                span_id: '1',
+                trace_flags: '01'
+            }, 'trace mapping');
+
+            const logs = await flushLogs();
+            const appLog = findLogByEvent(logs, 'trace-map');
+
+            expect(appLog).toBeDefined();
+            expect(appLog).toHaveProperty('logging.googleapis.com/trace', '105445aa7843bc8bf206b12000100000');
+            expect(appLog).toHaveProperty('logging.googleapis.com/spanId', '1');
+            expect(appLog).toHaveProperty('logging.googleapis.com/trace_sampled', true);
+            expect(appLog).not.toHaveProperty('trace_id');
+            expect(appLog).not.toHaveProperty('span_id');
+            expect(appLog).not.toHaveProperty('trace_flags');
+        });
+
+        it('should omit trace_sampled when trace_flags indicates unsampled trace', async () => {
+            vi.stubEnv('LOG_LEVEL', 'info');
+
+            const {logger, flushLogs} = createLoggerHarness();
+            logger.info({
+                event: 'trace-unsampled',
+                trace_id: '105445aa7843bc8bf206b12000100000',
+                span_id: '1',
+                trace_flags: '00'
+            }, 'trace mapping');
+
+            const logs = await flushLogs();
+            const appLog = findLogByEvent(logs, 'trace-unsampled');
+
+            expect(appLog).toBeDefined();
+            expect(appLog).toHaveProperty('logging.googleapis.com/trace', '105445aa7843bc8bf206b12000100000');
+            expect(appLog).toHaveProperty('logging.googleapis.com/spanId', '1');
+            expect(appLog).not.toHaveProperty('logging.googleapis.com/trace_sampled');
+        });
+
         it('should serialize native errors with error reporting fields', async () => {
             vi.stubEnv('LOG_LEVEL', 'info');
 

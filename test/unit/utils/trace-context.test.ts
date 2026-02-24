@@ -1,16 +1,8 @@
-import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
+import {describe, it, expect} from 'vitest';
 import {extractTraceContext} from '../../../src/utils/trace-context';
 import type {FastifyRequest} from 'fastify';
 
 describe('Trace Context Utilities', () => {
-    beforeEach(() => {
-        vi.stubEnv('GOOGLE_CLOUD_PROJECT', 'test-project');
-    });
-
-    afterEach(() => {
-        vi.unstubAllEnvs();
-    });
-
     describe('extractTraceContext', () => {
         it('should extract trace context from X-Cloud-Trace-Context header', () => {
             const mockRequest = {
@@ -22,9 +14,9 @@ describe('Trace Context Utilities', () => {
             const result = extractTraceContext(mockRequest);
 
             expect(result).toEqual({
-                'logging.googleapis.com/trace': 'projects/test-project/traces/105445aa7843bc8bf206b12000100000',
-                'logging.googleapis.com/spanId': '1',
-                'logging.googleapis.com/trace_sampled': true
+                trace_id: '105445aa7843bc8bf206b12000100000',
+                span_id: '1',
+                trace_flags: '01'
             });
         });
 
@@ -38,8 +30,8 @@ describe('Trace Context Utilities', () => {
             const result = extractTraceContext(mockRequest);
 
             expect(result).toEqual({
-                'logging.googleapis.com/trace': 'projects/test-project/traces/105445aa7843bc8bf206b12000100000',
-                'logging.googleapis.com/spanId': '1'
+                trace_id: '105445aa7843bc8bf206b12000100000',
+                span_id: '1'
             });
         });
 
@@ -53,9 +45,9 @@ describe('Trace Context Utilities', () => {
             const result = extractTraceContext(mockRequest);
 
             expect(result).toEqual({
-                'logging.googleapis.com/trace': 'projects/test-project/traces/105445aa7843bc8bf206b12000100000',
-                'logging.googleapis.com/spanId': '1',
-                'logging.googleapis.com/trace_sampled': false
+                trace_id: '105445aa7843bc8bf206b12000100000',
+                span_id: '1',
+                trace_flags: '00'
             });
         });
 
@@ -69,9 +61,9 @@ describe('Trace Context Utilities', () => {
             const result = extractTraceContext(mockRequest);
 
             expect(result).toEqual({
-                'logging.googleapis.com/trace': 'projects/test-project/traces/4bf92f3577b34da6a3ce929d0e0e4736',
-                'logging.googleapis.com/spanId': '00f067aa0ba902b7',
-                'logging.googleapis.com/trace_sampled': true
+                trace_id: '4bf92f3577b34da6a3ce929d0e0e4736',
+                span_id: '00f067aa0ba902b7',
+                trace_flags: '01'
             });
         });
 
@@ -86,9 +78,9 @@ describe('Trace Context Utilities', () => {
             const result = extractTraceContext(mockRequest);
 
             expect(result).toEqual({
-                'logging.googleapis.com/trace': 'projects/test-project/traces/105445aa7843bc8bf206b12000100000',
-                'logging.googleapis.com/spanId': '1',
-                'logging.googleapis.com/trace_sampled': true
+                trace_id: '105445aa7843bc8bf206b12000100000',
+                span_id: '1',
+                trace_flags: '01'
             });
         });
 
@@ -102,29 +94,15 @@ describe('Trace Context Utilities', () => {
             const result = extractTraceContext(mockRequest);
 
             expect(result).toEqual({
-                'logging.googleapis.com/trace': 'projects/test-project/traces/4bf92f3577b34da6a3ce929d0e0e4736',
-                'logging.googleapis.com/spanId': '00f067aa0ba902b7',
-                'logging.googleapis.com/trace_sampled': false
+                trace_id: '4bf92f3577b34da6a3ce929d0e0e4736',
+                span_id: '00f067aa0ba902b7',
+                trace_flags: '00'
             });
         });
 
         it('should return empty object when no trace headers are present', () => {
             const mockRequest = {
                 headers: {}
-            } as unknown as FastifyRequest;
-
-            const result = extractTraceContext(mockRequest);
-
-            expect(result).toEqual({});
-        });
-
-        it('should return empty object when GOOGLE_CLOUD_PROJECT is not set', () => {
-            vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
-
-            const mockRequest = {
-                headers: {
-                    'x-cloud-trace-context': '105445aa7843bc8bf206b12000100000/1;o=1'
-                }
             } as unknown as FastifyRequest;
 
             const result = extractTraceContext(mockRequest);
@@ -142,7 +120,7 @@ describe('Trace Context Utilities', () => {
             const result = extractTraceContext(mockRequest);
 
             expect(result).toEqual({
-                'logging.googleapis.com/trace': 'projects/test-project/traces/malformed-header'
+                trace_id: 'malformed-header'
             });
         });
 
@@ -180,8 +158,8 @@ describe('Trace Context Utilities', () => {
             const result = extractTraceContext(mockRequest);
 
             expect(result).toEqual({
-                'logging.googleapis.com/spanId': '1',
-                'logging.googleapis.com/trace_sampled': true
+                span_id: '1',
+                trace_flags: '01'
             });
         });
     });

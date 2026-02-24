@@ -1,36 +1,41 @@
 import type {FastifyRequest} from 'fastify';
 
+interface GenericTraceContext {
+    trace_id?: string;
+    span_id?: string;
+    trace_flags?: string;
+}
+
 /**
  * Extract trace context from Cloud Run headers for log correlation
  */
-export function extractTraceContext(request: FastifyRequest): Record<string, string | boolean> {
-    const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT;
-    const traceContext: Record<string, string | boolean> = {};
+export function extractTraceContext(request: FastifyRequest): GenericTraceContext {
+    const traceContext: GenericTraceContext = {};
 
     // Extract from X-Cloud-Trace-Context header (Cloud Run format)
     const cloudTraceHeader = request.headers['x-cloud-trace-context'] as string;
-    if (cloudTraceHeader && PROJECT_ID) {
+    if (cloudTraceHeader) {
         const [traceId, spanId] = cloudTraceHeader.split('/');
         if (traceId) {
-            traceContext['logging.googleapis.com/trace'] = `projects/${PROJECT_ID}/traces/${traceId}`;
+            traceContext.trace_id = traceId;
         }
         if (spanId) {
             const [spanIdPart, traceSampled] = spanId.split(';o=');
-            traceContext['logging.googleapis.com/spanId'] = spanIdPart;
+            traceContext.span_id = spanIdPart;
             if (traceSampled) {
-                traceContext['logging.googleapis.com/trace_sampled'] = traceSampled === '1';
+                traceContext.trace_flags = traceSampled === '1' ? '01' : '00';
             }
         }
     }
 
     // Also support W3C traceparent header (standard format)
     const traceparentHeader = request.headers.traceparent as string;
-    if (traceparentHeader && PROJECT_ID && !traceContext['logging.googleapis.com/trace']) {
+    if (traceparentHeader && !traceContext.trace_id) {
         const [version, traceId, spanId, traceFlags] = traceparentHeader.split('-');
         if (traceId && version === '00') {
-            traceContext['logging.googleapis.com/trace'] = `projects/${PROJECT_ID}/traces/${traceId}`;
-            traceContext['logging.googleapis.com/spanId'] = spanId;
-            traceContext['logging.googleapis.com/trace_sampled'] = (parseInt(traceFlags, 16) & 1) === 1;
+            traceContext.trace_id = traceId;
+            traceContext.span_id = spanId;
+            traceContext.trace_flags = (parseInt(traceFlags, 16) & 1) === 1 ? '01' : '00';
         }
     }
 
