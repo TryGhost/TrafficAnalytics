@@ -3,6 +3,8 @@ import {PageHitRequestBodySchema, PageHitRequestHeadersSchema, PageHitRequestQue
 import {publishPageHitRaw} from '../services/events/publisherUtils';
 import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations';
 
+const MAX_BODY_SIZE_KB = 20 * 1024; // 20 KB
+
 export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
     const payload = pageHitRawPayloadFromRequest(request);
     try {
@@ -136,6 +138,7 @@ export const pageHitRequestHandler = async (request: FastifyRequest<{
 };
 
 export const pageHitRouteOptions = {
+    bodyLimit: MAX_BODY_SIZE_KB,
     schema: {
         querystring: PageHitRequestQueryParamsSchema,
         headers: PageHitRequestHeadersSchema,
