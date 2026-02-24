@@ -183,6 +183,21 @@ describe('Logger Config', () => {
             });
         });
 
+        it('should not use worker service context when WORKER_MODE is false', async () => {
+            vi.stubEnv('LOG_LEVEL', 'info');
+            vi.stubEnv('K_SERVICE', '');
+            vi.stubEnv('WORKER_MODE', 'false');
+
+            const {logger, flushLogs} = createLoggerHarness();
+            logger.info({event: 'worker-mode-false'}, 'hello');
+
+            const logs = await flushLogs();
+            const appLog = findLogByEvent(logs, 'worker-mode-false');
+
+            expect(appLog).toBeDefined();
+            expect(appLog).toHaveProperty('serviceContext.service', 'analytics-service');
+        });
+
         it('should fall back to analytics-service when worker mode and K_SERVICE are missing', async () => {
             vi.stubEnv('LOG_LEVEL', 'info');
             vi.stubEnv('K_SERVICE', '');
@@ -229,7 +244,7 @@ describe('Logger Config', () => {
             }
         });
 
-        it('should map the message field to msg in production logs', async () => {
+        it('should map the msg field to message in production logs', async () => {
             vi.stubEnv('LOG_LEVEL', 'info');
 
             const {logger, flushLogs} = createLoggerHarness();

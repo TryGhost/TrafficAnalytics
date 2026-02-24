@@ -4,7 +4,8 @@ import type {FastifyRequest, FastifyReply} from 'fastify';
 import {createGcpLoggingPinoConfig} from '@google-cloud/pino-logging-gcp-config';
 
 function getServiceContext(): {service: string; version?: string} {
-    const service = process.env.K_SERVICE || (process.env.WORKER_MODE ? 'analytics-worker' : 'analytics-service');
+    const isWorkerMode = process.env.WORKER_MODE === 'true';
+    const service = process.env.K_SERVICE || (isWorkerMode ? 'analytics-worker' : 'analytics-service');
     const version = process.env.K_REVISION || process.env.npm_package_version;
 
     return version ? {service, version} : {service};
