@@ -42,6 +42,7 @@ describe('Logger Config', () => {
 
     it('should emit GCP severity field instead of numeric level in production logs', async () => {
         vi.stubEnv('NODE_ENV', 'production');
+        vi.stubEnv('LOG_LEVEL', 'info');
 
         let rawLog = '';
         const stream = new Writable({
