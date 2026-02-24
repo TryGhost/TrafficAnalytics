@@ -28,7 +28,7 @@ export class EventSubscriber {
                 event: 'EventSubscriberCreated',
                 subscriptionName: this.subscription.name
             });
-        } catch (error) {
+        } catch {
             throw new errors.IncorrectUsageError({
                 message: `Failed to create an event subscriber: ${subscriptionName}`
             });

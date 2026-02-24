@@ -94,7 +94,7 @@ export function transformUserAgent(userAgent: string): {os: string, browser: str
             browser: browserName,
             device: deviceType
         };
-    } catch (error) {
+    } catch {
         return {
             os: 'unknown',
             browser: 'unknown',
@@ -124,7 +124,7 @@ export function transformReferrer(referrerData: ParsedReferrer | undefined): {
             referrerSource: parsedReferrer.referrerSource || null,
             referrerMedium: parsedReferrer.referrerMedium || null
         };
-    } catch (error) {
+    } catch {
         return {};
     }
 }
