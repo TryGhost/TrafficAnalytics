@@ -185,6 +185,8 @@ describe('Logger Config', () => {
 
         it('should fall back to analytics-service when worker mode and K_SERVICE are missing', async () => {
             vi.stubEnv('LOG_LEVEL', 'info');
+            vi.stubEnv('K_SERVICE', '');
+            vi.stubEnv('WORKER_MODE', '');
 
             const {logger, flushLogs} = createLoggerHarness();
             logger.info({event: 'default-service-context'}, 'hello');
