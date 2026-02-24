@@ -52,7 +52,7 @@ The service follows a modular architecture:
 ## Environment Variables
 
 - `PORT` - Server port (default: 3000)
-- `HOST` - Server listen host (default: 0.0.0.0)
+- `LISTEN_HOST` - Server listen host (default: 0.0.0.0)
 - `PROXY_TARGET` - Upstream URL to forward requests
 - `TINYBIRD_WAIT` - Pass `wait=true` parameter to Tinybird, which makes it respond only after data is ingested (default: false)
 - `LOG_LEVEL` - Logging level (default: info)
