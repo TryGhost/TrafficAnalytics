@@ -115,7 +115,7 @@ export class WireMock {
                 if (response.ok) {
                     return;
                 }
-            } catch (error) {
+            } catch {
                 // Ignore connection errors and retry
             }
             

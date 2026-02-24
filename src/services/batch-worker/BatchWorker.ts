@@ -206,7 +206,7 @@ class BatchWorker {
     private getMessageData(message: Message) {
         try {
             return JSON.parse(message.data.toString());
-        } catch (_error) {
+        } catch {
             return message.data.toString();
         }
     }

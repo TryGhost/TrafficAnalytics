@@ -117,7 +117,7 @@ export async function cleanupTestSubscriptions(namePattern: RegExp = /^test-/): 
             .map(sub => sub.delete().catch(() => {})); // Ignore errors during cleanup
         
         await Promise.all(deletePromises);
-    } catch (error) {
+    } catch {
         // Ignore cleanup errors
     }
 }
