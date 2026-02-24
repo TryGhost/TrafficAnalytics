@@ -96,11 +96,10 @@ describe('Logger Config', () => {
     describe('production logging output', () => {
         beforeEach(() => {
             vi.stubEnv('NODE_ENV', 'production');
+            vi.stubEnv('LOG_LEVEL', 'info');
         });
 
         it('should emit GCP severity field in production logs', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
-
             const {logger, flushLogs} = createLoggerHarness();
             logger.info({event: 'test'}, 'hello');
 
@@ -112,7 +111,6 @@ describe('Logger Config', () => {
         });
 
         it('should include service context production logs', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
             vi.stubEnv('K_SERVICE', 'test-service');
             vi.stubEnv('K_REVISION', 'test-rev');
 
@@ -130,7 +128,6 @@ describe('Logger Config', () => {
         });
 
         it('should use npm package version when K_REVISION is not set', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
             vi.stubEnv('K_SERVICE', 'test-service');
             vi.stubEnv('K_REVISION', '');
             vi.stubEnv('npm_package_version', '9.9.9-test');
@@ -149,7 +146,6 @@ describe('Logger Config', () => {
         });
 
         it('should omit service context version when K_REVISION and npm package version are missing', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
             vi.stubEnv('K_SERVICE', 'test-service');
             vi.stubEnv('K_REVISION', '');
             vi.stubEnv('npm_package_version', '');
@@ -166,7 +162,6 @@ describe('Logger Config', () => {
         });
 
         it('should include service context from worker fallback when K_SERVICE is missing', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
             vi.stubEnv('WORKER_MODE', 'true');
             vi.stubEnv('K_REVISION', 'worker-rev');
 
@@ -184,7 +179,6 @@ describe('Logger Config', () => {
         });
 
         it('should not use worker service context when WORKER_MODE is false', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
             vi.stubEnv('K_SERVICE', '');
             vi.stubEnv('WORKER_MODE', 'false');
 
@@ -199,7 +193,6 @@ describe('Logger Config', () => {
         });
 
         it('should fall back to analytics-service when worker mode and K_SERVICE are missing', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
             vi.stubEnv('K_SERVICE', '');
             vi.stubEnv('WORKER_MODE', '');
 
@@ -245,8 +238,6 @@ describe('Logger Config', () => {
         });
 
         it('should map the msg field to message in production logs', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
-
             const {logger, flushLogs} = createLoggerHarness();
             logger.info({event: 'message_field_test'}, 'hello world');
 
@@ -259,8 +250,6 @@ describe('Logger Config', () => {
         });
 
         it('should map generic trace fields to GCP trace fields', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
-
             const {logger, flushLogs} = createLoggerHarness();
             logger.info({
                 event: 'trace-map',
@@ -282,8 +271,6 @@ describe('Logger Config', () => {
         });
 
         it('should omit trace_sampled when trace_flags indicates unsampled trace', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
-
             const {logger, flushLogs} = createLoggerHarness();
             logger.info({
                 event: 'trace-unsampled',
@@ -302,8 +289,6 @@ describe('Logger Config', () => {
         });
 
         it('should serialize native errors with error reporting fields', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
-
             const {logger, flushLogs} = createLoggerHarness();
             logger.error({event: 'native-error', err: new Error('boom')}, 'request failed');
 
@@ -318,8 +303,6 @@ describe('Logger Config', () => {
         });
 
         it('should serialize Ghost errors with Ghost-specific fields', async () => {
-            vi.stubEnv('LOG_LEVEL', 'info');
-
             const {logger, flushLogs} = createLoggerHarness();
             const ghostError = new errors.IncorrectUsageError({
                 message: 'bad input',
