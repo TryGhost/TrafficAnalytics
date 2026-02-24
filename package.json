@@ -41,7 +41,6 @@
   ],
   "devDependencies": {
     "@playwright/test": "1.58.2",
-    "@types/dotenv": "8.2.3",
     "@types/node": "24.10.13",
     "@types/supertest": "6.0.3",
     "@types/ua-parser-js": "0.7.39",
