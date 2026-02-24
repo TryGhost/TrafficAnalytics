@@ -52,7 +52,8 @@ export function getLoggerConfig(): LoggerOptions {
     // Production / staging configuration - GCP optimized JSON logs
     return createGcpLoggingPinoConfig(
         {
-            serviceContext: getServiceContext()
+            serviceContext: getServiceContext(),
+            inihibitDiagnosticMessage: Boolean(process.env.VITEST)
         },
         {
             level: process.env.LOG_LEVEL || 'info'
