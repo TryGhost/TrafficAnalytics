@@ -110,101 +110,99 @@ describe('Logger Config', () => {
             expect(appLog).toHaveProperty('severity', 'INFO');
         });
 
-        it('should include service context production logs', async () => {
-            vi.stubEnv('K_SERVICE', 'test-service');
-            vi.stubEnv('K_REVISION', 'test-rev');
+        const serviceContextCases = [
+            {
+                name: 'should include service context from K_SERVICE and K_REVISION',
+                event: 'service-context-k-service-k-revision',
+                env: {
+                    K_SERVICE: 'test-service',
+                    K_REVISION: 'test-rev'
+                },
+                expectedService: 'test-service',
+                expectedVersion: 'test-rev',
+                versionAssertion: 'exact'
+            },
+            {
+                name: 'should use npm package version when K_REVISION is not set',
+                event: 'service-context-npm-version-fallback',
+                env: {
+                    K_SERVICE: 'test-service',
+                    K_REVISION: '',
+                    npm_package_version: '9.9.9-test'
+                },
+                expectedService: 'test-service',
+                expectedVersion: '9.9.9-test',
+                versionAssertion: 'exact'
+            },
+            {
+                name: 'should omit service context version when K_REVISION and npm package version are missing',
+                event: 'service-context-no-version',
+                env: {
+                    K_SERVICE: 'test-service',
+                    K_REVISION: '',
+                    npm_package_version: ''
+                },
+                expectedService: 'test-service',
+                expectedVersion: undefined,
+                versionAssertion: 'absent'
+            },
+            {
+                name: 'should include worker service context when WORKER_MODE is true and K_SERVICE is missing',
+                event: 'service-context-worker',
+                env: {
+                    WORKER_MODE: 'true',
+                    K_REVISION: 'worker-rev'
+                },
+                expectedService: 'analytics-worker',
+                expectedVersion: 'worker-rev',
+                versionAssertion: 'exact'
+            },
+            {
+                name: 'should not use worker service context when WORKER_MODE is false',
+                event: 'service-context-worker-mode-false',
+                env: {
+                    K_SERVICE: '',
+                    WORKER_MODE: 'false'
+                },
+                expectedService: 'analytics-service',
+                expectedVersion: undefined,
+                versionAssertion: 'ignore'
+            },
+            {
+                name: 'should fall back to analytics-service when worker mode and K_SERVICE are missing',
+                event: 'service-context-default-service',
+                env: {
+                    K_SERVICE: '',
+                    WORKER_MODE: ''
+                },
+                expectedService: 'analytics-service',
+                expectedVersion: undefined,
+                versionAssertion: 'ignore'
+            }
+        ] as const;
 
-            const {logger, flushLogs} = createLoggerHarness();
-            logger.info({event: 'test'}, 'hello');
+        for (const testCase of serviceContextCases) {
+            it(testCase.name, async () => {
+                for (const [key, value] of Object.entries(testCase.env)) {
+                    vi.stubEnv(key, value);
+                }
 
-            const logs = await flushLogs();
-            const appLog = findLogByEvent(logs, 'test');
+                const {logger, flushLogs} = createLoggerHarness();
+                logger.info({event: testCase.event}, 'hello');
 
-            expect(appLog).toBeDefined();
-            expect(appLog).toHaveProperty('serviceContext', {
-                service: 'test-service',
-                version: 'test-rev'
+                const logs = await flushLogs();
+                const appLog = findLogByEvent(logs, testCase.event);
+
+                expect(appLog).toBeDefined();
+                expect(appLog).toHaveProperty('serviceContext.service', testCase.expectedService);
+
+                if (testCase.versionAssertion === 'exact') {
+                    expect(appLog).toHaveProperty('serviceContext.version', testCase.expectedVersion);
+                } else if (testCase.versionAssertion === 'absent') {
+                    expect(appLog).not.toHaveProperty('serviceContext.version');
+                }
             });
-        });
-
-        it('should use npm package version when K_REVISION is not set', async () => {
-            vi.stubEnv('K_SERVICE', 'test-service');
-            vi.stubEnv('K_REVISION', '');
-            vi.stubEnv('npm_package_version', '9.9.9-test');
-
-            const {logger, flushLogs} = createLoggerHarness();
-            logger.info({event: 'npm-version-fallback'}, 'hello');
-
-            const logs = await flushLogs();
-            const appLog = findLogByEvent(logs, 'npm-version-fallback');
-
-            expect(appLog).toBeDefined();
-            expect(appLog).toHaveProperty('serviceContext', {
-                service: 'test-service',
-                version: '9.9.9-test'
-            });
-        });
-
-        it('should omit service context version when K_REVISION and npm package version are missing', async () => {
-            vi.stubEnv('K_SERVICE', 'test-service');
-            vi.stubEnv('K_REVISION', '');
-            vi.stubEnv('npm_package_version', '');
-
-            const {logger, flushLogs} = createLoggerHarness();
-            logger.info({event: 'no-version-service-context'}, 'hello');
-
-            const logs = await flushLogs();
-            const appLog = findLogByEvent(logs, 'no-version-service-context');
-
-            expect(appLog).toBeDefined();
-            expect(appLog).toHaveProperty('serviceContext.service', 'test-service');
-            expect(appLog).not.toHaveProperty('serviceContext.version');
-        });
-
-        it('should include service context from worker fallback when K_SERVICE is missing', async () => {
-            vi.stubEnv('WORKER_MODE', 'true');
-            vi.stubEnv('K_REVISION', 'worker-rev');
-
-            const {logger, flushLogs} = createLoggerHarness();
-            logger.info({event: 'worker-service-context'}, 'hello');
-
-            const logs = await flushLogs();
-            const appLog = findLogByEvent(logs, 'worker-service-context');
-
-            expect(appLog).toBeDefined();
-            expect(appLog).toHaveProperty('serviceContext', {
-                service: 'analytics-worker',
-                version: 'worker-rev'
-            });
-        });
-
-        it('should not use worker service context when WORKER_MODE is false', async () => {
-            vi.stubEnv('K_SERVICE', '');
-            vi.stubEnv('WORKER_MODE', 'false');
-
-            const {logger, flushLogs} = createLoggerHarness();
-            logger.info({event: 'worker-mode-false'}, 'hello');
-
-            const logs = await flushLogs();
-            const appLog = findLogByEvent(logs, 'worker-mode-false');
-
-            expect(appLog).toBeDefined();
-            expect(appLog).toHaveProperty('serviceContext.service', 'analytics-service');
-        });
-
-        it('should fall back to analytics-service when worker mode and K_SERVICE are missing', async () => {
-            vi.stubEnv('K_SERVICE', '');
-            vi.stubEnv('WORKER_MODE', '');
-
-            const {logger, flushLogs} = createLoggerHarness();
-            logger.info({event: 'default-service-context'}, 'hello');
-
-            const logs = await flushLogs();
-            const appLog = findLogByEvent(logs, 'default-service-context');
-
-            expect(appLog).toBeDefined();
-            expect(appLog).toHaveProperty('serviceContext.service', 'analytics-service');
-        });
+        }
 
         it('should map each pino level to the expected GCP severity in production logs', async () => {
             vi.stubEnv('LOG_LEVEL', 'trace');
