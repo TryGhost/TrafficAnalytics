@@ -108,13 +108,9 @@ describe('Trace Context Utilities', () => {
             });
         });
 
-        it('should return empty object when GOOGLE_CLOUD_PROJECT is not set', () => {
-            vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
-
+        it('should return empty object when no trace headers are present', () => {
             const mockRequest = {
-                headers: {
-                    'x-cloud-trace-context': '105445aa7843bc8bf206b12000100000/1;o=1'
-                }
+                headers: {}
             } as unknown as FastifyRequest;
 
             const result = extractTraceContext(mockRequest);
@@ -122,9 +118,13 @@ describe('Trace Context Utilities', () => {
             expect(result).toEqual({});
         });
 
-        it('should return empty object when no trace headers are present', () => {
+        it('should return empty object when GOOGLE_CLOUD_PROJECT is not set', () => {
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
+
             const mockRequest = {
-                headers: {}
+                headers: {
+                    'x-cloud-trace-context': '105445aa7843bc8bf206b12000100000/1;o=1'
+                }
             } as unknown as FastifyRequest;
 
             const result = extractTraceContext(mockRequest);
