@@ -255,6 +255,27 @@ describe('Fastify App', () => {
                     });
             });
 
+            it('should reject requests larger than 20kb', async function () {
+                const oversizedPayload = {
+                    ...eventPayload,
+                    payload: {
+                        ...eventPayload.payload,
+                        oversized_data: 'x'.repeat(21 * 1024)
+                    }
+                };
+
+                await request(proxyServer)
+                    .post(path)
+                    .query({token: 'abc123', name: 'analytics_events_test'})
+                    .set('Content-Type', 'application/json')
+                    .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                    .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                    .send(oversizedPayload)
+                    .expect(413);
+
+                expect(targetRequests.length).toBe(0);
+            });
+
             it('should reject requests without x-site-uuid header', async function () {
                 await request(proxyServer)
                     .post(path)
