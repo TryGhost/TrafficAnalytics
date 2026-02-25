@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "local>TryGhost/.github:renovate-config"
+    "github>TryGhost/renovate-config"
   ],
   "packageRules": [
     {
