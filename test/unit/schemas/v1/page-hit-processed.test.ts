@@ -12,13 +12,15 @@ import {
 
 // Mock the @tryghost/referrer-parser module
 vi.mock('@tryghost/referrer-parser', async () => {
-    const ReferrerParser = vi.fn(() => ({
-        parse: vi.fn((url, source, medium) => ({
-            referrerUrl: url,
-            referrerSource: source,
-            referrerMedium: medium || 'unknown'
-        }))
-    }));
+    const ReferrerParser = vi.fn(function () {
+        return {
+            parse: vi.fn((url, source, medium) => ({
+                referrerUrl: url,
+                referrerSource: source,
+                referrerMedium: medium || 'unknown'
+            }))
+        };
+    });
 
     return {
         ReferrerParser
