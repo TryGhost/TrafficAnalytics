@@ -320,7 +320,11 @@ export class FirestoreSaltStore implements ISaltStore {
 
             return totalDeleted;
         } catch (error) {
-            await bulkWriter.close();
+            try {
+                await bulkWriter.close();
+            } catch (closeError) {
+                logger.error({event: 'FirestoreSaltStoreCleanupCloseFailed', error: closeError});
+            }
             logger.error({event: 'FirestoreSaltStoreCleanupFailed', error});
             throw error;
         }
