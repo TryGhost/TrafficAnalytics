@@ -28,6 +28,7 @@ export class FirestoreSaltStore implements ISaltStore {
     private static readonly CLEANUP_BULK_WRITER_INITIAL_OPS_PER_SECOND = 50;
     private static readonly CLEANUP_BULK_WRITER_MAX_OPS_PER_SECOND = 200;
     private static readonly CLEANUP_BULK_WRITER_MAX_RETRIES = 10;
+    private static readonly CLEANUP_MAX_DELETES_PER_RUN = 10000;
     private static readonly GRPC_ABORTED = 10;
     private static readonly GRPC_UNAVAILABLE = 14;
 
@@ -236,7 +237,7 @@ export class FirestoreSaltStore implements ISaltStore {
             'FIRESTORE_CLEANUP_BULK_WRITER_MAX_OPS_PER_SECOND',
             FirestoreSaltStore.CLEANUP_BULK_WRITER_MAX_OPS_PER_SECOND
         );
-        const maxDeletesPerRun = this.getPositiveIntEnvOrDefault('FIRESTORE_CLEANUP_MAX_DELETES_PER_RUN', Number.MAX_SAFE_INTEGER);
+        const maxDeletesPerRun = this.getPositiveIntEnvOrDefault('FIRESTORE_CLEANUP_MAX_DELETES_PER_RUN', FirestoreSaltStore.CLEANUP_MAX_DELETES_PER_RUN);
 
         const bulkWriter = this.firestore.bulkWriter({
             throttling: {
