@@ -72,6 +72,8 @@ describe('Server Conditional Loading', () => {
     describe('Worker App Loading (WORKER_MODE=true)', () => {
         beforeEach(async () => {
             process.env.WORKER_MODE = 'true';
+            vi.stubEnv('PROXY_TARGET', 'http://127.0.0.1:8089/v0/events');
+            vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'test-token');
             vi.resetModules();
 
             // Import server module which should load worker app
