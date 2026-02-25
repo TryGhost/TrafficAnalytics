@@ -58,7 +58,7 @@ function findLogByEvent(logs: JsonLog[], event: string): JsonLog | undefined {
 describe('Logger Config', () => {
     describe('environment config', () => {
         it('should disable logging in test environment', () => {
-        vi.stubEnv('NODE_ENV', 'testing');
+            vi.stubEnv('NODE_ENV', 'testing');
 
             expect(getLoggerConfig()).toEqual({level: 'silent'});
         });
