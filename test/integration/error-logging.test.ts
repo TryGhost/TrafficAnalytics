@@ -23,7 +23,7 @@ const mockReply = {
         warn: mockWarn,
         error: mockError
     },
-    status: vi.fn().mockReturnThis(),
+    status: vi.fn(() => mockReply),
     send: vi.fn()
 } as any;
 
