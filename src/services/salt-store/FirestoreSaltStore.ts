@@ -261,16 +261,15 @@ export class FirestoreSaltStore implements ISaltStore {
         });
 
         const startTime = Date.now();
+        const today = new Date().toISOString().split('T')[0];
+        const cutoffDate = new Date(today); // This will be midnight UTC of today
         let pagesProcessed = 0;
         let totalDeleted = 0;
         let maxDeletesPerRunReached = false;
         let lastProcessedDoc: QueryDocumentSnapshot | undefined;
+        let cleanupError: unknown;
 
         try {
-            // Get today's date in UTC (same logic as UserSignatureService)
-            const today = new Date().toISOString().split('T')[0];
-            const cutoffDate = new Date(today); // This will be midnight UTC of today
-
             while (totalDeleted < maxDeletesPerRun) {
                 const remainingDeletes = maxDeletesPerRun - totalDeleted;
                 const perPageLimit = Math.min(queryBatchSize, remainingDeletes);
@@ -310,32 +309,38 @@ export class FirestoreSaltStore implements ISaltStore {
             if (totalDeleted >= maxDeletesPerRun) {
                 maxDeletesPerRunReached = true;
             }
-
-            await bulkWriter.close();
-
-            logger.info({
-                event: 'FirestoreSaltStoreCleanupCompleted',
-                deletedCount: totalDeleted,
-                pagesProcessed,
-                durationMs: Date.now() - startTime,
-                cutoffDate: cutoffDate.toISOString(),
-                maxDeletesPerRun,
-                maxDeletesPerRunReached,
-                queryBatchSize,
-                initialOpsPerSecond,
-                maxOpsPerSecond
-            });
-
-            return totalDeleted;
         } catch (error) {
+            cleanupError = error;
+            logger.error({event: 'FirestoreSaltStoreCleanupFailed', error});
+        } finally {
             try {
                 await bulkWriter.close();
             } catch (closeError) {
                 logger.error({event: 'FirestoreSaltStoreCleanupCloseFailed', error: closeError});
+                if (!cleanupError) {
+                    cleanupError = closeError;
+                }
             }
-            logger.error({event: 'FirestoreSaltStoreCleanupFailed', error});
-            throw error;
         }
+
+        if (cleanupError) {
+            throw cleanupError;
+        }
+
+        logger.info({
+            event: 'FirestoreSaltStoreCleanupCompleted',
+            deletedCount: totalDeleted,
+            pagesProcessed,
+            durationMs: Date.now() - startTime,
+            cutoffDate: cutoffDate.toISOString(),
+            maxDeletesPerRun,
+            maxDeletesPerRunReached,
+            queryBatchSize,
+            initialOpsPerSecond,
+            maxOpsPerSecond
+        });
+
+        return totalDeleted;
     }
 
     /**
