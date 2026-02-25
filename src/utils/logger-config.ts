@@ -3,20 +3,12 @@ import type {PrettyOptions} from 'pino-pretty';
 import type {FastifyRequest, FastifyReply} from 'fastify';
 import {createGcpLoggingPinoConfig} from '@google-cloud/pino-logging-gcp-config';
 
-interface LogRecord {
-    trace_id?: string;
-    span_id?: string;
-    trace_flags?: string;
-    [key: string]: unknown;
-}
+function getServiceContext(): {service: string; version?: string} {
+    const isWorkerMode = process.env.WORKER_MODE === 'true';
+    const service = process.env.K_SERVICE || (isWorkerMode ? 'analytics-worker' : 'analytics-service');
+    const version = process.env.K_REVISION || process.env.npm_package_version;
 
-function serializeError(error: Error): Record<string, unknown> {
-    return {
-        message: error.message,
-        name: error.name,
-        code: 'code' in error ? (error as Error & {code: string}).code : undefined,
-        stack: error.stack
-    };
+    return version ? {service, version} : {service};
 }
 
 /**
@@ -53,38 +45,19 @@ export function getLoggerConfig(): LoggerOptions {
                     return {
                         statusCode: reply.statusCode
                     };
-                },
-                err: serializeError
+                }
             }
         };
     }
 
     // Production / staging configuration - GCP optimized JSON logs
-    const gcpConfig = createGcpLoggingPinoConfig();
-    return {
-        ...gcpConfig,
-        level: process.env.LOG_LEVEL || 'info',
-        formatters: {
-            log(object: LogRecord): Record<string, unknown> {
-                // Add trace context attributes following Cloud Logging structured log format described
-                // in https://cloud.google.com/logging/docs/structured-logging#special-payload-fields
-
-                /* eslint-disable camelcase */
-                const {trace_id, span_id, trace_flags, ...rest} = object;
-
-                return {
-                    'logging.googleapis.com/trace': trace_id,
-                    'logging.googleapis.com/spanId': span_id,
-                    'logging.googleapis.com/trace_sampled': trace_flags
-                        ? trace_flags === '01'
-                        : undefined,
-                    ...rest
-                };
-            }
+    return createGcpLoggingPinoConfig(
+        {
+            serviceContext: getServiceContext(),
+            inihibitDiagnosticMessage: Boolean(process.env.VITEST)
         },
-        serializers: {
-            ...gcpConfig.serializers,
-            err: serializeError
+        {
+            level: process.env.LOG_LEVEL || 'info'
         }
-    };
+    );
 }
