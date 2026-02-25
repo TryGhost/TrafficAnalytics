@@ -7,18 +7,22 @@ import logger from '../../../../src/utils/logger';
 
 // Mock EventSubscriber
 vi.mock('../../../../src/services/events/subscriber', () => ({
-    EventSubscriber: vi.fn().mockImplementation(() => ({
-        subscribe: vi.fn(),
-        close: vi.fn()
-    }))
+    EventSubscriber: vi.fn(function () {
+        return {
+            subscribe: vi.fn(),
+            close: vi.fn()
+        };
+    })
 }));
 
 // Mock TinybirdClient
 vi.mock('../../../../src/services/tinybird/client', () => ({
-    TinybirdClient: vi.fn().mockImplementation(() => ({
-        postEvent: vi.fn().mockResolvedValue(undefined),
-        postEventBatch: vi.fn().mockResolvedValue(undefined)
-    }))
+    TinybirdClient: vi.fn(function () {
+        return {
+            postEvent: vi.fn().mockResolvedValue(undefined),
+            postEventBatch: vi.fn().mockResolvedValue(undefined)
+        };
+    })
 }));
 
 const createMockMessage = (data: string) => {

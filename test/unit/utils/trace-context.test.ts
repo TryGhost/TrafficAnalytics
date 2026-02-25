@@ -1,14 +1,10 @@
-import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
+import {describe, it, expect, beforeEach, vi} from 'vitest';
 import {extractTraceContext} from '../../../src/utils/trace-context';
 import type {FastifyRequest} from 'fastify';
 
 describe('Trace Context Utilities', () => {
     beforeEach(() => {
         vi.stubEnv('GOOGLE_CLOUD_PROJECT', 'test-project');
-    });
-
-    afterEach(() => {
-        vi.unstubAllEnvs();
     });
 
     describe('extractTraceContext', () => {
