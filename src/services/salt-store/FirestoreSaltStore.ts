@@ -1,4 +1,4 @@
-import {Firestore} from '@google-cloud/firestore';
+import {Firestore, type QueryDocumentSnapshot} from '@google-cloud/firestore';
 import {ISaltStore, SaltRecord} from './ISaltStore';
 import logger from '../../utils/logger';
 
@@ -264,6 +264,7 @@ export class FirestoreSaltStore implements ISaltStore {
         let pagesProcessed = 0;
         let totalDeleted = 0;
         let maxDeletesPerRunReached = false;
+        let lastProcessedDoc: QueryDocumentSnapshot | undefined;
 
         try {
             // Get today's date in UTC (same logic as UserSignatureService)
@@ -274,18 +275,24 @@ export class FirestoreSaltStore implements ISaltStore {
                 const remainingDeletes = maxDeletesPerRun - totalDeleted;
                 const perPageLimit = Math.min(queryBatchSize, remainingDeletes);
 
-                const snapshot = await this.firestore
+                let query = this.firestore
                     .collection(this.collectionName)
                     .where('created_at', '<', cutoffDate)
                     .orderBy('created_at')
-                    .limit(perPageLimit)
-                    .get();
+                    .limit(perPageLimit);
+
+                if (lastProcessedDoc) {
+                    query = query.startAfter(lastProcessedDoc);
+                }
+
+                const snapshot = await query.get();
 
                 if (snapshot.size === 0) {
                     break;
                 }
 
                 pagesProcessed += 1;
+                lastProcessedDoc = snapshot.docs[snapshot.docs.length - 1];
 
                 snapshot.docs.forEach((doc) => {
                     bulkWriter.delete(doc.ref);
