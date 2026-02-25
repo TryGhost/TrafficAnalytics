@@ -1,4 +1,4 @@
-import {describe, it, expect, afterEach, beforeEach, vi} from 'vitest';
+import {describe, it, expect, beforeEach, vi} from 'vitest';
 import pino, {type Logger} from 'pino';
 import {Writable} from 'node:stream';
 import errors from '@tryghost/errors';
@@ -56,13 +56,9 @@ function findLogByEvent(logs: JsonLog[], event: string): JsonLog | undefined {
 }
 
 describe('Logger Config', () => {
-    afterEach(() => {
-        vi.unstubAllEnvs();
-    });
-
     describe('environment config', () => {
         it('should disable logging in test environment', () => {
-            vi.stubEnv('NODE_ENV', 'testing');
+        vi.stubEnv('NODE_ENV', 'testing');
 
             expect(getLoggerConfig()).toEqual({level: 'silent'});
         });
