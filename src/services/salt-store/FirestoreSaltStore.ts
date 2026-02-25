@@ -306,8 +306,16 @@ export class FirestoreSaltStore implements ISaltStore {
                 totalDeleted += snapshot.size;
             }
 
-            if (totalDeleted >= maxDeletesPerRun) {
-                maxDeletesPerRunReached = true;
+            if (totalDeleted >= maxDeletesPerRun && lastProcessedDoc) {
+                const hasRemainingOldSalts = await this.firestore
+                    .collection(this.collectionName)
+                    .where('created_at', '<', cutoffDate)
+                    .orderBy('created_at')
+                    .startAfter(lastProcessedDoc)
+                    .limit(1)
+                    .get();
+
+                maxDeletesPerRunReached = hasRemainingOldSalts.size > 0;
             }
         } catch (error) {
             cleanupError = error;
