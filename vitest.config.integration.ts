@@ -6,6 +6,8 @@ export default defineConfig({
         environment: 'node',
         include: ['test/integration/**/*.test.ts'],
         setupFiles: ['test/setup/integration.ts'],
+        restoreMocks: true,
+        unstubEnvs: true,
         // Integration tests typically have longer timeouts
         testTimeout: 30000,
         hookTimeout: 30000,

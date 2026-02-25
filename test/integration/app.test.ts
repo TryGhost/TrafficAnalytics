@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 // Mock the user signature service before importing the app
 vi.mock('../../src/services/user-signature', () => ({
     userSignatureService: {
-        generateUserSignature: vi.fn().mockResolvedValue('a1b2c3d4e5f67890123456789012345678901234567890123456789012345678')
+        generateUserSignature: vi.fn(async () => 'a1b2c3d4e5f67890123456789012345678901234567890123456789012345678')
     }
 }));
 

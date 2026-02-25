@@ -12,8 +12,8 @@ import {
 
 // Mock the @tryghost/referrer-parser module
 vi.mock('@tryghost/referrer-parser', async () => {
-    const ReferrerParser = vi.fn().mockImplementation(() => ({
-        parse: vi.fn().mockImplementation((url, source, medium) => ({
+    const ReferrerParser = vi.fn(() => ({
+        parse: vi.fn((url, source, medium) => ({
             referrerUrl: url,
             referrerSource: source,
             referrerMedium: medium || 'unknown'
