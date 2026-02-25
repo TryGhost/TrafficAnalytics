@@ -234,24 +234,20 @@ describe('FirestoreSaltStore', () => {
                 created_at: todayCreatedAt
             });
 
-            process.env.FIRESTORE_CLEANUP_QUERY_BATCH_SIZE = '100';
+            vi.stubEnv('FIRESTORE_CLEANUP_QUERY_BATCH_SIZE', '100');
             vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
-            try {
-                const deletedCount = await saltStore.cleanup();
+            const deletedCount = await saltStore.cleanup();
 
-                expect(deletedCount).toBe(oldSaltCount);
+            expect(deletedCount).toBe(oldSaltCount);
 
-                const oldSnapshot = await collection
-                    .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
-                    .get();
-                expect(oldSnapshot.size).toBe(0);
+            const oldSnapshot = await collection
+                .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
+                .get();
+            expect(oldSnapshot.size).toBe(0);
 
-                const todayDoc = await saltStore.get('salt:2024-01-15:bulk-today');
-                expect(todayDoc?.salt).toBe('bulk-today-salt');
-            } finally {
-                delete process.env.FIRESTORE_CLEANUP_QUERY_BATCH_SIZE;
-            }
+            const todayDoc = await saltStore.get('salt:2024-01-15:bulk-today');
+            expect(todayDoc?.salt).toBe('bulk-today-salt');
         });
 
         it('should stop cleanup when max deletes per run is reached', async () => {
@@ -266,22 +262,17 @@ describe('FirestoreSaltStore', () => {
                 });
             }
 
-            process.env.FIRESTORE_CLEANUP_QUERY_BATCH_SIZE = '4';
-            process.env.FIRESTORE_CLEANUP_MAX_DELETES_PER_RUN = '5';
+            vi.stubEnv('FIRESTORE_CLEANUP_QUERY_BATCH_SIZE', '4');
+            vi.stubEnv('FIRESTORE_CLEANUP_MAX_DELETES_PER_RUN', '5');
             vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
-            try {
-                const deletedCount = await saltStore.cleanup();
-                expect(deletedCount).toBe(5);
+            const deletedCount = await saltStore.cleanup();
+            expect(deletedCount).toBe(5);
 
-                const remainingOldSnapshot = await collection
-                    .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
-                    .get();
-                expect(remainingOldSnapshot.size).toBe(5);
-            } finally {
-                delete process.env.FIRESTORE_CLEANUP_QUERY_BATCH_SIZE;
-                delete process.env.FIRESTORE_CLEANUP_MAX_DELETES_PER_RUN;
-            }
+            const remainingOldSnapshot = await collection
+                .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
+                .get();
+            expect(remainingOldSnapshot.size).toBe(5);
         });
     });
 
