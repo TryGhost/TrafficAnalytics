@@ -7,6 +7,8 @@ describe('Worker App', () => {
     beforeEach(async () => {
         // Clear environment variables to ensure clean state
         delete process.env.WORKER_MODE;
+        vi.stubEnv('PROXY_TARGET', 'http://127.0.0.1:8089/v0/events');
+        vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'test-token');
         
         // Clear module cache to ensure fresh import
         vi.resetModules();
