@@ -136,6 +136,11 @@ describe('FirestoreSaltStore', () => {
     });
 
     describe('cleanup', () => {
+        beforeEach(() => {
+            vi.useFakeTimers({toFake: ['Date']});
+            vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
+        });
+
         it('should delete salts from before today UTC', async () => {
             const key1 = 'salt:2024-01-14:cleanup-test-1';
             const key2 = 'salt:2024-01-15:cleanup-test-2';
@@ -144,9 +149,6 @@ describe('FirestoreSaltStore', () => {
             await saltStore.set(key1, 'yesterday-salt');
             await saltStore.set(key2, 'today-salt');
             await saltStore.set(key3, 'old-salt');
-
-            // Mock today as 2024-01-15
-            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
             // Update timestamps
             const firestore = (saltStore as any).firestore;
@@ -181,11 +183,8 @@ describe('FirestoreSaltStore', () => {
             const key = 'salt:2024-01-15:midnight-test';
             await saltStore.set(key, 'midnight-salt');
 
-            // Mock today as 2024-01-15
-            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
-
             const firestore = (saltStore as any).firestore;
-            await firestore.collection(testCollectionName).doc(key).update({ 
+            await firestore.collection(testCollectionName).doc(key).update({
                 created_at: new Date('2024-01-15T00:00:00.000Z') 
             });
 
@@ -236,7 +235,6 @@ describe('FirestoreSaltStore', () => {
             });
 
             vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '100');
-            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
             const deletedCount = await saltStore.cleanup();
 
@@ -272,7 +270,6 @@ describe('FirestoreSaltStore', () => {
             }
 
             vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '10000');
-            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
             const deletedCount = await saltStore.cleanup();
             expect(deletedCount).toBe(oldSaltCount);
@@ -298,7 +295,6 @@ describe('FirestoreSaltStore', () => {
             });
 
             vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '0.5');
-            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
             const deletedCount = await saltStore.cleanup();
             expect(deletedCount).toBe(2);
@@ -324,7 +320,6 @@ describe('FirestoreSaltStore', () => {
             });
 
             vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '1');
-            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
             const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => logger);
 
