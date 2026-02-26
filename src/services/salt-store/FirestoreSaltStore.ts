@@ -256,7 +256,14 @@ export class FirestoreSaltStore implements ISaltStore {
                 totalDeleted += snapshot.size;
             }
         } catch (error) {
-            logger.error({event: 'FirestoreSaltStoreCleanupFailed', error});
+            logger.error({
+                event: 'FirestoreSaltStoreCleanupFailed',
+                error,
+                deletedCount: totalDeleted,
+                durationMs: Date.now() - startTime,
+                cutoffDate: cutoffDate.toISOString(),
+                batchSize
+            });
             throw error;
         }
 

@@ -1,5 +1,6 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
 import {FirestoreSaltStore, SaltAlreadyExistsError} from '../../../../src/services/salt-store/FirestoreSaltStore';
+import logger from '../../../../src/utils/logger';
 
 describe('FirestoreSaltStore', () => {
     let saltStore: FirestoreSaltStore;
@@ -306,6 +307,52 @@ describe('FirestoreSaltStore', () => {
                 .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
                 .get();
             expect(remainingOldSnapshot.size).toBe(0);
+        });
+
+        it('should log deleted progress when cleanup fails mid-run', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+
+            await collection.doc('salt:2024-01-10:fail-1').set({
+                salt: 'fail-salt-1',
+                created_at: new Date('2024-01-10T12:00:00.000Z')
+            });
+
+            await collection.doc('salt:2024-01-10:fail-2').set({
+                salt: 'fail-salt-2',
+                created_at: new Date('2024-01-10T13:00:00.000Z')
+            });
+
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '1');
+            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
+
+            const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => logger);
+
+            let commitCalls = 0;
+            const originalBatch = firestore.batch.bind(firestore);
+            vi.spyOn(firestore, 'batch').mockImplementation(() => {
+                const batch = originalBatch() as any;
+                const originalCommit = batch.commit.bind(batch);
+
+                batch.commit = async () => {
+                    commitCalls += 1;
+                    if (commitCalls === 2) {
+                        throw new Error('simulated batch failure');
+                    }
+
+                    return originalCommit();
+                };
+
+                return batch;
+            });
+
+            await expect(saltStore.cleanup()).rejects.toThrow('simulated batch failure');
+
+            expect(errorSpy).toHaveBeenCalledWith(expect.objectContaining({
+                event: 'FirestoreSaltStoreCleanupFailed',
+                deletedCount: 1,
+                durationMs: expect.any(Number)
+            }));
         });
     });
 
