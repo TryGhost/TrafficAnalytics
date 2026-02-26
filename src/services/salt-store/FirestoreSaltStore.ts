@@ -231,13 +231,22 @@ export class FirestoreSaltStore implements ISaltStore {
         const startTime = Date.now();
         const today = new Date().toISOString().split('T')[0];
         const cutoffDate = new Date(today); // This will be midnight UTC of today
+        const cleanupQuery = this.firestore
+            .collection(this.collectionName)
+            .where('created_at', '<', cutoffDate);
+        const totalToBeDeleted = (await cleanupQuery.count().get()).data().count;
         let totalDeleted = 0;
+
+        logger.info({
+            event: 'FirestoreSaltStoreCleanupStarted',
+            totalToBeDeleted,
+            cutoffDate: cutoffDate.toISOString(),
+            batchSize
+        });
 
         try {
             while (true) {
-                const snapshot = await this.firestore
-                    .collection(this.collectionName)
-                    .where('created_at', '<', cutoffDate)
+                const snapshot = await cleanupQuery
                     .orderBy('created_at')
                     .limit(batchSize)
                     .get();
@@ -260,6 +269,7 @@ export class FirestoreSaltStore implements ISaltStore {
                 event: 'FirestoreSaltStoreCleanupFailed',
                 error,
                 deletedCount: totalDeleted,
+                totalToBeDeleted,
                 durationMs: Date.now() - startTime,
                 cutoffDate: cutoffDate.toISOString(),
                 batchSize
@@ -270,6 +280,7 @@ export class FirestoreSaltStore implements ISaltStore {
         logger.info({
             event: 'FirestoreSaltStoreCleanupCompleted',
             deletedCount: totalDeleted,
+            totalToBeDeleted,
             durationMs: Date.now() - startTime,
             cutoffDate: cutoffDate.toISOString(),
             batchSize

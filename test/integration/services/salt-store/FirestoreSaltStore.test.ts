@@ -354,6 +354,42 @@ describe('FirestoreSaltStore', () => {
                 durationMs: expect.any(Number)
             }));
         });
+
+        it('should log total documents to delete in completion metadata', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+
+            await collection.doc('salt:2024-01-10:total-1').set({
+                salt: 'total-salt-1',
+                created_at: new Date('2024-01-10T12:00:00.000Z')
+            });
+
+            await collection.doc('salt:2024-01-10:total-2').set({
+                salt: 'total-salt-2',
+                created_at: new Date('2024-01-10T13:00:00.000Z')
+            });
+
+            await collection.doc('salt:2024-01-15:total-today').set({
+                salt: 'total-salt-today',
+                created_at: new Date('2024-01-15T00:00:00.000Z')
+            });
+
+            const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => logger);
+
+            const deletedCount = await saltStore.cleanup();
+            expect(deletedCount).toBe(2);
+
+            expect(infoSpy).toHaveBeenCalledWith(expect.objectContaining({
+                event: 'FirestoreSaltStoreCleanupStarted',
+                totalToBeDeleted: 2
+            }));
+
+            expect(infoSpy).toHaveBeenCalledWith(expect.objectContaining({
+                event: 'FirestoreSaltStoreCleanupCompleted',
+                totalToBeDeleted: 2,
+                deletedCount: 2
+            }));
+        });
     });
 
     describe('getOrCreate', () => {
