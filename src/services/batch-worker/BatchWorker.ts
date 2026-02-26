@@ -110,7 +110,7 @@ class BatchWorker {
                 event: 'WorkerMessageProcessingFailed',
                 messageId: message.id,
                 messageData: this.getMessageData(message),
-                error
+                err: error
             });
             message.nack();
         }
@@ -126,7 +126,7 @@ class BatchWorker {
                 event: 'WorkerMessageParsingFailed',
                 messageId: message.id,
                 messageData: this.getMessageData(message),
-                error
+                err: error
             });
             // Ack the message. If we failed to parse it, we won't succeed next time.
             message.ack();
@@ -165,7 +165,7 @@ class BatchWorker {
                 event: 'WorkerBatchFlushFailed',
                 batchSize: batchToFlush.length,
                 messageIds: batchToFlush.map(item => item.message.id),
-                error
+                err: error
             });
 
             // Nack all messages in the failed batch
@@ -192,7 +192,7 @@ class BatchWorker {
                     event: 'WorkerScheduledFlushFailed',
                     batchSize: this.batch.length,
                     messageIds: this.batch.map(item => item.message.id),
-                    error
+                    err: error
                 });
             }
 

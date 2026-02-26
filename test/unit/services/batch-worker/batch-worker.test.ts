@@ -1,9 +1,31 @@
-import {describe, it, expect, beforeEach, vi, afterEach} from 'vitest';
+import {describe, it, expect, beforeEach, vi, afterEach, afterAll} from 'vitest';
 import {Message} from '@google-cloud/pubsub';
 import BatchWorker from '../../../../src/services/batch-worker/BatchWorker';
 import {EventSubscriber} from '../../../../src/services/events/subscriber';
 import {TinybirdClient} from '../../../../src/services/tinybird/client';
-import logger from '../../../../src/utils/logger';
+import {normalizeLogEntry, type InMemoryLogCapture} from '../../../utils/log-capture';
+
+const {LOG_CAPTURE_KEY} = vi.hoisted(() => ({
+    LOG_CAPTURE_KEY: '__batch_worker_log_capture__'
+}));
+
+vi.mock('../../../../src/utils/logger', async () => {
+    const {createInMemoryLogCapture} = await import('../../../utils/log-capture');
+    const capture = createInMemoryLogCapture();
+    (globalThis as Record<string, unknown>)[LOG_CAPTURE_KEY] = capture;
+    return {
+        default: capture.logger
+    };
+});
+
+const getLogCapture = (): InMemoryLogCapture => {
+    const capture = (globalThis as Record<string, unknown>)[LOG_CAPTURE_KEY];
+    if (!capture) {
+        throw new Error('Log capture has not been initialized');
+    }
+
+    return capture as InMemoryLogCapture;
+};
 
 // Mock EventSubscriber
 vi.mock('../../../../src/services/events/subscriber', () => ({
@@ -25,8 +47,12 @@ vi.mock('../../../../src/services/tinybird/client', () => ({
     })
 }));
 
+let messageIdCounter = 0;
+
 const createMockMessage = (data: string) => {
+    messageIdCounter += 1;
     return {
+        id: `mock-message-${messageIdCounter}`,
         data: Buffer.from(data),
         ack: vi.fn(),
         nack: vi.fn()
@@ -45,10 +71,8 @@ describe('BatchWorker', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        // Mock logger methods to avoid noise in tests
-        vi.spyOn(logger, 'info').mockImplementation(() => {});
-        vi.spyOn(logger, 'debug').mockImplementation(() => {});
-        vi.spyOn(logger, 'error').mockImplementation(() => {});
+        getLogCapture().clear();
+        messageIdCounter = 0;
 
         mockTinybirdClient = new TinybirdClient({
             apiUrl: 'https://api.tinybird.co',
@@ -67,11 +91,18 @@ describe('BatchWorker', () => {
         vi.clearAllMocks();
     });
 
+    afterAll(async () => {
+        await getLogCapture().stop();
+    });
+
     describe('constructor', () => {
         it('should create an instance with the provided topic', () => {
             expect(batchWorker).toBeInstanceOf(BatchWorker);
             expect(EventSubscriber).toHaveBeenCalledWith(testTopic);
-            expect(logger.info).toHaveBeenCalledWith({event: 'BatchWorkerCreating', topic: testTopic});
+
+            const log = getLogCapture().findByEvent('BatchWorkerCreating');
+            expect(log).toBeDefined();
+            expect(normalizeLogEntry(log!)).toMatchObject({event: 'BatchWorkerCreating', topic: testTopic});
         });
     });
 
@@ -79,7 +110,9 @@ describe('BatchWorker', () => {
         it('should start the subscriber with handleMessage callback', async () => {
             await batchWorker.start();
 
-            expect(logger.info).toHaveBeenCalledWith({event: 'BatchWorkerStarting', topic: testTopic});
+            const log = getLogCapture().findByEvent('BatchWorkerStarting');
+            expect(log).toBeDefined();
+            expect(normalizeLogEntry(log!)).toMatchObject({event: 'BatchWorkerStarting', topic: testTopic});
             expect(mockSubscriber.subscribe).toHaveBeenCalledWith(expect.any(Function));
         });
     });
@@ -88,7 +121,9 @@ describe('BatchWorker', () => {
         it('should stop the subscriber', async () => {
             await batchWorker.stop();
 
-            expect(logger.info).toHaveBeenCalledWith({event: 'BatchWorkerStopping', topic: testTopic});
+            const log = getLogCapture().findByEvent('BatchWorkerStopping');
+            expect(log).toBeDefined();
+            expect(normalizeLogEntry(log!)).toMatchObject({event: 'BatchWorkerStopping', topic: testTopic});
             expect(mockSubscriber.close).toHaveBeenCalled();
         });
     });
@@ -145,56 +180,51 @@ describe('BatchWorker', () => {
 
             await (batchWorker as any).handleMessage(mockMessage);
 
-            // Should log info message with just event_id for successful processing
-            expect(logger.info).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    event: 'WorkerProcessedMessage',
-                    messageId: mockMessage.id,
-                    eventId: validPageHitRawData.payload.event_id
-                })
-            );
+            const processedLog = getLogCapture().findByEvent('WorkerProcessedMessage');
+            expect(processedLog).toBeDefined();
+            expect(normalizeLogEntry(processedLog!)).toMatchObject({
+                event: 'WorkerProcessedMessage',
+                messageId: mockMessage.id,
+                eventId: validPageHitRawData.payload.event_id
+            });
 
-            // Should log debug message with full payload
-            expect(logger.debug).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    event: 'WorkerProcessedMessageDetails',
-                    messageId: mockMessage.id,
-                    messageData: validPageHitRawData,
-                    pageHitProcessed: expect.objectContaining({
-                        timestamp: validPageHitRawData.timestamp,
-                        action: validPageHitRawData.action,
-                        version: validPageHitRawData.version,
-                        site_uuid: validPageHitRawData.site_uuid,
-                        session_id: expect.any(String),
-                        payload: expect.objectContaining({
-                            // Original payload fields
-                            member_uuid: validPageHitRawData.payload.member_uuid,
-                            member_status: validPageHitRawData.payload.member_status,
-                            post_uuid: validPageHitRawData.payload.post_uuid,
-                            post_type: validPageHitRawData.payload.post_type,
-                            locale: validPageHitRawData.payload.locale,
-                            location: validPageHitRawData.payload.location,
-                            pathname: validPageHitRawData.payload.pathname,
-                            href: validPageHitRawData.payload.href,
-                            // Processed fields
-                            os: expect.any(String),
-                            browser: expect.any(String),
-                            device: expect.any(String),
-                            // UTM fields from raw data
-                            utm_source: validPageHitRawData.payload.utm_source,
-                            utm_medium: validPageHitRawData.payload.utm_medium,
-                            utm_campaign: validPageHitRawData.payload.utm_campaign,
-                            utm_term: validPageHitRawData.payload.utm_term,
-                            utm_content: validPageHitRawData.payload.utm_content,
-                            // parsedReferrer should be undefined since no parsedReferrer in raw data
-                            parsedReferrer: undefined,
-                            meta: {
-                                received_timestamp: validPageHitRawData.payload.meta.received_timestamp
-                            }
-                        })
-                    })
+            const detailsLog = getLogCapture().findByEvent('WorkerProcessedMessageDetails');
+            expect(detailsLog).toBeDefined();
+            const normalizedDetailsLog = normalizeLogEntry(detailsLog!);
+            expect(normalizedDetailsLog).toMatchObject({
+                event: 'WorkerProcessedMessageDetails',
+                messageId: mockMessage.id,
+                messageData: validPageHitRawData
+            });
+
+            expect(normalizedDetailsLog.pageHitProcessed).toMatchObject({
+                timestamp: validPageHitRawData.timestamp,
+                action: validPageHitRawData.action,
+                version: validPageHitRawData.version,
+                site_uuid: validPageHitRawData.site_uuid,
+                session_id: expect.any(String),
+                payload: expect.objectContaining({
+                    member_uuid: validPageHitRawData.payload.member_uuid,
+                    member_status: validPageHitRawData.payload.member_status,
+                    post_uuid: validPageHitRawData.payload.post_uuid,
+                    post_type: validPageHitRawData.payload.post_type,
+                    locale: validPageHitRawData.payload.locale,
+                    location: validPageHitRawData.payload.location,
+                    pathname: validPageHitRawData.payload.pathname,
+                    href: validPageHitRawData.payload.href,
+                    os: expect.any(String),
+                    browser: expect.any(String),
+                    device: expect.any(String),
+                    utm_source: validPageHitRawData.payload.utm_source,
+                    utm_medium: validPageHitRawData.payload.utm_medium,
+                    utm_campaign: validPageHitRawData.payload.utm_campaign,
+                    utm_term: validPageHitRawData.payload.utm_term,
+                    utm_content: validPageHitRawData.payload.utm_content,
+                    meta: {
+                        received_timestamp: validPageHitRawData.payload.meta.received_timestamp
+                    }
                 })
-            );
+            });
 
             // Message should not be acked yet
             expect(mockMessage.ack).not.toHaveBeenCalled();
@@ -224,12 +254,16 @@ describe('BatchWorker', () => {
 
             await (batchWorker as any).handleMessage(mockMessage);
 
-            expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+            const log = getLogCapture().findByEvent('WorkerMessageParsingFailed');
+            expect(log).toBeDefined();
+            expect(normalizeLogEntry(log!)).toMatchObject({
                 event: 'WorkerMessageParsingFailed',
                 messageId: mockMessage.id,
-                messageData: invalidJson,
-                error: expect.any(Object)
-            }));
+                messageData: invalidJson
+            });
+
+            expect(log).toHaveProperty('err.message');
+            expect(log).toHaveProperty('err.stack');
 
             expectMessageAcked(mockMessage);
         });
@@ -264,12 +298,16 @@ describe('BatchWorker', () => {
 
             await (batchWorker as any).handleMessage(mockMessage);
 
-            expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+            const log = getLogCapture().findByEvent('WorkerMessageParsingFailed');
+            expect(log).toBeDefined();
+            expect(normalizeLogEntry(log!)).toMatchObject({
                 event: 'WorkerMessageParsingFailed',
                 messageId: mockMessage.id,
-                messageData: invalidPageHitRawWithEmptyUserAgent,
-                error: expect.any(Object)
-            }));
+                messageData: invalidPageHitRawWithEmptyUserAgent
+            });
+
+            expect(log).toHaveProperty('err.message');
+            expect(log).toHaveProperty('err.stack');
 
             expectMessageAcked(mockMessage);
         });
@@ -381,19 +419,18 @@ describe('BatchWorker', () => {
             expect(mockMessage.nack).not.toHaveBeenCalled();
             expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
 
-            // Should log bot filtering
-            expect(logger.info).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    event: 'BotEventFiltered',
-                    messageId: mockMessage.id,
-                    messageData: botData,
-                    pageHitProcessed: expect.objectContaining({
-                        payload: expect.objectContaining({
-                            device: 'bot'
-                        })
+            const log = getLogCapture().findByEvent('BotEventFiltered');
+            expect(log).toBeDefined();
+            expect(normalizeLogEntry(log!)).toMatchObject({
+                event: 'BotEventFiltered',
+                messageId: mockMessage.id,
+                messageData: botData,
+                pageHitProcessed: expect.objectContaining({
+                    payload: expect.objectContaining({
+                        device: 'bot'
                     })
                 })
-            );
+            });
         });
 
         it('should filter Googlebot with Android user agent and acknowledge', async () => {
