@@ -245,7 +245,7 @@ export class FirestoreSaltStore implements ISaltStore {
         });
 
         try {
-            while (true) {
+            while (totalDeleted < totalToBeDeleted) {
                 const snapshot = await cleanupQuery
                     .orderBy('created_at')
                     .limit(batchSize)
@@ -263,6 +263,22 @@ export class FirestoreSaltStore implements ISaltStore {
                 await batch.commit();
 
                 totalDeleted += snapshot.size;
+
+                const docsRemaining = Math.max(totalToBeDeleted - totalDeleted, 0);
+                const completionPercentage = totalToBeDeleted > 0
+                    ? Math.round((totalDeleted / totalToBeDeleted) * 100)
+                    : 100;
+
+                logger.info({
+                    event: 'FirestoreSaltStoreCleanupBatchCompleted',
+                    deletedInBatch: snapshot.size,
+                    deletedCount: totalDeleted,
+                    totalToBeDeleted,
+                    docsRemaining,
+                    completionPercentage,
+                    cutoffDate: cutoffDate.toISOString(),
+                    batchSize
+                });
             }
         } catch (error) {
             logger.error({

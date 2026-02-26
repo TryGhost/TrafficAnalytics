@@ -390,6 +390,46 @@ describe('FirestoreSaltStore', () => {
                 deletedCount: 2
             }));
         });
+
+        it('should log per-batch cleanup progress metadata', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+            const oldCreatedAt = new Date('2024-01-10T12:00:00.000Z');
+
+            for (let i = 0; i < 5; i += 1) {
+                await collection.doc(`salt:2024-01-10:batch-progress-${i}`).set({
+                    salt: `batch-progress-salt-${i}`,
+                    created_at: oldCreatedAt
+                });
+            }
+
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '2');
+
+            const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => logger);
+
+            const deletedCount = await saltStore.cleanup();
+            expect(deletedCount).toBe(5);
+
+            const progressCalls = infoSpy.mock.calls
+                .map(call => call[0] as Record<string, unknown>)
+                .filter(entry => entry.event === 'FirestoreSaltStoreCleanupBatchCompleted');
+
+            expect(progressCalls).toHaveLength(3);
+            expect(progressCalls[0]).toMatchObject({
+                deletedInBatch: 2,
+                deletedCount: 2,
+                totalToBeDeleted: 5,
+                docsRemaining: 3,
+                completionPercentage: 40
+            });
+            expect(progressCalls[2]).toMatchObject({
+                deletedInBatch: 1,
+                deletedCount: 5,
+                totalToBeDeleted: 5,
+                docsRemaining: 0,
+                completionPercentage: 100
+            });
+        });
     });
 
     describe('getOrCreate', () => {
