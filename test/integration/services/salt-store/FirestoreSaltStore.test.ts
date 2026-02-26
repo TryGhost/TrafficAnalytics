@@ -281,6 +281,32 @@ describe('FirestoreSaltStore', () => {
                 .get();
             expect(remainingOldSnapshot.size).toBe(0);
         });
+
+        it('should fallback to default cleanup batch size when configured value rounds below one', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+
+            await collection.doc('salt:2024-01-10:fractional-1').set({
+                salt: 'fractional-salt-1',
+                created_at: new Date('2024-01-10T12:00:00.000Z')
+            });
+
+            await collection.doc('salt:2024-01-10:fractional-2').set({
+                salt: 'fractional-salt-2',
+                created_at: new Date('2024-01-10T13:00:00.000Z')
+            });
+
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '0.5');
+            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
+
+            const deletedCount = await saltStore.cleanup();
+            expect(deletedCount).toBe(2);
+
+            const remainingOldSnapshot = await collection
+                .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
+                .get();
+            expect(remainingOldSnapshot.size).toBe(0);
+        });
     });
 
     describe('getOrCreate', () => {

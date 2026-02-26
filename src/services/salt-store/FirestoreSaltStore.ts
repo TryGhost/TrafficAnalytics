@@ -59,7 +59,12 @@ export class FirestoreSaltStore implements ISaltStore {
             return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
         }
 
-        return Math.min(Math.floor(parsed), FirestoreSaltStore.CLEANUP_BATCH_SIZE);
+        const normalized = Math.floor(parsed);
+        if (normalized < 1) {
+            return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
+        }
+
+        return Math.min(normalized, FirestoreSaltStore.CLEANUP_BATCH_SIZE);
     }
 
     /**
