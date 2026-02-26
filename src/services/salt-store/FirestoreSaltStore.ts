@@ -24,6 +24,7 @@ export class SaltAlreadyExistsError extends Error {
 export class FirestoreSaltStore implements ISaltStore {
     private firestore: Firestore;
     private collectionName: string;
+    private static readonly CLEANUP_BATCH_SIZE = 500;
 
     /**
      * Creates a new FirestoreSaltStore instance.
@@ -45,6 +46,25 @@ export class FirestoreSaltStore implements ISaltStore {
         
         // Perform a basic health check to fail fast if Firestore is unavailable
         this.healthCheck();
+    }
+
+    private getCleanupBatchSize(): number {
+        const envValue = process.env.FIRESTORE_CLEANUP_BATCH_SIZE;
+        if (!envValue) {
+            return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
+        }
+
+        const parsed = Number(envValue);
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+            return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
+        }
+
+        const normalized = Math.floor(parsed);
+        if (normalized < 1) {
+            return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
+        }
+
+        return Math.min(normalized, FirestoreSaltStore.CLEANUP_BATCH_SIZE);
     }
 
     /**
@@ -207,31 +227,82 @@ export class FirestoreSaltStore implements ISaltStore {
      * @returns Number of salts deleted
      */
     async cleanup(): Promise<number> {
+        const batchSize = this.getCleanupBatchSize();
+        const startTime = Date.now();
+        const today = new Date().toISOString().split('T')[0];
+        const cutoffDate = new Date(today); // This will be midnight UTC of today
+        const cleanupQuery = this.firestore
+            .collection(this.collectionName)
+            .where('created_at', '<', cutoffDate);
+        const totalToBeDeleted = (await cleanupQuery.count().get()).data().count;
+        let totalDeleted = 0;
+
+        logger.info({
+            event: 'FirestoreSaltStoreCleanupStarted',
+            totalToBeDeleted,
+            cutoffDate: cutoffDate.toISOString(),
+            batchSize
+        });
+
         try {
-            // Get today's date in UTC (same logic as UserSignatureService)
-            const today = new Date().toISOString().split('T')[0];
-            const cutoffDate = new Date(today); // This will be midnight UTC of today
-            
-            const snapshot = await this.firestore
-                .collection(this.collectionName)
-                .where('created_at', '<', cutoffDate)
-                .get();
+            while (totalDeleted < totalToBeDeleted) {
+                const snapshot = await cleanupQuery
+                    .orderBy('created_at')
+                    .limit(batchSize)
+                    .get();
 
-            if (snapshot.size === 0) {
-                return 0;
+                if (snapshot.size === 0) {
+                    break;
+                }
+
+                const batch = this.firestore.batch();
+                snapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+
+                await batch.commit();
+
+                totalDeleted += snapshot.size;
+
+                const docsRemaining = Math.max(totalToBeDeleted - totalDeleted, 0);
+                const completionPercentage = totalToBeDeleted > 0
+                    ? Math.round((totalDeleted / totalToBeDeleted) * 100)
+                    : 100;
+
+                logger.info({
+                    event: 'FirestoreSaltStoreCleanupBatchCompleted',
+                    deletedInBatch: snapshot.size,
+                    deletedCount: totalDeleted,
+                    totalToBeDeleted,
+                    docsRemaining,
+                    completionPercentage,
+                    cutoffDate: cutoffDate.toISOString(),
+                    batchSize
+                });
             }
-
-            const batch = this.firestore.batch();
-            snapshot.docs.forEach((doc) => {
-                batch.delete(doc.ref);
-            });
-            
-            await batch.commit();
-            return snapshot.size;
         } catch (error) {
-            logger.error({event: 'FirestoreSaltStoreCleanupFailed', error});
+            logger.error({
+                event: 'FirestoreSaltStoreCleanupFailed',
+                error,
+                deletedCount: totalDeleted,
+                totalToBeDeleted,
+                durationMs: Date.now() - startTime,
+                cutoffDate: cutoffDate.toISOString(),
+                batchSize
+            });
             throw error;
         }
+
+        logger.info({
+            event: 'FirestoreSaltStoreCleanupCompleted',
+            deletedCount: totalDeleted,
+            totalToBeDeleted,
+            durationMs: Date.now() - startTime,
+            cutoffDate: cutoffDate.toISOString(),
+            batchSize
+        });
+
+        return totalDeleted;
     }
 
     /**

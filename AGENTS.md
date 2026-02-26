@@ -58,6 +58,7 @@ The service follows a modular architecture:
 - `LOG_LEVEL` - Logging level (default: info)
 - `SALT_STORE_TYPE` - Salt store implementation (default: memory)
 - `ENABLE_SALT_CLEANUP_SCHEDULER` - Enable automatic daily salt cleanup (default: true, set to 'false' to disable)
+- `FIRESTORE_CLEANUP_BATCH_SIZE` - Number of Firestore documents to delete per cleanup loop (default: 500, max: 500)
 - `TRUST_PROXY` - Enable trust proxy to resolve client IPs from X-Forwarded-For headers (default: true, set to 'false' to disable)
 - `HMAC_SECRET` - Secret key for HMAC validation (Optional. Disabled if missing.)
 - `HMAC_VALIDATION_LOG_ONLY` - When set to 'true', HMAC validation failures are logged but requests are not rejected (default: false)

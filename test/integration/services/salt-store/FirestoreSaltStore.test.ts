@@ -1,5 +1,6 @@
 import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
 import {FirestoreSaltStore, SaltAlreadyExistsError} from '../../../../src/services/salt-store/FirestoreSaltStore';
+import logger from '../../../../src/utils/logger';
 
 describe('FirestoreSaltStore', () => {
     let saltStore: FirestoreSaltStore;
@@ -135,6 +136,16 @@ describe('FirestoreSaltStore', () => {
     });
 
     describe('cleanup', () => {
+        beforeEach(() => {
+            vi.useFakeTimers({toFake: ['Date']});
+            vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
+        });
+
+        afterEach(() => {
+            vi.clearAllTimers();
+            vi.useRealTimers();
+        });
+
         it('should delete salts from before today UTC', async () => {
             const key1 = 'salt:2024-01-14:cleanup-test-1';
             const key2 = 'salt:2024-01-15:cleanup-test-2';
@@ -143,9 +154,6 @@ describe('FirestoreSaltStore', () => {
             await saltStore.set(key1, 'yesterday-salt');
             await saltStore.set(key2, 'today-salt');
             await saltStore.set(key3, 'old-salt');
-
-            // Mock today as 2024-01-15
-            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
             // Update timestamps
             const firestore = (saltStore as any).firestore;
@@ -180,11 +188,8 @@ describe('FirestoreSaltStore', () => {
             const key = 'salt:2024-01-15:midnight-test';
             await saltStore.set(key, 'midnight-salt');
 
-            // Mock today as 2024-01-15
-            vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
-
             const firestore = (saltStore as any).firestore;
-            await firestore.collection(testCollectionName).doc(key).update({ 
+            await firestore.collection(testCollectionName).doc(key).update({
                 created_at: new Date('2024-01-15T00:00:00.000Z') 
             });
 
@@ -206,6 +211,224 @@ describe('FirestoreSaltStore', () => {
 
             const all = await saltStore.getAll();
             expect(Object.keys(all)).toHaveLength(2);
+        });
+
+        it('should cleanup old salts in multiple query pages', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+            const oldCreatedAt = new Date('2024-01-10T12:00:00.000Z');
+            const todayCreatedAt = new Date('2024-01-15T00:00:00.000Z');
+            const oldSaltCount = 5;
+
+            for (let i = 0; i < oldSaltCount; i += 3) {
+                const batch = firestore.batch();
+                const chunkEnd = Math.min(i + 3, oldSaltCount);
+
+                for (let j = i; j < chunkEnd; j += 1) {
+                    batch.set(collection.doc(`salt:2024-01-10:bulk-old-${j}`), {
+                        salt: `bulk-old-salt-${j}`,
+                        created_at: oldCreatedAt
+                    });
+                }
+
+                await batch.commit();
+            }
+
+            await collection.doc('salt:2024-01-15:bulk-today').set({
+                salt: 'bulk-today-salt',
+                created_at: todayCreatedAt
+            });
+
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '2');
+
+            const deletedCount = await saltStore.cleanup();
+
+            expect(deletedCount).toBe(oldSaltCount);
+
+            const oldSnapshot = await collection
+                .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
+                .get();
+            expect(oldSnapshot.size).toBe(0);
+
+            const todayDoc = await saltStore.get('salt:2024-01-15:bulk-today');
+            expect(todayDoc?.salt).toBe('bulk-today-salt');
+        });
+
+        it('should cap cleanup batch size at Firestore batch limit', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+            const oldCreatedAt = new Date('2024-01-10T12:00:00.000Z');
+            const oldSaltCount = 510;
+
+            for (let i = 0; i < oldSaltCount; i += 400) {
+                const batch = firestore.batch();
+                const chunkEnd = Math.min(i + 400, oldSaltCount);
+
+                for (let j = i; j < chunkEnd; j += 1) {
+                    batch.set(collection.doc(`salt:2024-01-10:capped-${j}`), {
+                        salt: `capped-salt-${j}`,
+                        created_at: oldCreatedAt
+                    });
+                }
+
+                await batch.commit();
+            }
+
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '10000');
+
+            const deletedCount = await saltStore.cleanup();
+            expect(deletedCount).toBe(oldSaltCount);
+
+            const remainingOldSnapshot = await collection
+                .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
+                .get();
+            expect(remainingOldSnapshot.size).toBe(0);
+        });
+
+        it('should fallback to default cleanup batch size when configured value rounds below one', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+
+            await collection.doc('salt:2024-01-10:fractional-1').set({
+                salt: 'fractional-salt-1',
+                created_at: new Date('2024-01-10T12:00:00.000Z')
+            });
+
+            await collection.doc('salt:2024-01-10:fractional-2').set({
+                salt: 'fractional-salt-2',
+                created_at: new Date('2024-01-10T13:00:00.000Z')
+            });
+
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '0.5');
+
+            const deletedCount = await saltStore.cleanup();
+            expect(deletedCount).toBe(2);
+
+            const remainingOldSnapshot = await collection
+                .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
+                .get();
+            expect(remainingOldSnapshot.size).toBe(0);
+        });
+
+        it('should log deleted progress when cleanup fails mid-run', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+
+            await collection.doc('salt:2024-01-10:fail-1').set({
+                salt: 'fail-salt-1',
+                created_at: new Date('2024-01-10T12:00:00.000Z')
+            });
+
+            await collection.doc('salt:2024-01-10:fail-2').set({
+                salt: 'fail-salt-2',
+                created_at: new Date('2024-01-10T13:00:00.000Z')
+            });
+
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '1');
+
+            const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => logger);
+
+            let commitCalls = 0;
+            const originalBatch = firestore.batch.bind(firestore);
+            vi.spyOn(firestore, 'batch').mockImplementation(() => {
+                const batch = originalBatch() as any;
+                const originalCommit = batch.commit.bind(batch);
+
+                batch.commit = async () => {
+                    commitCalls += 1;
+                    if (commitCalls === 2) {
+                        throw new Error('simulated batch failure');
+                    }
+
+                    return originalCommit();
+                };
+
+                return batch;
+            });
+
+            await expect(saltStore.cleanup()).rejects.toThrow('simulated batch failure');
+
+            expect(errorSpy).toHaveBeenCalledWith(expect.objectContaining({
+                event: 'FirestoreSaltStoreCleanupFailed',
+                deletedCount: 1,
+                durationMs: expect.any(Number)
+            }));
+        });
+
+        it('should log total documents to delete in completion metadata', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+
+            await collection.doc('salt:2024-01-10:total-1').set({
+                salt: 'total-salt-1',
+                created_at: new Date('2024-01-10T12:00:00.000Z')
+            });
+
+            await collection.doc('salt:2024-01-10:total-2').set({
+                salt: 'total-salt-2',
+                created_at: new Date('2024-01-10T13:00:00.000Z')
+            });
+
+            await collection.doc('salt:2024-01-15:total-today').set({
+                salt: 'total-salt-today',
+                created_at: new Date('2024-01-15T00:00:00.000Z')
+            });
+
+            const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => logger);
+
+            const deletedCount = await saltStore.cleanup();
+            expect(deletedCount).toBe(2);
+
+            expect(infoSpy).toHaveBeenCalledWith(expect.objectContaining({
+                event: 'FirestoreSaltStoreCleanupStarted',
+                totalToBeDeleted: 2
+            }));
+
+            expect(infoSpy).toHaveBeenCalledWith(expect.objectContaining({
+                event: 'FirestoreSaltStoreCleanupCompleted',
+                totalToBeDeleted: 2,
+                deletedCount: 2
+            }));
+        });
+
+        it('should log per-batch cleanup progress metadata', async () => {
+            const firestore = (saltStore as any).firestore;
+            const collection = firestore.collection(testCollectionName);
+            const oldCreatedAt = new Date('2024-01-10T12:00:00.000Z');
+
+            for (let i = 0; i < 5; i += 1) {
+                await collection.doc(`salt:2024-01-10:batch-progress-${i}`).set({
+                    salt: `batch-progress-salt-${i}`,
+                    created_at: oldCreatedAt
+                });
+            }
+
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '2');
+
+            const infoSpy = vi.spyOn(logger, 'info').mockImplementation(() => logger);
+
+            const deletedCount = await saltStore.cleanup();
+            expect(deletedCount).toBe(5);
+
+            const progressCalls = infoSpy.mock.calls
+                .map(call => call[0] as Record<string, unknown>)
+                .filter(entry => entry.event === 'FirestoreSaltStoreCleanupBatchCompleted');
+
+            expect(progressCalls).toHaveLength(3);
+            expect(progressCalls[0]).toMatchObject({
+                deletedInBatch: 2,
+                deletedCount: 2,
+                totalToBeDeleted: 5,
+                docsRemaining: 3,
+                completionPercentage: 40
+            });
+            expect(progressCalls[2]).toMatchObject({
+                deletedInBatch: 1,
+                deletedCount: 5,
+                totalToBeDeleted: 5,
+                docsRemaining: 0,
+                completionPercentage: 100
+            });
         });
     });
 
