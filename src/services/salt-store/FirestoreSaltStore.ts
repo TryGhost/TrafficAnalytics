@@ -1,4 +1,4 @@
-import {Firestore, type QueryDocumentSnapshot} from '@google-cloud/firestore';
+import {Firestore} from '@google-cloud/firestore';
 import {ISaltStore, SaltRecord} from './ISaltStore';
 import logger from '../../utils/logger';
 
@@ -24,13 +24,7 @@ export class SaltAlreadyExistsError extends Error {
 export class FirestoreSaltStore implements ISaltStore {
     private firestore: Firestore;
     private collectionName: string;
-    private static readonly CLEANUP_QUERY_BATCH_SIZE = 1000;
-    private static readonly CLEANUP_BULK_WRITER_INITIAL_OPS_PER_SECOND = 50;
-    private static readonly CLEANUP_BULK_WRITER_MAX_OPS_PER_SECOND = 200;
-    private static readonly CLEANUP_BULK_WRITER_MAX_RETRIES = 10;
-    private static readonly CLEANUP_MAX_DELETES_PER_RUN = 10000;
-    private static readonly GRPC_ABORTED = 10;
-    private static readonly GRPC_UNAVAILABLE = 14;
+    private static readonly CLEANUP_BATCH_SIZE = 500;
 
     /**
      * Creates a new FirestoreSaltStore instance.
@@ -54,18 +48,18 @@ export class FirestoreSaltStore implements ISaltStore {
         this.healthCheck();
     }
 
-    private getPositiveIntEnvOrDefault(envName: string, defaultValue: number): number {
-        const envValue = process.env[envName];
+    private getCleanupBatchSize(): number {
+        const envValue = process.env.FIRESTORE_CLEANUP_BATCH_SIZE;
         if (!envValue) {
-            return defaultValue;
+            return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
         }
 
         const parsed = Number(envValue);
         if (!Number.isFinite(parsed) || parsed <= 0) {
-            return defaultValue;
+            return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
         }
 
-        return Math.floor(parsed);
+        return Math.min(Math.floor(parsed), FirestoreSaltStore.CLEANUP_BATCH_SIZE);
     }
 
     /**
@@ -228,124 +222,45 @@ export class FirestoreSaltStore implements ISaltStore {
      * @returns Number of salts deleted
      */
     async cleanup(): Promise<number> {
-        const queryBatchSize = this.getPositiveIntEnvOrDefault('FIRESTORE_CLEANUP_QUERY_BATCH_SIZE', FirestoreSaltStore.CLEANUP_QUERY_BATCH_SIZE);
-        const initialOpsPerSecond = this.getPositiveIntEnvOrDefault(
-            'FIRESTORE_CLEANUP_BULK_WRITER_INITIAL_OPS_PER_SECOND',
-            FirestoreSaltStore.CLEANUP_BULK_WRITER_INITIAL_OPS_PER_SECOND
-        );
-        const maxOpsPerSecond = this.getPositiveIntEnvOrDefault(
-            'FIRESTORE_CLEANUP_BULK_WRITER_MAX_OPS_PER_SECOND',
-            FirestoreSaltStore.CLEANUP_BULK_WRITER_MAX_OPS_PER_SECOND
-        );
-        const maxDeletesPerRun = this.getPositiveIntEnvOrDefault('FIRESTORE_CLEANUP_MAX_DELETES_PER_RUN', FirestoreSaltStore.CLEANUP_MAX_DELETES_PER_RUN);
-
-        const bulkWriter = this.firestore.bulkWriter({
-            throttling: {
-                initialOpsPerSecond,
-                maxOpsPerSecond
-            }
-        });
-        const fatalErrors: Error[] = [];
-
-        bulkWriter.onWriteError((error) => {
-            const shouldRetry =
-                (error.code === FirestoreSaltStore.GRPC_ABORTED || error.code === FirestoreSaltStore.GRPC_UNAVAILABLE) &&
-                error.failedAttempts < FirestoreSaltStore.CLEANUP_BULK_WRITER_MAX_RETRIES;
-
-            if (!shouldRetry) {
-                fatalErrors.push(error);
-                logger.error({event: 'FirestoreSaltStoreCleanupDeleteFailed', error});
-            }
-
-            return shouldRetry;
-        });
-
+        const batchSize = this.getCleanupBatchSize();
         const startTime = Date.now();
         const today = new Date().toISOString().split('T')[0];
         const cutoffDate = new Date(today); // This will be midnight UTC of today
-        let pagesProcessed = 0;
         let totalDeleted = 0;
-        let maxDeletesPerRunReached = false;
-        let lastProcessedDoc: QueryDocumentSnapshot | undefined;
-        let cleanupError: unknown;
 
         try {
-            while (totalDeleted < maxDeletesPerRun) {
-                const remainingDeletes = maxDeletesPerRun - totalDeleted;
-                const perPageLimit = Math.min(queryBatchSize, remainingDeletes);
-
-                let query = this.firestore
+            while (true) {
+                const snapshot = await this.firestore
                     .collection(this.collectionName)
                     .where('created_at', '<', cutoffDate)
                     .orderBy('created_at')
-                    .limit(perPageLimit);
-
-                if (lastProcessedDoc) {
-                    query = query.startAfter(lastProcessedDoc);
-                }
-
-                const snapshot = await query.get();
+                    .limit(batchSize)
+                    .get();
 
                 if (snapshot.size === 0) {
                     break;
                 }
 
-                pagesProcessed += 1;
-                lastProcessedDoc = snapshot.docs[snapshot.docs.length - 1];
-
+                const batch = this.firestore.batch();
                 snapshot.docs.forEach((doc) => {
-                    bulkWriter.delete(doc.ref);
+                    batch.delete(doc.ref);
                 });
 
-                await bulkWriter.flush();
-
-                if (fatalErrors.length > 0) {
-                    throw new Error(`Cleanup failed for ${fatalErrors.length} delete operations`);
-                }
+                await batch.commit();
 
                 totalDeleted += snapshot.size;
             }
-
-            if (totalDeleted >= maxDeletesPerRun && lastProcessedDoc) {
-                const hasRemainingOldSalts = await this.firestore
-                    .collection(this.collectionName)
-                    .where('created_at', '<', cutoffDate)
-                    .orderBy('created_at')
-                    .startAfter(lastProcessedDoc)
-                    .limit(1)
-                    .get();
-
-                maxDeletesPerRunReached = hasRemainingOldSalts.size > 0;
-            }
         } catch (error) {
-            cleanupError = error;
             logger.error({event: 'FirestoreSaltStoreCleanupFailed', error});
-        } finally {
-            try {
-                await bulkWriter.close();
-            } catch (closeError) {
-                logger.error({event: 'FirestoreSaltStoreCleanupCloseFailed', error: closeError});
-                if (!cleanupError) {
-                    cleanupError = closeError;
-                }
-            }
-        }
-
-        if (cleanupError) {
-            throw cleanupError;
+            throw error;
         }
 
         logger.info({
             event: 'FirestoreSaltStoreCleanupCompleted',
             deletedCount: totalDeleted,
-            pagesProcessed,
             durationMs: Date.now() - startTime,
             cutoffDate: cutoffDate.toISOString(),
-            maxDeletesPerRun,
-            maxDeletesPerRunReached,
-            queryBatchSize,
-            initialOpsPerSecond,
-            maxOpsPerSecond
+            batchSize
         });
 
         return totalDeleted;

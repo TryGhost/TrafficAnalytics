@@ -234,7 +234,7 @@ describe('FirestoreSaltStore', () => {
                 created_at: todayCreatedAt
             });
 
-            vi.stubEnv('FIRESTORE_CLEANUP_QUERY_BATCH_SIZE', '100');
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '100');
             vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
             const deletedCount = await saltStore.cleanup();
@@ -250,29 +250,36 @@ describe('FirestoreSaltStore', () => {
             expect(todayDoc?.salt).toBe('bulk-today-salt');
         });
 
-        it('should stop cleanup when max deletes per run is reached', async () => {
+        it('should cap cleanup batch size at Firestore batch limit', async () => {
             const firestore = (saltStore as any).firestore;
             const collection = firestore.collection(testCollectionName);
             const oldCreatedAt = new Date('2024-01-10T12:00:00.000Z');
+            const oldSaltCount = 510;
 
-            for (let i = 0; i < 10; i += 1) {
-                await collection.doc(`salt:2024-01-10:capped-${i}`).set({
-                    salt: `capped-salt-${i}`,
-                    created_at: oldCreatedAt
-                });
+            for (let i = 0; i < oldSaltCount; i += 400) {
+                const batch = firestore.batch();
+                const chunkEnd = Math.min(i + 400, oldSaltCount);
+
+                for (let j = i; j < chunkEnd; j += 1) {
+                    batch.set(collection.doc(`salt:2024-01-10:capped-${j}`), {
+                        salt: `capped-salt-${j}`,
+                        created_at: oldCreatedAt
+                    });
+                }
+
+                await batch.commit();
             }
 
-            vi.stubEnv('FIRESTORE_CLEANUP_QUERY_BATCH_SIZE', '4');
-            vi.stubEnv('FIRESTORE_CLEANUP_MAX_DELETES_PER_RUN', '5');
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '10000');
             vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-15T12:00:00.000Z');
 
             const deletedCount = await saltStore.cleanup();
-            expect(deletedCount).toBe(5);
+            expect(deletedCount).toBe(oldSaltCount);
 
             const remainingOldSnapshot = await collection
                 .where('created_at', '<', new Date('2024-01-15T00:00:00.000Z'))
                 .get();
-            expect(remainingOldSnapshot.size).toBe(5);
+            expect(remainingOldSnapshot.size).toBe(0);
         });
     });
 
