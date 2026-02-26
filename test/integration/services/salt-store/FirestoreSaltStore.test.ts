@@ -213,11 +213,11 @@ describe('FirestoreSaltStore', () => {
             const collection = firestore.collection(testCollectionName);
             const oldCreatedAt = new Date('2024-01-10T12:00:00.000Z');
             const todayCreatedAt = new Date('2024-01-15T00:00:00.000Z');
-            const oldSaltCount = 450;
+            const oldSaltCount = 5;
 
-            for (let i = 0; i < oldSaltCount; i += 400) {
+            for (let i = 0; i < oldSaltCount; i += 3) {
                 const batch = firestore.batch();
-                const chunkEnd = Math.min(i + 400, oldSaltCount);
+                const chunkEnd = Math.min(i + 3, oldSaltCount);
 
                 for (let j = i; j < chunkEnd; j += 1) {
                     batch.set(collection.doc(`salt:2024-01-10:bulk-old-${j}`), {
@@ -234,7 +234,7 @@ describe('FirestoreSaltStore', () => {
                 created_at: todayCreatedAt
             });
 
-            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '100');
+            vi.stubEnv('FIRESTORE_CLEANUP_BATCH_SIZE', '2');
 
             const deletedCount = await saltStore.cleanup();
 
