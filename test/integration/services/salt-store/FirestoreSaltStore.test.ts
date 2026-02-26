@@ -141,6 +141,11 @@ describe('FirestoreSaltStore', () => {
             vi.setSystemTime(new Date('2024-01-15T12:00:00.000Z'));
         });
 
+        afterEach(() => {
+            vi.clearAllTimers();
+            vi.useRealTimers();
+        });
+
         it('should delete salts from before today UTC', async () => {
             const key1 = 'salt:2024-01-14:cleanup-test-1';
             const key2 = 'salt:2024-01-15:cleanup-test-2';
