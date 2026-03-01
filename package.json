@@ -41,7 +41,7 @@
   ],
   "devDependencies": {
     "@playwright/test": "1.58.2",
-    "@types/node": "24.10.13",
+    "@types/node": "24.10.14",
     "@types/supertest": "7.2.0",
     "@types/ua-parser-js": "0.7.39",
     "@vitest/coverage-v8": "4.0.18",
