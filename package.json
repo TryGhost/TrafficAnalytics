@@ -71,7 +71,7 @@
     "@opentelemetry/resources": "2.5.1",
     "@opentelemetry/sdk-node": "0.212.0",
     "@opentelemetry/sdk-trace-base": "2.5.1",
-    "@opentelemetry/semantic-conventions": "1.39.0",
+    "@opentelemetry/semantic-conventions": "1.40.0",
     "@sinclair/typebox": "0.34.48",
     "@tryghost/errors": "2.2.1",
     "@tryghost/referrer-parser": "0.1.14",
