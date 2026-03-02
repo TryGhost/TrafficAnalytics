@@ -38,8 +38,8 @@ export class UserSignatureService {
             try {
                 const deletedCount = await this.saltStore.cleanup();
                 logger.info({event: 'SaltCleanupCompleted', deletedCount});
-            } catch (error) {
-                logger.error({event: 'SaltCleanupFailed', error});
+            } catch (err) {
+                logger.error({event: 'SaltCleanupFailed', err});
             }
         };
         
