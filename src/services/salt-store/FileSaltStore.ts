@@ -55,8 +55,8 @@ export class FileSaltStore implements ISaltStore {
                 // File doesn't exist, create it with empty object
                 await this.writeFile({});
             }
-        } catch (error) {
-            logger.warn({event: 'FileSaltStoreInitializationFailed', error});
+        } catch (err) {
+            logger.warn({event: 'FileSaltStoreInitializationFailed', err});
         }
     }
 
@@ -80,12 +80,12 @@ export class FileSaltStore implements ISaltStore {
                 }
             }
             return records;
-        } catch (error) {
-            if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        } catch (err) {
+            if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
                 return {};
             }
             // Handle corrupted file
-            logger.error({event: 'FileSaltStoreReadFailed', error});
+            logger.error({event: 'FileSaltStoreReadFailed', err});
             await this.writeFile({});
             return {};
         }
@@ -247,9 +247,9 @@ export class FileSaltStore implements ISaltStore {
                 }
                 
                 return deletedCount;
-            } catch (error) {
-                logger.error({event: 'FileSaltStoreCleanupFailed', error});
-                throw error;
+            } catch (err) {
+                logger.error({event: 'FileSaltStoreCleanupFailed', err});
+                throw err;
             }
         });
     }
