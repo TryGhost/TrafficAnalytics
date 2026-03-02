@@ -68,6 +68,31 @@ export class FirestoreSaltStore implements ISaltStore {
     }
 
     /**
+     * Computes the expire_at timestamp for a salt document.
+     * Parses the date from the key (format: salt:{date}:{siteUuid}) and returns
+     * that date + 2 days at midnight UTC, providing a 24-hour safety buffer.
+     *
+     * Falls back to fallbackDate + 2 days if the key format is unexpected.
+     */
+    private getExpireAt(key: string, fallbackDate: Date): Date {
+        const parts = key.split(':');
+        // Expected format: salt:{YYYY-MM-DD}:{siteUuid}
+        if (parts.length >= 3 && parts[0] === 'salt') {
+            const dateStr = parts[1];
+            const parsed = new Date(dateStr);
+            if (!isNaN(parsed.getTime())) {
+                const expireAt = new Date(parsed);
+                expireAt.setUTCDate(expireAt.getUTCDate() + 2);
+                return expireAt;
+            }
+        }
+        // Fallback: created_at + 2 days
+        const expireAt = new Date(fallbackDate);
+        expireAt.setUTCDate(expireAt.getUTCDate() + 2);
+        return expireAt;
+    }
+
+    /**
      * Performs a basic health check to verify Firestore connectivity.
      * This helps fail fast during initialization if Firestore is unavailable.
      */
@@ -167,8 +192,11 @@ export class FirestoreSaltStore implements ISaltStore {
                 created_at: now
             };
 
-            // Use create() for atomic operation - fails if document exists
-            await docRef.create(record);
+            // Write expire_at alongside the record for Firestore TTL support
+            await docRef.create({
+                ...record,
+                expire_at: this.getExpireAt(key, now)
+            });
 
             return {
                 salt,

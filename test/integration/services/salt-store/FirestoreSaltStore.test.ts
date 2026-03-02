@@ -511,4 +511,22 @@ describe('FirestoreSaltStore', () => {
             expect(Math.abs(stored!.created_at.getTime() - result.created_at.getTime())).toBeLessThan(1000);
         });
     });
+
+    describe('expire_at', () => {
+        it('should write expire_at when creating a document via set()', async () => {
+            const key = 'salt:2024-01-15:550e8400-e29b-41d4-a716-446655440000';
+            await saltStore.set(key, 'test-salt');
+
+            // Read the raw Firestore document to check expire_at
+            const firestore = (saltStore as any).firestore;
+            const doc = await firestore.collection(testCollectionName).doc(key).get();
+            const data = doc.data();
+
+            expect(data.expire_at).toBeDefined();
+
+            // Key date is 2024-01-15, expire_at should be 2024-01-17T00:00:00.000Z (key date + 2 days)
+            const expireAt = data.expire_at.toDate();
+            expect(expireAt).toEqual(new Date('2024-01-17T00:00:00.000Z'));
+        });
+    });
 });
