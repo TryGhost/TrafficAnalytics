@@ -572,5 +572,15 @@ describe('FirestoreSaltStore', () => {
             expect(record!.created_at).toBeInstanceOf(Date);
             expect((record as any).expire_at).toBeUndefined();
         });
+
+        it('should not include expire_at in SaltRecords returned by getAll()', async () => {
+            await saltStore.set('salt:2024-01-15:550e8400-e29b-41d4-a716-446655440000', 'salt-1');
+            await saltStore.set('salt:2024-01-16:550e8400-e29b-41d4-a716-446655440000', 'salt-2');
+
+            const records = await saltStore.getAll();
+            for (const record of Object.values(records)) {
+                expect((record as any).expire_at).toBeUndefined();
+            }
+        });
     });
 });

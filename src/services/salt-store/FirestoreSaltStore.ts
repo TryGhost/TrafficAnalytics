@@ -25,6 +25,7 @@ export class FirestoreSaltStore implements ISaltStore {
     private firestore: Firestore;
     private collectionName: string;
     private static readonly CLEANUP_BATCH_SIZE = 500;
+    private static readonly EXPIRE_AT_BUFFER_DAYS = 2;
 
     /**
      * Creates a new FirestoreSaltStore instance.
@@ -82,13 +83,13 @@ export class FirestoreSaltStore implements ISaltStore {
             const parsed = new Date(dateStr);
             if (!isNaN(parsed.getTime())) {
                 const expireAt = new Date(parsed);
-                expireAt.setUTCDate(expireAt.getUTCDate() + 2);
+                expireAt.setUTCDate(expireAt.getUTCDate() + FirestoreSaltStore.EXPIRE_AT_BUFFER_DAYS);
                 return expireAt;
             }
         }
         // Fallback: created_at + 2 days
         const expireAt = new Date(fallbackDate);
-        expireAt.setUTCDate(expireAt.getUTCDate() + 2);
+        expireAt.setUTCDate(expireAt.getUTCDate() + FirestoreSaltStore.EXPIRE_AT_BUFFER_DAYS);
         return expireAt;
     }
 
