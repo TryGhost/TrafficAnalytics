@@ -41,15 +41,14 @@ class EventPublisher {
             });
 
             return messageId;
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
+        } catch (err) {
             logger.error({
                 event: 'EventPublishFailed',
-                error: errorMessage,
+                err,
                 topic,
                 payload
             });
-            throw error;
+            throw err;
         }
     }
 }
