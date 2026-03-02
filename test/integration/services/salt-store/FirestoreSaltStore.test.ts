@@ -528,5 +528,49 @@ describe('FirestoreSaltStore', () => {
             const expireAt = data.expire_at.toDate();
             expect(expireAt).toEqual(new Date('2024-01-17T00:00:00.000Z'));
         });
+
+        it('should write expire_at when creating a document via getOrCreate()', async () => {
+            const key = 'salt:2024-03-20:550e8400-e29b-41d4-a716-446655440000';
+            await saltStore.getOrCreate(key, () => 'test-salt');
+
+            const firestore = (saltStore as any).firestore;
+            const doc = await firestore.collection(testCollectionName).doc(key).get();
+            const data = doc.data();
+
+            expect(data.expire_at).toBeDefined();
+            const expireAt = data.expire_at.toDate();
+            expect(expireAt).toEqual(new Date('2024-03-22T00:00:00.000Z'));
+        });
+
+        it('should fall back to created_at + 2 days when key format is unexpected', async () => {
+            const key = 'unexpected-key-format';
+            await saltStore.set(key, 'test-salt');
+
+            const firestore = (saltStore as any).firestore;
+            const doc = await firestore.collection(testCollectionName).doc(key).get();
+            const data = doc.data();
+
+            expect(data.expire_at).toBeDefined();
+            const expireAt = data.expire_at.toDate();
+            const createdAt = data.created_at.toDate();
+
+            // expire_at should be created_at + 2 days
+            const expectedExpireAt = new Date(createdAt);
+            expectedExpireAt.setUTCDate(expectedExpireAt.getUTCDate() + 2);
+
+            // Compare to within 1 second to account for execution time
+            expect(Math.abs(expireAt.getTime() - expectedExpireAt.getTime())).toBeLessThan(1000);
+        });
+
+        it('should not include expire_at in SaltRecord returned by get()', async () => {
+            const key = 'salt:2024-01-15:550e8400-e29b-41d4-a716-446655440000';
+            await saltStore.set(key, 'test-salt');
+
+            const record = await saltStore.get(key);
+            expect(record).toBeDefined();
+            expect(record!.salt).toBe('test-salt');
+            expect(record!.created_at).toBeInstanceOf(Date);
+            expect((record as any).expire_at).toBeUndefined();
+        });
     });
 });
