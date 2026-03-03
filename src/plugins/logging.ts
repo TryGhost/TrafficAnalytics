@@ -34,7 +34,7 @@ async function loggingPlugin(fastify: FastifyInstance) {
             request.log = request.log.child(childContext);
         }
 
-        request.log.info({
+        request.log.debug({
             event: 'IncomingRequest',
             httpRequest: {
                 requestMethod: request.method,
@@ -61,7 +61,7 @@ async function loggingPlugin(fastify: FastifyInstance) {
     });
 
     fastify.addHook('onResponse', async (request, reply) => {
-        request.log.info({
+        request.log.debug({
             event: 'RequestCompleted',
             httpRequest: {
                 requestMethod: request.method,

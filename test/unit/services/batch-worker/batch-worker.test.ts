@@ -145,8 +145,8 @@ describe('BatchWorker', () => {
 
             await (batchWorker as any).handleMessage(mockMessage);
 
-            // Should log info message with just event_id for successful processing
-            expect(logger.info).toHaveBeenCalledWith(
+            // Should log debug message with event details for successful processing
+            expect(logger.debug).toHaveBeenCalledWith(
                 expect.objectContaining({
                     event: 'WorkerProcessedMessage',
                     messageId: mockMessage.id,
@@ -157,7 +157,7 @@ describe('BatchWorker', () => {
             // Should log debug message with full payload
             expect(logger.debug).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    event: 'WorkerProcessedMessageDetails',
+                    event: 'WorkerProcessedMessage',
                     messageId: mockMessage.id,
                     messageData: validPageHitRawData,
                     pageHitProcessed: expect.objectContaining({

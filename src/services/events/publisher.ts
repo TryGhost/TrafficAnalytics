@@ -35,6 +35,7 @@ class EventPublisher {
 
             logger.info({
                 event: 'EventPublishSuccessful',
+                event_id: (payload as {payload?: {event_id?: string | null}}).payload?.event_id ?? null,
                 messageId,
                 topic,
                 payloadSize: message.data.length
