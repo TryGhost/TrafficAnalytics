@@ -24,6 +24,6 @@ export const publishPageHitRaw = async (request: PageHitRequestType, payload: Pa
             event_id: payload.payload.event_id,
             message_id: messageId,
             payload
-         });
+        });
     }
 };
