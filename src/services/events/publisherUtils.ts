@@ -9,25 +9,21 @@ export const publishPageHitRaw = async (request: PageHitRequestType, payload: Pa
             event_id: payload.payload.event_id,
             payload
         });
-        await publishEvent({
+        const messageId = await publishEvent({
             topic,
             payload,
             logger: request.log
-        const messageId = await publishEvent({
-               topic,
-               payload,
-               logger: request.log
-         });
-         request.log.info({
+        });
+        request.log.info({
             event: 'PublishedPageHitRawEvent',
             message_id: messageId,
             event_id: payload.payload.event_id
         });
         request.log.debug({
-             event: 'PublishedPageHitRawEventPayload', 
-             event_id: payload.payload.event_id,
-             message_id: messageId,
-             payload
+            event: 'PublishedPageHitRawEventPayload',
+            event_id: payload.payload.event_id,
+            message_id: messageId,
+            payload
          });
     }
 };
