@@ -40,7 +40,7 @@ runs:
           }
 
     - name: Setup QEMU
-      uses: docker/setup-qemu-action@v3
+      uses: docker/setup-qemu-action@v4
       if: inputs.build-multiarchitecture == 'true'
 
     - name: Set up Docker Buildx
