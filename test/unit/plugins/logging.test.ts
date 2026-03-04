@@ -154,6 +154,41 @@ describe('Logging Plugin', () => {
         });
     });
 
+    describe('x-site-uuid header', () => {
+        it('should include siteUuid in IncomingRequest log when x-site-uuid header is provided', async () => {
+            const siteUuid = '12345678-1234-1234-1234-123456789012';
+
+            await app.inject({
+                method: 'GET',
+                url: '/test',
+                headers: {
+                    'x-site-uuid': siteUuid
+                }
+            });
+
+            const incomingRequestLog = parseLogs().find(
+                log => log.event === 'IncomingRequest'
+            );
+
+            expect(incomingRequestLog).toBeDefined();
+            expect(incomingRequestLog?.siteUuid).toBe(siteUuid);
+        });
+
+        it('should not include siteUuid in IncomingRequest log when x-site-uuid header is not provided', async () => {
+            await app.inject({
+                method: 'GET',
+                url: '/test'
+            });
+
+            const incomingRequestLog = parseLogs().find(
+                log => log.event === 'IncomingRequest'
+            );
+
+            expect(incomingRequestLog).toBeDefined();
+            expect(incomingRequestLog).not.toHaveProperty('siteUuid');
+        });
+    });
+
     describe('request body logging', () => {
         it('should log request body for requests over 600 KB', async () => {
             const largeBody = {

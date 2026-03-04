@@ -25,16 +25,21 @@ async function loggingPlugin(fastify: FastifyInstance) {
         const rawRequestId = request.headers['x-request-id'];
         const requestId = Array.isArray(rawRequestId) ? rawRequestId[0] : rawRequestId;
 
+        // Extract site UUID if present
+        const rawSiteUuid = request.headers['x-site-uuid'];
+        const siteUuid = Array.isArray(rawSiteUuid) ? rawSiteUuid[0] : rawSiteUuid;
+
         const childContext: Record<string, unknown> = {
             ...traceContext,
-            ...(requestId && {requestId})
+            ...(requestId && {requestId}),
+            ...(siteUuid && {siteUuid})
         };
 
         if (Object.keys(childContext).length > 0) {
             request.log = request.log.child(childContext);
         }
 
-        request.log.debug({
+        request.log.info({
             event: 'IncomingRequest',
             httpRequest: {
                 requestMethod: request.method,
