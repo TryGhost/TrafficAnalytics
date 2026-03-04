@@ -33,9 +33,8 @@ class EventPublisher {
 
             const messageId = await this.pubsub.topic(topic).publishMessage(message);
 
-            logger.info({
+            logger.debug({
                 event: 'EventPublishSuccessful',
-                event_id: (payload as {payload?: {event_id?: string | null}}).payload?.event_id ?? null,
                 messageId,
                 topic,
                 payloadSize: message.data.length
