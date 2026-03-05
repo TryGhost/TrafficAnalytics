@@ -61,7 +61,7 @@ jobs:
 
       - name: Generate Docker Tags
         id: traffic-analytics-docker-metadata
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ghost/traffic-analytics
