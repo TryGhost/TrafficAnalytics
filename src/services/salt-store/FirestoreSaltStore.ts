@@ -69,7 +69,7 @@ export class FirestoreSaltStore implements ISaltStore {
     }
 
     /**
-     * Computes the expire_at timestamp for a salt document.
+     * Computes the expires_at timestamp for a salt document.
      * Parses the date from the key (format: salt:{date}:{siteUuid}) and returns
      * that date + 2 days at midnight UTC, providing a 24-hour safety buffer.
      *
@@ -193,10 +193,10 @@ export class FirestoreSaltStore implements ISaltStore {
                 created_at: now
             };
 
-            // Write expire_at alongside the record for Firestore TTL support
+            // Write expires_at alongside the record for Firestore TTL support
             await docRef.create({
                 ...record,
-                expire_at: this.getExpireAt(key, now)
+                expires_at: this.getExpireAt(key, now)
             });
 
             return {

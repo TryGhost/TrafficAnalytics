@@ -512,24 +512,24 @@ describe('FirestoreSaltStore', () => {
         });
     });
 
-    describe('expire_at', () => {
-        it('should write expire_at when creating a document via set()', async () => {
+    describe('expires_at', () => {
+        it('should write expires_at when creating a document via set()', async () => {
             const key = 'salt:2024-01-15:550e8400-e29b-41d4-a716-446655440000';
             await saltStore.set(key, 'test-salt');
 
-            // Read the raw Firestore document to check expire_at
+            // Read the raw Firestore document to check expires_at
             const firestore = (saltStore as any).firestore;
             const doc = await firestore.collection(testCollectionName).doc(key).get();
             const data = doc.data();
 
-            expect(data.expire_at).toBeDefined();
+            expect(data.expires_at).toBeDefined();
 
-            // Key date is 2024-01-15, expire_at should be 2024-01-17T00:00:00.000Z (key date + 2 days)
-            const expireAt = data.expire_at.toDate();
+            // Key date is 2024-01-15, expires_at should be 2024-01-17T00:00:00.000Z (key date + 2 days)
+            const expireAt = data.expires_at.toDate();
             expect(expireAt).toEqual(new Date('2024-01-17T00:00:00.000Z'));
         });
 
-        it('should write expire_at when creating a document via getOrCreate()', async () => {
+        it('should write expires_at when creating a document via getOrCreate()', async () => {
             const key = 'salt:2024-03-20:550e8400-e29b-41d4-a716-446655440000';
             await saltStore.getOrCreate(key, () => 'test-salt');
 
@@ -537,8 +537,8 @@ describe('FirestoreSaltStore', () => {
             const doc = await firestore.collection(testCollectionName).doc(key).get();
             const data = doc.data();
 
-            expect(data.expire_at).toBeDefined();
-            const expireAt = data.expire_at.toDate();
+            expect(data.expires_at).toBeDefined();
+            const expireAt = data.expires_at.toDate();
             expect(expireAt).toEqual(new Date('2024-03-22T00:00:00.000Z'));
         });
 
@@ -550,11 +550,11 @@ describe('FirestoreSaltStore', () => {
             const doc = await firestore.collection(testCollectionName).doc(key).get();
             const data = doc.data();
 
-            expect(data.expire_at).toBeDefined();
-            const expireAt = data.expire_at.toDate();
+            expect(data.expires_at).toBeDefined();
+            const expireAt = data.expires_at.toDate();
             const createdAt = data.created_at.toDate();
 
-            // expire_at should be created_at + 2 days
+            // expires_at should be created_at + 2 days
             const expectedExpireAt = new Date(createdAt);
             expectedExpireAt.setUTCDate(expectedExpireAt.getUTCDate() + 2);
 
@@ -562,7 +562,7 @@ describe('FirestoreSaltStore', () => {
             expect(Math.abs(expireAt.getTime() - expectedExpireAt.getTime())).toBeLessThan(1000);
         });
 
-        it('should not include expire_at in SaltRecord returned by get()', async () => {
+        it('should not include expires_at in SaltRecord returned by get()', async () => {
             const key = 'salt:2024-01-15:550e8400-e29b-41d4-a716-446655440000';
             await saltStore.set(key, 'test-salt');
 
@@ -570,16 +570,16 @@ describe('FirestoreSaltStore', () => {
             expect(record).toBeDefined();
             expect(record!.salt).toBe('test-salt');
             expect(record!.created_at).toBeInstanceOf(Date);
-            expect((record as any).expire_at).toBeUndefined();
+            expect((record as any).expires_at).toBeUndefined();
         });
 
-        it('should not include expire_at in SaltRecords returned by getAll()', async () => {
+        it('should not include expires_at in SaltRecords returned by getAll()', async () => {
             await saltStore.set('salt:2024-01-15:550e8400-e29b-41d4-a716-446655440000', 'salt-1');
             await saltStore.set('salt:2024-01-16:550e8400-e29b-41d4-a716-446655440000', 'salt-2');
 
             const records = await saltStore.getAll();
             for (const record of Object.values(records)) {
-                expect((record as any).expire_at).toBeUndefined();
+                expect((record as any).expires_at).toBeUndefined();
             }
         });
     });
