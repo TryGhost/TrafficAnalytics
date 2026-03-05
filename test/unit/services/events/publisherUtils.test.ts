@@ -32,7 +32,7 @@ describe('publisherUtils', () => {
     });
 
     describe('publishPageHitRaw', () => {
-        it('should log info message with only event_id on successful publish', async () => {
+        it('should log debug payload details on successful publish', async () => {
             const payload = {
                 payload: {
                     event_id: 'test-event-123',
@@ -44,12 +44,12 @@ describe('publisherUtils', () => {
 
             await publishPageHitRaw(mockRequest, payload);
 
-            expect(mockRequest.log.info).toHaveBeenCalledWith(
-                {event: 'PublishingPageHitRawEvent', event_id: 'test-event-123'}
-            );
-            expect(mockRequest.log.info).not.toHaveBeenCalledWith(
-                expect.objectContaining({payload: expect.anything()}),
-                expect.anything()
+            expect(mockRequest.log.debug).toHaveBeenCalledWith(
+                {
+                    event: 'PublishingPageHitRawEvent',
+                    event_id: 'test-event-123',
+                    payload
+                }
             );
         });
 

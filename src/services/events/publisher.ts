@@ -33,7 +33,7 @@ class EventPublisher {
 
             const messageId = await this.pubsub.topic(topic).publishMessage(message);
 
-            logger.info({
+            logger.debug({
                 event: 'EventPublishSuccessful',
                 messageId,
                 topic,
