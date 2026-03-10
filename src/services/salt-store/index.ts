@@ -1,4 +1,4 @@
-export type {ISaltStore, SaltRecord} from './ISaltStore';
+export type {ISaltStore, SaltKey, SaltRecord} from './ISaltStore';
 export {MemorySaltStore} from './MemorySaltStore';
 export {FirestoreSaltStore} from './FirestoreSaltStore';
 export {createSaltStore} from './SaltStoreFactory';

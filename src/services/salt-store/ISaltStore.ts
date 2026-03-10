@@ -1,3 +1,5 @@
+export type SaltKey = `salt:${number}-${number}-${number}:${string}`;
+
 export interface SaltRecord {
     salt: string;
     created_at: Date;

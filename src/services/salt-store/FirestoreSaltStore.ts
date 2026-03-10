@@ -75,7 +75,7 @@ export class FirestoreSaltStore implements ISaltStore {
      *
      * Falls back to fallbackDate + 2 days if the key format is unexpected.
      */
-    private getExpireAt(key: string, fallbackDate: Date): Date {
+    private getExpireAt(key: string, fallbackDate: Date) {
         const parts = key.split(':');
         // Expected format: salt:{YYYY-MM-DD}:{siteUuid}
         if (parts.length >= 3 && parts[0] === 'salt') {
