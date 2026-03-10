@@ -180,13 +180,15 @@ class BatchWorker {
         this.flushTimer = setTimeout(async () => {
             this.flushTimer = null;
 
+            const pendingBatchSize = this.batch.length;
+            const pendingMessageIds = this.batch.map(item => item.message.id);
             try {
                 await this.flushBatch();
             } catch (err) {
                 logger.error({
                     event: 'WorkerScheduledFlushFailed',
-                    batchSize: this.batch.length,
-                    messageIds: this.batch.map(item => item.message.id),
+                    batchSize: pendingBatchSize,
+                    messageIds: pendingMessageIds,
                     err
                 });
             }
