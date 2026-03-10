@@ -58,7 +58,7 @@
   },
   "dependencies": {
     "@fastify/cors": "11.2.0",
-    "@fastify/reply-from": "12.6.0",
+    "@fastify/reply-from": "12.6.1",
     "@fastify/type-provider-typebox": "5.2.0",
     "@google-cloud/firestore": "8.3.0",
     "@google-cloud/opentelemetry-cloud-trace-exporter": "3.0.0",
