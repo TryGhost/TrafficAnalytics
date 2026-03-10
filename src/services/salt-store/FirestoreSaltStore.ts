@@ -25,6 +25,7 @@ export class FirestoreSaltStore implements ISaltStore {
     private firestore: Firestore;
     private collectionName: string;
     private static readonly CLEANUP_BATCH_SIZE = 500;
+    private static readonly EXPIRE_AT_BUFFER_DAYS = 2;
 
     /**
      * Creates a new FirestoreSaltStore instance.
@@ -65,6 +66,31 @@ export class FirestoreSaltStore implements ISaltStore {
         }
 
         return Math.min(normalized, FirestoreSaltStore.CLEANUP_BATCH_SIZE);
+    }
+
+    /**
+     * Computes the expires_at timestamp for a salt document.
+     * Parses the date from the key (format: salt:{date}:{siteUuid}) and returns
+     * that date + 2 days at midnight UTC, providing a 24-hour safety buffer.
+     *
+     * Falls back to fallbackDate + 2 days if the key format is unexpected.
+     */
+    private getExpireAt(key: string, fallbackDate: Date) {
+        const parts = key.split(':');
+        // Expected format: salt:{YYYY-MM-DD}:{siteUuid}
+        if (parts.length >= 3 && parts[0] === 'salt') {
+            const dateStr = parts[1];
+            const parsed = new Date(dateStr);
+            if (!isNaN(parsed.getTime())) {
+                const expireAt = new Date(parsed);
+                expireAt.setUTCDate(expireAt.getUTCDate() + FirestoreSaltStore.EXPIRE_AT_BUFFER_DAYS);
+                return expireAt;
+            }
+        }
+        // Fallback: created_at + 2 days
+        const expireAt = new Date(fallbackDate);
+        expireAt.setUTCDate(expireAt.getUTCDate() + FirestoreSaltStore.EXPIRE_AT_BUFFER_DAYS);
+        return expireAt;
     }
 
     /**
@@ -167,8 +193,11 @@ export class FirestoreSaltStore implements ISaltStore {
                 created_at: now
             };
 
-            // Use create() for atomic operation - fails if document exists
-            await docRef.create(record);
+            // Write expires_at alongside the record for Firestore TTL support
+            await docRef.create({
+                ...record,
+                expires_at: this.getExpireAt(key, now)
+            });
 
             return {
                 salt,

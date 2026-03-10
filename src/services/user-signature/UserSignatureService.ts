@@ -1,4 +1,4 @@
-import {ISaltStore} from '../salt-store';
+import {ISaltStore, SaltKey} from '../salt-store';
 import crypto from 'crypto';
 import logger from '../../utils/logger';
 
@@ -74,9 +74,9 @@ export class UserSignatureService {
      * @param siteUuid - The site_uuid to get the salt for
      * @returns The key to use to store the salt for the site
      */
-    private getKey(siteUuid: string): string {
+    private getKey(siteUuid: string): SaltKey {
         const date = new Date().toISOString().split('T')[0];
-        return `salt:${date}:${siteUuid}`;
+        return `salt:${date}:${siteUuid}` as SaltKey;
     }
 
     /**
