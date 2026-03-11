@@ -33,7 +33,7 @@ describe('Error Formatters', () => {
                 const result = ErrorDataFormatter.formatValidationError(validationError, request);
 
                 expect(result).toEqual({
-                    error: {
+                    err: {
                         message: 'error message',
                         name: 'FastifyError',
                         code: 'CODE',
@@ -91,7 +91,7 @@ describe('Error Formatters', () => {
                 const result = ErrorDataFormatter.formatUnhandledError(unhandledError, request);
 
                 expect(result).toEqual({
-                    error: {
+                    err: {
                         message: 'Database connection failed',
                         name: 'DatabaseError',
                         code: 'DATABASE_ERROR',

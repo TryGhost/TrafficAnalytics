@@ -106,11 +106,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    error: {
-                        message: 'Test error message',
-                        stack: testError.stack,
-                        name: 'Error'
-                    },
+                    err: testError,
                     payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
@@ -140,7 +136,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    error: 'String error',
+                    err: 'String error',
                     payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
@@ -170,7 +166,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    error: null,
+                    err: null,
                     payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
@@ -200,7 +196,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    error: undefined,
+                    err: undefined,
                     payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
@@ -230,7 +226,7 @@ describe('page-hit-handlers', () => {
             expect(publishPageHitRawSpy).toHaveBeenCalledWith(mockRequest, mockPayload);
             expect(mockRequest.log.error).toHaveBeenCalledWith(
                 {
-                    error: complexError,
+                    err: complexError,
                     payload: mockPayload,
                     httpRequest: {
                         requestMethod: mockRequest.method,
@@ -470,11 +466,7 @@ describe('page-hit-handlers', () => {
             options?.onError!(mockReplyInstance, testError as any);
 
             expect(mockReplyInstance.log.error).toHaveBeenCalledWith({
-                error: {
-                    message: 'Proxy connection failed',
-                    stack: testError.stack,
-                    name: 'Error'
-                },
+                err: testError,
                 httpRequest: {
                     requestMethod: mockRequest.method,
                     requestUrl: mockRequest.url,
@@ -518,11 +510,7 @@ describe('page-hit-handlers', () => {
             options?.onError!(mockReplyInstance, wrappedError as any);
 
             expect(mockReplyInstance.log.error).toHaveBeenCalledWith({
-                error: {
-                    message: 'Connection timeout',
-                    stack: innerError.stack,
-                    name: 'Error'
-                },
+                err: innerError,
                 httpRequest: {
                     requestMethod: mockRequest.method,
                     requestUrl: mockRequest.url,
