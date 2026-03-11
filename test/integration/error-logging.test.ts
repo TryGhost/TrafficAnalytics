@@ -54,7 +54,7 @@ describe('Error Logging', () => {
         // Verify validation error was logged with stack trace and useful request data
         expect(mockWarn).toHaveBeenCalledWith(
             expect.objectContaining({
-                error: expect.objectContaining({
+                err: expect.objectContaining({
                     message: 'querystring must have required property "name"',
                     name: 'FastifyError',
                     code: 'FST_ERR_VALIDATION',
@@ -78,8 +78,8 @@ describe('Error Logging', () => {
 
         // Verify the logged data structure
         const loggedData = mockWarn.mock.calls[0][0];
-        expect(loggedData).toHaveProperty('error.stack');
-        expect(loggedData).toHaveProperty('error.code');
+        expect(loggedData).toHaveProperty('err.stack');
+        expect(loggedData).toHaveProperty('err.code');
         expect(loggedData).toHaveProperty('headers');
         expect(loggedData).toHaveProperty('query');
         expect(loggedData).toHaveProperty('requestBody');
@@ -103,7 +103,7 @@ describe('Error Logging', () => {
         // Verify unhandled error was logged with stack trace and useful request data
         expect(mockError).toHaveBeenCalledWith(
             expect.objectContaining({
-                error: expect.objectContaining({
+                err: expect.objectContaining({
                     message: 'Database connection failed',
                     name: 'DatabaseError',
                     code: 'DATABASE_ERROR',
@@ -127,8 +127,8 @@ describe('Error Logging', () => {
 
         // Verify the logged data structure
         const loggedData = mockError.mock.calls[0][0];
-        expect(loggedData).toHaveProperty('error.stack');
-        expect(loggedData).toHaveProperty('error.code');
+        expect(loggedData).toHaveProperty('err.stack');
+        expect(loggedData).toHaveProperty('err.code');
         expect(loggedData).toHaveProperty('headers');
         expect(loggedData).toHaveProperty('query');
         expect(loggedData).toHaveProperty('requestBody');
@@ -152,8 +152,8 @@ describe('Error Logging', () => {
 
         // Verify the new logging is cleaner and includes stack trace
         const loggedData = mockError.mock.calls[0][0];
-        expect(loggedData).toHaveProperty('error.stack');
-        expect(loggedData).toHaveProperty('error.code');
+        expect(loggedData).toHaveProperty('err.stack');
+        expect(loggedData).toHaveProperty('err.code');
         expect(loggedData).toHaveProperty('headers');
         expect(loggedData).toHaveProperty('query');
         expect(loggedData).toHaveProperty('requestBody');

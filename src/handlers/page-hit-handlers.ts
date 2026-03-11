@@ -10,14 +10,10 @@ export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestT
     try {
         await publishPageHitRaw(request, payload);
         reply.status(202).send({message: 'Page hit event received'});
-    } catch (error) {
+    } catch (err) {
         request.log.error({
             event: 'PageHitPublishFailed',
-            error: error instanceof Error ? {
-                message: error.message,
-                stack: error.stack,
-                name: error.name
-            } : error,
+            err,
             payload,
             httpRequest: {
                 requestMethod: request.method,
@@ -80,11 +76,7 @@ export const handlePageHitRequestStrategyInline = async (request: PageHitRequest
             const unwrappedError = 'error' in error ? error.error : error;
             replyInstance.log.error({
                 event: 'ProxyError',
-                error: {
-                    message: unwrappedError.message,
-                    stack: unwrappedError.stack,
-                    name: unwrappedError.name
-                },
+                err: unwrappedError,
                 httpRequest: {
                     requestMethod: replyInstance.request.method,
                     requestUrl: replyInstance.request.url,
@@ -114,14 +106,10 @@ export const pageHitRequestHandler = async (request: FastifyRequest<{
         } else {
             await handlePageHitRequestStrategyInline(request, reply);
         }
-    } catch (error) {
+    } catch (err) {
         reply.log.error({
             event: 'RequestProcessingError',
-            error: error instanceof Error ? {
-                message: error.message,
-                stack: error.stack,
-                name: error.name
-            } : error,
+            err,
             httpRequest: {
                 requestMethod: request.method,
                 requestUrl: request.url,

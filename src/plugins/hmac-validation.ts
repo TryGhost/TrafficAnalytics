@@ -33,7 +33,7 @@ async function hmacValidationPlugin(fastify: FastifyInstance) {
                     method: request.method,
                     ip: request.ip,
                     userAgent: request.headers['user-agent'],
-                    error: validationResult.error,
+                    reason: validationResult.error,
                     type: 'security_validation_error',
                     logOnlyMode
                 });
@@ -64,14 +64,10 @@ async function hmacValidationPlugin(fastify: FastifyInstance) {
                 method: request.method,
                 ip: request.ip
             });
-        } catch (error) {
+        } catch (err) {
             request.log.error({
                 event: 'HmacValidationError',
-                error: error instanceof Error ? {
-                    message: error.message,
-                    stack: error.stack,
-                    name: error.name
-                } : error,
+                err,
                 url: request.url,
                 method: request.method,
                 ip: request.ip,
