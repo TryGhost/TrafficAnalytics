@@ -70,7 +70,7 @@ jobs:
           gcp_workload_identity_provider: ${{ vars.GCP_WORKFLOW_IDENTITY_PROVIDER }}
 
       - name: Send slack notification for rollback
-        uses: slackapi/slack-github-action@v2.1.1
+        uses: slackapi/slack-github-action@v3.0.1
         if: always()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}

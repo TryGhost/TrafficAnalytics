@@ -44,7 +44,7 @@ jobs:
           git push origin "v$NEW_VERSION"
 
       - name: Send slack notification for new version release
-        uses: slackapi/slack-github-action@v2.1.1
+        uses: slackapi/slack-github-action@v3.0.1
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
