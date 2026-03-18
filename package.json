@@ -74,7 +74,7 @@
     "@opentelemetry/semantic-conventions": "1.40.0",
     "@sinclair/typebox": "0.34.48",
     "@tryghost/errors": "3.0.3",
-    "@tryghost/referrer-parser": "0.1.14",
+    "@tryghost/referrer-parser": "0.1.15",
     "@tryghost/validator": "2.0.3",
     "fastify": "5.8.2",
     "fastify-plugin": "5.1.0",
