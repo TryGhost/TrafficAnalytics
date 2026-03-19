@@ -46,48 +46,16 @@ jobs:
           esac
 
   rollback:
-    name: Rollback
+    name: Rollback (${{ matrix.environment }})
     needs: generate-environments
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         environment: ${{ fromJSON(needs.generate-environments.outputs.environments) }}
-        region: [europe-west4]
-        include:
-          - region: europe-west4
-            region_name: netherlands
-    steps:
-      - uses: actions/checkout@v6
-      - name: "Deploy (${{ matrix.environment }} | ${{ matrix.region }})"
-        uses: "./.github/actions/deploy-gcp-cloud-run"
-        with:
-          environment: ${{ matrix.environment }}
-          region: ${{ matrix.region }}
-          service: >-
-            ${{ contains(matrix.environment, 'staging') && 'stg' || 'prd' }}-${{ matrix.region_name }}-traffic-analytics
-          image: ${{ vars.DOCKER_IMAGE }}:${{ inputs.tag }}
-          gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
-          gcp_workload_identity_provider: ${{ vars.GCP_WORKFLOW_IDENTITY_PROVIDER }}
-
-      - name: Send slack notification for rollback
-        uses: slackapi/slack-github-action@v3.0.1
-        if: always()
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            text: "Traffic Analytics Rollback: ${{ job.status }} (${{ matrix.environment }})"
-            blocks:
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: "${{ job.status == 'success' && ':leftwards_arrow_with_hook: *Traffic Analytics Rollback Completed*' || ':x: *Traffic Analytics Rollback Failed*' }}"
-              - type: "section"
-                fields:
-                  - type: "mrkdwn"
-                    text: "*Environment:*\n:gear: ${{ matrix.environment }}"
-                  - type: "mrkdwn"
-                    text: "*Workflow:* <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
-            attachments:
-              - color: "${{ job.status == 'success' && 'warning' || 'danger' }}"
-                fallback: "Traffic Analytics Rollback: ${{ job.status }}"
+    uses: ./.github/workflows/deploy-environment.yml
+    secrets: inherit
+    with:
+      environment: ${{ matrix.environment }}
+      image: ${{ vars.DOCKER_IMAGE }}:${{ inputs.tag }}
+      region: europe-west4
+      region_name: netherlands
+      services: '["analytics"]'
