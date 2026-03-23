@@ -30,7 +30,7 @@ runs:
         project_id: ${{ inputs.gcp_project_id }}
         token_format: access_token
         workload_identity_provider: ${{ inputs.gcp_workload_identity_provider }}
-        service_account: ${{ contains(inputs.environment, 'staging') && 'stg' || 'prd' }}-gh-deploy@ghost-traffic-analytics.iam.gserviceaccount.com
+        service_account: ${{ contains(inputs.environment, 'staging') && 'stg-gh-deploy@ghost-traffic-analytics-stg.iam.gserviceaccount.com' || 'prd-gh-deploy@ghost-traffic-analytics.iam.gserviceaccount.com' }}
     - name: "Deploy to Cloud Run"
       uses: google-github-actions/deploy-cloudrun@v3
       with:
