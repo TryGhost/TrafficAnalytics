@@ -49,7 +49,7 @@ jobs:
           service: ${{ inputs.environment == 'staging' && 'stg' || 'prd' }}-${{ inputs.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
           image: ${{ inputs.image }}
           gcp_project_id: ${{ vars.GCP_PROJECT_ID }}${{ inputs.environment == 'staging' && '-stg' || '' }}
-          gcp_workload_identity_provider: ${{ vars.GCP_WORKFLOW_IDENTITY_PROVIDER }}
+          gcp_workload_identity_provider: ${{ inputs.environment == 'staging' && vars.GCP_WORKFLOW_IDENTITY_PROVIDER_STG || vars.GCP_WORKFLOW_IDENTITY_PROVIDER_PRD }}
 
   notify:
     name: Notify (${{ inputs.environment }})
