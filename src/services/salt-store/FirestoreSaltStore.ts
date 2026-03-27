@@ -101,9 +101,9 @@ export class FirestoreSaltStore implements ISaltStore {
         try {
             // Simple operation to test connectivity - just get the collection reference
             await this.firestore.collection(this.collectionName).limit(1).get();
-        } catch (error) {
+        } catch (err) {
             // Log warning but don't throw - allow graceful degradation
-            logger.warn({event: 'FirestoreSaltStoreHealthCheckFailed', error});
+            logger.warn({event: 'FirestoreSaltStoreHealthCheckFailed', err});
         }
     }
 
@@ -309,17 +309,17 @@ export class FirestoreSaltStore implements ISaltStore {
                     batchSize
                 });
             }
-        } catch (error) {
+        } catch (err) {
             logger.error({
                 event: 'FirestoreSaltStoreCleanupFailed',
-                error,
+                err,
                 deletedCount: totalDeleted,
                 totalToBeDeleted,
                 durationMs: Date.now() - startTime,
                 cutoffDate: cutoffDate.toISOString(),
                 batchSize
             });
-            throw error;
+            throw err;
         }
 
         logger.info({
@@ -356,10 +356,10 @@ export class FirestoreSaltStore implements ISaltStore {
         try {
             // Use existing set method which handles atomic creation
             return await this.set(key, newSalt);
-        } catch (error) {
+        } catch (err) {
             // Handle race condition: another process created the document between our read and create
             // We could do this with a transaction, but it adds unnecessary performance overhead
-            if (error instanceof SaltAlreadyExistsError) {
+            if (err instanceof SaltAlreadyExistsError) {
                 // Another process created it, read and return the existing document
                 const freshSalt = await this.get(key);
                 if (!freshSalt) {
@@ -367,10 +367,10 @@ export class FirestoreSaltStore implements ISaltStore {
                 }
                 return freshSalt;
             }
-            
+
             // Re-throw other errors
-            logger.error({event: 'FirestoreSaltStoreGetOrCreateFailed', error});
-            throw error;
+            logger.error({event: 'FirestoreSaltStoreGetOrCreateFailed', err});
+            throw err;
         }
     }
 }
