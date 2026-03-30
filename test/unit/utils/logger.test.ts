@@ -87,6 +87,51 @@ describe('Logger Config', () => {
             expect(config.formatters).toHaveProperty('log');
             expect(config.serializers).toBeUndefined();
         });
+
+        it('should add an Axiom transport in production when dataset and token are configured', () => {
+            vi.stubEnv('NODE_ENV', 'production');
+            vi.stubEnv('LOG_LEVEL', 'info');
+            vi.stubEnv('AXIOM_DATASET', 'traffic-logs');
+            vi.stubEnv('AXIOM_TOKEN', 'axiom-token');
+            vi.stubEnv('AXIOM_ORG_ID', 'ghost');
+            vi.stubEnv('AXIOM_URL', 'https://api.axiom.test');
+            vi.stubEnv('AXIOM_LOG_LEVEL', 'error');
+
+            const config = getLoggerConfig();
+
+            expect(config.transport).toMatchObject({
+                targets: [
+                    {
+                        target: 'pino/file',
+                        options: {
+                            destination: 1
+                        }
+                    },
+                    {
+                        target: '@axiomhq/pino',
+                        level: 'error',
+                        options: {
+                            dataset: 'traffic-logs',
+                            token: 'axiom-token',
+                            orgId: 'ghost',
+                            url: 'https://api.axiom.test'
+                        }
+                    }
+                ]
+            });
+            expect(config.formatters).toHaveProperty('log');
+        });
+
+        it('should skip the Axiom transport when dataset or token are missing', () => {
+            vi.stubEnv('NODE_ENV', 'production');
+            vi.stubEnv('LOG_LEVEL', 'info');
+            vi.stubEnv('AXIOM_DATASET', 'traffic-logs');
+
+            const config = getLoggerConfig();
+
+            expect(config.transport).toBeUndefined();
+            expect(config.formatters).toHaveProperty('log');
+        });
     });
 
     describe('production logging output', () => {
