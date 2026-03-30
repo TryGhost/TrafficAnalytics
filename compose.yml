@@ -119,7 +119,7 @@ services:
         condition: service_healthy
 
   firestore:
-    image: google/cloud-sdk:emulators
+    image: google/cloud-sdk:emulators@sha256:5ce660bcac0e2dd14d3b4309a95ba3c3b82af0ab0fef4ecb1d4fccdaa4bf28c9
     command: ["/app/firestore-wrapper.sh"]
     ports:
       - ${FIRESTORE_PORT:-8080}:8080
@@ -137,7 +137,7 @@ services:
       - dev-network
 
   pubsub:
-    image: google/cloud-sdk:emulators
+    image: google/cloud-sdk:emulators@sha256:5ce660bcac0e2dd14d3b4309a95ba3c3b82af0ab0fef4ecb1d4fccdaa4bf28c9
     command: ["/app/start-pubsub.sh"]
     ports:
       - ${PUBSUB_PORT:-8085}:8085
@@ -156,7 +156,7 @@ services:
     networks:
       - dev-network
   fake-tinybird:
-    image: wiremock/wiremock:3.13.2
+    image: wiremock/wiremock:3.13.2@sha256:fd27e46090916e85326229e5102ee169ae729059f3374549615bd20a35fee1f2
     ports:
       - ${FAKE_TINYBIRD_PORT:-8089}:8080
     command: ["--global-response-templating", "--verbose"]
@@ -194,7 +194,7 @@ services:
         condition: service_healthy
 
   jaeger:
-    image: jaegertracing/all-in-one:1.76.0
+    image: jaegertracing/all-in-one:1.76.0@sha256:ab6f1a1f0fb49ea08bcd19f6b84f6081d0d44b364b6de148e1798eb5816bacac
     networks:
       - dev-network
       - test-network
@@ -232,7 +232,7 @@ services:
 
   # Test-specific emulator services (isolated from dev)
   firestore-test:
-    image: google/cloud-sdk:emulators
+    image: google/cloud-sdk:emulators@sha256:5ce660bcac0e2dd14d3b4309a95ba3c3b82af0ab0fef4ecb1d4fccdaa4bf28c9
     command: ["/app/firestore-wrapper.sh"]
     volumes:
       - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
@@ -249,7 +249,7 @@ services:
     profiles: [testing]
 
   pubsub-test:
-    image: google/cloud-sdk:emulators
+    image: google/cloud-sdk:emulators@sha256:5ce660bcac0e2dd14d3b4309a95ba3c3b82af0ab0fef4ecb1d4fccdaa4bf28c9
     command: ["/app/start-pubsub.sh"]
     volumes:
       - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
