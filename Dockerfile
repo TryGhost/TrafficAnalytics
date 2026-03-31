@@ -7,13 +7,15 @@ RUN apk add --no-cache curl
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 
-RUN yarn install --ignore-scripts --frozen-lockfile
+COPY package.json pnpm-lock.yaml ./
+
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 COPY . .
 
-RUN yarn build
+RUN pnpm build
 
 CMD ["node", "--enable-source-maps", "dist/server.js"]
 

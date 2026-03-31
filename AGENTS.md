@@ -9,20 +9,20 @@ TrafficAnalytics is a web analytics proxy service for Ghost that processes and e
 ## Key Commands
 
 ###
-- `yarn build` - build TypeScript code
+- `pnpm build` - build TypeScript code
 - `docker compose build` - Build docker image
 
 ### Development
-- `yarn dev` - Start development server in Docker
+- `pnpm dev` - Start development server in Docker
 
 ### Testing
-- `yarn test` - Run all tests in Docker
-- `yarn test:unit` - Run unit tests in Docker
-- `yarn test:integration` - Run integration tests in Docker
-- `yarn test:e2e` - Run e2e tests in Docker
+- `pnpm test` - Run all tests in Docker
+- `pnpm test:unit` - Run unit tests in Docker
+- `pnpm test:integration` - Run integration tests in Docker
+- `pnpm test:e2e` - Run e2e tests in Docker
 
 ### Linting
-- `yarn lint` - Run linter in Docker
+- `pnpm lint` - Run linter in Docker
 
 ## Architecture
 

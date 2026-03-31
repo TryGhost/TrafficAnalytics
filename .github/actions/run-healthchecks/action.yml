@@ -17,15 +17,18 @@ runs:
       run: |
         curl -s --max-time 30 -o /dev/null "${{ inputs.base_url }}" &
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4
+
     - name: Setup Node.js
       uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
       with:
         node-version: '20'
-        cache: 'yarn'
+        cache: 'pnpm'
 
     - name: Install dependencies
       shell: bash
-      run: yarn install --ignore-scripts --frozen-lockfile
+      run: pnpm install --frozen-lockfile --ignore-scripts
 
     - name: Get Playwright version
       id: playwright-version
@@ -62,7 +65,7 @@ runs:
           -e PW_TEST_HTML_REPORT_OPEN=never \
           --network host \
           "$IMAGE" \
-          bash -c "yarn playwright test --reporter=list --reporter=html"
+          bash -c "npx playwright test --reporter=list --reporter=html"
 
     - name: Upload test results
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7

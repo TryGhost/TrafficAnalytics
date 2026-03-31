@@ -57,7 +57,7 @@ Pre-requisites:
 - Docker Compose
 
 1. `git clone` this repo & `cd` into it as usual
-2. `yarn dev` to build & start all required development services. The Analytics Service will be reachable at `http://localhost:3000`.
+2. `pnpm dev` to build & start all required development services. The Analytics Service will be reachable at `http://localhost:3000`.
 
 ## Develop locally with Ghost
 
@@ -66,20 +66,20 @@ If you want to manually test the Analytics Service + Ghost together locally, the
 1. In Ghost, add `ANALYTICS_PROXY_TARGET=traffic-analytics-analytics-service-1:3000` to your `.env` file. This tells Ghost's `caddy` service to route requests to `/.ghost/analytics/**` to this instance of the analytics service instead of the instance in Ghost's compose project.
 1. In Ghost, run `docker compose --profile analytics up -d`. This starts `tinybird-local`, deploys the Tinybird schema, and stored required tokens in a `shared-config` named volume.
 1. In Ghost, run `docker compose --profile split up`. This runs Caddy, Ghost's backend and Ghost Admin. Ghost will be available at `http://localhost:2368`
-1. In this repo, run `yarn dev:ghost` instead of `yarn dev`. This runs the analytics service within Ghost's docker network, and mounts the `shared-config` volume so it can access the tokens it needs to send events to `tinybird-local`.
+1. In this repo, run `pnpm dev:ghost` instead of `pnpm dev`. This runs the analytics service within Ghost's docker network, and mounts the `shared-config` volume so it can access the tokens it needs to send events to `tinybird-local`.
 
 That's it! Now when you visit Ghost at `http://localhost:2368`, you should see the requests to `/.ghost/analytics/api/v1/page_hit` in the request logs in this repo, and the `worker` service will send the events to the `tinybird-local` service running in the Ghost project.
 
 ## Test
 
-- `yarn test:types` — run Typescript typechecks in Docker
-- `yarn test:unit` — run all unit tests in Docker
-- `yarn test:integration` — run all integration tests in Docker
-- `yarn test` — run typechecks, unit tests and integration tests in Docker
-- `yarn test:e2e` — run e2e tests (with wiremock) in Docker
+- `pnpm test:types` — run Typescript typechecks in Docker
+- `pnpm test:unit` — run all unit tests in Docker
+- `pnpm test:integration` — run all integration tests in Docker
+- `pnpm test` — run typechecks, unit tests and integration tests in Docker
+- `pnpm test:e2e` — run e2e tests (with wiremock) in Docker
 
 ## Lint
-- `yarn lint` run eslint in docker compose
+- `pnpm lint` run eslint in docker compose
 
 
 ## Multi-Worktree Development

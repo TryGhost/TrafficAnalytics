@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
       target: base
     entrypoint: ["/app/scripts/entrypoint.sh"]
-    command: ["yarn","tsx", "watch", "server.ts"]
+    command: ["pnpm","tsx", "watch", "server.ts"]
     ports:
       - ${ANALYTICS_PORT:-3000}:3000
     env_file:
@@ -45,7 +45,7 @@ services:
     image: local/traffic-analytics:development
     pull_policy: never
     entrypoint: ["/app/scripts/entrypoint.sh"]
-    command: ["yarn", "tsx", "watch", "server.ts"]
+    command: ["pnpm", "tsx", "watch", "server.ts"]
     ports:
       - ${WORKER_PORT:-3001}:3000
     env_file:
@@ -88,7 +88,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: base
-    command: ["yarn", "tsx", "watch", "server.ts"]
+    command: ["pnpm", "tsx", "watch", "server.ts"]
     ports:
       - 4000:3000
     env_file:
@@ -171,7 +171,7 @@ services:
   e2e-test:
     image: local/traffic-analytics:development
     pull_policy: never
-    command: ["yarn", "_test:e2e"]
+    command: ["pnpm", "_test:e2e"]
     env_file:
       - path: .env
         required: false
@@ -206,7 +206,7 @@ services:
   test:
     image: local/traffic-analytics:development
     pull_policy: never
-    command: sh -c "yarn _test && yarn _lint"
+    command: sh -c "pnpm _test && pnpm _lint"
     env_file:
       - path: .env
         required: false

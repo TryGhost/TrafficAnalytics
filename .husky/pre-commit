@@ -9,16 +9,16 @@ fi
 echo "Running pre-commit checks..."
 
 # Run linting
-echo "Running yarn lint..."
-yarn lint
+echo "Running pnpm lint..."
+pnpm lint
 if [ $? -ne 0 ]; then
   echo "Linting failed. Please fix the issues before committing."
   exit 1
 fi
 
 # Run unit tests
-echo "Running yarn test:unit..."
-yarn test:unit
+echo "Running pnpm test:unit..."
+pnpm test:unit
 if [ $? -ne 0 ]; then
   echo "Unit tests failed. Please fix the issues before committing."
   exit 1
