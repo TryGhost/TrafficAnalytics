@@ -100,12 +100,12 @@ class BatchWorker {
             if (this.batch.length >= this.batchSize) {
                 await this.flushBatch();
             }
-        } catch (error) {
+        } catch (err) {
             logger.error({
                 event: 'WorkerMessageProcessingFailed',
                 messageId: message.id,
                 messageData: this.getMessageData(message),
-                error
+                err
             });
             message.nack();
         }
@@ -116,12 +116,12 @@ class BatchWorker {
             const messageData = message.data.toString();
             const parsedMessageData = JSON.parse(messageData);
             return Value.Parse(PageHitRawSchema, parsedMessageData);
-        } catch (error) {
+        } catch (err) {
             logger.error({
                 event: 'WorkerMessageParsingFailed',
                 messageId: message.id,
                 messageData: this.getMessageData(message),
-                error
+                err
             });
             // Ack the message. If we failed to parse it, we won't succeed next time.
             message.ack();
@@ -155,12 +155,12 @@ class BatchWorker {
                 batchSize: batchToFlush.length,
                 messageIds: batchToFlush.map(item => item.message.id)
             });
-        } catch (error) {
+        } catch (err) {
             logger.error({
                 event: 'WorkerBatchFlushFailed',
                 batchSize: batchToFlush.length,
                 messageIds: batchToFlush.map(item => item.message.id),
-                error
+                err
             });
 
             // Nack all messages in the failed batch
@@ -168,7 +168,7 @@ class BatchWorker {
                 item.message.nack();
             });
 
-            throw error;
+            throw err;
         }
     }
 
@@ -180,14 +180,16 @@ class BatchWorker {
         this.flushTimer = setTimeout(async () => {
             this.flushTimer = null;
 
+            const pendingBatchSize = this.batch.length;
+            const pendingMessageIds = this.batch.map(item => item.message.id);
             try {
                 await this.flushBatch();
-            } catch (error) {
+            } catch (err) {
                 logger.error({
                     event: 'WorkerScheduledFlushFailed',
-                    batchSize: this.batch.length,
-                    messageIds: this.batch.map(item => item.message.id),
-                    error
+                    batchSize: pendingBatchSize,
+                    messageIds: pendingMessageIds,
+                    err
                 });
             }
 

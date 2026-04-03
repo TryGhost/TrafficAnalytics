@@ -309,7 +309,7 @@ describe('UserSignatureService', () => {
                 await timeoutCallback();
                 
                 expect(cleanupSpy).toHaveBeenCalledOnce();
-                expect(loggerErrorSpy).toHaveBeenCalledWith({event: 'SaltCleanupFailed', error});
+                expect(loggerErrorSpy).toHaveBeenCalledWith({event: 'SaltCleanupFailed', err: error});
                 
                 service.stopCleanupScheduler();
             });
