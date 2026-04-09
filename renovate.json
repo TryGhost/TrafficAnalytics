@@ -5,6 +5,16 @@
   ],
   "packageRules": [
     {
+      "description": "Automerge Docker Compose digest updates",
+      "matchManagers": [
+        "docker-compose"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
       "description": "Pin ua-parser-js to <2.0.0 to remain on the MIT license. Versions 2.0.0+ switched to AGPL, which is not compatible with our MIT license.",
       "matchPackageNames": [
         "ua-parser-js"
