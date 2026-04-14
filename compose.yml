@@ -119,7 +119,7 @@ services:
         condition: service_healthy
 
   firestore:
-    image: google/cloud-sdk:emulators@sha256:e5fc8093e26e6985d196fb0e51d2c45946357eca409ed440657a55ddfa6120e1
+    image: google/cloud-sdk:emulators@sha256:e49bd9957b69001b81bef35cdef14c858e939217e95130f93b85d584b378d3b2
     command: ["/app/firestore-wrapper.sh"]
     ports:
       - ${FIRESTORE_PORT:-8080}:8080
@@ -137,7 +137,7 @@ services:
       - dev-network
 
   pubsub:
-    image: google/cloud-sdk:emulators@sha256:e5fc8093e26e6985d196fb0e51d2c45946357eca409ed440657a55ddfa6120e1
+    image: google/cloud-sdk:emulators@sha256:e49bd9957b69001b81bef35cdef14c858e939217e95130f93b85d584b378d3b2
     command: ["/app/start-pubsub.sh"]
     ports:
       - ${PUBSUB_PORT:-8085}:8085
@@ -232,7 +232,7 @@ services:
 
   # Test-specific emulator services (isolated from dev)
   firestore-test:
-    image: google/cloud-sdk:emulators@sha256:e5fc8093e26e6985d196fb0e51d2c45946357eca409ed440657a55ddfa6120e1
+    image: google/cloud-sdk:emulators@sha256:e49bd9957b69001b81bef35cdef14c858e939217e95130f93b85d584b378d3b2
     command: ["/app/firestore-wrapper.sh"]
     volumes:
       - ./docker/firestore/firestore-wrapper.sh:/app/firestore-wrapper.sh:ro
@@ -249,7 +249,7 @@ services:
     profiles: [testing]
 
   pubsub-test:
-    image: google/cloud-sdk:emulators@sha256:e5fc8093e26e6985d196fb0e51d2c45946357eca409ed440657a55ddfa6120e1
+    image: google/cloud-sdk:emulators@sha256:e49bd9957b69001b81bef35cdef14c858e939217e95130f93b85d584b378d3b2
     command: ["/app/start-pubsub.sh"]
     volumes:
       - ./docker/pubsub/start-pubsub.sh:/app/start-pubsub.sh:ro
