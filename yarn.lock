@@ -354,10 +354,10 @@
     retry-request "^7.0.0"
     teeny-request "^9.0.0"
 
-"@google-cloud/firestore@8.3.0":
-  version "8.3.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/firestore/-/firestore-8.3.0.tgz#d6d0c0d4d9a58868f27986ff023cc424ac119431"
-  integrity sha512-OYadXaHxx8J5GQtCwDNjaVu2+O9Ozdst4Iqi+vDTI/WmLTO56XX3QBOXp4T+qh3tyQzl9YzDBrmA7o8n1xTouA==
+"@google-cloud/firestore@8.5.0":
+  version "8.5.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/firestore/-/firestore-8.5.0.tgz#76860622089eb0022a60c1b1e59eff26b74a5fc4"
+  integrity sha512-1sbtj7JQfsfekrxwHR0s2CAz8+hkpBdiuB7+20VEgI4EWvW3+GhEUqYOQPRoZ2spHyITLN4gaOPmBN17J539yQ==
   dependencies:
     "@opentelemetry/api" "^1.9.0"
     fast-deep-equal "^3.1.3"
