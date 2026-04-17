@@ -1,4 +1,4 @@
-import type {LoggerOptions} from 'pino';
+import type {LoggerOptions, TransportTargetOptions} from 'pino';
 import type {PrettyOptions} from 'pino-pretty';
 import type {FastifyRequest, FastifyReply} from 'fastify';
 import {createGcpLoggingPinoConfig} from '@google-cloud/pino-logging-gcp-config';
@@ -9,6 +9,50 @@ function getServiceContext(): {service: string; version?: string} {
     const version = process.env.K_REVISION || process.env.npm_package_version;
 
     return version ? {service, version} : {service};
+}
+
+function getStdoutTransportTarget(): TransportTargetOptions {
+    return {
+        target: 'pino/file',
+        options: {
+            destination: 1
+        }
+    };
+}
+
+function getAxiomTransportTarget(): TransportTargetOptions | undefined {
+    const token = process.env.AXIOM_TOKEN;
+    const dataset = process.env.AXIOM_DATASET;
+
+    if (!token || !dataset) {
+        return undefined;
+    }
+
+    return {
+        target: '@axiomhq/pino',
+        level: process.env.AXIOM_LOG_LEVEL || process.env.LOG_LEVEL || 'info',
+        options: {
+            token,
+            dataset,
+            ...(process.env.AXIOM_ORG_ID ? {orgId: process.env.AXIOM_ORG_ID} : {}),
+            ...(process.env.AXIOM_URL ? {url: process.env.AXIOM_URL} : {})
+        }
+    };
+}
+
+function getProductionTransport(): LoggerOptions['transport'] | undefined {
+    const axiomTarget = getAxiomTransportTarget();
+
+    if (!axiomTarget) {
+        return undefined;
+    }
+
+    return {
+        targets: [
+            getStdoutTransportTarget(),
+            axiomTarget
+        ]
+    };
 }
 
 /**
@@ -51,7 +95,7 @@ export function getLoggerConfig(): LoggerOptions {
     }
 
     // Production / staging configuration - GCP optimized JSON logs
-    return createGcpLoggingPinoConfig(
+    const config = createGcpLoggingPinoConfig(
         {
             serviceContext: getServiceContext(),
             inihibitDiagnosticMessage: Boolean(process.env.VITEST)
@@ -60,4 +104,8 @@ export function getLoggerConfig(): LoggerOptions {
             level: process.env.LOG_LEVEL || 'info'
         }
     );
+
+    const transport = getProductionTransport();
+
+    return transport ? {...config, transport} : config;
 }
