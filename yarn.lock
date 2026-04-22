@@ -1558,29 +1558,29 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.0.tgz#f544a148d3ab35801c1f633a7441fd87c2e484bf"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
 
-"@tryghost/errors@3.0.3", "@tryghost/errors@^3.0.3":
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.0.3.tgz#73444013e7d516bf3177e2ddeb1b0ead468ab132"
-  integrity sha512-0hRFMQvsNPbojPS7xDuJEe4eNzWSQ6v2rLFXlTCeY7K7Lh4GXRmsI846SxPXwH8moaWIsrLP4xTnmIp8Tgs/Lw==
+"@tryghost/errors@3.1.0":
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.1.0.tgz#d02112b290f5358c2e73f148084d3bad4cf72c17"
+  integrity sha512-vavmjjIAxngGuKK+D6vzYM+Bi36Td1cVEPtj25OFfHJj3xwoZL1Hji/wJylzqIRIFoCGvvHw+Ztnqjl9yLLAVw==
 
 "@tryghost/referrer-parser@0.1.15":
   version "0.1.15"
   resolved "https://registry.yarnpkg.com/@tryghost/referrer-parser/-/referrer-parser-0.1.15.tgz#cd05b93df65e49c04f53aea4e5b28f8257c45f5a"
   integrity sha512-d/C1iim7X08dDBB6+xt45cUAtjyF4sje8Z+tjJ00heC+kcuZca1m/5YqosWytUCPvUpq0G5jeatZYTK8r19lag==
 
-"@tryghost/tpl@^2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/tpl/-/tpl-2.0.3.tgz#1242eeda93bf1393a1bd61dd4f7e6bb06dad08a6"
-  integrity sha512-v3BCkpcjEpYG7gPBntOjUYhADYfxbb+3tlt0KxqhZ9RYm+1sQ6wdsfZ+6Yh0akOwp/caifWIVuuvfcbL7x4SFA==
+"@tryghost/tpl@2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/tpl/-/tpl-2.1.0.tgz#48882a23bf929508d5a3faf2f27194ea520d6d75"
+  integrity sha512-NIzGwyHcFUnJRmaDkd5wx6X+lXfqXqUbsICKO4KcPFtwmqLVButlbidNZsXLdoblyI2J5jS6JIGY22TB+mtiBw==
 
-"@tryghost/validator@2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@tryghost/validator/-/validator-2.0.3.tgz#b2b7118c62f335c6febd9db9b2e6e7ae23c66f56"
-  integrity sha512-k8XZIaeSjqL+zzYzYkUO491tqvduXZGAkDkimsDABPeVE5SNSFXQGaHcMb97YQa0Br1lRDKQl08KY2UboTv0zA==
+"@tryghost/validator@2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/validator/-/validator-2.1.0.tgz#11cf6bc9690e5c45273e150e5df17bfbe7619b8f"
+  integrity sha512-HdM5ucxn91WG4pkLOIojPRFKWW1wF4IS9lhyxv95gA32AMWnGBpA5B1cQ9/Jv30Xn3ZBz6L7nxmoKtmdsRus7A==
   dependencies:
-    "@tryghost/errors" "^3.0.3"
-    "@tryghost/tpl" "^2.0.3"
-    lodash "4.17.23"
+    "@tryghost/errors" "3.1.0"
+    "@tryghost/tpl" "2.1.0"
+    lodash "4.18.1"
     moment-timezone "^0.5.23"
     validator "7.2.0"
 
@@ -3670,12 +3670,7 @@ lodash.upperfirst@4.3.1:
   resolved "https://registry.yarnpkg.com/lodash.upperfirst/-/lodash.upperfirst-4.3.1.tgz#1365edf431480481ef0d1c68957a5ed99d49f7ce"
   integrity sha512-sReKOYJIJf74dhJONhU4e0/shzi1trVbSWDOhKYE5XV2O+H7Sb2Dihwuc7xWxVl+DgFPyTqIN3zMfT9cq5iWDg==
 
-lodash@4.17.23:
-  version "4.17.23"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.23.tgz#f113b0378386103be4f6893388c73d0bde7f2c5a"
-  integrity sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==
-
-lodash@^4.17.21:
+lodash@4.18.1, lodash@^4.17.21:
   version "4.18.1"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.18.1.tgz#ff2b66c1f6326d59513de2407bf881439812771c"
   integrity sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==
