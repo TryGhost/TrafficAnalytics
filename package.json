@@ -75,7 +75,7 @@
     "@sinclair/typebox": "0.34.49",
     "@tryghost/errors": "3.1.0",
     "@tryghost/referrer-parser": "0.1.15",
-    "@tryghost/validator": "2.1.0",
+    "@tryghost/validator": "3.0.0",
     "fastify": "5.8.5",
     "fastify-plugin": "5.1.0",
     "pino": "10.3.1",
