@@ -1573,16 +1573,16 @@
   resolved "https://registry.yarnpkg.com/@tryghost/tpl/-/tpl-2.1.0.tgz#48882a23bf929508d5a3faf2f27194ea520d6d75"
   integrity sha512-NIzGwyHcFUnJRmaDkd5wx6X+lXfqXqUbsICKO4KcPFtwmqLVButlbidNZsXLdoblyI2J5jS6JIGY22TB+mtiBw==
 
-"@tryghost/validator@2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@tryghost/validator/-/validator-2.1.0.tgz#11cf6bc9690e5c45273e150e5df17bfbe7619b8f"
-  integrity sha512-HdM5ucxn91WG4pkLOIojPRFKWW1wF4IS9lhyxv95gA32AMWnGBpA5B1cQ9/Jv30Xn3ZBz6L7nxmoKtmdsRus7A==
+"@tryghost/validator@3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/validator/-/validator-3.0.0.tgz#36a883916c0154258bca54a0d130395f444bfe5f"
+  integrity sha512-/VBFzlSz8MMpVuP9dhbjMinaRglEa62XqOgx2umW2gUZoROjE4B77G4AMUrQY+KkDT1eGT/OTUQ8gPT1EQPPLw==
   dependencies:
     "@tryghost/errors" "3.1.0"
     "@tryghost/tpl" "2.1.0"
     lodash "4.18.1"
     moment-timezone "^0.5.23"
-    validator "7.2.0"
+    validator "13.15.35"
 
 "@tybys/wasm-util@^0.10.1":
   version "0.10.1"
@@ -4881,10 +4881,10 @@ validate-npm-package-license@^3.0.1:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
 
-validator@7.2.0:
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/validator/-/validator-7.2.0.tgz#a63dcbaba51d4350bf8df20988e0d5a54d711791"
-  integrity sha512-c8NGTUYeBEcUIGeMppmNVKHE7wwfm3mYbNZxV+c5mlv9fDHI7Ad3p07qfNrn/CvpdkK2k61fOLRO2sTEhgQXmg==
+validator@13.15.35:
+  version "13.15.35"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-13.15.35.tgz#81cf455c51f15b69d8d340be5914f3fab00dbf7f"
+  integrity sha512-TQ5pAGhd5whStmqWvYF4OjQROlmv9SMFVt37qoCBdqRffuuklWYQlCNnEs2ZaIBD1kZRNnikiZOS1eqgkar0iw==
 
 vite@8.0.9, "vite@^6.0.0 || ^7.0.0 || ^8.0.0":
   version "8.0.9"
