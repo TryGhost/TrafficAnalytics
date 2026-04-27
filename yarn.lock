@@ -1563,6 +1563,11 @@
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.1.0.tgz#d02112b290f5358c2e73f148084d3bad4cf72c17"
   integrity sha512-vavmjjIAxngGuKK+D6vzYM+Bi36Td1cVEPtj25OFfHJj3xwoZL1Hji/wJylzqIRIFoCGvvHw+Ztnqjl9yLLAVw==
 
+"@tryghost/errors@3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.2.0.tgz#d6dcc78fcdebd6c6767653e0fd859b93791194e7"
+  integrity sha512-FASXloLrHpfJwpT4NDtYiyP3Im41cjsmz95J08dDGRyqGnsIdK7AfJ7SICEPGsMRrUu2qUWkhh9YLRaFNrZjRw==
+
 "@tryghost/referrer-parser@0.1.16":
   version "0.1.16"
   resolved "https://registry.yarnpkg.com/@tryghost/referrer-parser/-/referrer-parser-0.1.16.tgz#47c26876d8b76f4e3f2b89968aed20380146e581"
