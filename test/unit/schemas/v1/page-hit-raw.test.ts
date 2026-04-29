@@ -7,7 +7,7 @@ describe('PageHitRawSchema v1', () => {
         timestamp: '2024-01-01T00:00:00.000Z',
         action: 'page_hit',
         version: '1',
-        site_uuid: '12345678-1234-1234-1234-123456789012',
+        site_uuid: '12345678-1234-4234-9234-123456789012',
         payload: {
             event_id: '550e8400-e29b-41d4-a716-446655440000',
             member_uuid: 'undefined',
@@ -119,7 +119,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 payload: {
                     ...validPageHitRaw.payload,
-                    member_uuid: '12345678-1234-1234-1234-123456789012'
+                    member_uuid: '12345678-1234-4234-9234-123456789012'
                 }
             };
             expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
@@ -152,7 +152,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 payload: {
                     ...validPageHitRaw.payload,
-                    post_uuid: '12345678-1234-1234-1234-123456789012'
+                    post_uuid: '12345678-1234-4234-9234-123456789012'
                 }
             };
             expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
