@@ -8,7 +8,7 @@ describe('pageHitRawPayloadFromRequest', () => {
             ip: '192.168.1.1',
             serverReceivedAt,
             headers: {
-                'x-site-uuid': '12345678-1234-1234-1234-123456789012',
+                'x-site-uuid': '12345678-1234-4234-9234-123456789012',
                 'content-type': 'application/json',
                 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
             },
@@ -45,7 +45,7 @@ describe('pageHitRawPayloadFromRequest', () => {
         expect(result.timestamp).toBe(serverTime.toISOString());
         expect(result.action).toBe('page_hit');
         expect(result.version).toBe('1');
-        expect(result.site_uuid).toBe('12345678-1234-1234-1234-123456789012');
+        expect(result.site_uuid).toBe('12345678-1234-4234-9234-123456789012');
         expect(result.payload).toEqual({
             event_id: 'test-event-id',
             member_uuid: 'member-uuid-123',

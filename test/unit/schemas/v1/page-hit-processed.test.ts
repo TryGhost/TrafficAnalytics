@@ -31,7 +31,7 @@ const validPageHitRaw: PageHitRaw = {
     timestamp: '2024-01-01T00:00:00.000Z',
     action: 'page_hit',
     version: '1',
-    site_uuid: '12345678-1234-1234-1234-123456789012',
+    site_uuid: '12345678-1234-4234-9234-123456789012',
     payload: {
         event_id: '550e8400-e29b-41d4-a716-446655440000',
         member_uuid: 'undefined',
@@ -70,11 +70,11 @@ describe('PageHitProcessedSchema v1', () => {
         timestamp: '2024-01-01T00:00:00.000Z',
         action: 'page_hit',
         version: '1',
-        site_uuid: '12345678-1234-1234-1234-123456789012',
+        site_uuid: '12345678-1234-4234-9234-123456789012',
         session_id: 'abc123def456',
         payload: {
             event_id: '550e8400-e29b-41d4-a716-446655440000',
-            site_uuid: '12345678-1234-1234-1234-123456789012',
+            site_uuid: '12345678-1234-4234-9234-123456789012',
             member_uuid: 'undefined',
             member_status: 'free',
             post_uuid: 'undefined',
@@ -372,7 +372,7 @@ describe('PageHitProcessedSchema v1', () => {
 
     describe('generateUserSignature', () => {
         it('should generate consistent signature for same inputs', async () => {
-            const siteUuid = '12345678-1234-1234-1234-123456789012';
+            const siteUuid = '12345678-1234-4234-9234-123456789012';
             const ipAddress = '192.168.1.1';
             const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
 
@@ -384,7 +384,7 @@ describe('PageHitProcessedSchema v1', () => {
         });
 
         it('should generate different signatures for different inputs', async () => {
-            const siteUuid = '12345678-1234-1234-1234-123456789012';
+            const siteUuid = '12345678-1234-4234-9234-123456789012';
             const ipAddress1 = '192.168.1.1';
             const ipAddress2 = '192.168.1.2';
             const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';

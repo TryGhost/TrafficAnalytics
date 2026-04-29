@@ -120,7 +120,7 @@ describe('PageHitRequestSchema v1', () => {
     describe('HeadersSchema', () => {
         it('should validate valid headers', () => {
             const validHeaders = {
-                'x-site-uuid': '12345678-1234-1234-1234-123456789012',
+                'x-site-uuid': '12345678-1234-4234-9234-123456789012',
                 'content-type': 'application/json',
                 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
             };
@@ -130,7 +130,7 @@ describe('PageHitRequestSchema v1', () => {
 
         it('should validate with optional referer', () => {
             const validHeaders = {
-                'x-site-uuid': '12345678-1234-1234-1234-123456789012',
+                'x-site-uuid': '12345678-1234-4234-9234-123456789012',
                 'content-type': 'application/json',
                 'user-agent': 'Mozilla/5.0',
                 referer: 'https://example.com'
@@ -151,7 +151,7 @@ describe('PageHitRequestSchema v1', () => {
 
         it('should reject invalid content-type', () => {
             const invalidHeaders = {
-                'x-site-uuid': '12345678-1234-1234-1234-123456789012',
+                'x-site-uuid': '12345678-1234-4234-9234-123456789012',
                 'content-type': 'text/plain',
                 'user-agent': 'Mozilla/5.0'
             };
@@ -161,7 +161,7 @@ describe('PageHitRequestSchema v1', () => {
 
         it('should reject missing required headers', () => {
             const invalidHeaders = {
-                'x-site-uuid': '12345678-1234-1234-1234-123456789012'
+                'x-site-uuid': '12345678-1234-4234-9234-123456789012'
             // Missing content-type and user-agent
             };
         
@@ -177,7 +177,7 @@ describe('PageHitRequestSchema v1', () => {
             referrer: 'https://google.com',
             pathname: '/blog/post',
             href: 'https://example.com/blog/post',
-            site_uuid: '12345678-1234-1234-1234-123456789012',
+            site_uuid: '12345678-1234-4234-9234-123456789012',
             post_uuid: 'undefined',
             post_type: 'post',
             member_uuid: 'undefined',
@@ -216,7 +216,7 @@ describe('PageHitRequestSchema v1', () => {
         it('should validate with UUID post_uuid', () => {
             const payloadWithUUIDPost = {
                 ...validPayload,
-                post_uuid: '12345678-1234-1234-1234-123456789012'
+                post_uuid: '12345678-1234-4234-9234-123456789012'
             };
         
             expect(Value.Check(PageHitRequestPayloadSchema, payloadWithUUIDPost)).toBe(true);
@@ -225,7 +225,7 @@ describe('PageHitRequestSchema v1', () => {
         it('should validate with UUID member_uuid', () => {
             const payloadWithUUIDMember = {
                 ...validPayload,
-                member_uuid: '12345678-1234-1234-1234-123456789012'
+                member_uuid: '12345678-1234-4234-9234-123456789012'
             };
         
             expect(Value.Check(PageHitRequestPayloadSchema, payloadWithUUIDMember)).toBe(true);
@@ -443,7 +443,7 @@ describe('PageHitRequestSchema v1', () => {
                 location: 'homepage',
                 pathname: '/blog',
                 href: 'https://example.com/blog',
-                site_uuid: '12345678-1234-1234-1234-123456789012',
+                site_uuid: '12345678-1234-4234-9234-123456789012',
                 post_uuid: 'undefined',
                 post_type: 'post',
                 member_uuid: 'undefined',
@@ -492,7 +492,7 @@ describe('PageHitRequestSchema v1', () => {
                 name: 'analytics_events'
             },
             headers: {
-                'x-site-uuid': '12345678-1234-1234-1234-123456789012',
+                'x-site-uuid': '12345678-1234-4234-9234-123456789012',
                 'content-type': 'application/json',
                 'user-agent': 'Mozilla/5.0'
             },
@@ -507,7 +507,7 @@ describe('PageHitRequestSchema v1', () => {
                     location: 'homepage',
                     pathname: '/blog',
                     href: 'https://example.com/blog',
-                    site_uuid: '12345678-1234-1234-1234-123456789012',
+                    site_uuid: '12345678-1234-4234-9234-123456789012',
                     post_uuid: 'undefined',
                     post_type: 'post',
                     member_uuid: 'undefined',

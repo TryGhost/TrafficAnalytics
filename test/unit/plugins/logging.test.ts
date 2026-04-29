@@ -156,7 +156,7 @@ describe('Logging Plugin', () => {
 
     describe('x-site-uuid header', () => {
         it('should include siteUuid in IncomingRequest log when x-site-uuid header is provided', async () => {
-            const siteUuid = '12345678-1234-1234-1234-123456789012';
+            const siteUuid = '12345678-1234-4234-9234-123456789012';
 
             await app.inject({
                 method: 'GET',
