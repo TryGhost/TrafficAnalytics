@@ -7,9 +7,9 @@ import validator from '@tryghost/validator';
  * format validators are available before any schema usage.
  */
 export function registerFormatValidators(): void {
-    // UUID format validator using @tryghost/validator
     FormatRegistry.Set('uuid', (value) => {
-        return validator.isUUID(value);
+        // We only require UUID-shaped values here; they do not need to be fully RFC compliant.
+        return validator.isUUID(value, 'loose');
     });
 
     // URI format validator using @tryghost/validator
