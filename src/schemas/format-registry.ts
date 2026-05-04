@@ -1,8 +1,6 @@
 import {FormatRegistry} from '@sinclair/typebox';
 import validator from '@tryghost/validator';
 
-const UUID_SHAPE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /**
  * Registers all format validators used by schemas.
  * This should be called once at application startup to ensure
@@ -11,7 +9,7 @@ const UUID_SHAPE_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
 export function registerFormatValidators(): void {
     FormatRegistry.Set('uuid', (value) => {
         // We only require UUID-shaped values here; they do not need to be fully RFC compliant.
-        return validator.isUUID(value, 'loose') || UUID_SHAPE_PATTERN.test(value);
+        return validator.isUUID(value, 'loose');
     });
 
     // URI format validator using @tryghost/validator
