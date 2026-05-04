@@ -104,6 +104,14 @@ describe('PageHitRawSchema v1', () => {
             expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
         });
 
+        it('should validate UUID-shaped values without requiring RFC version and variant bits', () => {
+            const validData = {
+                ...validPageHitRaw,
+                site_uuid: '12345678-1234-1234-1234-123456789012'
+            };
+            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+        });
+
         it('should reject invalid UUID format', () => {
             const invalidData = {
                 ...validPageHitRaw,

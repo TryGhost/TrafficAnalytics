@@ -5,7 +5,7 @@ declare module '@tryghost/validator' {
         isURL(str: string): boolean;
         isEmail(str: string): boolean;
         isIn(str: string, values: string[]): boolean;
-        isUUID(str: string, version?: number): boolean;
+        isUUID(str: string, version?: number | 'loose' | 'all' | 'nil' | 'max'): boolean;
         isBoolean(str: string): boolean;
         isInt(str: string, options?: {min?: number; max?: number}): boolean;
         isLowercase(str: string): boolean;
