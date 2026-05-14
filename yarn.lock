@@ -1558,10 +1558,10 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.1.tgz#35adc6222e3662fa2222ce123b961476a746b9ea"
   integrity sha512-HqmEUIGRJ5fSXchkVgR5F7qn48bDBzv0kWj/Kfu5e6uci4UlEeng4331LnBkWffb++Ei3FOVLxo8JJWMFBDMeQ==
 
-"@tryghost/errors@3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.2.0.tgz#d6dcc78fcdebd6c6767653e0fd859b93791194e7"
-  integrity sha512-FASXloLrHpfJwpT4NDtYiyP3Im41cjsmz95J08dDGRyqGnsIdK7AfJ7SICEPGsMRrUu2qUWkhh9YLRaFNrZjRw==
+"@tryghost/errors@3.2.1":
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.2.1.tgz#55706fd78b6d874eddaa8475f55b64a87e6d7132"
+  integrity sha512-KM7Xe9qaR4a0RTjgcggS10NDMZbkYlLz0ePYIQ/0FbkEZtTqWwRrOn4BeQe587FpZ5DoXbiXxNE5vBMfZBPl+Q==
 
 "@tryghost/referrer-parser@0.1.17":
   version "0.1.17"
@@ -1573,12 +1573,12 @@
   resolved "https://registry.yarnpkg.com/@tryghost/tpl/-/tpl-2.2.0.tgz#8178f529f36c6e9eb7a015e5a0a7eb5e11b8a33b"
   integrity sha512-6OFCFHNzJxbZ0HXiLIAKJz5OkT6cdZId19m6UZ2+xN8oBg14iZwhoHoBWCzKNDrFN53t3N5JHM3oa/WtoB+BKw==
 
-"@tryghost/validator@3.1.0":
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/@tryghost/validator/-/validator-3.1.0.tgz#53462554ae385384e9ed2ebbb7a8f64113d3aa0a"
-  integrity sha512-/C0uetcZA5In8jKnXJ31fVRbVkmxqBE+FBjz9w6Uj0/jG/7xbDzrpmwo1QHboc+5HfKFzvIvaLNTnjskBi28eQ==
+"@tryghost/validator@3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@tryghost/validator/-/validator-3.1.1.tgz#f3d05defea508cf4b564b8328863cbd7304ca655"
+  integrity sha512-GIBONNQs7BP7FEKf8XxDk+roLVf86rQle3YWbe4IajqAcHoto952RAARwSAvYOhmqroBfX2++9BAyXEER+Ys9Q==
   dependencies:
-    "@tryghost/errors" "3.2.0"
+    "@tryghost/errors" "3.2.1"
     "@tryghost/tpl" "2.2.0"
     lodash "4.18.1"
     moment-timezone "^0.5.23"
