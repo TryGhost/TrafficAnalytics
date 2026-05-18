@@ -1,22 +1,31 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
+import {PassThrough} from 'node:stream';
 import {extractTraceContext} from '../utils/trace-context';
-import {getSerializedSizeBytes, summarizeRequestBody} from '../utils/body-summary';
 
-const REQUEST_BODY_LOG_THRESHOLD_BYTES = 600 * 1024;
+const METHODS_WITH_REQUEST_BODY = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-const getContentLength = (contentLengthHeader: string | string[] | undefined): number | undefined => {
-    if (!contentLengthHeader) {
-        return undefined;
-    }
-
-    const contentLength = Array.isArray(contentLengthHeader) ? contentLengthHeader[0] : contentLengthHeader;
-    const parsedLength = Number.parseInt(contentLength, 10);
-
-    return Number.isNaN(parsedLength) ? undefined : parsedLength;
+type PayloadTee = PassThrough & {
+    receivedEncodedLength: number;
 };
 
+type RequestBodyDiagnostics = {
+    contentType: string | string[] | undefined;
+    contentLength: string | string[] | undefined;
+    rawBytes?: number;
+    rawComplete?: boolean;
+    rawAborted?: boolean;
+};
+
+declare module 'fastify' {
+    interface FastifyRequest {
+        requestBodyDiagnostics: RequestBodyDiagnostics | null;
+    }
+}
+
 async function loggingPlugin(fastify: FastifyInstance) {
+    fastify.decorateRequest('requestBodyDiagnostics', null);
+
     fastify.addHook('onRequest', async (request) => {
         // Extract trace context for GCP log correlation
         const traceContext = extractTraceContext(request);
@@ -39,6 +48,11 @@ async function loggingPlugin(fastify: FastifyInstance) {
             request.log = request.log.child(childContext);
         }
 
+        request.requestBodyDiagnostics = {
+            contentType: request.headers['content-type'],
+            contentLength: request.headers['content-length']
+        };
+
         request.log.info({
             event: 'IncomingRequest',
             httpRequest: {
@@ -53,16 +67,43 @@ async function loggingPlugin(fastify: FastifyInstance) {
         });
     });
 
-    fastify.addHook('preHandler', async (request) => {
-        const contentLength = getContentLength(request.headers['content-length']);
-        if (contentLength && contentLength > REQUEST_BODY_LOG_THRESHOLD_BYTES) {
-            request.log.debug({
-                event: 'IncomingRequestBody',
-                requestBodySize: contentLength,
-                parsedBodySize: getSerializedSizeBytes(request.body),
-                bodySummary: summarizeRequestBody(request.body)
-            });
+    fastify.addHook('preParsing', async (request, _reply, payload) => {
+        if (!METHODS_WITH_REQUEST_BODY.has(request.method)) {
+            return payload;
         }
+
+        let rawBytes = 0;
+        // Fastify reads this property on streams returned from preParsing hooks to preserve bodyLimit and Content-Length checks.
+        const tee = Object.assign(new PassThrough(), {
+            receivedEncodedLength: 0
+        }) as PayloadTee;
+
+        request.requestBodyDiagnostics = request.requestBodyDiagnostics ?? {
+            contentType: request.headers['content-type'],
+            contentLength: request.headers['content-length']
+        };
+
+        payload.on('data', (chunk) => {
+            const chunkLength = Buffer.isBuffer(chunk) ? chunk.length : Buffer.byteLength(chunk);
+            rawBytes += chunkLength;
+            tee.receivedEncodedLength += chunkLength;
+        });
+
+        payload.on('end', () => {
+            if (!request.requestBodyDiagnostics) {
+                return;
+            }
+
+            request.requestBodyDiagnostics.rawBytes = rawBytes;
+            request.requestBodyDiagnostics.rawComplete = request.raw.complete;
+            request.requestBodyDiagnostics.rawAborted = request.raw.aborted;
+        });
+        payload.on('error', (err) => {
+            tee.destroy(err);
+        });
+
+        payload.pipe(tee);
+        return tee;
     });
 
     fastify.addHook('onResponse', async (request, reply) => {
@@ -79,7 +120,8 @@ async function loggingPlugin(fastify: FastifyInstance) {
                 responseSize: String(reply.getHeader('content-length') || 0),
                 status: reply.statusCode,
                 latency: `${(reply.elapsedTime / 1000).toFixed(9)}s`
-            }
+            },
+            ...(request.requestBodyDiagnostics && {requestBody: request.requestBodyDiagnostics})
         });
     });
 }

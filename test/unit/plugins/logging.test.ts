@@ -190,50 +190,53 @@ describe('Logging Plugin', () => {
     });
 
     describe('request body logging', () => {
-        it('should log request body for requests over 600 KB', async () => {
-            const largeBody = {
-                payload: 'x'.repeat((600 * 1024) + 1)
-            };
-
+        it('should include request body diagnostics in RequestCompleted for body requests', async () => {
             await app.inject({
                 method: 'POST',
                 url: '/test',
-                payload: largeBody
-            });
-
-            const incomingRequestBodyLog = parseLogs().find(
-                log => log.event === 'IncomingRequestBody'
-            );
-
-            expect(incomingRequestBodyLog).toBeDefined();
-            expect(incomingRequestBodyLog?.requestBodySize).toBeGreaterThan(600 * 1024);
-            expect(incomingRequestBodyLog?.parsedBodySize).toBeGreaterThan(600 * 1024);
-            expect(incomingRequestBodyLog?.bodySummary).toEqual({
-                type: 'object',
-                keyCount: 1,
-                keys: {
-                    payload: {
-                        type: 'string',
-                        length: (600 * 1024) + 1
-                    }
+                headers: {
+                    'content-type': 'application/json'
+                },
+                payload: {
+                    ok: true
                 }
             });
+
+            const requestCompletedLog = parseLogs().find(
+                log => log.event === 'RequestCompleted'
+            );
+
+            expect(requestCompletedLog).toBeDefined();
+            expect(requestCompletedLog?.requestBody).toMatchObject({
+                contentType: 'application/json',
+                contentLength: expect.any(String),
+                rawBytes: expect.any(Number),
+                rawAborted: false
+            });
+            expect((requestCompletedLog?.requestBody as {rawBytes: number}).rawBytes).toBeGreaterThan(0);
         });
 
-        it('should not log request body for requests at or under 600 KB', async () => {
+        it('should include request body headers without raw byte diagnostics for non-body methods', async () => {
             await app.inject({
-                method: 'POST',
+                method: 'GET',
                 url: '/test',
-                payload: {
-                    payload: 'x'.repeat((600 * 1024) - 200)
+                headers: {
+                    'content-type': 'application/json',
+                    'content-length': '0'
                 }
             });
 
-            const incomingRequestBodyLog = parseLogs().find(
-                log => log.event === 'IncomingRequestBody'
+            const requestCompletedLog = parseLogs().find(
+                log => log.event === 'RequestCompleted'
             );
 
-            expect(incomingRequestBodyLog).toBeUndefined();
+            expect(requestCompletedLog).toBeDefined();
+            expect(requestCompletedLog?.requestBody).toMatchObject({
+                contentType: 'application/json',
+                contentLength: '0'
+            });
+            expect(requestCompletedLog?.requestBody).not.toHaveProperty('rawBytes');
+            expect(requestCompletedLog?.requestBody).not.toHaveProperty('rawAborted');
         });
     });
 });
