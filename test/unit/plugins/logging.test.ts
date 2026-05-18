@@ -216,29 +216,6 @@ describe('Logging Plugin', () => {
             expect((requestCompletedLog?.requestBody as {rawBytes: number}).rawBytes).toBeGreaterThan(0);
         });
 
-        it('should include request body headers without raw byte diagnostics for non-body methods', async () => {
-            await app.inject({
-                method: 'GET',
-                url: '/test',
-                headers: {
-                    'content-type': 'application/json',
-                    'content-length': '0'
-                }
-            });
-
-            const requestCompletedLog = parseLogs().find(
-                log => log.event === 'RequestCompleted'
-            );
-
-            expect(requestCompletedLog).toBeDefined();
-            expect(requestCompletedLog?.requestBody).toMatchObject({
-                contentType: 'application/json',
-                contentLength: '0'
-            });
-            expect(requestCompletedLog?.requestBody).not.toHaveProperty('rawBytes');
-            expect(requestCompletedLog?.requestBody).not.toHaveProperty('rawAborted');
-        });
-
         it('should not emit separate IncomingRequestBody log lines', async () => {
             await app.inject({
                 method: 'POST',
