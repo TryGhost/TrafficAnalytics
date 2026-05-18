@@ -89,6 +89,9 @@ async function loggingPlugin(fastify: FastifyInstance) {
             request.requestBodyDiagnostics.rawComplete = request.raw.complete;
             request.requestBodyDiagnostics.rawAborted = request.raw.aborted;
         });
+        payload.on('error', (err) => {
+            tee.destroy(err);
+        });
 
         payload.pipe(tee);
         return tee;
