@@ -73,6 +73,7 @@ async function loggingPlugin(fastify: FastifyInstance) {
         }
 
         let rawBytes = 0;
+        // Fastify reads this property on streams returned from preParsing hooks to preserve bodyLimit and Content-Length checks.
         const tee = Object.assign(new PassThrough(), {
             receivedEncodedLength: 0
         }) as PayloadTee;
