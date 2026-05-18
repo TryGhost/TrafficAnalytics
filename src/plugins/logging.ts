@@ -1,9 +1,26 @@
 import {FastifyInstance} from 'fastify';
 import fp from 'fastify-plugin';
+import {PassThrough} from 'node:stream';
 import {extractTraceContext} from '../utils/trace-context';
 import {getSerializedSizeBytes, summarizeRequestBody} from '../utils/body-summary';
 
 const REQUEST_BODY_LOG_THRESHOLD_BYTES = 600 * 1024;
+const METHODS_WITH_REQUEST_BODY = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+type RequestBodyDiagnostics = {
+    contentType: string | string[] | undefined;
+    contentLength: string | string[] | undefined;
+    transferEncoding: string | string[] | undefined;
+    rawBytes?: number;
+    rawComplete?: boolean;
+    rawAborted?: boolean;
+};
+
+declare module 'fastify' {
+    interface FastifyRequest {
+        requestBodyDiagnostics: RequestBodyDiagnostics | null;
+    }
+}
 
 const getContentLength = (contentLengthHeader: string | string[] | undefined): number | undefined => {
     if (!contentLengthHeader) {
@@ -17,6 +34,8 @@ const getContentLength = (contentLengthHeader: string | string[] | undefined): n
 };
 
 async function loggingPlugin(fastify: FastifyInstance) {
+    fastify.decorateRequest('requestBodyDiagnostics', null);
+
     fastify.addHook('onRequest', async (request) => {
         // Extract trace context for GCP log correlation
         const traceContext = extractTraceContext(request);
@@ -39,6 +58,12 @@ async function loggingPlugin(fastify: FastifyInstance) {
             request.log = request.log.child(childContext);
         }
 
+        request.requestBodyDiagnostics = {
+            contentType: request.headers['content-type'],
+            contentLength: request.headers['content-length'],
+            transferEncoding: request.headers['transfer-encoding']
+        };
+
         request.log.info({
             event: 'IncomingRequest',
             httpRequest: {
@@ -51,6 +76,38 @@ async function loggingPlugin(fastify: FastifyInstance) {
                 requestSize: String(request.raw.headers['content-length'] || 0)
             }
         });
+    });
+
+    fastify.addHook('preParsing', async (request, _reply, payload) => {
+        if (!METHODS_WITH_REQUEST_BODY.has(request.method)) {
+            return payload;
+        }
+
+        let rawBytes = 0;
+        const tee = new PassThrough();
+
+        request.requestBodyDiagnostics = request.requestBodyDiagnostics ?? {
+            contentType: request.headers['content-type'],
+            contentLength: request.headers['content-length'],
+            transferEncoding: request.headers['transfer-encoding']
+        };
+
+        payload.on('data', (chunk) => {
+            rawBytes += Buffer.isBuffer(chunk) ? chunk.length : Buffer.byteLength(chunk);
+        });
+
+        payload.on('end', () => {
+            if (!request.requestBodyDiagnostics) {
+                return;
+            }
+
+            request.requestBodyDiagnostics.rawBytes = rawBytes;
+            request.requestBodyDiagnostics.rawComplete = request.raw.complete;
+            request.requestBodyDiagnostics.rawAborted = request.raw.aborted;
+        });
+
+        payload.pipe(tee);
+        return tee;
     });
 
     fastify.addHook('preHandler', async (request) => {
@@ -79,7 +136,8 @@ async function loggingPlugin(fastify: FastifyInstance) {
                 responseSize: String(reply.getHeader('content-length') || 0),
                 status: reply.statusCode,
                 latency: `${(reply.elapsedTime / 1000).toFixed(9)}s`
-            }
+            },
+            ...(request.requestBodyDiagnostics && {requestBody: request.requestBodyDiagnostics})
         });
     });
 }

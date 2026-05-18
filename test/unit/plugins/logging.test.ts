@@ -190,6 +190,50 @@ describe('Logging Plugin', () => {
     });
 
     describe('request body logging', () => {
+        it('should include request body diagnostics in RequestCompleted for body requests', async () => {
+            await app.inject({
+                method: 'POST',
+                url: '/test',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                payload: {
+                    ok: true
+                }
+            });
+
+            const requestCompletedLog = parseLogs().find(
+                log => log.event === 'RequestCompleted'
+            );
+
+            expect(requestCompletedLog).toBeDefined();
+            expect(requestCompletedLog?.requestBody).toMatchObject({
+                contentType: 'application/json',
+                contentLength: expect.any(String),
+                rawBytes: expect.any(Number),
+                rawAborted: false
+            });
+            expect((requestCompletedLog?.requestBody as {rawBytes: number}).rawBytes).toBeGreaterThan(0);
+        });
+
+        it('should include request body headers without raw byte diagnostics for non-body methods', async () => {
+            await app.inject({
+                method: 'GET',
+                url: '/test'
+            });
+
+            const requestCompletedLog = parseLogs().find(
+                log => log.event === 'RequestCompleted'
+            );
+
+            expect(requestCompletedLog).toBeDefined();
+            expect(requestCompletedLog?.requestBody).toEqual({
+                contentType: undefined,
+                contentLength: undefined,
+                transferEncoding: undefined
+            });
+        });
+
         it('should log request body for requests over 600 KB', async () => {
             const largeBody = {
                 payload: 'x'.repeat((600 * 1024) + 1)
