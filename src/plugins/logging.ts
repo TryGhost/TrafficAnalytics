@@ -5,6 +5,10 @@ import {extractTraceContext} from '../utils/trace-context';
 
 const METHODS_WITH_REQUEST_BODY = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
+type PayloadTee = PassThrough & {
+    receivedEncodedLength: number;
+};
+
 type RequestBodyDiagnostics = {
     contentType: string | string[] | undefined;
     contentLength: string | string[] | undefined;
@@ -69,7 +73,9 @@ async function loggingPlugin(fastify: FastifyInstance) {
         }
 
         let rawBytes = 0;
-        const tee = new PassThrough();
+        const tee = Object.assign(new PassThrough(), {
+            receivedEncodedLength: 0
+        }) as PayloadTee;
 
         request.requestBodyDiagnostics = request.requestBodyDiagnostics ?? {
             contentType: request.headers['content-type'],
@@ -77,7 +83,9 @@ async function loggingPlugin(fastify: FastifyInstance) {
         };
 
         payload.on('data', (chunk) => {
-            rawBytes += Buffer.isBuffer(chunk) ? chunk.length : Buffer.byteLength(chunk);
+            const chunkLength = Buffer.isBuffer(chunk) ? chunk.length : Buffer.byteLength(chunk);
+            rawBytes += chunkLength;
+            tee.receivedEncodedLength += chunkLength;
         });
 
         payload.on('end', () => {
