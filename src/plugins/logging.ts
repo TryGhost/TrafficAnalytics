@@ -8,7 +8,6 @@ const METHODS_WITH_REQUEST_BODY = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 type RequestBodyDiagnostics = {
     contentType: string | string[] | undefined;
     contentLength: string | string[] | undefined;
-    transferEncoding: string | string[] | undefined;
     rawBytes?: number;
     rawComplete?: boolean;
     rawAborted?: boolean;
@@ -47,8 +46,7 @@ async function loggingPlugin(fastify: FastifyInstance) {
 
         request.requestBodyDiagnostics = {
             contentType: request.headers['content-type'],
-            contentLength: request.headers['content-length'],
-            transferEncoding: request.headers['transfer-encoding']
+            contentLength: request.headers['content-length']
         };
 
         request.log.info({
@@ -75,8 +73,7 @@ async function loggingPlugin(fastify: FastifyInstance) {
 
         request.requestBodyDiagnostics = request.requestBodyDiagnostics ?? {
             contentType: request.headers['content-type'],
-            contentLength: request.headers['content-length'],
-            transferEncoding: request.headers['transfer-encoding']
+            contentLength: request.headers['content-length']
         };
 
         payload.on('data', (chunk) => {

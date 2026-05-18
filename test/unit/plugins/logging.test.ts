@@ -229,8 +229,7 @@ describe('Logging Plugin', () => {
             expect(requestCompletedLog).toBeDefined();
             expect(requestCompletedLog?.requestBody).toEqual({
                 contentType: undefined,
-                contentLength: undefined,
-                transferEncoding: undefined
+                contentLength: undefined
             });
         });
 
