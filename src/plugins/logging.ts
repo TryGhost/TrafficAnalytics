@@ -14,6 +14,9 @@ type RequestBodyDiagnostics = {
     rawBytes?: number;
     rawComplete?: boolean;
     rawAborted?: boolean;
+    requestBodySize?: number;
+    parsedBodySize?: number;
+    bodySummary?: ReturnType<typeof summarizeRequestBody>;
 };
 
 declare module 'fastify' {
@@ -113,12 +116,15 @@ async function loggingPlugin(fastify: FastifyInstance) {
     fastify.addHook('preHandler', async (request) => {
         const contentLength = getContentLength(request.headers['content-length']);
         if (contentLength && contentLength > REQUEST_BODY_LOG_THRESHOLD_BYTES) {
-            request.log.debug({
-                event: 'IncomingRequestBody',
-                requestBodySize: contentLength,
-                parsedBodySize: getSerializedSizeBytes(request.body),
-                bodySummary: summarizeRequestBody(request.body)
-            });
+            request.requestBodyDiagnostics = request.requestBodyDiagnostics ?? {
+                contentType: request.headers['content-type'],
+                contentLength: request.headers['content-length'],
+                transferEncoding: request.headers['transfer-encoding']
+            };
+
+            request.requestBodyDiagnostics.requestBodySize = contentLength;
+            request.requestBodyDiagnostics.parsedBodySize = getSerializedSizeBytes(request.body);
+            request.requestBodyDiagnostics.bodySummary = summarizeRequestBody(request.body);
         }
     });
 

@@ -234,7 +234,7 @@ describe('Logging Plugin', () => {
             });
         });
 
-        it('should log request body for requests over 600 KB', async () => {
+        it('should include parsed request body summary in RequestCompleted for requests over 600 KB', async () => {
             const largeBody = {
                 payload: 'x'.repeat((600 * 1024) + 1)
             };
@@ -245,14 +245,15 @@ describe('Logging Plugin', () => {
                 payload: largeBody
             });
 
-            const incomingRequestBodyLog = parseLogs().find(
-                log => log.event === 'IncomingRequestBody'
+            const requestCompletedLog = parseLogs().find(
+                log => log.event === 'RequestCompleted'
             );
 
-            expect(incomingRequestBodyLog).toBeDefined();
-            expect(incomingRequestBodyLog?.requestBodySize).toBeGreaterThan(600 * 1024);
-            expect(incomingRequestBodyLog?.parsedBodySize).toBeGreaterThan(600 * 1024);
-            expect(incomingRequestBodyLog?.bodySummary).toEqual({
+            expect(requestCompletedLog).toBeDefined();
+            const requestBody = requestCompletedLog?.requestBody as Record<string, unknown>;
+            expect(requestBody.requestBodySize).toBeGreaterThan(600 * 1024);
+            expect(requestBody.parsedBodySize).toBeGreaterThan(600 * 1024);
+            expect(requestBody.bodySummary).toEqual({
                 type: 'object',
                 keyCount: 1,
                 keys: {
@@ -264,12 +265,31 @@ describe('Logging Plugin', () => {
             });
         });
 
-        it('should not log request body for requests at or under 600 KB', async () => {
+        it('should not include parsed request body summary for requests at or under 600 KB', async () => {
             await app.inject({
                 method: 'POST',
                 url: '/test',
                 payload: {
                     payload: 'x'.repeat((600 * 1024) - 200)
+                }
+            });
+
+            const requestCompletedLog = parseLogs().find(
+                log => log.event === 'RequestCompleted'
+            );
+
+            expect(requestCompletedLog).toBeDefined();
+            expect(requestCompletedLog?.requestBody).not.toHaveProperty('requestBodySize');
+            expect(requestCompletedLog?.requestBody).not.toHaveProperty('parsedBodySize');
+            expect(requestCompletedLog?.requestBody).not.toHaveProperty('bodySummary');
+        });
+
+        it('should not emit separate IncomingRequestBody log lines', async () => {
+            await app.inject({
+                method: 'POST',
+                url: '/test',
+                payload: {
+                    payload: 'x'.repeat((600 * 1024) + 1)
                 }
             });
 
