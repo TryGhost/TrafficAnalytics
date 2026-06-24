@@ -28,6 +28,9 @@ jobs:
     name: Lint and Test (Node ${{ matrix.node }})
     needs: prepare
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         node: ${{ fromJSON(needs.prepare.outputs.node-versions) }}
