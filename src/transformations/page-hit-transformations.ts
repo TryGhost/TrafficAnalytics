@@ -25,6 +25,7 @@ export const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageH
             member_status: request.body.payload.member_status,
             post_uuid: request.body.payload.post_uuid,
             post_type: request.body.payload.post_type,
+            gift_link: request.body.payload.gift_link ?? null,
             locale: request.body.payload.locale,
             location: request.body.payload.location,
             referrer: request.body.payload.referrer ?? null,
