@@ -103,7 +103,7 @@ runs:
         host_port=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "3000/tcp") 0).HostPort}}' "$container_id")
 
         for attempt in {1..30}; do
-          if curl -fsS "http://127.0.0.1:${host_port}/" >/dev/null; then
+          if curl -fsS --max-time 2 "http://127.0.0.1:${host_port}/" >/dev/null; then
             echo "Production image smoke test passed."
             exit 0
           fi
