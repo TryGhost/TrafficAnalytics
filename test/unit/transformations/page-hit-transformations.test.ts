@@ -22,6 +22,7 @@ describe('pageHitRawPayloadFromRequest', () => {
                     member_status: 'free',
                     post_uuid: 'post-uuid-456',
                     post_type: 'post',
+                    gift_link: 'gift-token-789',
                     locale: 'en-US',
                     location: 'homepage',
                     referrer: 'https://google.com',
@@ -52,6 +53,7 @@ describe('pageHitRawPayloadFromRequest', () => {
             member_status: 'free',
             post_uuid: 'post-uuid-456',
             post_type: 'post',
+            gift_link: 'gift-token-789',
             locale: 'en-US',
             location: 'homepage',
             referrer: 'https://google.com',
@@ -75,6 +77,15 @@ describe('pageHitRawPayloadFromRequest', () => {
             ip: '192.168.1.1',
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
         });
+    });
+
+    it('defaults gift_link to null when absent (non-gift hit)', () => {
+        const request = createPageHitRequest();
+        delete request.body.payload.gift_link;
+
+        const result = pageHitRawPayloadFromRequest(request);
+
+        expect(result.payload.gift_link).toBeNull();
     });
 
     describe('Event ID', () => {

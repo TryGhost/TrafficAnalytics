@@ -28,6 +28,7 @@ const PayloadSchema = Type.Object({
     member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')]),
     post_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
     post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
+    gift_link: Type.Optional(Type.Union([StringSchema, Type.Null()])),
     locale: NonEmptyStringSchema,
     location: Type.Union([NonEmptyStringSchema, Type.Null()]),
     referrer: Type.Optional(Type.Union([StringSchema, Type.Null()])),
