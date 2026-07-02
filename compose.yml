@@ -156,7 +156,7 @@ services:
     networks:
       - dev-network
   fake-tinybird:
-    image: wiremock/wiremock:3.13.2@sha256:fd27e46090916e85326229e5102ee169ae729059f3374549615bd20a35fee1f2
+    image: wiremock/wiremock:3.13.2@sha256:0d4ecb3e4dc8213fd7a4d37d6a78f6e6b553a6d2e15bd51b0999781282ac61b3
     ports:
       - ${FAKE_TINYBIRD_PORT:-8089}:8080
     command: ["--global-response-templating", "--verbose"]
