@@ -2826,6 +2826,18 @@ fast-json-stringify@^6.0.0:
     json-schema-ref-resolver "^3.0.0"
     rfdc "^1.2.0"
 
+fast-json-stringify@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/fast-json-stringify/-/fast-json-stringify-7.0.0.tgz#0df3d67b74bfe07ad715afac4c808c6c756549db"
+  integrity sha512-YV53BAbR3Qwq37wfD1oZ97YJ0nYj6CwfzKXQ38ock9XxI2EnLOdl5psKms6Evook6ACckytZJOaKY0ThmIi1uw==
+  dependencies:
+    "@fastify/merge-json-schemas" "^0.2.0"
+    ajv "^8.12.0"
+    ajv-formats "^3.0.1"
+    fast-uri "^3.0.0"
+    json-schema-ref-resolver "^3.0.0"
+    rfdc "^1.2.0"
+
 fast-levenshtein@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
@@ -2858,10 +2870,10 @@ fastify-plugin@^5.0.0, fastify-plugin@^5.0.1:
   resolved "https://registry.yarnpkg.com/fastify-plugin/-/fastify-plugin-5.1.0.tgz#7083e039d6418415f9a669f8c25e72fc5bf2d3e7"
   integrity sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==
 
-fastify@5.9.0:
-  version "5.9.0"
-  resolved "https://registry.yarnpkg.com/fastify/-/fastify-5.9.0.tgz#067a1d175ff3a09228e3e76ba6f639408c3fa0b1"
-  integrity sha512-VMS5lE0zj+MZlJpQa3Qv5iGjfun0H2N7VRgoBwpcTNQ2bdIQpv7fDpb+HGteGbicBsGkzGS+X+hdx9mmrfWuHQ==
+fastify@5.10.0:
+  version "5.10.0"
+  resolved "https://registry.yarnpkg.com/fastify/-/fastify-5.10.0.tgz#3c94a52439259a66889dbad14e0fc3d6b1bc934e"
+  integrity sha512-A9L0ziuWGQHgEEVgF3davQ9vbD93IuX+lo2IsxapQmu5b/Y/ynn9m9K5JHt9dvyJXOFc5iN0Zk5GHEOqnzhWjg==
   dependencies:
     "@fastify/ajv-compiler" "^4.0.5"
     "@fastify/error" "^4.0.0"
@@ -2869,7 +2881,7 @@ fastify@5.9.0:
     "@fastify/proxy-addr" "^5.0.0"
     abstract-logging "^2.0.1"
     avvio "^9.0.0"
-    fast-json-stringify "^6.0.0"
+    fast-json-stringify "^7.0.0"
     find-my-way "^9.6.0"
     light-my-request "^6.0.0"
     pino "^9.14.0 || ^10.1.0"
