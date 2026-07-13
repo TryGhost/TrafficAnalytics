@@ -1584,10 +1584,10 @@
   resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.3.1.tgz#da2d34c53685ce60180e4b911b23d194b458c765"
   integrity sha512-/TbbCWtmNbc6JY3lR7g0wL+RxBndbFCv1O4BrQ/HxrZCi3DFXUs3KUh2jJeOoWTtisqqdRkR1Z76NluKle3fQg==
 
-"@tryghost/referrer-parser@0.1.20":
-  version "0.1.20"
-  resolved "https://registry.yarnpkg.com/@tryghost/referrer-parser/-/referrer-parser-0.1.20.tgz#b0a7bbfb21157b5f33a225b1b63f603ae53783bb"
-  integrity sha512-RJKY2r4JXI2J2pkMkWrAdIMUXx0+Ct+zzUOE5O1wi/3yGhVShcxn3ieGBIZab2odZwIrNYzNhulHPYLRZMBumw==
+"@tryghost/referrer-parser@0.1.21":
+  version "0.1.21"
+  resolved "https://registry.yarnpkg.com/@tryghost/referrer-parser/-/referrer-parser-0.1.21.tgz#516ff8cbf4b10093ff95e9c3c7fe1553df1c533b"
+  integrity sha512-Uz7bj8IadLah1j9GgieGQ0VGytdOG6mIlYdbpNu1r8/o9pjR2IS4bt88tvwpGSPNb47P9NrGntGn+Le1W/90jg==
 
 "@tryghost/tpl@2.3.1":
   version "2.3.1"
