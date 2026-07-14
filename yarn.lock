@@ -1564,10 +1564,10 @@
   resolved "https://registry.yarnpkg.com/@simple-dom/interface/-/interface-1.4.0.tgz#e8feea579232017f89b0138e2726facda6fbb71f"
   integrity sha512-l5qumKFWU0S+4ZzMaLXFU8tQZsicHEMEyAxI5kDFGhJsRqDwe0a7/iPA/GdxlGyDKseQQAgIz5kzU7eXTrlSpA==
 
-"@sinclair/typebox@0.34.50":
-  version "0.34.50"
-  resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.34.50.tgz#6aaa311c3a90239f3ec21771ca7432a45131db99"
-  integrity sha512-ydBWw0G6WFwWHzh9RK4B5c690UkreOG0llq0r+DaI7LgKgxigf8mhHzIPI3S0850g1BPkq/zpuCfrq4QFgUlTQ==
+"@sinclair/typebox@0.34.51":
+  version "0.34.51"
+  resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.34.51.tgz#fe196ba81f09c4b0796bc2a166187278566755dc"
+  integrity sha512-Nu4sNPT4G3QgAvxmdUCR/NBmsi23F2tEIcbMOZJVHS+qEgk+rmXxQikEeoKFyaX+UEggAoTvHUvIlj8MfYPzXQ==
 
 "@standard-schema/spec@^1.1.0":
   version "1.1.0"
