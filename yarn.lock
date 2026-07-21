@@ -288,10 +288,10 @@
     "@fastify/forwarded" "^3.0.0"
     ipaddr.js "^2.1.0"
 
-"@fastify/reply-from@12.6.3":
-  version "12.6.3"
-  resolved "https://registry.yarnpkg.com/@fastify/reply-from/-/reply-from-12.6.3.tgz#d8818a840ced334cf0304bad71f469a756da6335"
-  integrity sha512-oP8V1jo1SVL2MtagitoOGK7voP88VID0sGsm2Ob1lEzD0h9GBWq36zAe8JmYjllj0ybdHcMTQEhE/EQzVAjWsQ==
+"@fastify/reply-from@12.6.4":
+  version "12.6.4"
+  resolved "https://registry.yarnpkg.com/@fastify/reply-from/-/reply-from-12.6.4.tgz#19a1535d27a5a2bdbd8b32bcfcd9fc62612d71fd"
+  integrity sha512-WpHqGNRKzEraRQwBFK64g2HijN0ZuDuiiwWg06r5LY0lv1iu0qYg1BfVM0iYcCMiovrM8kKXsKm5GDH9JH9aPA==
   dependencies:
     "@fastify/error" "^4.0.0"
     end-of-stream "^1.4.4"
