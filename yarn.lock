@@ -1579,28 +1579,28 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.1.tgz#35adc6222e3662fa2222ce123b961476a746b9ea"
   integrity sha512-HqmEUIGRJ5fSXchkVgR5F7qn48bDBzv0kWj/Kfu5e6uci4UlEeng4331LnBkWffb++Ei3FOVLxo8JJWMFBDMeQ==
 
-"@tryghost/errors@3.3.2":
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.3.2.tgz#9df09438fe29537b7b22c39a513b0728a55933b6"
-  integrity sha512-w2FtmkegrXIhZUsZUIyqaxrSZDZmPIXpUYzjcnH5UIAWmKuuyYckYHfadOUyu0ObN8dXadqYI7dkeLbDeZroug==
+"@tryghost/errors@3.3.4":
+  version "3.3.4"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.3.4.tgz#65a81d1ff419b7cfa777bf63af1332523d930584"
+  integrity sha512-3FsNlifWFS3g68ImdMun5XwRYYvVdFaS/4spFmJSd9yMJ1kkFHrkNprhYPt0hRVv6G/2I9pvA5TWpklZ4Hdtsw==
 
 "@tryghost/referrer-parser@0.1.21":
   version "0.1.21"
   resolved "https://registry.yarnpkg.com/@tryghost/referrer-parser/-/referrer-parser-0.1.21.tgz#516ff8cbf4b10093ff95e9c3c7fe1553df1c533b"
   integrity sha512-Uz7bj8IadLah1j9GgieGQ0VGytdOG6mIlYdbpNu1r8/o9pjR2IS4bt88tvwpGSPNb47P9NrGntGn+Le1W/90jg==
 
-"@tryghost/tpl@2.3.2":
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/tpl/-/tpl-2.3.2.tgz#5af767599120660badf72a436c419d5c7415aeb3"
-  integrity sha512-CXx7JCqyTFtsZENp4Bc3Af0cFD6QmQAtoLnM0BL4kTZkPFsPkvJPIhE55JmV3sL8rj9NA0kyz7w8614ViMugiA==
+"@tryghost/tpl@2.3.4":
+  version "2.3.4"
+  resolved "https://registry.yarnpkg.com/@tryghost/tpl/-/tpl-2.3.4.tgz#297c5c46f5175a16dc5ab82a2657944c051998f7"
+  integrity sha512-/sPmwPuTcu1noY5PGwTwDmlE8wZuttl2r1IORMF5vxRKYUC7iWQnyKNstXtYfgh3bgBTYcq0kkfoPdz3B4GEKQ==
 
-"@tryghost/validator@3.2.2":
-  version "3.2.2"
-  resolved "https://registry.yarnpkg.com/@tryghost/validator/-/validator-3.2.2.tgz#796f06af82a9a2f91e66d05862b510216f33af41"
-  integrity sha512-DYDJScaglPU/pAdzAXv2l/hmVHwW+K9BNI1CPjmwWbYhJDWcgBcoss1o46/edkcJXg1R4Vq43NA4g+AbF1OY5g==
+"@tryghost/validator@3.2.4":
+  version "3.2.4"
+  resolved "https://registry.yarnpkg.com/@tryghost/validator/-/validator-3.2.4.tgz#fca98edac586ba585803737256b2f5f6ff691368"
+  integrity sha512-voyNSOxIhS5ltyFGqy+xxp6dRgsMkgfxE/6T7S8q4II+WCkU0W9mXu+NP9tpv5frazN7ZlRE0/RHVKzxXC6lbQ==
   dependencies:
-    "@tryghost/errors" "3.3.2"
-    "@tryghost/tpl" "2.3.2"
+    "@tryghost/errors" "3.3.4"
+    "@tryghost/tpl" "2.3.4"
     lodash "4.18.1"
     moment-timezone "^0.5.23"
     validator "13.15.35"
