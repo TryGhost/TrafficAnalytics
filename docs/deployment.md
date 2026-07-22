@@ -24,7 +24,7 @@ flowchart TD
 
 Triggered on every push to `main` (and via manual `workflow_dispatch`). Jobs:
 
-1. **Bump Version** — bumps the patch version with `npm version patch` (e.g. `1.2.3 → 1.2.4`), commits it as `vX.Y.Z [skip ci]`, pushes to `main`, and creates + pushes the `vX.Y.Z` git tag. Sends a Slack "new version released" notification. (Uses a `GH_PAT` so the push can re-trigger downstream workflows.)
+1. **Bump Version** — bumps the patch version with `npm version patch` (e.g. `1.2.3 → 1.2.4`), commits it as `vX.Y.Z [skip ci]`, pushes to `main`, and creates + pushes the `vX.Y.Z` git tag. Sends a Slack "new version released" notification. (The commit carries `[skip ci]`, so it does not re-trigger CI/deploy; a `GH_PAT` authorizes the push and tag to the protected branch, and the Docker Hub build is dispatched explicitly by the next job.)
 2. **Trigger Docker Hub Deploy** — dispatches [`docker-hub.yml`](../.github/workflows/docker-hub.yml) at the new `vX.Y.Z` tag.
 3. **Build** — calls [`deploy-image-to-gcp.yml`](../.github/workflows/deploy-image-to-gcp.yml) to build and push the image to GCP Artifact Registry.
 4. **Deploy Staging** and **Deploy Production** — both call [`deploy-environment.yml`](../.github/workflows/deploy-environment.yml) after the build, so the two environments deploy in parallel. Each deploys the `analytics` and `worker` services.
@@ -43,7 +43,7 @@ A reusable (`workflow_call`) workflow that:
 
 Reusable workflow that takes `environment`, `image`, `region`, `region_name`, and a JSON `services` array. It runs a matrix over the services, deploying each to Cloud Run via the [`deploy-gcp-cloud-run`](../.github/actions/deploy-gcp-cloud-run) composite action. Cloud Run service names follow:
 
-```
+```text
 <stg|prd>-<region_name>-traffic-analytics[-worker]
 ```
 
