@@ -1,22 +1,34 @@
 import {test as base} from '@playwright/test';
 
 export const test = base.extend({
-    page: async ({page}, use) => {
+    page: async ({page, baseURL}, use) => {
         const wafBypassToken = process.env.HEALTHCHECK_WAF_BYPASS_TOKEN;
 
         if (!wafBypassToken) {
             throw new Error('HEALTHCHECK_WAF_BYPASS_TOKEN is required for healthchecks');
         }
 
-        // Authenticate only the analytics request as synthetic monitoring. The
-        // WAF allow rule validates this token without changing Ghost routing.
+        if (!baseURL) {
+            throw new Error('A baseURL is required for healthchecks');
+        }
+        const trustedHealthcheckOrigin = new URL(baseURL).origin;
+
+        // Authenticate analytics requests only on the configured healthcheck
+        // origin. Redirects are rechecked before receiving the token.
         await page.route('**/.ghost/analytics/**', async (route) => {
-            await route.continue({
+            if (new URL(route.request().url()).origin !== trustedHealthcheckOrigin) {
+                await route.continue();
+                return;
+            }
+
+            const response = await route.fetch({
                 headers: {
                     ...route.request().headers(),
                     'X-Ghost-Analytics-Healthcheck-Token': wafBypassToken
-                }
+                },
+                maxRedirects: 0
             });
+            await route.fulfill({response});
         });
 
         // Set synthetic monitoring flag before each test
