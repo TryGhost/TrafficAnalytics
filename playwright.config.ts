@@ -8,7 +8,7 @@ export default defineConfig({
     timeout: 60000, // 60 seconds
     workers: process.env.CI ? 1 : undefined,
     reporter: 'html',
-  
+
     use: {
         baseURL: process.env.TEST_BASE_URL || 'https://main.ghost.org',
         // Traces contain request headers, so disable them when a WAF token is present.
@@ -16,6 +16,10 @@ export default defineConfig({
     },
 
     projects: [
+        {
+            name: 'chromium',
+            use: {...devices['Desktop Chrome']}
+        },
         {
             name: 'firefox',
             use: {...devices['Desktop Firefox']}
