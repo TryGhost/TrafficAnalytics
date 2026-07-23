@@ -7,6 +7,10 @@ on:
         description: "The deployment environment (staging/production)"
         type: string
         required: true
+    secrets:
+      HEALTHCHECK_WAF_BYPASS_TOKEN:
+        description: "Token accepted by the WAF healthcheck allow rule"
+        required: true
 
 jobs:
   prepare:
@@ -41,6 +45,7 @@ jobs:
         with:
           base_url: ${{ matrix.target.base_url }}
           environment_name: ${{ matrix.target.name }}
+          waf_bypass_token: ${{ secrets.HEALTHCHECK_WAF_BYPASS_TOKEN }}
 
       - name: Send Slack notification if health checks fail
         if: failure()
