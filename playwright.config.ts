@@ -11,7 +11,8 @@ export default defineConfig({
   
     use: {
         baseURL: process.env.TEST_BASE_URL || 'https://main.ghost.org',
-        trace: 'retain-on-failure'
+        // Traces contain request headers, so disable them when a WAF token is present.
+        trace: process.env.HEALTHCHECK_WAF_BYPASS_TOKEN ? 'off' : 'retain-on-failure'
     },
 
     projects: [

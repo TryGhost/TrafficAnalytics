@@ -8,6 +8,9 @@ inputs:
   environment_name:
     description: 'Environment name for artifact naming'
     required: true
+  waf_bypass_token:
+    description: 'Secret token accepted by the WAF healthcheck allow rule'
+    required: true
 
 runs:
   using: 'composite'
@@ -36,7 +39,13 @@ runs:
       shell: bash
       env:
         TEST_BASE_URL: ${{ inputs.base_url }}
+        HEALTHCHECK_WAF_BYPASS_TOKEN: ${{ inputs.waf_bypass_token }}
       run: |
+        if [ -z "$HEALTHCHECK_WAF_BYPASS_TOKEN" ]; then
+          echo "::error::HEALTHCHECK_WAF_BYPASS_TOKEN is not configured"
+          exit 1
+        fi
+
         IMAGE="mcr.microsoft.com/playwright:v${{ steps.playwright-version.outputs.version }}"
 
         for attempt in 1 2 3; do
@@ -58,6 +67,7 @@ runs:
           -v ${{ github.workspace }}:/work \
           -w /work \
           -e TEST_BASE_URL="${TEST_BASE_URL}" \
+          -e HEALTHCHECK_WAF_BYPASS_TOKEN \
           -e CI=true \
           -e PW_TEST_HTML_REPORT_OPEN=never \
           --network host \
