@@ -64,7 +64,7 @@ jobs:
           echo "Tree SHA: ${{ steps.tree.outputs.sha }}"
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
         with:
           registry: ghcr.io
