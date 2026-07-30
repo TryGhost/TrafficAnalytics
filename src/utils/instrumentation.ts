@@ -4,7 +4,9 @@ import {ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION} from '@opentelemetry/semantic-c
 import {resourceFromAttributes} from '@opentelemetry/resources';
 import {OTLPTraceExporter} from '@opentelemetry/exporter-trace-otlp-http';
 import {TraceExporter as GCPTraceExporter} from '@google-cloud/opentelemetry-cloud-trace-exporter';
-import {getNodeAutoInstrumentations} from '@opentelemetry/auto-instrumentations-node';
+import {HttpInstrumentation} from '@opentelemetry/instrumentation-http';
+import {UndiciInstrumentation} from '@opentelemetry/instrumentation-undici';
+import {fastifyOtelInstrumentation, IGNORED_PATHS} from './fastify-otel';
 import {SpanExporter} from '@opentelemetry/sdk-trace-base';
 
 // Determine which trace exporter to use based on environment
@@ -25,6 +27,11 @@ function getTraceExporter(): SpanExporter {
 }
 
 // Use K_SERVICE for GCP, or WORKER_MODE for local development
+// TODO: `||` binds tighter than `?:`, so this reads as
+// `(K_SERVICE || WORKER_MODE) ? ... : ...`. K_SERVICE is always set on Cloud Run,
+// so both the ingest and worker services report as 'analytics-worker' in
+// production. Likely intended: `K_SERVICE || (WORKER_MODE ? ... : ...)`.
+// Fixing it renames a service in Cloud Trace, so check dashboards/alerts first.
 const serviceName = process.env.K_SERVICE || process.env.WORKER_MODE ? 'analytics-worker' : 'analytics-service';
 const serviceVersion = process.env.K_REVISION || 'unknown';
 
@@ -34,7 +41,19 @@ const sdk = new NodeSDK({
         [ATTR_SERVICE_VERSION]: serviceVersion
     }), 
     traceExporter: getTraceExporter(),
-    instrumentations: [getNodeAutoInstrumentations()]
+    // Only instrumentations that survive the bundled production build: the
+    // bundle inlines node_modules, so anything relying on a require hook to
+    // patch a package has nothing left to patch. These hook node builtins or
+    // diagnostics channels instead. gRPC traffic is covered by the native
+    // OpenTelemetry support in the Pub/Sub and Firestore clients.
+    instrumentations: [
+        new HttpInstrumentation({
+            // Drop the health probe spans the Fastify instrumentation already skips
+            ignoreIncomingRequestHook: request => IGNORED_PATHS.has((request.url ?? '/').split('?')[0])
+        }),
+        new UndiciInstrumentation(),
+        fastifyOtelInstrumentation
+    ]
 });
 
 sdk.start();
