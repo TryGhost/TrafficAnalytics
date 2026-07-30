@@ -10,12 +10,16 @@ import {getLoggerConfig} from './utils/logger-config';
 import {errorHandler} from './utils/error-handler';
 import v1Routes from './routes/v1';
 import replyFrom from '@fastify/reply-from';
+import {fastifyOtelInstrumentation} from './utils/fastify-otel';
 
 const app = fastify({
     logger: getLoggerConfig(),
     disableRequestLogging: true,
     trustProxy: process.env.TRUST_PROXY !== 'false'
 }).withTypeProvider<TypeBoxTypeProvider>();
+
+// Tracing first, so its hooks wrap everything registered below
+app.register(fastifyOtelInstrumentation.plugin());
 
 // Global error handler
 app.setErrorHandler(errorHandler());
