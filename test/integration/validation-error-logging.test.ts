@@ -180,7 +180,10 @@ describe('Validation Error Logging', () => {
                 validation: expect.arrayContaining([
                     expect.objectContaining({
                         instancePath: '/timestamp',
-                        message: expect.stringContaining('date-time')
+                        // The schema constrains the timestamp with both `pattern` and
+                        // `format`; ajv stops at the first failure, so either may be
+                        // reported depending on the input.
+                        message: expect.stringMatching(/pattern|format/)
                     })
                 ])
             });

@@ -6,59 +6,55 @@ import {
     PageHitRequestPayloadSchema,
     PageHitRequestBodySchema,
     PageHitRequestSchema,
-    EventIdSchema
+    EventIdSchema,
+    resolveEventId
 } from '../../../../src/schemas';
 import assert from 'node:assert/strict';
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 describe('PageHitRequestSchema v1', () => {
     describe('EventIdSchema', () => {
-        it('should validate with an undefined event ID', () => {
-            assert.ok(Value.Check(EventIdSchema, undefined), 'Event ID can be undefined');
+        // The schema deliberately accepts anything, so that a junk event ID is replaced by
+        // resolveEventId rather than turning the whole request into a 400.
+        const anyValues = [
+            ['undefined', undefined],
+            ['null', null],
+            ['a string', '12345678-1234-1234-1234-123456789012'],
+            ['a number', 123],
+            ['a boolean', true]
+        ] as const;
+
+        for (const [label, value] of anyValues) {
+            it(`should validate with ${label} as the event ID`, () => {
+                assert.ok(Value.Check(EventIdSchema, value), `Event ID can be ${label}`);
+            });
+        }
+    });
+
+    describe('resolveEventId', () => {
+        it('should keep a non-empty string as-is, even when it is not a valid UUID', () => {
+            expect(resolveEventId('12345678-1234-1234-1234-123456789012')).toBe('12345678-1234-1234-1234-123456789012');
+            expect(resolveEventId('not-a-uuid')).toBe('not-a-uuid');
         });
 
-        it('should validate with a null event ID', () => {
-            assert.ok(Value.Check(EventIdSchema, null), 'Event ID can be null');
-        });
+        const generatedCases = [
+            ['undefined', undefined],
+            ['null', null],
+            ['an empty string', ''],
+            ['a number', 123],
+            ['a boolean', true],
+            ['an object', {}]
+        ] as const;
 
-        it('should validate with a string event ID', () => {
-            assert.ok(Value.Check(EventIdSchema, '12345678-1234-1234-1234-123456789012'), 'Event ID can be a string');
-        });
+        for (const [label, value] of generatedCases) {
+            it(`should generate a UUID for ${label}`, () => {
+                expect(resolveEventId(value)).toMatch(UUID_PATTERN);
+            });
+        }
 
-        it('should validate with a number event ID', () => {
-            assert.ok(Value.Check(EventIdSchema, 123), 'Event ID can be a number');
-        });
-
-        it('should validate with a boolean event ID', () => {
-            assert.ok(Value.Check(EventIdSchema, true), 'Event ID can be a boolean');
-        });
-
-        it('should transform undefined to a UUID', () => {
-            const result = Value.Decode(EventIdSchema, undefined);
-            expect(typeof result).toBe('string');
-            expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-        });
-
-        it('should transform null to a UUID', () => {
-            const result = Value.Decode(EventIdSchema, null);
-            expect(typeof result).toBe('string');
-            expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-        });
-
-        it('should transform a string event ID to itself', () => {
-            const result = Value.Decode(EventIdSchema, '12345678-1234-1234-1234-123456789012');
-            expect(result).toBe('12345678-1234-1234-1234-123456789012');
-        });
-
-        it('should transform an empty string to a UUID', () => {
-            const result = Value.Decode(EventIdSchema, '');
-            expect(typeof result).toBe('string');
-            expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-        });
-
-        it('should transform a non-string value to a UUID', () => {
-            const result = Value.Decode(EventIdSchema, 123); 
-            expect(typeof result).toBe('string');
-            expect(result).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        it('should generate a different UUID on each call', () => {
+            expect(resolveEventId(undefined)).not.toBe(resolveEventId(undefined));
         });
     });
 
