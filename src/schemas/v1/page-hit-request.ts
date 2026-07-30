@@ -1,5 +1,4 @@
 import {Static, Type} from '@sinclair/typebox';
-import {Value} from '@sinclair/typebox/value';
 import {randomUUID} from 'crypto';
 import {FastifyRequest} from 'fastify';
 
@@ -11,7 +10,12 @@ const NonEmptyStringSchema = Type.String({
 });
 const UUIDSchema = Type.String({format: 'uuid'});
 const ISO8601DateTimeSchema = Type.String({
-    format: 'date-time'
+    // `format` alone accepts any RFC 3339 timestamp, including offsets and second-precision.
+    // The pattern narrows that to the canonical `Date.prototype.toISOString()` shape, which
+    // is what we store. Both are needed: the pattern fixes the shape, the format rejects
+    // impossible dates like 2026-02-30 that still match it.
+    format: 'date-time',
+    pattern: '^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$'
 });
 const VersionSchema = Type.Literal('1');
 
@@ -23,18 +27,23 @@ const AnalyticsEventNameSchema = Type.Union([
 const ActionSchema = Type.Literal('page_hit');
 const ContentTypeSchema = Type.Literal('application/json');
 
-// Accept any value, but transform it to a UUID if it's not a string
-// Allows non-valid UUIDs to be passed as long as they are a string
-export const EventIdSchema = Type.Transform(Type.Any())
-    .Decode((value: unknown) => {
-        // If it's a string and non-empty, use it
-        if (typeof value === 'string' && value.length > 0) {
-            return value;
-        }
-        // If it's an empty string, undefined, null, or any other value, generate a new UUID
-        return randomUUID();
-    })
-    .Encode((value: string) => value);
+// Accept any value. Clients send all sorts of things here, and anything unusable is
+// replaced by resolveEventId rather than rejected.
+export const EventIdSchema = Type.Any();
+
+/**
+ * Resolve the client-supplied event ID to the one we store.
+ *
+ * Any non-empty string is kept as-is, so IDs that are not valid UUIDs still round-trip.
+ * Empty strings, missing values and non-strings get a fresh UUID.
+ */
+export const resolveEventId = (value: unknown): string => {
+    if (typeof value === 'string' && value.length > 0) {
+        return value;
+    }
+
+    return randomUUID();
+};
 
 // Query parameters schema
 export const PageHitRequestQueryParamsSchema = Type.Object({
@@ -115,14 +124,22 @@ export interface PageHitRequestType extends FastifyRequest {
     body: Static<typeof PageHitRequestBodySchema>;
 }
 
+/**
+ * Apply payload defaults and settle the event ID.
+ *
+ * Fastify has already validated the body, query and headers against the schemas above
+ * using ajv, so this does not revalidate them - it only does the two things a JSON
+ * Schema cannot express.
+ */
 export const populateAndTransformPageHitRequest = async (request: PageHitRequestType): Promise<PageHitRequestType> => {
-    request.body.payload = {
+    const payload = {
         ...PageHitRequestPayloadDefaults,
         ...request.body.payload
     };
-    request.body = Value.Decode(PageHitRequestBodySchema, request.body);
-    request.query = Value.Decode(PageHitRequestQueryParamsSchema, request.query);
-    request.headers = Value.Decode(PageHitRequestHeadersSchema, request.headers);
+
+    payload.event_id = resolveEventId(payload.event_id);
+    request.body.payload = payload;
+
     return request;
 };
 
