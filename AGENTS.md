@@ -79,6 +79,7 @@ Adapter pattern behind `ISaltStore`, selected by `SALT_STORE_TYPE` (see `SaltSto
 - `TINYBIRD_TRACKER_TOKEN` - Bearer token for authenticating with Tinybird
 - `TINYBIRD_WAIT` - Pass `wait=true` parameter to Tinybird, which makes it respond only after data is ingested (default: false)
 - `LOG_LEVEL` - Logging level (default: info)
+- `LOG_FORMAT` - Production log shape: `gcp` (Cloud Logging structured fields) or `json` (plain pino). Defaults to `gcp` when `K_SERVICE`, `GAE_SERVICE` or `GOOGLE_CLOUD_PROJECT` is set, otherwise `json`. Ignored when `NODE_ENV=development`, which always uses pretty logs.
 
 ### Pub/Sub (batch mode)
 - `PUBSUB_TOPIC_PAGE_HITS_RAW` - Topic the ingest app publishes raw events to. If set, the ingest app runs in batch mode; if unset, it runs in synchronous proxy mode.
