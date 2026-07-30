@@ -1,5 +1,4 @@
-import {randomUUID} from 'crypto';
-import {PageHitRequestType, PageHitRaw} from '../schemas';
+import {PageHitRequestType, PageHitRaw, resolveEventId} from '../schemas';
 
 export const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageHitRaw => {
     const parseReceivedTimestamp = (value: string | undefined) => {
@@ -20,7 +19,9 @@ export const pageHitRawPayloadFromRequest = (request: PageHitRequestType): PageH
         version: request.body.version,
         site_uuid: request.headers['x-site-uuid'],
         payload: {
-            event_id: request.body.payload.event_id && request.body.payload.event_id.length > 0 ? request.body.payload.event_id : randomUUID(),
+            // Already settled by the preHandler; called again so this stays correct for
+            // callers that build a payload without going through it.
+            event_id: resolveEventId(request.body.payload.event_id),
             member_uuid: request.body.payload.member_uuid,
             member_status: request.body.payload.member_status,
             post_uuid: request.body.payload.post_uuid,

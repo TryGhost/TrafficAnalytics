@@ -354,6 +354,34 @@ describe('Fastify App', () => {
                     .send(payloadWithWeirdHref)
                     .expect(202);
             });
+
+            // Timestamps that are valid RFC 3339 but not what Date.prototype.toISOString()
+            // emits. These used to pass schema validation and then blow up in the preHandler,
+            // returning a 500; they belong in the same 400 bucket as any other bad field.
+            const nonCanonicalTimestamps = [
+                ['no milliseconds', '2025-04-14T22:16:06Z'],
+                ['a UTC offset instead of Z', '2025-04-14T22:16:06.095+02:00'],
+                ['more than millisecond precision', '2025-04-14T22:16:06.095123Z'],
+                ['a date that does not exist', '2025-02-30T22:16:06.095Z']
+            ] as const;
+
+            for (const [label, timestamp] of nonCanonicalTimestamps) {
+                it(`should reject a timestamp with ${label}`, async function () {
+                    await request(proxyServer)
+                        .post(path)
+                        .query({token: 'abc123', name: 'analytics_events_test'})
+                        .set('Content-Type', 'application/json')
+                        .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                        .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                        .send({...eventPayload, timestamp})
+                        .expect(400)
+                        .expect(function (res) {
+                            assert.ok(res.body.message.includes('body/timestamp'));
+                        });
+
+                    expect(targetRequests.length).toBe(0);
+                });
+            }
         });
 
         describe('event id transformation', function () {
@@ -393,6 +421,31 @@ describe('Fastify App', () => {
                 const targetRequest = targetRequests[0];
                 expect(targetRequest.body.payload.event_id).toBe(eventId);
             });
+
+            // The schema accepts any type here on purpose, so junk is replaced rather than
+            // rejected. Guards against event_id being tightened to a string in the schema.
+            const junkEventIds = [
+                ['an empty string', ''],
+                ['null', null],
+                ['a number', 123],
+                ['a boolean', true]
+            ] as const;
+
+            for (const [label, eventId] of junkEventIds) {
+                it(`should generate an event id when given ${label}`, async function () {
+                    await request(proxyServer)
+                        .post(path)
+                        .query({token: 'abc123', name: 'analytics_events_test'})
+                        .set('Content-Type', 'application/json')
+                        .set('x-site-uuid', '940b73e9-4952-4752-b23d-9486f999c47e')
+                        .set('User-Agent', 'Mozilla/5.0 Test Browser')
+                        .send({...eventPayload, payload: {...eventPayload.payload, event_id: eventId}})
+                        .expect(202);
+
+                    const targetRequest = targetRequests[0];
+                    expect(targetRequest.body.payload.event_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+                });
+            }
         });
 
         describe('user agent parsing', function () {
