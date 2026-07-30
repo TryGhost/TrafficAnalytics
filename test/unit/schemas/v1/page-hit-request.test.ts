@@ -1,5 +1,4 @@
 import {describe, it, expect} from 'vitest';
-import {Value} from '@sinclair/typebox/value';
 import {
     PageHitRequestQueryParamsSchema,
     PageHitRequestHeadersSchema,
@@ -27,7 +26,7 @@ describe('PageHitRequestSchema v1', () => {
 
         for (const [label, value] of anyValues) {
             it(`should validate with ${label} as the event ID`, () => {
-                assert.ok(Value.Check(EventIdSchema, value), `Event ID can be ${label}`);
+                assert.ok(EventIdSchema.safeParse(value).success, `Event ID can be ${label}`);
             });
         }
     });
@@ -65,7 +64,7 @@ describe('PageHitRequestSchema v1', () => {
                 name: 'analytics_events'
             };
         
-            expect(Value.Check(PageHitRequestQueryParamsSchema, validParams)).toBe(true);
+            expect(PageHitRequestQueryParamsSchema.safeParse(validParams).success).toBe(true);
         });
 
         it('should validate analytics_events_test name', () => {
@@ -74,7 +73,7 @@ describe('PageHitRequestSchema v1', () => {
                 name: 'analytics_events_test'
             };
         
-            expect(Value.Check(PageHitRequestQueryParamsSchema, validParams)).toBe(true);
+            expect(PageHitRequestQueryParamsSchema.safeParse(validParams).success).toBe(true);
         });
 
         it('should reject invalid name values', () => {
@@ -83,7 +82,7 @@ describe('PageHitRequestSchema v1', () => {
                 name: 'invalid_event_name'
             };
         
-            expect(Value.Check(PageHitRequestQueryParamsSchema, invalidParams)).toBe(false);
+            expect(PageHitRequestQueryParamsSchema.safeParse(invalidParams).success).toBe(false);
         });
 
         it('should validate without token (optional)', () => {
@@ -91,7 +90,7 @@ describe('PageHitRequestSchema v1', () => {
                 name: 'analytics_events'
             };
         
-            expect(Value.Check(PageHitRequestQueryParamsSchema, validParams)).toBe(true);
+            expect(PageHitRequestQueryParamsSchema.safeParse(validParams).success).toBe(true);
         });
 
         it('should reject empty token when provided', () => {
@@ -100,7 +99,7 @@ describe('PageHitRequestSchema v1', () => {
                 name: 'analytics_events'
             };
         
-            expect(Value.Check(PageHitRequestQueryParamsSchema, invalidParams)).toBe(false);
+            expect(PageHitRequestQueryParamsSchema.safeParse(invalidParams).success).toBe(false);
         });
 
         it('should allow additional properties', () => {
@@ -109,7 +108,7 @@ describe('PageHitRequestSchema v1', () => {
                 additional: 'property'
             };
         
-            expect(Value.Check(PageHitRequestQueryParamsSchema, validParams)).toBe(true);
+            expect(PageHitRequestQueryParamsSchema.safeParse(validParams).success).toBe(true);
         });
     });
 
@@ -121,7 +120,7 @@ describe('PageHitRequestSchema v1', () => {
                 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
             };
         
-            expect(Value.Check(PageHitRequestHeadersSchema, validHeaders)).toBe(true);
+            expect(PageHitRequestHeadersSchema.safeParse(validHeaders).success).toBe(true);
         });
 
         it('should validate with optional referer', () => {
@@ -132,7 +131,7 @@ describe('PageHitRequestSchema v1', () => {
                 referer: 'https://example.com'
             };
         
-            expect(Value.Check(PageHitRequestHeadersSchema, validHeaders)).toBe(true);
+            expect(PageHitRequestHeadersSchema.safeParse(validHeaders).success).toBe(true);
         });
 
         it('should reject invalid UUID format', () => {
@@ -142,7 +141,7 @@ describe('PageHitRequestSchema v1', () => {
                 'user-agent': 'Mozilla/5.0'
             };
         
-            expect(Value.Check(PageHitRequestHeadersSchema, invalidHeaders)).toBe(false);
+            expect(PageHitRequestHeadersSchema.safeParse(invalidHeaders).success).toBe(false);
         });
 
         it('should reject invalid content-type', () => {
@@ -152,7 +151,7 @@ describe('PageHitRequestSchema v1', () => {
                 'user-agent': 'Mozilla/5.0'
             };
         
-            expect(Value.Check(PageHitRequestHeadersSchema, invalidHeaders)).toBe(false);
+            expect(PageHitRequestHeadersSchema.safeParse(invalidHeaders).success).toBe(false);
         });
 
         it('should reject missing required headers', () => {
@@ -161,7 +160,7 @@ describe('PageHitRequestSchema v1', () => {
             // Missing content-type and user-agent
             };
         
-            expect(Value.Check(PageHitRequestHeadersSchema, invalidHeaders)).toBe(false);
+            expect(PageHitRequestHeadersSchema.safeParse(invalidHeaders).success).toBe(false);
         });
     });
 
@@ -181,7 +180,7 @@ describe('PageHitRequestSchema v1', () => {
         };
 
         it('should validate valid payload', () => {
-            expect(Value.Check(PageHitRequestPayloadSchema, validPayload)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(validPayload).success).toBe(true);
         });
 
         it('should validate with null referrer', () => {
@@ -190,14 +189,14 @@ describe('PageHitRequestSchema v1', () => {
                 referrer: null
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithNullReferrer)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithNullReferrer).success).toBe(true);
         });
 
         it('should validate without referrer field (optional)', () => {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const {referrer, ...payloadWithoutReferrer} = validPayload;
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithoutReferrer)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithoutReferrer).success).toBe(true);
         });
 
         it('should validate with empty string referrer', () => {
@@ -206,7 +205,7 @@ describe('PageHitRequestSchema v1', () => {
                 referrer: ''
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithEmptyReferrer)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithEmptyReferrer).success).toBe(true);
         });
 
         it('should validate with UUID post_uuid', () => {
@@ -215,7 +214,7 @@ describe('PageHitRequestSchema v1', () => {
                 post_uuid: '12345678-1234-1234-1234-123456789012'
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithUUIDPost)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithUUIDPost).success).toBe(true);
         });
 
         it('should validate with UUID member_uuid', () => {
@@ -224,7 +223,7 @@ describe('PageHitRequestSchema v1', () => {
                 member_uuid: '12345678-1234-1234-1234-123456789012'
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithUUIDMember)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithUUIDMember).success).toBe(true);
         });
 
         it('should validate all post_type values', () => {
@@ -235,7 +234,7 @@ describe('PageHitRequestSchema v1', () => {
                     ...validPayload,
                     post_type: postType
                 };
-                expect(Value.Check(PageHitRequestPayloadSchema, payload)).toBe(true);
+                expect(PageHitRequestPayloadSchema.safeParse(payload).success).toBe(true);
             });
         });
 
@@ -245,7 +244,7 @@ describe('PageHitRequestSchema v1', () => {
                 post_type: 'article'
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, invalidPayload)).toBe(false);
+            expect(PageHitRequestPayloadSchema.safeParse(invalidPayload).success).toBe(false);
         });
 
         it('should not be too strict about the href value', () => {
@@ -254,7 +253,7 @@ describe('PageHitRequestSchema v1', () => {
                 href: 'not-a-url'
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, invalidPayload)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(invalidPayload).success).toBe(true);
         });
 
         it('should reject empty required strings', () => {
@@ -263,7 +262,7 @@ describe('PageHitRequestSchema v1', () => {
                 'user-agent': ''
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, invalidPayload)).toBe(false);
+            expect(PageHitRequestPayloadSchema.safeParse(invalidPayload).success).toBe(false);
         });
 
         it('should reject invalid site_uuid', () => {
@@ -272,7 +271,7 @@ describe('PageHitRequestSchema v1', () => {
                 site_uuid: 'invalid-uuid'
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, invalidPayload)).toBe(false);
+            expect(PageHitRequestPayloadSchema.safeParse(invalidPayload).success).toBe(false);
         });
 
         it('should validate real healthcheck payload with null location and undefined member_status', () => {
@@ -295,7 +294,7 @@ describe('PageHitRequestSchema v1', () => {
                 member_status: 'undefined'
             };
             
-            expect(Value.Check(PageHitRequestPayloadSchema, healthcheckPayload)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(healthcheckPayload).success).toBe(true);
         });
 
         it('should validate with parsedReferrer object with all string values', () => {
@@ -308,7 +307,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithParsedReferrer)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithParsedReferrer).success).toBe(true);
         });
 
         it('should validate with parsedReferrer object with mixed null and string values', () => {
@@ -321,7 +320,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithMixedParsedReferrer)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithMixedParsedReferrer).success).toBe(true);
         });
 
         it('should validate without parsedReferrer field (optional)', () => {
@@ -330,7 +329,7 @@ describe('PageHitRequestSchema v1', () => {
                 // parsedReferrer field omitted
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithoutParsedReferrer)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithoutParsedReferrer).success).toBe(true);
         });
 
         it('should reject parsedReferrer with missing required fields', () => {
@@ -343,7 +342,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithIncompleteParsedReferrer)).toBe(false);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithIncompleteParsedReferrer).success).toBe(false);
         });
 
         it('should validate parsedReferrer with UTM parameters', () => {
@@ -361,7 +360,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
 
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithUTMParams)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithUTMParams).success).toBe(true);
         });
 
         it('should validate parsedReferrer with partial UTM parameters', () => {
@@ -378,7 +377,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
 
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithPartialUTM)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithPartialUTM).success).toBe(true);
         });
 
         it('should validate parsedReferrer with null UTM parameters', () => {
@@ -396,7 +395,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
 
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithNullUTM)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithNullUTM).success).toBe(true);
         });
 
         it('should validate parsedReferrer without UTM parameters', () => {
@@ -410,7 +409,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
 
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithoutUTM)).toBe(true);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithoutUTM).success).toBe(true);
         });
 
         it('should reject parsedReferrer with invalid field types', () => {
@@ -423,7 +422,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRequestPayloadSchema, payloadWithInvalidParsedReferrer)).toBe(false);
+            expect(PageHitRequestPayloadSchema.safeParse(payloadWithInvalidParsedReferrer).success).toBe(false);
         });
     });
 
@@ -448,7 +447,7 @@ describe('PageHitRequestSchema v1', () => {
         };
 
         it('should validate valid body', () => {
-            expect(Value.Check(PageHitRequestBodySchema, validBody)).toBe(true);
+            expect(PageHitRequestBodySchema.safeParse(validBody).success).toBe(true);
         });
 
         it('should validate body without session_id (optional)', () => {
@@ -460,7 +459,7 @@ describe('PageHitRequestSchema v1', () => {
                 // session_id omitted
             };
             
-            expect(Value.Check(PageHitRequestBodySchema, bodyWithoutSessionId)).toBe(true);
+            expect(PageHitRequestBodySchema.safeParse(bodyWithoutSessionId).success).toBe(true);
         });
 
         it('should reject invalid timestamp format', () => {
@@ -469,7 +468,7 @@ describe('PageHitRequestSchema v1', () => {
                 timestamp: '2024-01-01'
             };
         
-            expect(Value.Check(PageHitRequestBodySchema, invalidBody)).toBe(false);
+            expect(PageHitRequestBodySchema.safeParse(invalidBody).success).toBe(false);
         });
 
         it('should reject invalid action', () => {
@@ -478,7 +477,7 @@ describe('PageHitRequestSchema v1', () => {
                 action: 'click_event'
             };
         
-            expect(Value.Check(PageHitRequestBodySchema, invalidBody)).toBe(false);
+            expect(PageHitRequestBodySchema.safeParse(invalidBody).success).toBe(false);
         });
     });
 
@@ -513,7 +512,7 @@ describe('PageHitRequestSchema v1', () => {
         };
 
         it('should validate complete valid request', () => {
-            expect(Value.Check(PageHitRequestSchema, validRequest)).toBe(true);
+            expect(PageHitRequestSchema.safeParse(validRequest).success).toBe(true);
         });
 
         it('should reject request with invalid query params', () => {
@@ -524,7 +523,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRequestSchema, invalidRequest)).toBe(false);
+            expect(PageHitRequestSchema.safeParse(invalidRequest).success).toBe(false);
         });
 
         it('should reject request with invalid headers', () => {
@@ -537,7 +536,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRequestSchema, invalidRequest)).toBe(false);
+            expect(PageHitRequestSchema.safeParse(invalidRequest).success).toBe(false);
         });
 
         it('should reject request with invalid body', () => {
@@ -549,7 +548,7 @@ describe('PageHitRequestSchema v1', () => {
                 }
             };
         
-            expect(Value.Check(PageHitRequestSchema, invalidRequest)).toBe(false);
+            expect(PageHitRequestSchema.safeParse(invalidRequest).success).toBe(false);
         });
     });
 });

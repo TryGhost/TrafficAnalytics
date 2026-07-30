@@ -151,7 +151,9 @@ describe('Validation Error Logging', () => {
                 validation: expect.arrayContaining([
                     expect.objectContaining({
                         instancePath: '/x-site-uuid',
-                        message: expect.stringContaining('format')
+                        // z.guid() emits both `format: uuid` and an equivalent `pattern`;
+                        // ajv stops at the first failure, so either may be reported.
+                        message: expect.stringMatching(/pattern|format/)
                     })
                 ])
             });

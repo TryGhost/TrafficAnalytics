@@ -1,6 +1,6 @@
 // Main module file
 import fastify from 'fastify';
-import {TypeBoxTypeProvider} from '@fastify/type-provider-typebox';
+import {serializerCompiler, validatorCompiler, type ZodTypeProvider} from './schemas';
 import loggingPlugin from './plugins/logging';
 import timestampPlugin from './plugins/timestamp';
 import corsPlugin from './plugins/cors';
@@ -15,7 +15,11 @@ const app = fastify({
     logger: getLoggerConfig(),
     disableRequestLogging: true,
     trustProxy: process.env.TRUST_PROXY !== 'false'
-}).withTypeProvider<TypeBoxTypeProvider>();
+}).withTypeProvider<ZodTypeProvider>();
+
+// Route schemas are Zod; compile them to ajv rather than running Zod's parser per request
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(serializerCompiler);
 
 // Global error handler
 app.setErrorHandler(errorHandler());
