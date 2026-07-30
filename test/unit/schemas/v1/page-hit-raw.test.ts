@@ -1,5 +1,4 @@
 import {describe, it, expect} from 'vitest';
-import {Value} from '@sinclair/typebox/value';
 import {PageHitRawSchema} from '../../../../src/schemas';
 
 describe('PageHitRawSchema v1', () => {
@@ -30,7 +29,7 @@ describe('PageHitRawSchema v1', () => {
     };
 
     it('should validate valid page hit raw data', () => {
-        expect(Value.Check(PageHitRawSchema, validPageHitRaw)).toBe(true);
+        expect(PageHitRawSchema.safeParse(validPageHitRaw).success).toBe(true);
     });
 
     describe('timestamp validation', () => {
@@ -39,7 +38,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 timestamp: '2024-12-25T15:30:45.123Z'
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should reject invalid timestamp format', () => {
@@ -47,7 +46,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 timestamp: '2024-01-01'
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject non-ISO8601 timestamp', () => {
@@ -55,7 +54,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 timestamp: 'January 1, 2024'
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
     });
 
@@ -65,7 +64,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 action: 'page_hit'
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should reject invalid action', () => {
@@ -73,7 +72,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 action: 'click_event'
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
     });
 
@@ -83,7 +82,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 version: '1'
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should reject invalid version', () => {
@@ -91,7 +90,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 version: '2'
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
     });
 
@@ -101,7 +100,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 site_uuid: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate UUID-shaped values without requiring RFC version and variant bits', () => {
@@ -109,7 +108,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 site_uuid: '12345678-1234-1234-1234-123456789012'
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should reject invalid UUID format', () => {
@@ -117,7 +116,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 site_uuid: 'invalid-uuid'
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
     });
 
@@ -130,7 +129,7 @@ describe('PageHitRawSchema v1', () => {
                     member_uuid: '12345678-1234-1234-1234-123456789012'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate with "undefined" member_uuid', () => {
@@ -141,7 +140,7 @@ describe('PageHitRawSchema v1', () => {
                     member_uuid: 'undefined'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate with "undefined" member_status', () => {
@@ -152,7 +151,7 @@ describe('PageHitRawSchema v1', () => {
                     member_status: 'undefined'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate with UUID post_uuid', () => {
@@ -163,7 +162,7 @@ describe('PageHitRawSchema v1', () => {
                     post_uuid: '12345678-1234-1234-1234-123456789012'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate with "undefined" post_uuid', () => {
@@ -174,7 +173,7 @@ describe('PageHitRawSchema v1', () => {
                     post_uuid: 'undefined'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate all post_type values', () => {
@@ -188,7 +187,7 @@ describe('PageHitRawSchema v1', () => {
                         post_type: postType
                     }
                 };
-                expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+                expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
             });
         });
 
@@ -200,7 +199,7 @@ describe('PageHitRawSchema v1', () => {
                     post_type: 'article'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should validate with null location', () => {
@@ -211,7 +210,7 @@ describe('PageHitRawSchema v1', () => {
                     location: null
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate with null referrer', () => {
@@ -222,7 +221,7 @@ describe('PageHitRawSchema v1', () => {
                     referrer: null
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate without referrer field (optional)', () => {
@@ -232,7 +231,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 payload: payloadWithoutReferrer
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate with parsedReferrer object with all string values', () => {
@@ -247,7 +246,7 @@ describe('PageHitRawSchema v1', () => {
                     }
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate with parsedReferrer object with null values', () => {
@@ -262,7 +261,7 @@ describe('PageHitRawSchema v1', () => {
                     }
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate with parsedReferrer object with mixed null and string values', () => {
@@ -277,7 +276,7 @@ describe('PageHitRawSchema v1', () => {
                     }
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate without parsedReferrer field (optional)', () => {
@@ -288,7 +287,7 @@ describe('PageHitRawSchema v1', () => {
                     // parsedReferrer field omitted
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should reject parsedReferrer with missing required fields', () => {
@@ -303,7 +302,7 @@ describe('PageHitRawSchema v1', () => {
                     }
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject parsedReferrer with invalid field types', () => {
@@ -318,7 +317,7 @@ describe('PageHitRawSchema v1', () => {
                     }
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should not be too strict about the href value', () => {
@@ -329,7 +328,7 @@ describe('PageHitRawSchema v1', () => {
                     href: 'not-a-url'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(true);
         });
 
         it('should reject empty pathname', () => {
@@ -340,7 +339,7 @@ describe('PageHitRawSchema v1', () => {
                     pathname: ''
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject empty locale', () => {
@@ -351,7 +350,7 @@ describe('PageHitRawSchema v1', () => {
                     locale: ''
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject invalid member_uuid', () => {
@@ -362,7 +361,7 @@ describe('PageHitRawSchema v1', () => {
                     member_uuid: 'invalid-uuid'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject invalid post_uuid', () => {
@@ -373,7 +372,7 @@ describe('PageHitRawSchema v1', () => {
                     post_uuid: 'invalid-uuid'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
     });
 
@@ -386,7 +385,7 @@ describe('PageHitRawSchema v1', () => {
                     'user-agent': 'Chrome/91.0.4472.124'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, validData)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should reject empty ip', () => {
@@ -397,7 +396,7 @@ describe('PageHitRawSchema v1', () => {
                     ip: ''
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject empty user-agent', () => {
@@ -408,7 +407,7 @@ describe('PageHitRawSchema v1', () => {
                     'user-agent': ''
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject missing ip', () => {
@@ -418,7 +417,7 @@ describe('PageHitRawSchema v1', () => {
                     'user-agent': validPageHitRaw.meta['user-agent']
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject missing user-agent', () => {
@@ -428,7 +427,7 @@ describe('PageHitRawSchema v1', () => {
                     ip: validPageHitRaw.meta.ip
                 }
             };
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
     });
 
@@ -436,25 +435,25 @@ describe('PageHitRawSchema v1', () => {
         it('should reject missing timestamp', () => {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const {timestamp, ...invalidData} = validPageHitRaw;
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject missing payload', () => {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const {payload, ...invalidData} = validPageHitRaw;
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should reject missing meta', () => {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const {meta, ...invalidData} = validPageHitRaw;
-            expect(Value.Check(PageHitRawSchema, invalidData)).toBe(false);
+            expect(PageHitRawSchema.safeParse(invalidData).success).toBe(false);
         });
     });
 
     describe('event_id validation', () => {
         it('should validate when event_id is present', () => {
-            expect(Value.Check(PageHitRawSchema, validPageHitRaw)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validPageHitRaw).success).toBe(true);
         });
 
         it('should validate when event_id is missing (optional field)', () => {
@@ -464,7 +463,7 @@ describe('PageHitRawSchema v1', () => {
                 ...validPageHitRaw,
                 payload: payloadWithoutEventId
             };
-            expect(Value.Check(PageHitRawSchema, validDataWithoutEventId)).toBe(true);
+            expect(PageHitRawSchema.safeParse(validDataWithoutEventId).success).toBe(true);
         });
 
         it('should accept any string as event_id (validation happens during processing)', () => {
@@ -475,7 +474,7 @@ describe('PageHitRawSchema v1', () => {
                     event_id: 'not-a-uuid'
                 }
             };
-            expect(Value.Check(PageHitRawSchema, dataWithInvalidEventId)).toBe(true);
+            expect(PageHitRawSchema.safeParse(dataWithInvalidEventId).success).toBe(true);
         });
     });
 
@@ -507,7 +506,7 @@ describe('PageHitRawSchema v1', () => {
                 }
             };
 
-            expect(Value.Check(PageHitRawSchema, realWorldPayload)).toBe(true);
+            expect(PageHitRawSchema.safeParse(realWorldPayload).success).toBe(true);
         });
 
         it('should validate payload with parsedReferrer', () => {
@@ -542,7 +541,7 @@ describe('PageHitRawSchema v1', () => {
                 }
             };
 
-            expect(Value.Check(PageHitRawSchema, realWorldPayloadWithParsedReferrer)).toBe(true);
+            expect(PageHitRawSchema.safeParse(realWorldPayloadWithParsedReferrer).success).toBe(true);
         });
     });
 });

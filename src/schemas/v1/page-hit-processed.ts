@@ -1,4 +1,4 @@
-import {Type, Static} from '@sinclair/typebox';
+import {z} from 'zod';
 import {PageHitRaw} from './page-hit-raw';
 import type {ParsedReferrer} from './page-hit-raw';
 import uap from 'ua-parser-js';
@@ -8,49 +8,54 @@ import {isBot} from '../../utils/bot-detection';
 
 const referrerParser = new ReferrerParser();
 
+// See page-hit-request.ts: UUID-shaped is enough, RFC compliance is not required.
+const UUIDSchema = z.guid();
+const ISO8601DateTimeSchema = z.iso.datetime({precision: 3});
+const NullableString = z.string().nullable();
+
 // Complete page hit processed schema
-export const PageHitProcessedSchema = Type.Object({
-    timestamp: Type.String({format: 'date-time'}),
-    action: Type.Literal('page_hit'),
-    version: Type.Literal('1'),
-    site_uuid: Type.String({format: 'uuid'}),
-    session_id: Type.String(),
-    payload: Type.Object({
-        event_id: Type.String({format: 'uuid'}),
-        site_uuid: Type.String({format: 'uuid'}),
-        member_uuid: Type.Union([Type.String({format: 'uuid'}), Type.Literal('undefined')]),
-        member_status: Type.Union([Type.String({minLength: 1}), Type.Literal('undefined')]),
-        post_uuid: Type.Union([Type.String({format: 'uuid'}), Type.Literal('undefined')]),
-        post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
-        gift_link: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        locale: Type.String({minLength: 1}),
-        location: Type.Union([Type.String({minLength: 1}), Type.Null()]),
-        pathname: Type.String({minLength: 1}),
-        href: Type.String(),
-        os: Type.String(),
-        browser: Type.String(),
-        device: Type.String(),
-        parsedReferrer: Type.Optional(Type.Object({
-            url: Type.Union([Type.String(), Type.Null()]),
-            source: Type.Union([Type.String(), Type.Null()]),
-            medium: Type.Union([Type.String(), Type.Null()])
-        })),
-        referrerUrl: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        referrerSource: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        referrerMedium: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utm_source: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utm_medium: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utm_campaign: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utm_term: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        utm_content: Type.Optional(Type.Union([Type.String(), Type.Null()])),
-        'user-agent': Type.String(),
-        meta: Type.Object({
-            received_timestamp: Type.Union([Type.String({format: 'date-time'}), Type.Null()])
+export const PageHitProcessedSchema = z.object({
+    timestamp: ISO8601DateTimeSchema,
+    action: z.literal('page_hit'),
+    version: z.literal('1'),
+    site_uuid: UUIDSchema,
+    session_id: z.string(),
+    payload: z.object({
+        event_id: UUIDSchema,
+        site_uuid: UUIDSchema,
+        member_uuid: z.union([UUIDSchema, z.literal('undefined')]),
+        member_status: z.union([z.string().min(1), z.literal('undefined')]),
+        post_uuid: z.union([UUIDSchema, z.literal('undefined')]),
+        post_type: z.enum(['null', 'post', 'page']),
+        gift_link: NullableString.optional(),
+        locale: z.string().min(1),
+        location: z.string().min(1).nullable(),
+        pathname: z.string().min(1),
+        href: z.string(),
+        os: z.string(),
+        browser: z.string(),
+        device: z.string(),
+        parsedReferrer: z.object({
+            url: NullableString,
+            source: NullableString,
+            medium: NullableString
+        }).optional(),
+        referrerUrl: NullableString.optional(),
+        referrerSource: NullableString.optional(),
+        referrerMedium: NullableString.optional(),
+        utm_source: NullableString.optional(),
+        utm_medium: NullableString.optional(),
+        utm_campaign: NullableString.optional(),
+        utm_term: NullableString.optional(),
+        utm_content: NullableString.optional(),
+        'user-agent': z.string(),
+        meta: z.object({
+            received_timestamp: ISO8601DateTimeSchema.nullable()
         })
     })
 });
 
-export type PageHitProcessed = Static<typeof PageHitProcessedSchema>;
+export type PageHitProcessed = z.infer<typeof PageHitProcessedSchema>;
 
 // Transform functions
 // NOTE: These functions are deliberately duplicated from the proxy service /processors

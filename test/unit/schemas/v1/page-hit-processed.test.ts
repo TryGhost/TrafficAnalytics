@@ -1,5 +1,4 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {Value} from '@sinclair/typebox/value';
 import {
     PageHitProcessedSchema,
     transformUserAgent,
@@ -107,13 +106,13 @@ describe('PageHitProcessedSchema v1', () => {
     };
 
     it('should validate valid page hit processed data', () => {
-        expect(Value.Check(PageHitProcessedSchema, validPageHitProcessed)).toBe(true);
+        expect(PageHitProcessedSchema.safeParse(validPageHitProcessed).success).toBe(true);
     });
 
     it('should require session_id field', () => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars, camelcase
         const {session_id, ...invalidData} = validPageHitProcessed;
-        expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
+        expect(PageHitProcessedSchema.safeParse(invalidData).success).toBe(false);
     });
 
     it('should not be too strict about the href value', async () => {
@@ -139,7 +138,7 @@ describe('PageHitProcessedSchema v1', () => {
                     os: undefined
                 }
             };
-            expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
+            expect(PageHitProcessedSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should require browser field', () => {
@@ -150,7 +149,7 @@ describe('PageHitProcessedSchema v1', () => {
                     browser: undefined
                 }
             };
-            expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
+            expect(PageHitProcessedSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should require device field', () => {
@@ -161,7 +160,7 @@ describe('PageHitProcessedSchema v1', () => {
                     device: undefined
                 }
             };
-            expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
+            expect(PageHitProcessedSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should require user-agent field', () => {
@@ -172,7 +171,7 @@ describe('PageHitProcessedSchema v1', () => {
                     'user-agent': undefined
                 }
             };
-            expect(Value.Check(PageHitProcessedSchema, invalidData)).toBe(false);
+            expect(PageHitProcessedSchema.safeParse(invalidData).success).toBe(false);
         });
 
         it('should allow optional referrer fields', () => {
@@ -185,7 +184,7 @@ describe('PageHitProcessedSchema v1', () => {
                     referrer_medium: undefined
                 }
             };
-            expect(Value.Check(PageHitProcessedSchema, validData)).toBe(true);
+            expect(PageHitProcessedSchema.safeParse(validData).success).toBe(true);
         });
 
         it('should validate with all referrer fields present', () => {
@@ -198,7 +197,7 @@ describe('PageHitProcessedSchema v1', () => {
                     referrerMedium: 'social'
                 }
             };
-            expect(Value.Check(PageHitProcessedSchema, validData)).toBe(true);
+            expect(PageHitProcessedSchema.safeParse(validData).success).toBe(true);
         });
     });
     describe('transformUserAgent', () => {
@@ -534,7 +533,7 @@ describe('PageHitProcessedSchema v1', () => {
         it('should produce valid PageHitProcessed schema', async () => {
             const result = await transformPageHitRawToProcessed(validPageHitRaw);
 
-            expect(Value.Check(PageHitProcessedSchema, result)).toBe(true);
+            expect(PageHitProcessedSchema.safeParse(result).success).toBe(true);
         });
     });
 });

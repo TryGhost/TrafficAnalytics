@@ -45,10 +45,25 @@ Key modules under `src/`:
 - **Events** (`src/services/events/`): `publisher.ts` / `publisherUtils.ts` publish raw page hits to Pub/Sub; `subscriber.ts` consumes from a subscription. Uses `@google-cloud/pubsub`.
 - **Batch worker** (`src/services/batch-worker/`): subscribes, transforms each message, batches, and flushes to Tinybird (`BATCH_SIZE`, `BATCH_FLUSH_INTERVAL_MS`).
 - **Tinybird** (`src/services/tinybird/`): `client.ts` posts single or NDJSON-batch events to `{PROXY_TARGET}/v0/events?name=analytics_events`.
-- **Transformations / schemas** (`src/transformations/page-hit-transformations.ts`, `src/schemas/v1/`): build the raw payload from the request and transform raw → processed (user-agent parsing via `ua-parser-js`, referrer parsing via `@tryghost/referrer-parser`, user signature, bot filtering).
+- **Transformations / schemas** (`src/transformations/page-hit-transformations.ts`, `src/schemas/v1/`): Zod schemas for the request, raw and processed events; build the raw payload from the request and transform raw → processed (user-agent parsing via `ua-parser-js`, referrer parsing via `@tryghost/referrer-parser`, user signature, bot filtering).
+- **Validation** (`src/schemas/validation.ts`): compiles the Zod schemas to ajv validators, and provides the Fastify type provider.
 - **Salt store** (`src/services/salt-store/`): adapter pattern (`memory`, `file`, `firestore`) behind `ISaltStore`, selected by `SALT_STORE_TYPE`.
 - **User signature** (`src/services/user-signature/`): SHA-256 of daily-rotating salt + site UUID + IP + user agent.
 - **Instrumentation** (`src/utils/instrumentation.ts`): OpenTelemetry setup — Jaeger (default) or Google Cloud Trace.
+
+### Schemas & Validation
+
+Schemas are written in Zod (`src/schemas/v1/`), but nothing validates with Zod at runtime. `src/schemas/validation.ts` converts each schema to JSON Schema once at boot via `z.toJSONSchema` and compiles it with ajv, so the per-request path is generated code rather than Zod's interpreter. Zod is there for authoring and type inference (`z.infer`, and the `ZodTypeProvider` that types route handlers).
+
+Two ajv instances, because they are used for different things:
+- `requestAjv` — route validation. Mirrors Fastify's own options (`coerceTypes: 'array'`, `useDefaults`, `removeAdditional`), since HTTP query params and headers arrive as strings and need coercing.
+- `dataAjv` — `createValidator`, used off the HTTP path (the batch worker validating Pub/Sub messages). Coercion is off: that data is already typed JSON, and coercing it rewrites a null into an empty string to satisfy the string branch of a union.
+
+Things to know when editing a schema:
+- **Never use `.transform()` or `.pipe()` in a schema.** JSON Schema cannot express them and `z.toJSONSchema` drops them without error, so the transform silently stops running. Do that work in a preHandler instead — `resolveEventId` in `page-hit-request.ts` is the pattern. `.default()` is fine; it survives as `default` and ajv's `useDefaults` applies it.
+- **`z.guid()`, not `z.uuid()`.** We only require UUID-shaped values; `z.uuid()` enforces RFC version and variant nibbles and would reject IDs real Ghost sites send.
+- **`z.iso.datetime({precision: 3})`.** Without the precision, offsets and second-granularity timestamps are accepted; we only store the canonical `toISOString()` shape.
+- `test/unit/schemas/validation.test.ts` guards the Zod ↔ ajv projection. Nothing in the type system keeps the two in step, so add a case there when adding a schema construct that is new to the codebase.
 
 ### Salt Store
 
@@ -119,6 +134,7 @@ Tests use Vitest and follow the same directory structure as the source code. Whe
 ## Development Notes
 
 - The project uses Fastify for high-performance HTTP handling
+- Zod for schemas, compiled to ajv validators (see Schemas & Validation above)
 - TypeScript with strict mode enabled
 - Docker-first development approach
 - All external dependencies are kept in package.json (not bundled in build)
