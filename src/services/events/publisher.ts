@@ -13,7 +13,8 @@ class EventPublisher {
 
     private constructor() {
         this.pubsub = new PubSub({
-            projectId: process.env.GOOGLE_CLOUD_PROJECT
+            projectId: process.env.GOOGLE_CLOUD_PROJECT,
+            enableOpenTelemetryTracing: true
         });
     }
 

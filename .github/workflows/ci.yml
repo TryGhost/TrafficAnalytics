@@ -21,7 +21,7 @@ jobs:
         id: set-matrix
         run: |
           DOCKERFILE_VERSION=${{ steps.extract-node-version.outputs.node-version }}
-          VERSIONS=$(echo "[20, 22, $DOCKERFILE_VERSION]" | jq -c 'unique')
+          VERSIONS=$(echo "[22, $DOCKERFILE_VERSION]" | jq -c 'unique')
           echo "node-versions=$VERSIONS" >> $GITHUB_OUTPUT
 
   lint-and-test:
