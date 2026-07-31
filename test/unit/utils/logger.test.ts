@@ -80,6 +80,7 @@ describe('Logger Config', () => {
         it('should return gcp logger config outside development and test', () => {
             vi.stubEnv('NODE_ENV', 'production');
             vi.stubEnv('LOG_LEVEL', 'info');
+            vi.stubEnv('LOG_FORMAT', 'gcp');
 
             const config = getLoggerConfig();
 
@@ -89,10 +90,76 @@ describe('Logger Config', () => {
         });
     });
 
+    describe('log format selection', () => {
+        beforeEach(() => {
+            vi.stubEnv('NODE_ENV', 'production');
+            vi.stubEnv('LOG_LEVEL', 'info');
+            // Cleared individually so detection is not decided by the ambient
+            // environment, which sets GOOGLE_CLOUD_PROJECT for the emulators.
+            vi.stubEnv('LOG_FORMAT', '');
+            vi.stubEnv('K_SERVICE', '');
+            vi.stubEnv('GAE_SERVICE', '');
+            vi.stubEnv('GOOGLE_CLOUD_PROJECT', '');
+        });
+
+        it('should return plain json config when no google cloud environment is detected', () => {
+            const config = getLoggerConfig();
+
+            expect(config).toEqual({level: 'info'});
+        });
+
+        const detectionCases = [
+            {name: 'K_SERVICE', env: 'K_SERVICE', value: 'analytics-service'},
+            {name: 'GAE_SERVICE', env: 'GAE_SERVICE', value: 'analytics-service'},
+            {name: 'GOOGLE_CLOUD_PROJECT', env: 'GOOGLE_CLOUD_PROJECT', value: 'a-project'}
+        ] as const;
+
+        for (const testCase of detectionCases) {
+            it(`should return gcp config when ${testCase.name} is set`, () => {
+                vi.stubEnv(testCase.env, testCase.value);
+
+                const config = getLoggerConfig();
+
+                expect(config.formatters).toHaveProperty('log');
+            });
+        }
+
+        it('should prefer an explicit LOG_FORMAT over detection', () => {
+            vi.stubEnv('K_SERVICE', 'analytics-service');
+            vi.stubEnv('LOG_FORMAT', 'json');
+
+            expect(getLoggerConfig()).toEqual({level: 'info'});
+        });
+
+        it('should use the gcp config when LOG_FORMAT requests it off google cloud', () => {
+            vi.stubEnv('LOG_FORMAT', 'gcp');
+
+            const config = getLoggerConfig();
+
+            expect(config.formatters).toHaveProperty('log');
+        });
+
+        it('should throw on an unrecognised LOG_FORMAT rather than guessing', () => {
+            vi.stubEnv('LOG_FORMAT', 'gpc');
+
+            expect(() => getLoggerConfig()).toThrow(/Invalid LOG_FORMAT 'gpc'/);
+        });
+
+        it('should not apply LOG_FORMAT in development, which is always pretty', () => {
+            vi.stubEnv('NODE_ENV', 'development');
+            vi.stubEnv('LOG_FORMAT', 'gcp');
+
+            expect(getLoggerConfig().transport).toMatchObject({target: 'pino-pretty'});
+        });
+    });
+
     describe('production logging output', () => {
         beforeEach(() => {
             vi.stubEnv('NODE_ENV', 'production');
             vi.stubEnv('LOG_LEVEL', 'info');
+            // Pinned so these assert the GCP record shape rather than the detection
+            // that happens to select it in this environment.
+            vi.stubEnv('LOG_FORMAT', 'gcp');
         });
 
         it('should emit GCP severity field in production logs', async () => {

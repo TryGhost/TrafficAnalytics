@@ -1,8 +1,19 @@
+import {resolve} from 'node:path';
 import {defineConfig} from 'vite';
 
 export default defineConfig({
     server: {
         port: 3000
+    },
+    resolve: {
+        alias: [
+            // Anchored so only the package index is swapped for the shim; the deep
+            // `@google-cloud/logging/build/src/...` import still hits the real package.
+            {
+                find: /^@google-cloud\/logging$/,
+                replacement: resolve(import.meta.dirname, 'src/utils/gcp-logging-shim.ts')
+            }
+        ]
     },
     build: {
         target: 'esnext',
