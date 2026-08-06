@@ -2,6 +2,7 @@ import {FastifyReply, FastifyRequest} from 'fastify';
 import {PageHitRequestBodySchema, PageHitRequestHeadersSchema, PageHitRequestQueryParamsSchema, PageHitRequestType, populateAndTransformPageHitRequest, transformPageHitRawToProcessed, type PageHitRequestBodyType, type PageHitRequestHeadersType, type PageHitRequestQueryParamsType} from '../schemas';
 import {publishPageHitRaw} from '../services/events/publisherUtils';
 import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations';
+import {PAGE_HIT_ACCEPTED_RESPONSE} from '../utils/page-hit-response';
 
 const MAX_BODY_SIZE_BYTES = 20 * 1024; // 20 KB
 
@@ -9,7 +10,7 @@ export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestT
     const payload = pageHitRawPayloadFromRequest(request);
     try {
         await publishPageHitRaw(request, payload);
-        reply.status(202).send({message: 'Page hit event received'});
+        reply.status(202).send(PAGE_HIT_ACCEPTED_RESPONSE);
     } catch (err) {
         request.log.error({
             event: 'PageHitPublishFailed',
@@ -33,16 +34,6 @@ export const handlePageHitRequestStrategyBatch = async (request: PageHitRequestT
 export const handlePageHitRequestStrategyInline = async (request: PageHitRequestType, reply: FastifyReply): Promise<void> => {
     const pageHitRaw = pageHitRawPayloadFromRequest(request);
     const pageHitProcessed = await transformPageHitRawToProcessed(pageHitRaw);
-
-    // Filter bot traffic before proxying
-    if (pageHitProcessed.payload.device === 'bot') {
-        request.log.info({
-            event: 'BotEventFiltered',
-            pageHitProcessed
-        });
-        reply.status(202).send();
-        return;
-    }
 
     request.body = pageHitProcessed;
 

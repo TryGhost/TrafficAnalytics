@@ -22,7 +22,9 @@ flowchart LR
 
     subgraph Ingest["Ingest app (src/app.ts)"]
         HMAC["HMAC validation<br/>(preValidation)"]
-        Pre["Populate + validate<br/>(preHandler)"]
+        Validate["Schema validation"]
+        Bots["Filter bot traffic<br/>(preHandler)"]
+        Pre["Populate request defaults<br/>(route preHandler)"]
         Pub["Publish raw event"]
     end
 
@@ -31,23 +33,25 @@ flowchart LR
 
     subgraph Worker["Worker app (src/worker-app.ts)"]
         Enrich["Enrich:<br/>user agent + referrer<br/>+ user signature"]
-        Bots["Filter bot traffic"]
+        BotGuard["Defensive bot check"]
         Batch["Batch<br/>(BATCH_SIZE / flush interval)"]
     end
 
     TB["Tinybird<br/>POST /v0/events"]
 
     Browser -->|"POST /api/v1/page_hit"| HMAC
-    HMAC --> Pre --> Pub
+    HMAC --> Validate --> Bots
+    Bots -->|"bot: 202 Accepted"| Browser
+    Bots -->|"not bot"| Pre --> Pub
     Pub -->|"202 Accepted"| Browser
     Pub --> Topic --> Sub --> Enrich
-    Enrich --> Bots --> Batch --> TB
+    Enrich --> BotGuard --> Batch --> TB
 ```
 
 Notes:
 - **HMAC validation** ([`src/plugins/hmac-validation.ts`](../src/plugins/hmac-validation.ts)) is a global `preValidation` hook. It validates the signature and timestamp carried in the URL query parameters and strips them before downstream processing. It is skipped entirely if `HMAC_SECRET` is unset, and it can be run in log-only mode with `HMAC_VALIDATION_LOG_ONLY=true`.
 - **Enrichment** ([`transformPageHitRawToProcessed`](../src/schemas/v1/page-hit-processed.ts)) parses the user agent with `ua-parser-js`, parses the referrer with `@tryghost/referrer-parser`, and computes the `session_id` user signature.
-- **Bot filtering** drops events whose parsed device is `bot` before they reach Tinybird (in both the worker and the synchronous proxy path).
+- **Bot filtering** runs in the ingest app's [`bot-detection`](../src/plugins/bot-detection.ts) `preHandler` hook before the request strategy is selected, so bot events return the standard `202` accepted response without being published to Pub/Sub or proxied to Tinybird. Set `ENABLE_BOT_DETECTION_HEADER=true` to include `x-ghost-bot-detected: true` on these responses; the header is omitted by default. The worker retains a defensive check for legacy or directly published messages that bypassed the API.
 - **Batching** ([`src/services/batch-worker/BatchWorker.ts`](../src/services/batch-worker/BatchWorker.ts)) accumulates processed events and flushes them to Tinybird as newline-delimited JSON when the batch reaches `BATCH_SIZE` (default 50) or the flush timer fires (`BATCH_FLUSH_INTERVAL_MS`, default 1000ms). Messages are `ack`ed on a successful flush and `nack`ed on failure.
 
 ### Synchronous proxy mode
