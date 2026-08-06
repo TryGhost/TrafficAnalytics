@@ -4,6 +4,7 @@ import type {ParsedReferrer} from './page-hit-raw';
 import uap from 'ua-parser-js';
 import {ReferrerParser} from '@tryghost/referrer-parser';
 import {userSignatureService} from '../../services/user-signature';
+import {isBot} from '../../utils/bot-detection';
 
 const referrerParser = new ReferrerParser();
 
@@ -102,11 +103,6 @@ export function transformUserAgent(userAgent: string): {os: string, browser: str
             device: 'unknown'
         };
     }
-}
-
-function isBot(userAgentString: string): boolean {
-    const botPattern = /wget|ahrefsbot|curl|bot|crawler|spider|urllib|bitdiscovery|\+https:\/\/|googlebot/i;
-    return botPattern.test(userAgentString);
 }
 
 export function transformReferrer(referrerData: ParsedReferrer | undefined): {

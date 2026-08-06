@@ -44,8 +44,8 @@ sequenceDiagram
 
 The "Process Request" and "forward to Tinybird" steps above happen in one of two ways, and this is how the service runs by default in development and production:
 
-- **Batch mode (default)** — The ingest service validates the request, publishes the raw event to a Google Cloud Pub/Sub topic, and immediately returns `202`. A separate **worker** process consumes from the subscription, enriches each event (user-agent parsing, referrer parsing, user signature), filters bot traffic, batches events, and forwards them to Tinybird's `/v0/events` endpoint. This decouples request handling from Tinybird ingestion. Started with `yarn dev` (alias for `yarn dev:batch`).
-- **Proxy mode (synchronous)** — With no Pub/Sub topic configured, the ingest service enriches the request inline and proxies it straight to Tinybird in the same request/response cycle. Started with `yarn dev:proxy`.
+- **Batch mode (default)** — The ingest service validates the request, filters bot traffic, publishes non-bot raw events to a Google Cloud Pub/Sub topic, and immediately returns `202`. A separate **worker** process consumes from the subscription, enriches each event (user-agent parsing, referrer parsing, user signature), batches events, and forwards them to Tinybird's `/v0/events` endpoint. This decouples request handling from Tinybird ingestion. Started with `yarn dev` (alias for `yarn dev:batch`).
+- **Proxy mode (synchronous)** — With no Pub/Sub topic configured, the ingest service filters bot traffic, enriches non-bot requests inline, and proxies them straight to Tinybird in the same request/response cycle. Started with `yarn dev:proxy`.
 
 Both modes run from the same image; the role is selected by the `WORKER_MODE` environment variable (worker vs. ingest) and the presence of `PUBSUB_TOPIC_PAGE_HITS_RAW` (batch vs. proxy). See [docs/architecture.md](docs/architecture.md) for a diagram and full detail.
 
@@ -57,7 +57,7 @@ Both modes run from the same image; the role is selected by the `WORKER_MODE` en
 
 ## Configuration
 
-Copy `.env.example` to `.env` and configure as needed. For local development with Ghost, see [Develop locally with Ghost](#develop-locally-with-ghost)
+Copy `.env.example` to `.env` and configure as needed. Set `ENABLE_BOT_DETECTION_HEADER=true` to include `x-ghost-bot-detected: true` on `202` responses for filtered bots; this response header is omitted by default. For local development with Ghost, see [Develop locally with Ghost](#develop-locally-with-ghost)
 
 ## Develop
 
