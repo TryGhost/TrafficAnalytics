@@ -459,15 +459,23 @@
   resolved "https://registry.yarnpkg.com/@google-cloud/promisify/-/promisify-5.1.0.tgz#6f012894c887221e2ef82258aa9dc2b7848ca3aa"
   integrity sha512-/j9zzWDxsgKg0hMuFBmLGI8ES9xj4DjXvQnDCKl0w5ed7WE3CGsgHmUoC35rvfBXshSW+5StQGnCUD+RBqITKA==
 
-"@google-cloud/pubsub@5.3.1":
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/@google-cloud/pubsub/-/pubsub-5.3.1.tgz#94f1d6f77c3ad023ae606e6a8dfd8e30180a3cbe"
-  integrity sha512-xXAQBVVrFviWz8L8yDKEqv1ziVw/gMSpYHt3IxSYRSY0fTyjis+xOrKJILj8dd8PAUHGnGiAIYuTprflkE9jsQ==
+"@google-cloud/pubsub-api@^0.2.1":
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/@google-cloud/pubsub-api/-/pubsub-api-0.2.1.tgz#4cc352f91adffdcc0afa3060c07e93d51cea1630"
+  integrity sha512-TBMvacGZMzYTJgG+B/UWVCgfH+zFOZpOPpehgRiA3P1d9rQwIltcfPtGNJcsLnRr9y2ABffGJ5UXF7R72bp7Yg==
+  dependencies:
+    google-gax "^5.0.7"
+
+"@google-cloud/pubsub@6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/pubsub/-/pubsub-6.0.0.tgz#4880339d35ca9bbbe9ae13afa641eba9cc13e435"
+  integrity sha512-hpaUqfgX1Z6tp/2xN9xrAsrcozVOeBgwUogkPtfOP744jOnttMVnRvxidorDVcRfbF6BT+qZo0SjhVjsSAaL3Q==
   dependencies:
     "@google-cloud/paginator" "^6.0.0"
     "@google-cloud/precise-date" "^5.0.0"
     "@google-cloud/projectify" "^5.0.0"
     "@google-cloud/promisify" "^5.0.0"
+    "@google-cloud/pubsub-api" "^0.2.1"
     "@opentelemetry/api" "~1.9.0"
     "@opentelemetry/core" "^1.30.1"
     "@opentelemetry/semantic-conventions" "~1.39.0"
@@ -3195,7 +3203,7 @@ google-gax@^4.0.3:
     retry-request "^7.0.0"
     uuid "^9.0.1"
 
-google-gax@^5.0.1, google-gax@^5.0.5:
+google-gax@^5.0.1, google-gax@^5.0.5, google-gax@^5.0.7:
   version "5.0.8"
   resolved "https://registry.yarnpkg.com/google-gax/-/google-gax-5.0.8.tgz#7f1ceab60482c2352387da824400cfc23aff5972"
   integrity sha512-M4vpZcXQIC1gqIVGQ7eaU3jXQA6zecStyTXu514TYfThlgSurYJOxHZo9fzU6hAgwPWvuEynAVHWyaIk80VeEA==
