@@ -20,7 +20,8 @@ export class EventSubscriber {
         }
 
         this.pubsub = new PubSub({
-            projectId: process.env.GOOGLE_CLOUD_PROJECT
+            projectId: process.env.GOOGLE_CLOUD_PROJECT,
+            enableOpenTelemetryTracing: true
         });
         try {
             this.subscription = this.pubsub.subscription(subscriptionName);
