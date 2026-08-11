@@ -12,7 +12,7 @@ import {SpanExporter} from '@opentelemetry/sdk-trace-base';
 // Determine which trace exporter to use based on environment
 function getTraceExporter(): SpanExporter {
     const traceExporterType = process.env.OTEL_TRACE_EXPORTER || 'jaeger';
-    
+
     if (traceExporterType === 'gcp' || process.env.K_SERVICE) {
         // Use Google Cloud Trace for GCP environments
         // K_SERVICE is automatically set by Cloud Run
@@ -27,19 +27,15 @@ function getTraceExporter(): SpanExporter {
 }
 
 // Use K_SERVICE for GCP, or WORKER_MODE for local development
-// TODO: `||` binds tighter than `?:`, so this reads as
-// `(K_SERVICE || WORKER_MODE) ? ... : ...`. K_SERVICE is always set on Cloud Run,
-// so both the ingest and worker services report as 'analytics-worker' in
-// production. Likely intended: `K_SERVICE || (WORKER_MODE ? ... : ...)`.
-// Fixing it renames a service in Cloud Trace, so check dashboards/alerts first.
-const serviceName = process.env.K_SERVICE || process.env.WORKER_MODE ? 'analytics-worker' : 'analytics-service';
+const isWorkerMode = process.env.WORKER_MODE === 'true';
+const serviceName = process.env.K_SERVICE || (isWorkerMode ? 'analytics-worker' : 'analytics-service');
 const serviceVersion = process.env.K_REVISION || 'unknown';
 
 const sdk = new NodeSDK({
     resource: resourceFromAttributes({
         [ATTR_SERVICE_NAME]: serviceName,
         [ATTR_SERVICE_VERSION]: serviceVersion
-    }), 
+    }),
     traceExporter: getTraceExporter(),
     // Only instrumentations that survive the bundled production build: the
     // bundle inlines node_modules, so anything relying on a require hook to
