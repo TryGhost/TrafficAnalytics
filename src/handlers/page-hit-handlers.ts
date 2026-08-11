@@ -1,5 +1,5 @@
-import {FastifyReply, FastifyRequest} from 'fastify';
-import {PageHitRequestBodySchema, PageHitRequestHeadersSchema, PageHitRequestQueryParamsSchema, PageHitRequestType, populateAndTransformPageHitRequest, transformPageHitRawToProcessed, type PageHitRequestBodyType, type PageHitRequestHeadersType, type PageHitRequestQueryParamsType} from '../schemas';
+import type {FastifyReply, FastifyRequest} from 'fastify';
+import {PageHitRequestType, PageHitRequestSchema, populateAndTransformPageHitRequest, transformPageHitRawToProcessed, type PageHitRequestBodyType, type PageHitRequestHeadersType, type PageHitRequestQueryParamsType} from '../schemas';
 import {publishPageHitRaw} from '../services/events/publisherUtils';
 import {pageHitRawPayloadFromRequest} from '../transformations/page-hit-transformations';
 import {PAGE_HIT_ACCEPTED_RESPONSE} from '../utils/page-hit-response';
@@ -118,11 +118,7 @@ export const pageHitRequestHandler = async (request: FastifyRequest<{
 
 export const pageHitRouteOptions = {
     bodyLimit: MAX_BODY_SIZE_BYTES,
-    schema: {
-        querystring: PageHitRequestQueryParamsSchema,
-        headers: PageHitRequestHeadersSchema,
-        body: PageHitRequestBodySchema
-    },
+    schema: PageHitRequestSchema.shape,
     preHandler: populateAndTransformPageHitRequest,
     handler: pageHitRequestHandler
 };

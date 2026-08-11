@@ -1,58 +1,57 @@
-import {Type, Static} from '@sinclair/typebox';
+import {z} from 'zod';
 
 // Common types
-const StringSchema = Type.String();
-const NonEmptyStringSchema = Type.String({minLength: 1});
-const UUIDSchema = Type.String({format: 'uuid'});
-const ISO8601DateTimeSchema = Type.String({
-    format: 'date-time'
-});
+const StringSchema = z.string();
+const NonEmptyStringSchema = z.string().min(1);
+// See page-hit-request.ts: UUID-shaped is enough, RFC compliance is not required.
+const UUIDSchema = z.guid();
+const ISO8601DateTimeSchema = z.iso.datetime({precision: 3});
 
 // Enum types for page hit raw events
-const ActionSchema = Type.Literal('page_hit');
-const VersionSchema = Type.Literal('1');
+const ActionSchema = z.literal('page_hit');
+const VersionSchema = z.literal('1');
 
 // Parsed referrer schema
-const ParsedReferrerSchema = Type.Object({
-    source: Type.Union([StringSchema, Type.Null()]),
-    medium: Type.Union([StringSchema, Type.Null()]),
-    url: Type.Union([StringSchema, Type.Null()])
+const ParsedReferrerSchema = z.object({
+    source: StringSchema.nullable(),
+    medium: StringSchema.nullable(),
+    url: StringSchema.nullable()
 });
 
-export type ParsedReferrer = Static<typeof ParsedReferrerSchema>;
+export type ParsedReferrer = z.infer<typeof ParsedReferrerSchema>;
 
 // Payload schema for page hit raw events
-const PayloadSchema = Type.Object({
-    event_id: Type.Optional(StringSchema),
-    member_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
-    member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')]),
-    post_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
-    post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
-    gift_link: Type.Optional(Type.Union([StringSchema, Type.Null()])),
+const PayloadSchema = z.object({
+    event_id: StringSchema.optional(),
+    member_uuid: z.union([UUIDSchema, z.literal('undefined')]),
+    member_status: z.union([NonEmptyStringSchema, z.literal('undefined')]),
+    post_uuid: z.union([UUIDSchema, z.literal('undefined')]),
+    post_type: z.enum(['null', 'post', 'page']),
+    gift_link: StringSchema.nullable().optional(),
     locale: NonEmptyStringSchema,
-    location: Type.Union([NonEmptyStringSchema, Type.Null()]),
-    referrer: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    parsedReferrer: Type.Optional(ParsedReferrerSchema),
+    location: NonEmptyStringSchema.nullable(),
+    referrer: StringSchema.nullable().optional(),
+    parsedReferrer: ParsedReferrerSchema.optional(),
     pathname: NonEmptyStringSchema,
-    href: Type.String(),
-    utm_source: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utm_medium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utm_campaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utm_term: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utm_content: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    meta: Type.Object({
-        received_timestamp: Type.Union([ISO8601DateTimeSchema, Type.Null()])
+    href: StringSchema,
+    utm_source: StringSchema.nullable().optional(),
+    utm_medium: StringSchema.nullable().optional(),
+    utm_campaign: StringSchema.nullable().optional(),
+    utm_term: StringSchema.nullable().optional(),
+    utm_content: StringSchema.nullable().optional(),
+    meta: z.object({
+        received_timestamp: ISO8601DateTimeSchema.nullable()
     })
 });
 
 // Meta schema for page hit raw events
-const MetaSchema = Type.Object({
+const MetaSchema = z.object({
     ip: NonEmptyStringSchema,
     'user-agent': NonEmptyStringSchema
 });
 
 // Complete page hit raw schema
-export const PageHitRawSchema = Type.Object({
+export const PageHitRawSchema = z.object({
     timestamp: ISO8601DateTimeSchema,
     action: ActionSchema,
     version: VersionSchema,
@@ -61,4 +60,4 @@ export const PageHitRawSchema = Type.Object({
     meta: MetaSchema
 });
 
-export type PageHitRaw = Static<typeof PageHitRawSchema>;
+export type PageHitRaw = z.infer<typeof PageHitRawSchema>;

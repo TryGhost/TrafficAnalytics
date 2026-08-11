@@ -1,128 +1,134 @@
-import {Static, Type} from '@sinclair/typebox';
-import {Value} from '@sinclair/typebox/value';
+import {z} from 'zod';
 import {randomUUID} from 'crypto';
 import {FastifyRequest} from 'fastify';
 
 // Common types
-const StringSchema = Type.String();
-const NonEmptyStringSchema = Type.String({
-    minLength: 1,
-    pattern: '^.*\\S.*$' // At least one non-whitespace character
-});
-const UUIDSchema = Type.String({format: 'uuid'});
-const ISO8601DateTimeSchema = Type.String({
-    format: 'date-time'
-});
-const VersionSchema = Type.Literal('1');
+const StringSchema = z.string();
+const NonEmptyStringSchema = z.string().min(1).regex(/^.*\S.*$/); // At least one non-whitespace character
+// `guid`, not `uuid`: we only require UUID-shaped values, not RFC-compliant version and
+// variant nibbles. Sites in the wild send IDs that fail the stricter check.
+const UUIDSchema = z.guid();
+// `precision: 3` pins this to the canonical `Date.prototype.toISOString()` shape, which is
+// what we store. Without it, offsets and second-precision timestamps would be accepted.
+const ISO8601DateTimeSchema = z.iso.datetime({precision: 3});
+const VersionSchema = z.literal('1');
 
 // Enum types
-const AnalyticsEventNameSchema = Type.Union([
-    Type.Literal('analytics_events'),
-    Type.Literal('analytics_events_test')
-]);
-const ActionSchema = Type.Literal('page_hit');
-const ContentTypeSchema = Type.Literal('application/json');
+const AnalyticsEventNameSchema = z.enum(['analytics_events', 'analytics_events_test']);
+const ActionSchema = z.literal('page_hit');
+const ContentTypeSchema = z.literal('application/json');
 
-// Accept any value, but transform it to a UUID if it's not a string
-// Allows non-valid UUIDs to be passed as long as they are a string
-export const EventIdSchema = Type.Transform(Type.Any())
-    .Decode((value: unknown) => {
-        // If it's a string and non-empty, use it
-        if (typeof value === 'string' && value.length > 0) {
-            return value;
-        }
-        // If it's an empty string, undefined, null, or any other value, generate a new UUID
-        return randomUUID();
-    })
-    .Encode((value: string) => value);
+// Accept any value. Clients send all sorts of things here, and anything unusable is
+// replaced by resolveEventId rather than rejected.
+export const EventIdSchema = z.any();
+
+/**
+ * Resolve the client-supplied event ID to the one we store.
+ *
+ * Any non-empty string is kept as-is, so IDs that are not valid UUIDs still round-trip.
+ * Empty strings, missing values and non-strings get a fresh UUID.
+ */
+export const resolveEventId = (value: unknown): string => {
+    if (typeof value === 'string' && value.length > 0) {
+        return value;
+    }
+
+    return randomUUID();
+};
 
 // Query parameters schema
-export const PageHitRequestQueryParamsSchema = Type.Object({
-    token: Type.Optional(NonEmptyStringSchema),
+export const PageHitRequestQueryParamsSchema = z.object({
+    token: NonEmptyStringSchema.optional(),
     name: AnalyticsEventNameSchema
-}, {
-    additionalProperties: Type.String()
-});
+}).catchall(StringSchema);
 
-export type PageHitRequestQueryParamsType = Static<typeof PageHitRequestQueryParamsSchema>;
+export type PageHitRequestQueryParamsType = z.infer<typeof PageHitRequestQueryParamsSchema>;
 
 // Headers schema
-export const PageHitRequestHeadersSchema = Type.Object({
+export const PageHitRequestHeadersSchema = z.object({
     'x-site-uuid': UUIDSchema,
     'content-type': ContentTypeSchema,
     'user-agent': NonEmptyStringSchema,
-    'x-ghost-analytics-start': Type.Optional(StringSchema),
-    referer: Type.Optional(StringSchema)
-}, {
-    additionalProperties: Type.Union([StringSchema, Type.Array(StringSchema)])
-});
+    'x-ghost-analytics-start': StringSchema.optional(),
+    referer: StringSchema.optional()
+}).catchall(z.union([StringSchema, z.array(StringSchema)]));
 
-export type PageHitRequestHeadersType = Static<typeof PageHitRequestHeadersSchema>;
+export type PageHitRequestHeadersType = z.infer<typeof PageHitRequestHeadersSchema>;
 
 // Parsed referrer schema
-const ParsedReferrerSchema = Type.Object({
-    source: Type.Union([StringSchema, Type.Null()]),
-    medium: Type.Union([StringSchema, Type.Null()]),
-    url: Type.Union([StringSchema, Type.Null()])
+const ParsedReferrerSchema = z.object({
+    source: StringSchema.nullable(),
+    medium: StringSchema.nullable(),
+    url: StringSchema.nullable()
 });
 
 // Payload schema
-export const PageHitRequestPayloadSchema = Type.Object({
-    event_id: Type.Optional(EventIdSchema),
+// `looseObject` allows processors to add os, browser, device, etc.
+export const PageHitRequestPayloadSchema = z.looseObject({
+    event_id: EventIdSchema.optional(),
     'user-agent': NonEmptyStringSchema,
     locale: NonEmptyStringSchema,
-    location: Type.Union([NonEmptyStringSchema, Type.Null()]),
-    referrer: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    parsedReferrer: Type.Optional(ParsedReferrerSchema),
+    location: NonEmptyStringSchema.nullable(),
+    referrer: StringSchema.nullable().optional(),
+    parsedReferrer: ParsedReferrerSchema.optional(),
     pathname: NonEmptyStringSchema,
-    href: Type.String(),
+    href: StringSchema,
     site_uuid: UUIDSchema,
-    post_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
-    post_type: Type.Union([Type.Literal('null'), Type.Literal('post'), Type.Literal('page')]),
-    gift_link: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    member_uuid: Type.Union([UUIDSchema, Type.Literal('undefined')]),
-    member_status: Type.Union([NonEmptyStringSchema, Type.Literal('undefined')]),
-    utm_source: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utm_medium: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utm_campaign: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utm_term: Type.Optional(Type.Union([StringSchema, Type.Null()])),
-    utm_content: Type.Optional(Type.Union([StringSchema, Type.Null()]))
-}, {
-    additionalProperties: true // Allow processors to add os, browser, device, etc.
+    post_uuid: z.union([UUIDSchema, z.literal('undefined')]),
+    post_type: z.enum(['null', 'post', 'page']),
+    gift_link: StringSchema.nullable().optional(),
+    member_uuid: z.union([UUIDSchema, z.literal('undefined')]),
+    member_status: z.union([NonEmptyStringSchema, z.literal('undefined')]),
+    utm_source: StringSchema.nullable().optional(),
+    utm_medium: StringSchema.nullable().optional(),
+    utm_campaign: StringSchema.nullable().optional(),
+    utm_term: StringSchema.nullable().optional(),
+    utm_content: StringSchema.nullable().optional()
 });
 
 // Request body schema
-export const PageHitRequestBodySchema = Type.Object({
+export const PageHitRequestBodySchema = z.object({
     timestamp: ISO8601DateTimeSchema,
     action: ActionSchema,
     version: VersionSchema,
-    session_id: Type.Optional(StringSchema),
+    session_id: StringSchema.optional(),
     payload: PageHitRequestPayloadSchema
 });
 
-export type PageHitRequestBodyType = Static<typeof PageHitRequestBodySchema>;
+export type PageHitRequestBodyType = z.infer<typeof PageHitRequestBodySchema>;
 
 // Complete request schema
-export const PageHitRequestSchema = Type.Object({
+export const PageHitRequestSchema = z.object({
     querystring: PageHitRequestQueryParamsSchema,
     headers: PageHitRequestHeadersSchema,
     body: PageHitRequestBodySchema
 });
 
-export interface PageHitRequestType extends FastifyRequest {
-    query: Static<typeof PageHitRequestQueryParamsSchema>;
-    headers: Static<typeof PageHitRequestHeadersSchema>;
-    body: Static<typeof PageHitRequestBodySchema>;
-}
+// Built from FastifyRequest's own generic rather than hand-written, so it matches the
+// request type Fastify infers for the route exactly - including the way it merges declared
+// headers with IncomingHttpHeaders.
+export type PageHitRequestType = FastifyRequest<{
+    Querystring: PageHitRequestQueryParamsType;
+    Headers: PageHitRequestHeadersType;
+    Body: PageHitRequestBodyType;
+}>;
 
+/**
+ * Apply payload defaults and settle the event ID.
+ *
+ * Fastify has already validated the body, query and headers against the schemas above
+ * using ajv, so this does not revalidate them - it only does the two things a JSON
+ * Schema cannot express.
+ */
 export const populateAndTransformPageHitRequest = async (request: PageHitRequestType): Promise<PageHitRequestType> => {
-    request.body.payload = {
+    const payload = {
         ...PageHitRequestPayloadDefaults,
         ...request.body.payload
     };
-    request.body = Value.Decode(PageHitRequestBodySchema, request.body);
-    request.query = Value.Decode(PageHitRequestQueryParamsSchema, request.query);
-    request.headers = Value.Decode(PageHitRequestHeadersSchema, request.headers);
+
+    payload.event_id = resolveEventId(payload.event_id);
+    request.body.payload = payload;
+
     return request;
 };
 

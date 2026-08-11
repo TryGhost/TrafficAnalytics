@@ -1,9 +1,11 @@
 import {Message} from '@google-cloud/pubsub';
 import {EventSubscriber} from '../events/subscriber';
-import {PageHitRaw, PageHitRawSchema, PageHitProcessed, transformPageHitRawToProcessed} from '../../schemas';
-import {Value} from '@sinclair/typebox/value';
+import {PageHitRaw, PageHitRawSchema, PageHitProcessed, transformPageHitRawToProcessed, createValidator} from '../../schemas';
 import {TinybirdClient} from '../tinybird/client';
 import logger from '../../utils/logger';
+
+// Compiled once at module load rather than per message.
+const validatePageHitRaw = createValidator(PageHitRawSchema);
 
 interface BatchWorkerConfig {
     batchSize?: number;
@@ -115,7 +117,7 @@ class BatchWorker {
         try {
             const messageData = message.data.toString();
             const parsedMessageData = JSON.parse(messageData);
-            return Value.Parse(PageHitRawSchema, parsedMessageData);
+            return validatePageHitRaw(parsedMessageData);
         } catch (err) {
             logger.error({
                 event: 'WorkerMessageParsingFailed',
