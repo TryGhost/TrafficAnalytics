@@ -412,10 +412,10 @@
     arrify "^2.0.0"
     extend "^3.0.2"
 
-"@google-cloud/paginator@^6.0.0":
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/paginator/-/paginator-6.1.0.tgz#2a9d58da2f13786fd5c14437e1cd03d4f39f3e01"
-  integrity sha512-9bxQ/QNhcq5c6ra75khWjA5Q9UHWp0vQnhwesmqPpLLF5PxmxCIsadIA5ssLxKted4/iZ2RlRPkW/E8p68W8cg==
+"@google-cloud/paginator@^7.0.0":
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/@google-cloud/paginator/-/paginator-7.0.1.tgz#321e139a357c5a1c561b8a9e3937a316c40dc9ad"
+  integrity sha512-k32cWlHAF8yTgg8rciLI8mPMI6UzuJdKp53YRxISRwMFxUl2FYplvs+Mr2UHxKn0W7rXsqZnUZy73AOJFDP8iA==
   dependencies:
     extend "^3.0.2"
 
@@ -428,20 +428,20 @@
     eventid "^2.0.1"
     pino "^10.3.1"
 
-"@google-cloud/precise-date@^5.0.0":
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/precise-date/-/precise-date-5.2.0.tgz#f8a48e9c29b1b03853554be941711ba54e45ebb4"
-  integrity sha512-ckZ1elVT/JXbO4kxltiT8tumYnTXGIY7OFrDMAJyVWAte/rUYiCuH1YbaKLQrZpYDp522xgTfPqqW/VxfXFdgA==
+"@google-cloud/precise-date@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/precise-date/-/precise-date-6.0.0.tgz#2200ced9d3fb82480698767d84c202e14212e29d"
+  integrity sha512-m/TqW1Nh1j/O5tyzm3A0mE+3mIc3kvjMSCZedeUy8urDFkoMbp3lyHrzGek/rc9XvcnS4M8ly1pDWaTH32TFSw==
 
 "@google-cloud/projectify@^4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@google-cloud/projectify/-/projectify-4.0.0.tgz#d600e0433daf51b88c1fa95ac7f02e38e80a07be"
   integrity sha512-MmaX6HeSvyPbWGwFq7mXdo0uQZLGBYCwziiLIGq5JVX+/bdI3SAq6bP98trV5eTWfLuvsMcIC1YJOF2vfteLFA==
 
-"@google-cloud/projectify@^5.0.0":
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/projectify/-/projectify-5.2.0.tgz#75fd11f25daf329efe07034b0c66170852e8dd58"
-  integrity sha512-u4lTO+UI9bwyd/qaVkhVpp57jVH0Pc7wkHE0snZkpQyoKheHDJwmfStao8cWXSF03DmrQltLLSoDjM2CGBpFJA==
+"@google-cloud/projectify@^6.0.0":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/@google-cloud/projectify/-/projectify-6.0.1.tgz#e53661c5ac448326efd984f90ed0123b8659970d"
+  integrity sha512-zA3o4l87UJ56odT/e9PcT4n2bqVnrp6dg9vI75DoGGbl0/YJemX8Fta7454htECt07eALxxc4iaAbrX3T+QulA==
 
 "@google-cloud/promisify@4.0.0":
   version "4.0.0"
@@ -453,36 +453,36 @@
   resolved "https://registry.yarnpkg.com/@google-cloud/promisify/-/promisify-4.1.0.tgz#df8b060f0121c6462233f5420738dcda09c6df4a"
   integrity sha512-G/FQx5cE/+DqBbOpA5jKsegGwdPniU6PuIEMt+qxWgFxvxuFOzVmp6zYchtYuwAWV5/8Dgs0yAmjvNZv3uXLQg==
 
-"@google-cloud/promisify@^5.0.0":
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/promisify/-/promisify-5.1.0.tgz#6f012894c887221e2ef82258aa9dc2b7848ca3aa"
-  integrity sha512-/j9zzWDxsgKg0hMuFBmLGI8ES9xj4DjXvQnDCKl0w5ed7WE3CGsgHmUoC35rvfBXshSW+5StQGnCUD+RBqITKA==
+"@google-cloud/promisify@^6.0.0":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/@google-cloud/promisify/-/promisify-6.0.1.tgz#6cc04969e0f6326c612c72f8ccfd445d87f9d07e"
+  integrity sha512-lpN2AtoQ/iimp7jjm5zJFWbpW7OJc5qWmQdt59CI4ENeoIRIx+yf2ShSR2kanQfjFOshA74eSbimXXuRaSCUVg==
 
-"@google-cloud/pubsub-api@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@google-cloud/pubsub-api/-/pubsub-api-0.2.1.tgz#4cc352f91adffdcc0afa3060c07e93d51cea1630"
-  integrity sha512-TBMvacGZMzYTJgG+B/UWVCgfH+zFOZpOPpehgRiA3P1d9rQwIltcfPtGNJcsLnRr9y2ABffGJ5UXF7R72bp7Yg==
+"@google-cloud/pubsub-api@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@google-cloud/pubsub-api/-/pubsub-api-0.3.0.tgz#83578b5479a76c1c8a1a3078894da0a2a6f6b247"
+  integrity sha512-x1L+lrIHgaMwN5fAhnNVS7rh0BZn9eKmqOBXnOUM3jkilF4GE4ooETS9SYnCtPCVHwQtByDTh5b7KIMUW7XAHQ==
   dependencies:
-    google-gax "^5.0.7"
+    google-gax "^6.0.0"
 
-"@google-cloud/pubsub@6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@google-cloud/pubsub/-/pubsub-6.0.0.tgz#4880339d35ca9bbbe9ae13afa641eba9cc13e435"
-  integrity sha512-hpaUqfgX1Z6tp/2xN9xrAsrcozVOeBgwUogkPtfOP744jOnttMVnRvxidorDVcRfbF6BT+qZo0SjhVjsSAaL3Q==
+"@google-cloud/pubsub@6.0.1":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/@google-cloud/pubsub/-/pubsub-6.0.1.tgz#72b8f31a1625f15009dc724f5742c13b9692a976"
+  integrity sha512-Ms/cE5wyxWoHHj6IUWZO67j7nDhAKa7eAUkUYBJjRie0Yr1V82NclaaIntdqAmmpOgXbIzdDlrIyWXLVMeGSDg==
   dependencies:
-    "@google-cloud/paginator" "^6.0.0"
-    "@google-cloud/precise-date" "^5.0.0"
-    "@google-cloud/projectify" "^5.0.0"
-    "@google-cloud/promisify" "^5.0.0"
-    "@google-cloud/pubsub-api" "^0.2.1"
+    "@google-cloud/paginator" "^7.0.0"
+    "@google-cloud/precise-date" "^6.0.0"
+    "@google-cloud/projectify" "^6.0.0"
+    "@google-cloud/promisify" "^6.0.0"
+    "@google-cloud/pubsub-api" "^0.3.0"
     "@opentelemetry/api" "~1.9.0"
-    "@opentelemetry/core" "^1.30.1"
+    "@opentelemetry/core" "^2.8.0"
     "@opentelemetry/semantic-conventions" "~1.39.0"
     arrify "^2.0.0"
     extend "^3.0.2"
-    google-auth-library "^10.5.0"
-    google-gax "^5.0.5"
-    google-logging-utils "^1.1.3"
+    google-auth-library "^11.0.0"
+    google-gax "^6.0.0"
+    google-logging-utils "^2.0.0"
     heap-js "^2.6.0"
     is-stream-ended "^0.1.4"
     lodash.snakecase "^4.1.1"
@@ -646,19 +646,12 @@
   resolved "https://registry.yarnpkg.com/@opentelemetry/context-async-hooks/-/context-async-hooks-2.10.0.tgz#7259acfd5936ae713be3f6d36249add7ae8aca5a"
   integrity sha512-bvyMcgLEkozzSzpEEEo1OMoeQ97bxj6Qs2uN3mPrSdDvObMI1myffD/BPqcLlzZO9//d1SqQA/WPw7Cz2AiqhA==
 
-"@opentelemetry/core@2.10.0", "@opentelemetry/core@^2.0.0", "@opentelemetry/core@^2.9.0":
+"@opentelemetry/core@2.10.0", "@opentelemetry/core@^2.0.0", "@opentelemetry/core@^2.8.0", "@opentelemetry/core@^2.9.0":
   version "2.10.0"
   resolved "https://registry.yarnpkg.com/@opentelemetry/core/-/core-2.10.0.tgz#aa77f7138e74ba5399d5f3bb0deade0c168f00b2"
   integrity sha512-/wNZ8twnEQQA4HoHu22+vcsdru6pWPWxW+7w+FlxT6Id7PE/WIbZmVKkte+PF72e0F2dnImFeHD2syyE1Mw6MQ==
   dependencies:
     "@opentelemetry/semantic-conventions" "^1.29.0"
-
-"@opentelemetry/core@^1.30.1":
-  version "1.30.1"
-  resolved "https://registry.yarnpkg.com/@opentelemetry/core/-/core-1.30.1.tgz#a0b468bb396358df801881709ea38299fc30ab27"
-  integrity sha512-OOCM2C/QIURhJMuKaekP3TRBxBKxG/TWWA0TL2J6nXUtDnuCtccy49LUJF8xPFXMX+0LMcxFpCo8M9cGY1W6rQ==
-  dependencies:
-    "@opentelemetry/semantic-conventions" "1.28.0"
 
 "@opentelemetry/exporter-logs-otlp-grpc@0.221.0":
   version "0.221.0"
@@ -932,11 +925,6 @@
     "@opentelemetry/core" "2.10.0"
     "@opentelemetry/resources" "2.10.0"
     "@opentelemetry/semantic-conventions" "^1.29.0"
-
-"@opentelemetry/semantic-conventions@1.28.0":
-  version "1.28.0"
-  resolved "https://registry.yarnpkg.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.28.0.tgz#337fb2bca0453d0726696e745f50064411f646d6"
-  integrity sha512-lp4qAiMTD4sNWW4DbKLBkfiMZ4jbAboJIGOQr5DvciMRI494OapieI9qiODpOt0XBr1LjIDy1xAGAnVs5supTA==
 
 "@opentelemetry/semantic-conventions@1.43.0", "@opentelemetry/semantic-conventions@^1.22.0", "@opentelemetry/semantic-conventions@^1.24.0", "@opentelemetry/semantic-conventions@^1.28.0", "@opentelemetry/semantic-conventions@^1.29.0":
   version "1.43.0"
@@ -2632,7 +2620,7 @@ google-auth-library@11.0.1:
     google-logging-utils "^2.0.0"
     jws "^4.0.0"
 
-google-auth-library@^10.0.0, google-auth-library@^10.5.0, google-auth-library@^10.6.2:
+google-auth-library@^10.0.0, google-auth-library@^10.6.2:
   version "10.9.1"
   resolved "https://registry.yarnpkg.com/google-auth-library/-/google-auth-library-10.9.1.tgz#af9852a328a6077e8ffbe776681b4ca9420a1714"
   integrity sha512-i1ydyHrqcIxXkWh/uBmVkzCvIuq5yiK2ATndIe5XxKholrG/MTYP9xGYka4sQhrbIAgGjL2B6NOE7rFaiF3fXw==
@@ -2642,6 +2630,18 @@ google-auth-library@^10.0.0, google-auth-library@^10.5.0, google-auth-library@^1
     gaxios "^7.1.4"
     gcp-metadata "8.1.2"
     google-logging-utils "1.1.3"
+    jws "^4.0.0"
+
+google-auth-library@^11.0.0:
+  version "11.0.2"
+  resolved "https://registry.yarnpkg.com/google-auth-library/-/google-auth-library-11.0.2.tgz#7d08ae14bd81521d27ed27b3f4d0074d2af880a3"
+  integrity sha512-vzpgPutxrghPsnjrjpzLX2bdv8IOL719Rh0oEjGnQu8YCIbnbMuTTQ5zU9LcKvLdOPgCxBwppbvnhgW90Qna5Q==
+  dependencies:
+    base64-js "^1.3.0"
+    ecdsa-sig-formatter "^1.0.11"
+    gaxios "^7.1.4"
+    gcp-metadata "^9.0.0"
+    google-logging-utils "^2.0.0"
     jws "^4.0.0"
 
 google-auth-library@^9.3.0:
@@ -2674,7 +2674,7 @@ google-gax@^4.0.3:
     retry-request "^7.0.0"
     uuid "^9.0.1"
 
-google-gax@^5.0.0, google-gax@^5.0.1, google-gax@^5.0.5, google-gax@^5.0.7:
+google-gax@^5.0.0, google-gax@^5.0.1:
   version "5.0.8"
   resolved "https://registry.yarnpkg.com/google-gax/-/google-gax-5.0.8.tgz#7f1ceab60482c2352387da824400cfc23aff5972"
   integrity sha512-M4vpZcXQIC1gqIVGQ7eaU3jXQA6zecStyTXu514TYfThlgSurYJOxHZo9fzU6hAgwPWvuEynAVHWyaIk80VeEA==
@@ -2691,6 +2691,22 @@ google-gax@^5.0.0, google-gax@^5.0.1, google-gax@^5.0.5, google-gax@^5.0.7:
     retry-request "^8.0.2"
     rimraf "^5.0.1"
 
+google-gax@^6.0.0:
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/google-gax/-/google-gax-6.0.2.tgz#bd9091bc90494258c018a457b4ab48c934cf7a62"
+  integrity sha512-9O+aJyiZrGcEggeG9FoA1R3HRQEUi32ydPSvE42lFbh+D8KwQS57CgMsZ0JPpGCM1LFwEWe+yr2h/53xmgHnQA==
+  dependencies:
+    "@grpc/grpc-js" "^1.12.6"
+    "@grpc/proto-loader" "^0.8.0"
+    duplexify "^4.1.3"
+    google-auth-library "^11.0.0"
+    google-logging-utils "^2.0.0"
+    node-fetch "^3.3.2"
+    object-hash "^3.0.0"
+    proto3-json-serializer "^4.0.0"
+    protobufjs "^7.5.4"
+    retry-request "^9.0.0"
+
 google-logging-utils@1.1.3:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/google-logging-utils/-/google-logging-utils-1.1.3.tgz#17b71f1f95d266d2ddd356b8f00178433f041b17"
@@ -2701,7 +2717,7 @@ google-logging-utils@^0.0.2:
   resolved "https://registry.yarnpkg.com/google-logging-utils/-/google-logging-utils-0.0.2.tgz#5fd837e06fa334da450433b9e3e1870c1594466a"
   integrity sha512-NEgUnEcBiP5HrPzufUkBzJOD/Sxsco3rLNo1F1TNf7ieU8ryUzBhqba8r756CjLX7rn3fHl6iLEwPYuqpoKgQQ==
 
-google-logging-utils@^1.0.0, google-logging-utils@^1.1.3:
+google-logging-utils@^1.0.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/google-logging-utils/-/google-logging-utils-1.2.0.tgz#89dd643f986c765e61bfa2d01cada2292fe5bfd7"
   integrity sha512-WE9av4wKDZgRjBwgVUabocx8T6/7o3Ca1Fat46FXDhXVAFibzNadedcOXrdgd1Kzmk8tsk/9ZH89Wyf/SqeZ3A==
@@ -3632,6 +3648,13 @@ proto3-json-serializer@^2.0.2:
   dependencies:
     protobufjs "^7.2.5"
 
+proto3-json-serializer@^4.0.0:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/proto3-json-serializer/-/proto3-json-serializer-4.0.2.tgz#c25ceb475454eeca562f3f66b3d8229d5af9a0c6"
+  integrity sha512-VUQlb/J2WjOG8BKhdLwJUz+MKxSMtBGYh+TaNmRtiYVhlIzXjzeAGIx7gtc3lXlA2iURzfF2+cXaQvC2ofwzpg==
+  dependencies:
+    protobufjs "^7.5.4"
+
 protobufjs@^7.2.5, protobufjs@^7.3.2, protobufjs@^7.4.0, protobufjs@^7.5.3, protobufjs@^7.5.4, protobufjs@^7.5.5:
   version "7.6.5"
   resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-7.6.5.tgz#7b9250cdaf4a06139a9f0fe468a40d7d4febca71"
@@ -3801,6 +3824,14 @@ retry-request@^8.0.0, retry-request@^8.0.2:
   dependencies:
     extend "^3.0.2"
     teeny-request "^10.0.0"
+
+retry-request@^9.0.0:
+  version "9.0.1"
+  resolved "https://registry.yarnpkg.com/retry-request/-/retry-request-9.0.1.tgz#3845320e83899248528ba39cf105026406ee4cac"
+  integrity sha512-4kGHEBl0ME6gR+8QB1sPMyg58jUxLUcCZNeqLDrfqzk0eWQN8XJFmeu7fmZCjlZCRW0S2u64Ik1HkO/0sWgCYQ==
+  dependencies:
+    extend "^3.0.2"
+    teeny-request "^11.0.0"
 
 reusify@^1.0.4:
   version "1.1.0"
@@ -4172,6 +4203,16 @@ teeny-request@^10.0.0:
   version "10.1.4"
   resolved "https://registry.yarnpkg.com/teeny-request/-/teeny-request-10.1.4.tgz#2d70ab1f387cd12afd1e1f8896fefa33becc513a"
   integrity sha512-R1Cg4Vu0UULeDfHL/kjABLaTW++9yD/B6n2g48y5dJ04hsEaxcfmAqbNDzNsbqAYJyIpZafjklLG9YxRu9uzOg==
+  dependencies:
+    http-proxy-agent "^7.0.0"
+    https-proxy-agent "^7.0.1"
+    node-fetch "^3.3.2"
+    stream-events "^1.0.5"
+
+teeny-request@^11.0.0:
+  version "11.0.1"
+  resolved "https://registry.yarnpkg.com/teeny-request/-/teeny-request-11.0.1.tgz#74a574ef5ce363a3b14e98bd7ae498dc593f8c81"
+  integrity sha512-bNr5j2YjSdajgCVsp+8JVjRf1uHIbpNISLeKp/7V1NnVMX3Gh6H/kECNGlm2Q3I68ACODQ0iv6aZ3Rvm8WgLGA==
   dependencies:
     http-proxy-agent "^7.0.0"
     https-proxy-agent "^7.0.1"
