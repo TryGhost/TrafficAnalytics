@@ -1,5 +1,6 @@
 {
   "name": "traffic-analytics",
+  "private": true,
   "version": "1.0.359",
   "repository": "git@github.com:TryGhost/TrafficAnalytics.git",
   "author": "Ghost Foundation",
