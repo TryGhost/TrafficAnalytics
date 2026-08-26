@@ -5,6 +5,10 @@ inputs:
   docker-image:
     description: Which docker image to run linting and testing on
     required: true
+  upload-coverage:
+    description: Whether to upload the coverage report to Codecov (set true for a single matrix leg only)
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -18,12 +22,16 @@ runs:
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test yarn _lint
 
-    # Test with compose (includes Firestore emulator)
+    # Test with compose (includes Firestore emulator). Mount the coverage dir
+    # only on this one-off run (not on the service definition) so the E2E
+    # phase, which also starts the profile-less test service, cannot clobber
+    # the report on the host.
     - name: Test
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
-        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test
+        mkdir -p "${{ github.workspace }}/coverage"
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm -v "${{ github.workspace }}/coverage:/app/coverage" test
 
     - name: Stop services
       shell: bash
@@ -49,26 +57,13 @@ runs:
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm e2e-test
 
-    # Copy coverage report from test container
-    - name: Copy coverage report
-      shell: bash
-      run: |
-        export DOCKER_IMAGE=${{ inputs.docker-image }}
-        CONTAINER_ID=$(docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml ps -q test | head -1)
-        if [ ! -z "$CONTAINER_ID" ]; then
-          if docker cp $CONTAINER_ID:/app/coverage/cobertura-coverage.xml .; then
-            echo "Coverage report copied successfully"
-          else
-            echo "Warning: No coverage file found"
-          fi
-        fi
-
-    # Upload coverage reports
+    # Upload coverage reports. The test service mounts ./coverage from the
+    # host (see compose.ci.yml), so the cobertura report is already on disk.
     - name: Upload coverage reports
       uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
-      if: success() && inputs.node-version == 20
+      if: success() && inputs.upload-coverage == 'true'
       with:
-        files: ./cobertura-coverage.xml
+        files: ./coverage/cobertura-coverage.xml
         fail_ci_if_error: false
 
     # Cleanup compose services

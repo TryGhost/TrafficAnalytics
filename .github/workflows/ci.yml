@@ -52,6 +52,7 @@ jobs:
         uses: ./.github/actions/lint-and-test
         with:
           docker-image: ${{ steps.docker-build.outputs.base-image-name }}
+          upload-coverage: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
 
       - name: Get tree SHA
         id: tree
