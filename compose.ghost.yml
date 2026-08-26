@@ -1,27 +1,26 @@
 # Override file to allow running Ghost locally against the analytics service in this repo
-# Usage: `docker compose -f compose.ghost.yml -f compose.yml up`
+# Usage: Start Ghost with `pnpm dev:analytics:local`, then run `yarn dev:ghost`
 
 services:
   analytics-service:
     volumes:
-      - ghost_shared-config:/mnt/shared-config:ro
+      - ghost-shared-config:/mnt/shared-config:ro
     networks:
-      - ghost_default
+      ghost:
+        aliases:
+          - traffic-analytics-local
   worker:
     volumes:
-      - ghost_shared-config:/mnt/shared-config:ro
+      - ghost-shared-config:/mnt/shared-config:ro
     networks:
-      - ghost_default
-  analytics-service-proxy:
-    volumes:
-      - ghost_shared-config:/mnt/shared-config:ro
-    networks:
-      - ghost_default
+      - ghost
 
 volumes:
-  ghost_shared-config:
+  ghost-shared-config:
     external: true
+    name: ghost-dev_shared-config
 
 networks:
-  ghost_default:
+  ghost:
     external: true
+    name: ghost_dev
