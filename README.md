@@ -72,12 +72,10 @@ Pre-requisites:
 
 If you want to manually test the Analytics Service + Ghost together locally, there are just a few more steps to follow. You'll need this repo and TryGhost/Ghost cloned locally.
 
-1. In Ghost, add `ANALYTICS_PROXY_TARGET=traffic-analytics-analytics-service-1:3000` to your `.env` file. This tells Ghost's `caddy` service to route requests to `/.ghost/analytics/**` to this instance of the analytics service instead of the instance in Ghost's compose project.
-1. In Ghost, run `docker compose --profile analytics up -d`. This starts `tinybird-local`, deploys the Tinybird schema, and stored required tokens in a `shared-config` named volume.
-1. In Ghost, run `docker compose --profile split up`. This runs Caddy, Ghost's backend and Ghost Admin. Ghost will be available at `http://localhost:2368`
-1. In this repo, run `yarn dev:ghost` instead of `yarn dev`. This runs the analytics service within Ghost's docker network, and mounts the `shared-config` volume so it can access the tokens it needs to send events to `tinybird-local`.
+1. In Ghost, run `pnpm dev:analytics:local`. This starts Ghost, `tinybird-local`, and the published analytics image, while routing `/.ghost/analytics/**` requests to the stable network alias provided by this repository. The published analytics container remains running, but the gateway sends page hits to this local checkout instead.
+1. In this repo, run `yarn dev:ghost`. This starts the batch-mode ingest service and worker, joins them to Ghost's Docker network, and mounts its `shared-config` volume so they can reach `tinybird-local` with the generated tracker token.
 
-That's it! Now when you visit Ghost at `http://localhost:2368`, you should see the requests to `/.ghost/analytics/api/v1/page_hit` in the request logs in this repo, and the `worker` service will send the events to the `tinybird-local` service running in the Ghost project.
+Now when you visit Ghost at `http://localhost:2368`, you should see requests to `/.ghost/analytics/api/v1/page_hit` in this repository's logs, and the worker will send those events to the `tinybird-local` service running in the Ghost project.
 
 ## Test
 
