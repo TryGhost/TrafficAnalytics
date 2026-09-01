@@ -1107,10 +1107,10 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.1.tgz#35adc6222e3662fa2222ce123b961476a746b9ea"
   integrity sha512-HqmEUIGRJ5fSXchkVgR5F7qn48bDBzv0kWj/Kfu5e6uci4UlEeng4331LnBkWffb++Ei3FOVLxo8JJWMFBDMeQ==
 
-"@tryghost/errors@3.3.10":
-  version "3.3.10"
-  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.3.10.tgz#d2eea5b3e5997e6eb2d6e2ac2f2236ba0e6551fe"
-  integrity sha512-NM0N1Dykr7HxRPYRRFtBF51/AAaGNHnKOerM+I0nwrO6ujx3z5suoX4BvFiL+n+ZM8gLjk91yveCQLRlBLUWkg==
+"@tryghost/errors@3.3.12":
+  version "3.3.12"
+  resolved "https://registry.yarnpkg.com/@tryghost/errors/-/errors-3.3.12.tgz#a511fe3159c1c86f859e4aa1073ab54e9daabf8c"
+  integrity sha512-fjZp4K2u7ic5zDJ1+i+wru2+9URcbqEmYDzS6PZsiXr3z/gI1QSkwGvpVdoBHnyDEWCorR5KTqXts8Fg9H9L4Q==
 
 "@tryghost/referrer-parser@0.1.21":
   version "0.1.21"
