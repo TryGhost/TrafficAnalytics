@@ -140,5 +140,5 @@ Coverage is measured across the unit **and** integration suites together and enf
 - Zod for schemas, compiled to ajv validators (see Schemas & Validation above)
 - TypeScript with strict mode enabled
 - Docker-first development approach
-- pnpm is the package manager (pinned via the `packageManager` field, provisioned by corepack); `.npmrc` sets a hoisted `node_modules` layout for parity with the container workflow
+- pnpm is the package manager (pinned via the `packageManager` field, provisioned by corepack); pnpm settings (supply-chain soak, allowed build scripts) live in `pnpm-workspace.yaml`
 - All external dependencies are kept in package.json (not bundled in build)
