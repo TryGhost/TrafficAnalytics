@@ -11,17 +11,15 @@ runs:
   steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-    # Lint
     - name: Lint
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test yarn _lint
 
-    # Test with compose (includes Firestore emulator). The coverage dir is
-    # mounted on this one-off run rather than on the service definition, so the
-    # E2E phase — which also starts the profile-less test service — cannot
-    # clobber the report. It is left in the workspace for the caller to upload.
+    # Run tests with docker compose.
+    # The coverage dir is mounted on this one-off run rather than on the service definition, so the
+    # E2E phase cannot clobber the report. The coverage report is left in the workspace for the next step to upload.
     - name: Test
       shell: bash
       run: |
@@ -35,7 +33,6 @@ runs:
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml down
 
-    # E2E Test
     - name: Start services for E2E tests
       env:
         COMPOSE_PROFILES: batch,proxy
@@ -43,7 +40,7 @@ runs:
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml up -d
-        
+
     - name: Run E2E tests
       env:
         COMPOSE_PROFILES: batch,proxy
@@ -53,7 +50,6 @@ runs:
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm e2e-test
 
-    # Cleanup compose services
     - name: Cleanup compose services
       shell: bash
       if: always()
