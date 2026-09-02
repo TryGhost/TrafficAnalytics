@@ -24,15 +24,18 @@ runs:
       id: extract-node-version
       uses: ./.github/actions/extract-node-version
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+
     - name: Setup Node.js
       uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
       with:
         node-version: ${{ steps.extract-node-version.outputs.node-version }}
-        cache: 'yarn'
+        cache: 'pnpm'
 
     - name: Install dependencies
       shell: bash
-      run: yarn install --ignore-scripts --frozen-lockfile
+      run: pnpm install --ignore-scripts --frozen-lockfile
 
     - name: Get Playwright version
       id: playwright-version

@@ -1,0 +1,7 @@
+# pnpm settings (not a monorepo — no `packages:`; pnpm reads its config here).
+# 3-day supply-chain soak, matching the `minimumReleaseAge` Renovate already
+# applies via the shared TryGhost/renovate-config this repo extends.
+minimumReleaseAge: 4320 # 3 days in minutes
+minimumReleaseAgeExclude:
+  - '@tryghost/*'         # first-party, we publish these
+  - 'eslint-plugin-ghost' # first-party, off the @tryghost/ scope
