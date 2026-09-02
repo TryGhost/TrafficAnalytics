@@ -21,7 +21,7 @@ export default defineConfig({
             thresholds: {
                 // Floors set a couple of points below measured combined
                 // coverage (lines 95.25%, statements 95.27%, functions 96.73%,
-                // branches 88.28%) for stability. Raise, never lower.
+                // branches 88.28%) for stability.
                 lines: 93,
                 functions: 94,
                 branches: 85,
@@ -46,7 +46,6 @@ export default defineConfig({
                     setupFiles: ['test/setup/integration.ts'],
                     restoreMocks: true,
                     unstubEnvs: true,
-                    // Integration tests typically have longer timeouts
                     testTimeout: 30000,
                     hookTimeout: 30000,
                     // Run integration tests sequentially to avoid shared emulator conflicts
