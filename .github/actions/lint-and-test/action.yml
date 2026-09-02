@@ -5,10 +5,6 @@ inputs:
   docker-image:
     description: Which docker image to run linting and testing on
     required: true
-  upload-coverage:
-    description: Whether to upload the coverage report to Codecov (set true for a single matrix leg only)
-    required: false
-    default: "false"
 
 runs:
   using: composite
@@ -22,10 +18,10 @@ runs:
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test yarn _lint
 
-    # Test with compose (includes Firestore emulator). Mount the coverage dir
-    # only on this one-off run (not on the service definition) so the E2E
-    # phase, which also starts the profile-less test service, cannot clobber
-    # the report on the host.
+    # Test with compose (includes Firestore emulator). The coverage dir is
+    # mounted on this one-off run rather than on the service definition, so the
+    # E2E phase — which also starts the profile-less test service — cannot
+    # clobber the report. It is left in the workspace for the caller to upload.
     - name: Test
       shell: bash
       run: |
@@ -56,15 +52,6 @@ runs:
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
         docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm e2e-test
-
-    # Upload coverage reports. The test service mounts ./coverage from the
-    # host (see compose.ci.yml), so the cobertura report is already on disk.
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
-      if: success() && inputs.upload-coverage == 'true'
-      with:
-        files: ./coverage/cobertura-coverage.xml
-        fail_ci_if_error: false
 
     # Cleanup compose services
     - name: Cleanup compose services
