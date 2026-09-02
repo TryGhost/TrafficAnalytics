@@ -132,6 +132,8 @@ Tests use Vitest and follow the same directory structure as the source code. Whe
 - Ensure all new code has test coverage
 - Do not add constant timeouts to tests
 
+Coverage is measured across the unit **and** integration suites together and enforced in CI. CI runs `yarn _test` (inside the test container), which performs the type check and then the combined coverage run (the `unit` and `integration` projects in `vitest.config.ts`), failing if line/function/branch/statement coverage drops below the thresholds set there. Locally, `yarn test` wraps the same thing in Docker; `yarn test:unit` / `yarn test:integration` remain for fast per-suite iteration.
+
 ## Development Notes
 
 - The project uses Fastify for high-performance HTTP handling
