@@ -44,10 +44,10 @@ sequenceDiagram
 
 The "Process Request" and "forward to Tinybird" steps above happen in one of two ways, and this is how the service runs by default in development and production:
 
-- **Batch mode (default)** — The ingest service validates the request, filters bot traffic, publishes non-bot raw events to a Google Cloud Pub/Sub topic, and immediately returns `202`. A separate **worker** process consumes from the subscription, enriches each event (user-agent parsing, referrer parsing, user signature), batches events, and forwards them to Tinybird's `/v0/events` endpoint. This decouples request handling from Tinybird ingestion. Started with `pnpm dev` (alias for `pnpm dev:batch`).
+- **Batch mode (default)** — The ingest service validates requests and publishes events to Google Cloud Pub/Sub. A separate **worker** consumes page hits and automation events, batches them, and forwards them to Tinybird. Automation run and run-step events are kept in separate Tinybird batches. This decouples request handling from Tinybird ingestion. Started with `pnpm dev` (alias for `pnpm dev:batch`).
 - **Proxy mode (synchronous)** — With no Pub/Sub topic configured, the ingest service filters bot traffic, enriches non-bot requests inline, and proxies them straight to Tinybird in the same request/response cycle. Started with `pnpm dev:proxy`.
 
-Both modes run from the same image; the role is selected by the `WORKER_MODE` environment variable (worker vs. ingest) and the presence of `PUBSUB_TOPIC_PAGE_HITS_RAW` (batch vs. proxy). See [docs/architecture.md](docs/architecture.md) for a diagram and full detail.
+Both modes run from the same image; the role is selected by the `WORKER_MODE` environment variable (worker vs. ingest). Page hits use `PUBSUB_TOPIC_PAGE_HITS_RAW` and automation events use `PUBSUB_TOPIC_AUTOMATION_EVENTS` to select batch vs. inline handling independently. See [docs/architecture.md](docs/architecture.md) for a diagram and full detail.
 
 ## Features
 

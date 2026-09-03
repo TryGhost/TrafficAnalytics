@@ -1,4 +1,4 @@
-import {PubSub} from '@google-cloud/pubsub';
+import {PubSub, type Topic} from '@google-cloud/pubsub';
 import type {FastifyBaseLogger} from 'fastify';
 
 export interface PublishEventOptions {
@@ -10,6 +10,7 @@ export interface PublishEventOptions {
 class EventPublisher {
     private static instance: EventPublisher;
     private pubsub: PubSub;
+    private topics = new Map<string, Topic>();
 
     private constructor() {
         this.pubsub = new PubSub({
@@ -25,6 +26,15 @@ class EventPublisher {
         return EventPublisher.instance;
     }
 
+    private getTopic(name: string): Topic {
+        let topic = this.topics.get(name);
+        if (!topic) {
+            topic = this.pubsub.topic(name);
+            this.topics.set(name, topic);
+        }
+        return topic;
+    }
+
     async publishEvent({topic, payload, logger}: PublishEventOptions): Promise<string> {
         try {
             const message = {
@@ -32,7 +42,7 @@ class EventPublisher {
                 timestamp: new Date().toISOString()
             };
 
-            const messageId = await this.pubsub.topic(topic).publishMessage(message);
+            const messageId = await this.getTopic(topic).publishMessage(message);
 
             logger.debug({
                 event: 'EventPublishSuccessful',
