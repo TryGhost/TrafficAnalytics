@@ -9,20 +9,20 @@ TrafficAnalytics is a web analytics proxy service for Ghost that processes and e
 ## Key Commands
 
 ###
-- `yarn build` - build TypeScript code
+- `pnpm build` - build TypeScript code
 - `docker compose build` - Build docker image
 
 ### Development
-- `yarn dev` - Start development server in Docker
+- `pnpm dev` - Start development server in Docker
 
 ### Testing
-- `yarn test` - Run all tests in Docker
-- `yarn test:unit` - Run unit tests in Docker
-- `yarn test:integration` - Run integration tests in Docker
-- `yarn test:e2e` - Run e2e tests in Docker
+- `pnpm test` - Run all tests in Docker
+- `pnpm test:unit` - Run unit tests in Docker
+- `pnpm test:integration` - Run integration tests in Docker
+- `pnpm test:e2e` - Run e2e tests in Docker
 
 ### Linting
-- `yarn lint` - Run linter in Docker
+- `pnpm lint` - Run linter in Docker
 
 ## Run Modes
 
@@ -132,7 +132,7 @@ Tests use Vitest and follow the same directory structure as the source code. Whe
 - Ensure all new code has test coverage
 - Do not add constant timeouts to tests
 
-Coverage is measured across the unit **and** integration suites together and enforced in CI. CI runs `yarn _test` (inside the test container), which performs the type check and then the combined coverage run (the `unit` and `integration` projects in `vitest.config.ts`), failing if line/function/branch/statement coverage drops below the thresholds set there. Locally, `yarn test` wraps the same thing in Docker; `yarn test:unit` / `yarn test:integration` remain for fast per-suite iteration.
+Coverage is measured across the unit **and** integration suites together and enforced in CI. CI runs `pnpm _test` (inside the test container), which performs the type check and then the combined coverage run (the `unit` and `integration` projects in `vitest.config.ts`), failing if line/function/branch/statement coverage drops below the thresholds set there. Locally, `pnpm test` wraps the same thing in Docker; `pnpm test:unit` / `pnpm test:integration` remain for fast per-suite iteration.
 
 ## Development Notes
 
@@ -140,4 +140,5 @@ Coverage is measured across the unit **and** integration suites together and enf
 - Zod for schemas, compiled to ajv validators (see Schemas & Validation above)
 - TypeScript with strict mode enabled
 - Docker-first development approach
+- pnpm is the package manager (pinned via the `packageManager` field, provisioned by corepack); pnpm settings (supply-chain soak, allowed build scripts) live in `pnpm-workspace.yaml`
 - All external dependencies are kept in package.json (not bundled in build)

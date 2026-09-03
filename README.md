@@ -44,8 +44,8 @@ sequenceDiagram
 
 The "Process Request" and "forward to Tinybird" steps above happen in one of two ways, and this is how the service runs by default in development and production:
 
-- **Batch mode (default)** — The ingest service validates the request, filters bot traffic, publishes non-bot raw events to a Google Cloud Pub/Sub topic, and immediately returns `202`. A separate **worker** process consumes from the subscription, enriches each event (user-agent parsing, referrer parsing, user signature), batches events, and forwards them to Tinybird's `/v0/events` endpoint. This decouples request handling from Tinybird ingestion. Started with `yarn dev` (alias for `yarn dev:batch`).
-- **Proxy mode (synchronous)** — With no Pub/Sub topic configured, the ingest service filters bot traffic, enriches non-bot requests inline, and proxies them straight to Tinybird in the same request/response cycle. Started with `yarn dev:proxy`.
+- **Batch mode (default)** — The ingest service validates the request, filters bot traffic, publishes non-bot raw events to a Google Cloud Pub/Sub topic, and immediately returns `202`. A separate **worker** process consumes from the subscription, enriches each event (user-agent parsing, referrer parsing, user signature), batches events, and forwards them to Tinybird's `/v0/events` endpoint. This decouples request handling from Tinybird ingestion. Started with `pnpm dev` (alias for `pnpm dev:batch`).
+- **Proxy mode (synchronous)** — With no Pub/Sub topic configured, the ingest service filters bot traffic, enriches non-bot requests inline, and proxies them straight to Tinybird in the same request/response cycle. Started with `pnpm dev:proxy`.
 
 Both modes run from the same image; the role is selected by the `WORKER_MODE` environment variable (worker vs. ingest) and the presence of `PUBSUB_TOPIC_PAGE_HITS_RAW` (batch vs. proxy). See [docs/architecture.md](docs/architecture.md) for a diagram and full detail.
 
@@ -66,27 +66,27 @@ Pre-requisites:
 - Docker Compose
 
 1. `git clone` this repo & `cd` into it as usual
-2. `yarn dev` to build & start all required development services. The Analytics Service will be reachable at `http://localhost:3000`.
+2. `pnpm dev` to build & start all required development services. The Analytics Service will be reachable at `http://localhost:3000`.
 
 ## Develop locally with Ghost
 
 If you want to manually test the Analytics Service + Ghost together locally, there are just a few more steps to follow. You'll need this repo and TryGhost/Ghost cloned locally.
 
 1. In Ghost, run `pnpm dev:analytics:local`. This starts Ghost, `tinybird-local`, and the published analytics image, while routing `/.ghost/analytics/**` requests to the stable network alias provided by this repository. The published analytics container remains running, but the gateway sends page hits to this local checkout instead.
-1. In this repo, run `yarn dev:ghost`. This starts the batch-mode ingest service and worker, joins them to Ghost's Docker network, and mounts its `shared-config` volume so they can reach `tinybird-local` with the generated tracker token.
+1. In this repo, run `pnpm dev:ghost`. This starts the batch-mode ingest service and worker, joins them to Ghost's Docker network, and mounts its `shared-config` volume so they can reach `tinybird-local` with the generated tracker token.
 
 Now when you visit Ghost at `http://localhost:2368`, you should see requests to `/.ghost/analytics/api/v1/page_hit` in this repository's logs, and the worker will send those events to the `tinybird-local` service running in the Ghost project.
 
 ## Test
 
-- `yarn test:types` — run Typescript typechecks in Docker
-- `yarn test:unit` — run all unit tests in Docker
-- `yarn test:integration` — run all integration tests in Docker
-- `yarn test` — run typechecks, unit tests and integration tests in Docker
-- `yarn test:e2e` — run e2e tests (with wiremock) in Docker
+- `pnpm test:types` — run Typescript typechecks in Docker
+- `pnpm test:unit` — run all unit tests in Docker
+- `pnpm test:integration` — run all integration tests in Docker
+- `pnpm test` — run typechecks, unit tests and integration tests in Docker
+- `pnpm test:e2e` — run e2e tests (with wiremock) in Docker
 
 ## Lint
-- `yarn lint` run eslint in docker compose
+- `pnpm lint` run eslint in docker compose
 
 
 ## Multi-Worktree Development

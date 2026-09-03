@@ -82,7 +82,7 @@ A nightly (06:00 UTC) scheduled job (plus manual dispatch) that prunes old GHCR 
 
 > [`test.yml`](../.github/workflows/test.yml) is a manual-dispatch placeholder and is not part of the deploy pipeline.
 
-## Local release helper — `yarn ship`
+## Local release helper — `pnpm ship`
 
 [`scripts/ship.js`](../scripts/ship.js) is an **optional** local helper (not part of CI). Run from an up-to-date `main`, it prompts for a bump type, creates a `release/vX.Y.Z` branch with the version bump committed, and pushes it so you can open a PR. The automated version bump described above still happens in `deploy.yml` when that PR merges.
 

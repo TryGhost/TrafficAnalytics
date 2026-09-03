@@ -1,5 +1,5 @@
 # Override file to allow running Ghost locally against the analytics service in this repo
-# Usage: Start Ghost with `pnpm dev:analytics:local`, then run `yarn dev:ghost`
+# Usage: Start Ghost with `pnpm dev:analytics:local`, then run `pnpm dev:ghost`
 
 services:
   analytics-service:

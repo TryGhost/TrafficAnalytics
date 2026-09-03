@@ -15,7 +15,7 @@ runs:
       shell: bash
       run: |
         export DOCKER_IMAGE=${{ inputs.docker-image }}
-        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test yarn _lint
+        docker compose -f compose.yml -f ${{ github.action_path }}/compose.ci.yml run --rm test pnpm _lint
 
     # Run tests with docker compose.
     # The coverage dir is mounted on this one-off run rather than on the service definition, so the
