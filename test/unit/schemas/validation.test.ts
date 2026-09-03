@@ -3,6 +3,8 @@ import {z} from 'zod';
 import {
     createValidator,
     validatorCompiler,
+    AutomationEventSchema,
+    AutomationRequestBodySchema,
     PageHitRawSchema,
     PageHitRequestBodySchema,
     PageHitRequestHeadersSchema,
@@ -10,6 +12,22 @@ import {
 } from '../../../src/schemas';
 
 const UUID = '940b73e9-4952-4752-b23d-9486f999c47e';
+
+function validAutomationEvent() {
+    return {
+        type: 'automation_runs',
+        site_uuid: UUID,
+        id: '6a99cd8cb5ac7c0052553383',
+        updated_at: '2026-09-03T19:42:04.000Z',
+        payload: {
+            id: '6a99cd8cb5ac7c0052553383',
+            automation_id: '6a99cd6cb5ac7c0052553378',
+            created_at: '2026-09-03T19:42:04.000Z',
+            updated_at: '2026-09-03T19:42:04.000Z',
+            site_uuid: UUID
+        }
+    };
+}
 
 function validRawEvent(): Record<string, unknown> & {payload: Record<string, unknown>} {
     return {
@@ -69,6 +87,21 @@ describe('schema validation', () => {
     describe('the ajv projection agrees with Zod', () => {
         // Built lazily so each case is constructed inside its own `it`.
         const cases: Array<[string, z.ZodType, () => unknown]> = [
+            ['a valid automation event', AutomationEventSchema, () => validAutomationEvent()],
+            ['a valid automation event batch', AutomationRequestBodySchema, () => [validAutomationEvent()]],
+            ['an empty automation event batch', AutomationRequestBodySchema, () => []],
+            ['an automation event with a field not included in the schema', AutomationEventSchema, () => ({
+                ...validAutomationEvent(),
+                payload: {...validAutomationEvent().payload, email: 'private@example.com'}
+            })],
+            ['an automation event with the wrong payload for its discriminator', AutomationEventSchema, () => ({
+                ...validAutomationEvent(),
+                type: 'automation_run_steps'
+            })],
+            ['an automation event with an invalid BSON ObjectId', AutomationEventSchema, () => ({
+                ...validAutomationEvent(),
+                id: 'not-an-object-id'
+            })],
             ['a valid raw event', PageHitRawSchema, () => validRawEvent()],
             ['a raw event with a bad site_uuid', PageHitRawSchema, () => ({...validRawEvent(), site_uuid: 'nope'})],
             ['a raw event with a non-canonical timestamp', PageHitRawSchema, () => ({...validRawEvent(), timestamp: '2025-04-14T22:16:06Z'})],
