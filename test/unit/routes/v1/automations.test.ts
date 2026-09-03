@@ -2,6 +2,11 @@ import fastify, {FastifyInstance} from 'fastify';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import v1Routes from '../../../../src/routes/v1';
 import {serializerCompiler, validatorCompiler} from '../../../../src/schemas';
+import * as publisherModule from '../../../../src/services/events/publisher';
+
+vi.mock('../../../../src/services/events/publisher', () => ({
+    publishEvent: vi.fn()
+}));
 
 const SITE_UUID = '45d99892-6304-4251-a75d-2d9ff9c5b81f';
 
@@ -44,8 +49,11 @@ describe('automations routes', () => {
     let fetchMock: ReturnType<typeof vi.fn>;
 
     beforeEach(async () => {
+        vi.clearAllMocks();
+        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', undefined);
         vi.stubEnv('PROXY_TARGET', 'https://api.tinybird.co/v0/events');
         vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'test-token');
+        vi.mocked(publisherModule.publishEvent).mockResolvedValue('message-id');
         fetchMock = vi.fn().mockResolvedValue({ok: true});
         vi.stubGlobal('fetch', fetchMock);
 
@@ -127,6 +135,81 @@ describe('automations routes', () => {
                 })
             })
         );
+    });
+
+    it('publishes a JSON event to Pub/Sub in batch mode', async () => {
+        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
+        const event = automationRunEvent();
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/automations',
+            payload: event
+        });
+
+        expect(response.statusCode).toBe(202);
+        expect(response.body).toBe('');
+        expect(publisherModule.publishEvent).toHaveBeenCalledWith({
+            topic: 'automation-events-topic',
+            payload: event,
+            logger: expect.anything()
+        });
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('publishes each NDJSON event to Pub/Sub in batch mode', async () => {
+        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
+        const runEvent = automationRunEvent();
+        const stepEvent = automationRunStepEvent();
+        let firstPublishResolved = false;
+        vi.mocked(publisherModule.publishEvent)
+            .mockImplementationOnce(async () => {
+                await new Promise<void>(resolve => setImmediate(resolve));
+                firstPublishResolved = true;
+                return 'first-message-id';
+            })
+            .mockImplementationOnce(async () => {
+                expect(firstPublishResolved).toBe(false);
+                return 'second-message-id';
+            });
+
+        const responsePromise = app.inject({
+            method: 'POST',
+            url: '/api/v1/automations',
+            headers: {
+                'content-type': 'application/x-ndjson'
+            },
+            payload: [JSON.stringify(runEvent), JSON.stringify(stepEvent)].join('\n')
+        });
+        const response = await responsePromise;
+
+        expect(response.statusCode).toBe(202);
+        expect(publisherModule.publishEvent).toHaveBeenNthCalledWith(1, {
+            topic: 'automation-events-topic',
+            payload: runEvent,
+            logger: expect.anything()
+        });
+        expect(publisherModule.publishEvent).toHaveBeenNthCalledWith(2, {
+            topic: 'automation-events-topic',
+            payload: stepEvent,
+            logger: expect.anything()
+        });
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('returns 500 when publishing to Pub/Sub fails', async () => {
+        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
+        vi.mocked(publisherModule.publishEvent).mockRejectedValue(new Error('Pub/Sub unavailable'));
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/automations',
+            payload: automationRunEvent()
+        });
+
+        expect(response.statusCode).toBe(500);
+        expect(response.json()).toEqual({error: 'Failed to process automation events'});
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('rejects an event missing a required payload field', async () => {

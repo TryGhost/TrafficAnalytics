@@ -23,6 +23,7 @@ services:
       - SALT_STORE_TYPE=${SALT_STORE_TYPE:-firestore}
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
+      - PUBSUB_TOPIC_AUTOMATION_EVENTS=traffic-analytics-automation-events
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
       - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
       - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
@@ -62,6 +63,7 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+      - PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS=traffic-analytics-automation-events-sub
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
       - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
       - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
@@ -147,6 +149,8 @@ services:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-dev
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+      - PUBSUB_TOPIC_AUTOMATION_EVENTS=traffic-analytics-automation-events
+      - PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS=traffic-analytics-automation-events-sub
     healthcheck:
       test: ["CMD", "sh", "-c", "curl -f http://localhost:8085 && test -f /tmp/pubsub-ready"]
       interval: 5s
@@ -217,6 +221,8 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub-test:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=test-traffic-analytics-page-hits-raw-sub
+      - PUBSUB_TOPIC_AUTOMATION_EVENTS=test-traffic-analytics-automation-events
+      - PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS=test-traffic-analytics-automation-events-sub
       - FIRESTORE_DATABASE_ID=(default)
       - FIRESTORE_SALT_COLLECTION=salts
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null

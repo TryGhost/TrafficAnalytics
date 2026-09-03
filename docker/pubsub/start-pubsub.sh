@@ -10,14 +10,18 @@
 # Set defaults
 HOST=0.0.0.0:8085
 PROJECT_ID=${GOOGLE_CLOUD_PROJECT:-traffic-analytics-dev}
-TOPIC_NAME=${PUBSUB_TOPIC_PAGE_HITS_RAW:-traffic-analytics-page-hits-raw}
-SUBSCRIPTION_NAME=${PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW:-traffic-analytics-page-hits-raw-subscription}
+PAGE_HITS_TOPIC_NAME=${PUBSUB_TOPIC_PAGE_HITS_RAW:-traffic-analytics-page-hits-raw}
+PAGE_HITS_SUBSCRIPTION_NAME=${PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW:-traffic-analytics-page-hits-raw-subscription}
+AUTOMATION_EVENTS_TOPIC_NAME=${PUBSUB_TOPIC_AUTOMATION_EVENTS:-traffic-analytics-automation-events}
+AUTOMATION_EVENTS_SUBSCRIPTION_NAME=${PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS:-traffic-analytics-automation-events-sub}
 
 echo "Starting Pub/Sub emulator..."
 echo "Host: $HOST"
 echo "Project: $PROJECT_ID"
-echo "Topic: $TOPIC_NAME"
-echo "Subscription: $SUBSCRIPTION_NAME"
+echo "Page hits topic: $PAGE_HITS_TOPIC_NAME"
+echo "Page hits subscription: $PAGE_HITS_SUBSCRIPTION_NAME"
+echo "Automation events topic: $AUTOMATION_EVENTS_TOPIC_NAME"
+echo "Automation events subscription: $AUTOMATION_EVENTS_SUBSCRIPTION_NAME"
 
 # Start the emulator in the background
 gcloud beta emulators pubsub start --host-port=${HOST} --project=${PROJECT_ID} &
@@ -37,29 +41,39 @@ if [[ "$PROJECT_ID" == *"test"* ]]; then
     echo "Test environment detected - skipping automatic topic/subscription creation"
     echo "Tests will manage their own Pub/Sub resources"
 else
-    # Create the topic via REST API
-    echo "Creating topic: $TOPIC_NAME"
-    if curl -s -o /dev/null -w "%{http_code}" -X PUT http://localhost:8085/v1/projects/${PROJECT_ID}/topics/${TOPIC_NAME} | grep -q "200"; then
-        echo "Topic created successfully: $TOPIC_NAME"
-    else
-        echo "Failed to create topic: $TOPIC_NAME"
-        exit 1
-    fi
+    create_topic() {
+        local topic_name=$1
+        echo "Creating topic: $topic_name"
+        if curl -s -o /dev/null -w "%{http_code}" -X PUT http://localhost:8085/v1/projects/${PROJECT_ID}/topics/${topic_name} | grep -q "200"; then
+            echo "Topic created successfully: $topic_name"
+        else
+            echo "Failed to create topic: $topic_name"
+            exit 1
+        fi
+    }
 
-    # Create the subscription via REST API
-    echo "Creating subscription: $SUBSCRIPTION_NAME"
-    SUBSCRIPTION_DATA='{"topic": "projects/'${PROJECT_ID}'/topics/'${TOPIC_NAME}'"}'
-    if curl -s -o /dev/null -w "%{http_code}" -X PUT \
-        -H "Content-Type: application/json" \
-        -d "$SUBSCRIPTION_DATA" \
-        http://localhost:8085/v1/projects/${PROJECT_ID}/subscriptions/${SUBSCRIPTION_NAME} | grep -q "200"; then
-        echo "Subscription created successfully: $SUBSCRIPTION_NAME"
-    else
-        echo "Failed to create subscription: $SUBSCRIPTION_NAME"
-        exit 1
-    fi
+    create_subscription() {
+        local topic_name=$1
+        local subscription_name=$2
+        echo "Creating subscription: $subscription_name"
+        local subscription_data='{"topic": "projects/'${PROJECT_ID}'/topics/'${topic_name}'"}'
+        if curl -s -o /dev/null -w "%{http_code}" -X PUT \
+            -H "Content-Type: application/json" \
+            -d "$subscription_data" \
+            http://localhost:8085/v1/projects/${PROJECT_ID}/subscriptions/${subscription_name} | grep -q "200"; then
+            echo "Subscription created successfully: $subscription_name"
+        else
+            echo "Failed to create subscription: $subscription_name"
+            exit 1
+        fi
+    }
 
-    # Verify topic and subscription were created
+    create_topic "$PAGE_HITS_TOPIC_NAME"
+    create_topic "$AUTOMATION_EVENTS_TOPIC_NAME"
+    create_subscription "$PAGE_HITS_TOPIC_NAME" "$PAGE_HITS_SUBSCRIPTION_NAME"
+    create_subscription "$AUTOMATION_EVENTS_TOPIC_NAME" "$AUTOMATION_EVENTS_SUBSCRIPTION_NAME"
+
+    # Verify topics and subscriptions were created
     echo "Verifying topic and subscription creation..."
     curl -s http://localhost:8085/v1/projects/${PROJECT_ID}/topics
     curl -s http://localhost:8085/v1/projects/${PROJECT_ID}/subscriptions
