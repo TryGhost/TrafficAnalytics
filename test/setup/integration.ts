@@ -4,6 +4,8 @@ import {createTopic, createSubscription, deleteSubscription, deleteTopic, cleanu
 // Use the base environment variable names, but we'll ensure cleanup between tests
 const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
 const subscriptionName = process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw-sub';
+const automationTopicName = process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS || 'test-traffic-analytics-automation-events';
+const automationSubscriptionName = process.env.PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS || 'test-traffic-analytics-automation-events-sub';
 
 // eslint-disable-next-line ghost/mocha/no-top-level-hooks
 beforeEach(async () => {
@@ -13,16 +15,22 @@ beforeEach(async () => {
     
     // Clean up the main test resources if they exist
     await deleteSubscription(subscriptionName);
+    await deleteSubscription(automationSubscriptionName);
     await deleteTopic(topicName);
+    await deleteTopic(automationTopicName);
     
     // Create fresh resources for this test
     await createTopic(topicName);
     await createSubscription(topicName, subscriptionName);
+    await createTopic(automationTopicName);
+    await createSubscription(automationTopicName, automationSubscriptionName);
 });
 
 // eslint-disable-next-line ghost/mocha/no-top-level-hooks  
 afterEach(async () => {
     await deleteSubscription(subscriptionName);
+    await deleteSubscription(automationSubscriptionName);
     await deleteTopic(topicName);
+    await deleteTopic(automationTopicName);
     vi.unstubAllEnvs();
 });

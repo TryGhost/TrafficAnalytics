@@ -67,6 +67,12 @@ export function createValidator<T extends ZodType>(schema: T): (data: unknown) =
     };
 }
 
+// Parsed NDJSON is already structured JSON, so routes consuming it need the same strict,
+// non-coercing behavior as other data paths rather than HTTP parameter coercion.
+export const dataValidatorCompiler: FastifySchemaCompiler<ZodType> = ({schema}) => {
+    return dataAjv.compile(toJsonSchema(schema, 'input'));
+};
+
 // Returns ajv's compiled function directly rather than wrapping it. Fastify reads
 // `.errors` off it on failure, which is what gives validation failures their
 // `body/timestamp must ...` messages and the structured `validation` array the error
