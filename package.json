@@ -90,6 +90,6 @@
     "google-auth-library": "11.0.2",
     "pino": "10.3.1",
     "ua-parser-js": "1.0.41",
-    "zod": "4.4.3"
+    "zod": "4.5.4"
   }
 }
