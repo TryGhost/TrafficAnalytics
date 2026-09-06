@@ -51,7 +51,7 @@
     "@types/node": "24.13.3",
     "@types/supertest": "7.2.1",
     "@types/ua-parser-js": "0.7.39",
-    "@vitest/coverage-v8": "4.1.11",
+    "@vitest/coverage-v8": "5.0.0",
     "eslint": "8.57.1",
     "eslint-plugin-ghost": "3.5.0",
     "husky": "9.1.7",
@@ -61,7 +61,7 @@
     "tsx": "4.23.13",
     "typescript": "7.0.2",
     "vite": "8.2.2",
-    "vitest": "4.1.11"
+    "vitest": "5.0.0"
   },
   "dependencies": {
     "@fastify/cors": "11.3.0",
