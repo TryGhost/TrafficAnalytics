@@ -2,6 +2,7 @@ import type {FastifyReply, FastifyRequest} from 'fastify';
 import {TinybirdClient} from '../services/tinybird/client';
 import {
     AutomationRequestBodySchema,
+    type AutomationEvent,
     type AutomationRequestBody
 } from '../schemas';
 import {publishAutomationEvent} from '../services/events/publisherUtils';
@@ -40,13 +41,37 @@ export const handleAutomationRequestStrategyInline = async (request: AutomationR
     reply.status(202).send();
 };
 
+const DEFAULT_PUBLISH_CONCURRENCY = 100;
+
+const publishConcurrency = (): number => {
+    const configured = parseInt(process.env.AUTOMATION_PUBLISH_CONCURRENCY || '', 10);
+    return configured > 0 ? configured : DEFAULT_PUBLISH_CONCURRENCY;
+};
+
+// Publishes every event, at most `limit` at a time, and collects the failures instead
+// of stopping at the first one so the caller can report how many were lost.
+async function publishAll(items: AutomationEvent[], limit: number, publish: (item: AutomationEvent) => Promise<void>): Promise<unknown[]> {
+    const errors: unknown[] = [];
+    let next = 0;
+    const workers = Array.from({length: Math.min(limit, items.length)}, async () => {
+        while (next < items.length) {
+            const item = items[next];
+            next += 1;
+            try {
+                await publish(item);
+            } catch (err) {
+                errors.push(err);
+            }
+        }
+    });
+    await Promise.all(workers);
+    return errors;
+}
+
 export const handleAutomationRequestStrategyBatch = async (request: AutomationRequest, reply: FastifyReply): Promise<void> => {
     const events = Array.isArray(request.body) ? request.body : [request.body];
 
-    const results = await Promise.allSettled(events.map(event => publishAutomationEvent(request, event)));
-    const errors = results
-        .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
-        .map(result => result.reason);
+    const errors = await publishAll(events, publishConcurrency(), event => publishAutomationEvent(request, event));
 
     if (errors.length > 0) {
         throw new AggregateError(errors, 'Failed to publish one or more automation events');

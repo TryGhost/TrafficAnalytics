@@ -16,7 +16,7 @@ The ingest app has two request-handling strategies (see [`src/handlers/page-hit-
 
 The automation endpoint selects its strategy independently using `PUBSUB_TOPIC_AUTOMATION_EVENTS`:
 
-- **Batch mode** — validate each JSON or NDJSON event, publish the complete event envelope to Pub/Sub, and return `202` after Pub/Sub acknowledges every publish.
+- **Batch mode** — validate each JSON or NDJSON event, publish the complete event envelope to Pub/Sub, and return `202` after Pub/Sub acknowledges every publish. At most `AUTOMATION_PUBLISH_CONCURRENCY` publishes (default 100) are in flight per request, so a large sync from Ghost is paced by Pub/Sub rather than pushed all at once.
 - **Inline mode** — when the automation topic is unset, validate each event and post it directly to the Tinybird datasource selected by its `type`.
 
 In batch mode, the worker consumes `PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS` and maintains independent batches for `automation_runs` and `automation_run_steps`. Each batch is sent to its corresponding Tinybird datasource, so event types are never mixed in one Tinybird request.

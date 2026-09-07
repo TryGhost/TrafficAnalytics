@@ -1,4 +1,5 @@
 import fastify, {FastifyInstance} from 'fastify';
+import {setImmediate as setImmediateAsync} from 'node:timers/promises';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import v1Routes from '../../../../src/routes/v1';
 import {serializerCompiler, validatorCompiler} from '../../../../src/schemas';
@@ -195,6 +196,33 @@ describe('automations routes', () => {
             logger: expect.anything()
         });
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('publishes at most AUTOMATION_PUBLISH_CONCURRENCY events at a time', async () => {
+        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
+        vi.stubEnv('AUTOMATION_PUBLISH_CONCURRENCY', '2');
+        let inFlight = 0;
+        let maxInFlight = 0;
+        vi.mocked(publisherModule.publishEvent).mockImplementation(async () => {
+            inFlight += 1;
+            maxInFlight = Math.max(maxInFlight, inFlight);
+            await setImmediateAsync();
+            inFlight -= 1;
+            return 'message-id';
+        });
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/automations',
+            headers: {
+                'content-type': 'application/x-ndjson'
+            },
+            payload: Array.from({length: 5}, () => JSON.stringify(automationRunEvent())).join('\n')
+        });
+
+        expect(response.statusCode).toBe(202);
+        expect(publisherModule.publishEvent).toHaveBeenCalledTimes(5);
+        expect(maxInFlight).toBe(2);
     });
 
     it('returns 500 when publishing to Pub/Sub fails', async () => {
