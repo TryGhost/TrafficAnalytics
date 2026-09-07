@@ -1,6 +1,7 @@
 import type {Message} from '@google-cloud/pubsub';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import AutomationBatchWorker, {type AutomationTinybirdClients} from '../../../../src/services/automation-worker/AutomationBatchWorker';
+import {EventSubscriber} from '../../../../src/services/events/subscriber';
 
 const subscriberMocks = vi.hoisted(() => ({
     close: vi.fn(),
@@ -125,6 +126,42 @@ describe('AutomationBatchWorker', () => {
             expect(message.ack).toHaveBeenCalledOnce();
             expect(message.nack).not.toHaveBeenCalled();
         });
+    });
+
+    it('caps outstanding subscription messages at twice the batch size', () => {
+        expect(EventSubscriber).toHaveBeenCalledWith('automation-events-sub', {
+            flowControl: {maxMessages: 4, allowExcessMessages: false}
+        });
+    });
+
+    it('posts one Tinybird request per event type at a time', async () => {
+        let finishFirstPost!: () => void;
+        runClient.postEventBatch.mockReturnValueOnce(new Promise<void>((resolve) => {
+            finishFirstPost = resolve;
+        }));
+        const messages = [
+            createMessage(automationRunEvent()),
+            createMessage(automationRunEvent('6a99cd8cb5ac7c0052553385')),
+            createMessage(automationRunEvent('6a99cd8cb5ac7c0052553387')),
+            createMessage(automationRunEvent('6a99cd8cb5ac7c0052553388'))
+        ];
+
+        await handleMessage(messages[0]);
+        const firstFlush = handleMessage(messages[1]);
+        await handleMessage(messages[2]);
+        const secondFlush = handleMessage(messages[3]);
+
+        expect(runClient.postEventBatch).toHaveBeenCalledOnce();
+
+        finishFirstPost();
+        await Promise.all([firstFlush, secondFlush]);
+
+        expect(runClient.postEventBatch).toHaveBeenCalledTimes(2);
+        expect(runClient.postEventBatch).toHaveBeenLastCalledWith([
+            expect.objectContaining({id: '6a99cd8cb5ac7c0052553387'}),
+            expect.objectContaining({id: '6a99cd8cb5ac7c0052553388'})
+        ]);
+        messages.forEach(message => expect(message.ack).toHaveBeenCalledOnce());
     });
 
     it('acks invalid messages without sending them to Tinybird', async () => {

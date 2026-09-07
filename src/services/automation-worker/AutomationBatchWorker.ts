@@ -24,6 +24,7 @@ class AutomationBatchWorker {
     private subscriber: EventSubscriber;
     private tinybirdClients: AutomationTinybirdClients;
     private batches: Record<AutomationEvent['type'], PendingMessage[]>;
+    private inFlight: Record<AutomationEvent['type'], Promise<void> | null>;
     private batchSize: number;
     private flushInterval: number;
     private flushTimer: NodeJS.Timeout | null;
@@ -32,14 +33,24 @@ class AutomationBatchWorker {
     constructor(subscriptionName: string, tinybirdClients: AutomationTinybirdClients, config: AutomationBatchWorkerConfig = {}) {
         logger.info({event: 'AutomationBatchWorkerCreating', subscriptionName});
         this.subscriptionName = subscriptionName;
-        this.subscriber = new EventSubscriber(subscriptionName);
+        this.batchSize = config.batchSize || parseInt(process.env.AUTOMATION_BATCH_SIZE || '1000', 10);
+        this.flushInterval = config.flushInterval || parseInt(process.env.AUTOMATION_BATCH_FLUSH_INTERVAL_MS || '1000', 10);
+        // Bounds worker memory: one batch being posted plus one accumulating per type.
+        this.subscriber = new EventSubscriber(subscriptionName, {
+            flowControl: {
+                maxMessages: this.batchSize * 2,
+                allowExcessMessages: false
+            }
+        });
         this.tinybirdClients = tinybirdClients;
         this.batches = {
             automation_runs: [],
             automation_run_steps: []
         };
-        this.batchSize = config.batchSize || parseInt(process.env.BATCH_SIZE || '50', 10);
-        this.flushInterval = config.flushInterval || parseInt(process.env.BATCH_FLUSH_INTERVAL_MS || '1000', 10);
+        this.inFlight = {
+            automation_runs: null,
+            automation_run_steps: null
+        };
         this.flushTimer = null;
         this.isShuttingDown = false;
 
@@ -114,7 +125,21 @@ class AutomationBatchWorker {
         }
     }
 
-    private async flushBatch(type: AutomationEvent['type']): Promise<void> {
+    // One Tinybird request per type at a time; a batch that fills while a request is
+    // in flight is posted as soon as that request settles.
+    private flushBatch(type: AutomationEvent['type']): Promise<void> {
+        if (!this.inFlight[type]) {
+            this.inFlight[type] = this.postBatch(type).finally(() => {
+                this.inFlight[type] = null;
+                if (this.batches[type].length >= this.batchSize) {
+                    void this.flushBatch(type);
+                }
+            });
+        }
+        return this.inFlight[type];
+    }
+
+    private async postBatch(type: AutomationEvent['type']): Promise<void> {
         const batch = this.batches[type];
         if (batch.length === 0) {
             return;

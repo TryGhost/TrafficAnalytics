@@ -1,4 +1,4 @@
-import {PubSub, type Subscription} from '@google-cloud/pubsub';
+import {PubSub, type Subscription, type SubscriptionOptions} from '@google-cloud/pubsub';
 import type {Message} from '@google-cloud/pubsub';
 import errors from '@tryghost/errors';
 import logger from '../../utils/logger.js';
@@ -7,7 +7,7 @@ export class EventSubscriber {
     private pubsub: PubSub;
     private subscription: Subscription;
 
-    constructor(subscriptionName: string) {
+    constructor(subscriptionName: string, options?: SubscriptionOptions) {
         if (!subscriptionName) {
             throw new errors.IncorrectUsageError({
                 message: 'Subscription name is required to create an event subscriber'
@@ -24,7 +24,7 @@ export class EventSubscriber {
             enableOpenTelemetryTracing: true
         });
         try {
-            this.subscription = this.pubsub.subscription(subscriptionName);
+            this.subscription = this.pubsub.subscription(subscriptionName, options);
             logger.info({
                 event: 'EventSubscriberCreated',
                 subscriptionName: this.subscription.name
