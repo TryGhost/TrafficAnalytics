@@ -1,26 +1,20 @@
 import type {FastifyRequest} from 'fastify';
-import {type AutomationEvent, PageHitRaw, PageHitRequestType} from '../../schemas';
+import {type AutomationEventChunk, PageHitRaw, PageHitRequestType} from '../../schemas';
 import {publishEvent} from './publisher';
 
-export const publishAutomationEvent = async (request: FastifyRequest, payload: AutomationEvent): Promise<void> => {
+export const publishAutomationChunk = async (request: FastifyRequest, chunk: AutomationEventChunk): Promise<void> => {
     const topic = process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS;
     if (topic) {
-        request.log.debug({
-            event: 'PublishingAutomationEvent',
-            automation_event_id: payload.id,
-            automation_event_type: payload.type,
-            payload
-        });
         const messageId = await publishEvent({
             topic,
-            payload,
+            payload: chunk,
             logger: request.log
         });
         request.log.info({
-            event: 'PublishedAutomationEvent',
+            event: 'PublishedAutomationChunk',
             message_id: messageId,
-            automation_event_id: payload.id,
-            automation_event_type: payload.type
+            automation_event_type: chunk.type,
+            event_count: chunk.events.length
         });
     }
 };

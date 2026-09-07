@@ -66,10 +66,7 @@ describe('automation worker', () => {
             }
         } as AutomationTinybirdClients;
 
-        worker = new AutomationBatchWorker(AUTOMATION_SUBSCRIPTION, tinybirdClients, {
-            batchSize: 1,
-            flushInterval: 60_000
-        });
+        worker = new AutomationBatchWorker(AUTOMATION_SUBSCRIPTION, tinybirdClients, {concurrency: 2});
         worker.start();
     });
 
@@ -77,11 +74,13 @@ describe('automation worker', () => {
         await worker.stop();
     });
 
-    it('routes Pub/Sub events into separate Tinybird batches', async () => {
+    it('routes Pub/Sub chunks into separate Tinybird batches', async () => {
         const logger = createMockLogger();
+        const {type: runType, ...runBody} = automationRunEvent;
+        const {type: stepType, ...stepBody} = automationRunStepEvent;
         await Promise.all([
-            publishEvent({topic: AUTOMATION_TOPIC, payload: automationRunEvent, logger}),
-            publishEvent({topic: AUTOMATION_TOPIC, payload: automationRunStepEvent, logger})
+            publishEvent({topic: AUTOMATION_TOPIC, payload: {type: runType, events: [runBody]}, logger}),
+            publishEvent({topic: AUTOMATION_TOPIC, payload: {type: stepType, events: [stepBody]}, logger})
         ]);
 
         const [receivedRunBatch, receivedStepBatch] = await Promise.all([runBatch, stepBatch]);

@@ -16,10 +16,10 @@ The ingest app has two request-handling strategies (see [`src/handlers/page-hit-
 
 The automation endpoint selects its strategy independently using `PUBSUB_TOPIC_AUTOMATION_EVENTS`:
 
-- **Batch mode** — validate each JSON or NDJSON event, publish the complete event envelope to Pub/Sub, and return `202` after Pub/Sub acknowledges every publish. At most `AUTOMATION_PUBLISH_CONCURRENCY` publishes (default 100) are in flight per request, so a large sync from Ghost is paced by Pub/Sub rather than pushed all at once.
+- **Batch mode** — validate each JSON or NDJSON event, group events by type into chunks of `AUTOMATION_CHUNK_SIZE` (default 500), publish each chunk as one Pub/Sub message, and return `202` after Pub/Sub acknowledges every publish. At most `AUTOMATION_PUBLISH_CONCURRENCY` publishes (default 100) are in flight per request, so a large sync from Ghost is paced by Pub/Sub rather than pushed all at once.
 - **Inline mode** — when the automation topic is unset, validate each event and post it directly to the Tinybird datasource selected by its `type`.
 
-In batch mode, the worker consumes `PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS` and maintains independent batches for `automation_runs` and `automation_run_steps`. Each batch is sent to its corresponding Tinybird datasource, so event types are never mixed in one Tinybird request.
+In batch mode, the worker consumes `PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS`. Each message is a chunk of one event type, and the worker posts it to that type's Tinybird datasource as one request, so event types are never mixed in one Tinybird request.
 
 ## Batch pipeline
 
@@ -60,12 +60,12 @@ flowchart LR
 ```mermaid
 flowchart LR
     Ghost["Ghost"] -->|"POST /api/v1/automations"| Validate["Validate JSON / NDJSON"]
-    Validate --> Publish["Publish one message per event"]
+    Validate --> Publish["Chunk by type, publish one message per chunk"]
     Publish --> Topic(["Automation topic"])
     Topic --> Sub(["Automation subscription"])
     Sub --> Route{"Event type"}
-    Route -->|"automation_runs"| Runs["Runs batch"]
-    Route -->|"automation_run_steps"| Steps["Run steps batch"]
+    Route -->|"automation_runs"| Runs["Runs chunk"]
+    Route -->|"automation_run_steps"| Steps["Run steps chunk"]
     Runs --> RunsTB["Tinybird<br/>automation_run_events"]
     Steps --> StepsTB["Tinybird<br/>automation_run_step_events"]
 ```
@@ -75,7 +75,7 @@ Notes:
 - **Enrichment** ([`transformPageHitRawToProcessed`](../src/schemas/v1/page-hit-processed.ts)) parses the user agent with `ua-parser-js`, parses the referrer with `@tryghost/referrer-parser`, and computes the `session_id` user signature.
 - **Bot filtering** runs in the ingest app's [`bot-detection`](../src/plugins/bot-detection.ts) `preHandler` hook before the request strategy is selected, so bot events return the standard `202` accepted response without being published to Pub/Sub or proxied to Tinybird. Set `ENABLE_BOT_DETECTION_HEADER=true` to include `x-ghost-bot-detected: true` on these responses; the header is omitted by default. The worker retains a defensive check for legacy or directly published messages that bypassed the API.
 - **Batching** ([`src/services/batch-worker/BatchWorker.ts`](../src/services/batch-worker/BatchWorker.ts)) accumulates processed events and flushes them to Tinybird as newline-delimited JSON when the batch reaches `BATCH_SIZE` (default 50) or the flush timer fires (`BATCH_FLUSH_INTERVAL_MS`, default 1000ms). Messages are `ack`ed on a successful flush and `nack`ed on failure.
-- **Automation batching** ([`AutomationBatchWorker`](../src/services/automation-worker/AutomationBatchWorker.ts)) has its own settings (`AUTOMATION_BATCH_SIZE`, default 1000; `AUTOMATION_BATCH_FLUSH_INTERVAL_MS`, default 1000ms), applied independently to each automation event type. Only one Tinybird request per type is in flight at a time, and the subscription's flow control caps outstanding messages at twice the batch size. A Tinybird failure only `nack`s messages from the affected type's batch.
+- **Automation chunks** ([`AutomationBatchWorker`](../src/services/automation-worker/AutomationBatchWorker.ts)) validates each row in a chunk, drops rows that fail validation, and posts the rest to Tinybird in one request. Subscription flow control caps outstanding messages at `AUTOMATION_WORKER_CONCURRENCY` (default 4), which is therefore the number of Tinybird requests in flight. A Tinybird failure `nack`s only that chunk.
 
 ### Synchronous proxy mode
 

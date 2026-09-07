@@ -150,15 +150,39 @@ describe('automations routes', () => {
 
         expect(response.statusCode).toBe(202);
         expect(response.body).toBe('');
+        const {type, ...eventBody} = event;
         expect(publisherModule.publishEvent).toHaveBeenCalledWith({
             topic: 'automation-events-topic',
-            payload: event,
+            payload: {type, events: [eventBody]},
             logger: expect.anything()
         });
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it('publishes each NDJSON event to Pub/Sub in batch mode', async () => {
+    it('chunks events of one type by AUTOMATION_CHUNK_SIZE', async () => {
+        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
+        vi.stubEnv('AUTOMATION_CHUNK_SIZE', '2');
+        const {type, ...eventBody} = automationRunEvent();
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/automations',
+            headers: {
+                'content-type': 'application/x-ndjson'
+            },
+            payload: Array.from({length: 5}, () => JSON.stringify(automationRunEvent())).join('\n')
+        });
+
+        expect(response.statusCode).toBe(202);
+        expect(publisherModule.publishEvent).toHaveBeenCalledTimes(3);
+        expect(vi.mocked(publisherModule.publishEvent).mock.calls.map(([call]) => call.payload)).toEqual([
+            {type, events: [eventBody, eventBody]},
+            {type, events: [eventBody, eventBody]},
+            {type, events: [eventBody]}
+        ]);
+    });
+
+    it('publishes each event type as its own chunk in batch mode', async () => {
         vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
         const runEvent = automationRunEvent();
         const stepEvent = automationRunStepEvent();
@@ -185,22 +209,25 @@ describe('automations routes', () => {
         const response = await responsePromise;
 
         expect(response.statusCode).toBe(202);
+        const {type: runType, ...runBody} = runEvent;
+        const {type: stepType, ...stepBody} = stepEvent;
         expect(publisherModule.publishEvent).toHaveBeenNthCalledWith(1, {
             topic: 'automation-events-topic',
-            payload: runEvent,
+            payload: {type: runType, events: [runBody]},
             logger: expect.anything()
         });
         expect(publisherModule.publishEvent).toHaveBeenNthCalledWith(2, {
             topic: 'automation-events-topic',
-            payload: stepEvent,
+            payload: {type: stepType, events: [stepBody]},
             logger: expect.anything()
         });
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it('publishes at most AUTOMATION_PUBLISH_CONCURRENCY events at a time', async () => {
+    it('publishes at most AUTOMATION_PUBLISH_CONCURRENCY chunks at a time', async () => {
         vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
         vi.stubEnv('AUTOMATION_PUBLISH_CONCURRENCY', '2');
+        vi.stubEnv('AUTOMATION_CHUNK_SIZE', '1');
         let inFlight = 0;
         let maxInFlight = 0;
         vi.mocked(publisherModule.publishEvent).mockImplementation(async () => {
