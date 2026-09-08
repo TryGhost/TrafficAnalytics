@@ -27,12 +27,14 @@ TrafficAnalytics is a web analytics proxy service for Ghost that processes and e
 ## Run Modes
 
 The same image runs in two roles, selected by `WORKER_MODE` (see `server.ts`):
-- **Ingest app** (`WORKER_MODE` unset — `src/app.ts`): the Fastify HTTP server that receives `POST /api/v1/page_hit`.
-- **Worker app** (`WORKER_MODE=true` — `src/worker-app.ts`): a Pub/Sub consumer that enriches events and forwards them to Tinybird. Exposes only health endpoints (`/`, `/health`).
+- **Ingest app** (`WORKER_MODE` unset — `src/app.ts`): the Fastify HTTP server that receives page-hit and automation events.
+- **Worker app** (`WORKER_MODE=true` — `src/worker-app.ts`): consumes page-hit and automation subscriptions, batches events, and forwards them to Tinybird. Exposes only health endpoints (`/`, `/health`).
 
 The ingest app has two request strategies (see `src/handlers/page-hit-handlers.ts`), chosen by whether `PUBSUB_TOPIC_PAGE_HITS_RAW` is set:
 - **Batch mode (default in dev/prod)**: filter bot traffic, publish non-bot raw events to the Pub/Sub topic, and return `202`; enrichment + forwarding happen later in the worker app. This is the `dev:batch` Compose profile (`analytics-service` + `worker`).
 - **Proxy mode (synchronous)**: no topic set — bot traffic is filtered, then non-bot requests are enriched inline and proxied straight to `PROXY_TARGET` (`/v0/events`). This is the `dev:proxy` Compose profile (`analytics-service-proxy`).
+
+The automations endpoint chooses its strategy independently using `PUBSUB_TOPIC_AUTOMATION_EVENTS`: when set, validated events are published to Pub/Sub and the worker batches each event type separately; when unset, they are sent directly to Tinybird.
 
 See `docs/architecture.md` for a diagram and deeper detail, and `docs/deployment.md` for the CI/deploy pipeline.
 
@@ -40,10 +42,11 @@ See `docs/architecture.md` for a diagram and deeper detail, and `docs/deployment
 
 Key modules under `src/`:
 - **Entrypoints**: `server.ts` (selects app by `WORKER_MODE`), `src/app.ts` (ingest), `src/worker-app.ts` (worker).
-- **Routes / handlers** (`src/routes/v1`, `src/handlers/page-hit-handlers.ts`): defines `POST /api/v1/page_hit`, chooses batch vs proxy strategy.
-- **Plugins** (`src/plugins/`): `hmac-validation` (global `preValidation` HMAC check), `bot-detection` (page-hit `preHandler` bot filter), `timestamp` (records `serverReceivedAt` on request), `cors`, `logging`, `proxy` (local `/local-proxy` test endpoint), `worker-plugin` (batch worker lifecycle in the worker app).
-- **Events** (`src/services/events/`): `publisher.ts` / `publisherUtils.ts` publish raw page hits to Pub/Sub; `subscriber.ts` consumes from a subscription. Uses `@google-cloud/pubsub`.
+- **Routes / handlers** (`src/routes/v1`, `src/handlers/`): defines the page-hit and automations endpoints and chooses their batch vs inline strategies.
+- **Plugins** (`src/plugins/`): `hmac-validation` (global `preValidation` HMAC check), `bot-detection` (page-hit `preHandler` bot filter), `timestamp` (records `serverReceivedAt` on request), `cors`, `logging`, `proxy` (local `/local-proxy` test endpoint), and the page-hit/automation worker lifecycle plugins.
+- **Events** (`src/services/events/`): `publisher.ts` / `publisherUtils.ts` publish raw page hits and automation events to Pub/Sub; `subscriber.ts` consumes from a subscription. Uses `@google-cloud/pubsub`.
 - **Batch worker** (`src/services/batch-worker/`): subscribes, transforms each message, batches, and flushes to Tinybird (`BATCH_SIZE`, `BATCH_FLUSH_INTERVAL_MS`).
+- **Automation worker** (`src/services/automation-worker/`): validates automation messages, maintains separate `automation_runs` and `automation_run_steps` batches, and flushes each type to its mapped Tinybird datasource.
 - **Tinybird** (`src/services/tinybird/`): `client.ts` posts single or NDJSON-batch events to `{PROXY_TARGET}/v0/events?name=analytics_events`.
 - **Transformations / schemas** (`src/transformations/page-hit-transformations.ts`, `src/schemas/v1/`): Zod schemas for the request, raw and processed events; build the raw payload from the request and transform raw → processed (user-agent parsing via `ua-parser-js`, referrer parsing via `@tryghost/referrer-parser`, user signature, bot filtering).
 - **Validation** (`src/schemas/validation.ts`): compiles the Zod schemas to ajv validators, and provides the Fastify type provider.
@@ -80,6 +83,8 @@ Adapter pattern behind `ISaltStore`, selected by `SALT_STORE_TYPE` (see `SaltSto
 4. The handler builds non-bot requests into raw payloads and publishes them to `PUBSUB_TOPIC_PAGE_HITS_RAW`, then responds `202`.
 5. The worker app consumes from `PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW`, enriches each event (user agent, referrer, user signature), defensively filters any bot events that bypassed the API, batches, and posts to Tinybird `/v0/events`.
 
+Automation batch mode follows the same publish/consume pattern through `PUBSUB_TOPIC_AUTOMATION_EVENTS` and `PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS`. The worker validates each message, routes it by `type`, and independently flushes `automation_runs` to `automation_run_events` and `automation_run_steps` to `automation_run_step_events`.
+
 **Proxy mode (synchronous — no Pub/Sub topic set):**
 1–3 as above.
 4. The `bot-detection` plugin returns `202` for bot traffic; the handler enriches non-bot requests inline (user agent, referrer, user signature) and proxies them to `PROXY_TARGET` (default `http://localhost:3000/local-proxy`).
@@ -98,10 +103,12 @@ Adapter pattern behind `ISaltStore`, selected by `SALT_STORE_TYPE` (see `SaltSto
 
 ### Pub/Sub (batch mode)
 - `PUBSUB_TOPIC_PAGE_HITS_RAW` - Topic the ingest app publishes raw events to. If set, the ingest app runs in batch mode; if unset, it runs in synchronous proxy mode.
+- `PUBSUB_TOPIC_AUTOMATION_EVENTS` - Topic the ingest app publishes validated automation events to. If set, automations use batch mode; if unset, they are sent to Tinybird inline.
+- `PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS` - Subscription consumed by the automation batch worker.
 - `PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW` - Subscription the worker app consumes from
 - `PUBSUB_EMULATOR_HOST` - Pub/Sub emulator address for local dev/test (e.g. `pubsub:8085`)
 - `GOOGLE_CLOUD_PROJECT` - GCP project ID used for Pub/Sub and Firestore
-- `BATCH_SIZE` - Worker flush batch size (default: 50)
+- `BATCH_SIZE` - Worker flush batch size (default: 50); automation workers apply it independently per event type
 - `BATCH_FLUSH_INTERVAL_MS` - Worker flush interval in ms (default: 1000)
 
 ### Salt store
