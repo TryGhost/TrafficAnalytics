@@ -8,11 +8,11 @@ The same Docker image runs in three roles, selected by the `WORKER_MODE` environ
 
 - **Ingest app** (`WORKER_MODE` unset — [`src/app.ts`](../src/app.ts)) — the Fastify HTTP server that receives `POST /api/v1/page_hit`.
 - **Worker app** (`WORKER_MODE=true` — [`src/worker-app.ts`](../src/worker-app.ts)) — a Pub/Sub consumer that enriches events and forwards them to Tinybird. It exposes only health endpoints (`/` and `/health`) for Cloud Run.
-- **Tinybird sync worker** (`WORKER_MODE=tinybird-sync` — [`src/tinybird-sync-worker-app.ts`](../src/tinybird-sync-worker-app.ts)) — currently exposes health endpoints and emits a heartbeat every 10 seconds. Sync behavior will be added later.
+- **Tinybird sync worker** (`WORKER_MODE=tinybird-sync` — [`src/tinybird-sync-worker-app.ts`](../src/tinybird-sync-worker-app.ts)) — consumes Tinybird sync events from Pub/Sub, buffers each event type separately, and sends batches to their mapped Tinybird datasources.
 
 The ingest app has two request-handling strategies (see [`src/handlers/page-hit-handlers.ts`](../src/handlers/page-hit-handlers.ts)), chosen by whether `PUBSUB_TOPIC_PAGE_HITS_RAW` is set:
 
-- **Batch mode (default in dev and production)** — publish the raw event to the Pub/Sub topic and return `202` immediately. Enrichment and forwarding to Tinybird happen asynchronously in the worker app. This is the `dev:batch` Compose profile: `analytics-service` (ingest) + `worker`.
+- **Batch mode (default in dev and production)** — publish events to Pub/Sub and return `202` immediately. Page-hit enrichment and forwarding happen in `worker`; Tinybird sync batching and forwarding happen in `tinybird-sync`. This is the `dev:batch` Compose profile: `analytics-service` + `worker` + `tinybird-sync`.
 - **Proxy mode (synchronous)** — no topic set. The request is enriched inline and proxied straight to `PROXY_TARGET` (`/v0/events`) within the same request/response cycle. This is the `dev:proxy` Compose profile: `analytics-service-proxy`.
 
 ## Batch pipeline
@@ -54,6 +54,7 @@ Notes:
 - **Enrichment** ([`transformPageHitRawToProcessed`](../src/schemas/v1/page-hit-processed.ts)) parses the user agent with `ua-parser-js`, parses the referrer with `@tryghost/referrer-parser`, and computes the `session_id` user signature.
 - **Bot filtering** runs in the ingest app's [`bot-detection`](../src/plugins/bot-detection.ts) `preHandler` hook before the request strategy is selected, so bot events return the standard `202` accepted response without being published to Pub/Sub or proxied to Tinybird. Set `ENABLE_BOT_DETECTION_HEADER=true` to include `x-ghost-bot-detected: true` on these responses; the header is omitted by default. The worker retains a defensive check for legacy or directly published messages that bypassed the API.
 - **Batching** ([`src/services/batch-worker/BatchWorker.ts`](../src/services/batch-worker/BatchWorker.ts)) accumulates processed events and flushes them to Tinybird as newline-delimited JSON when the batch reaches `BATCH_SIZE` (default 50) or the flush timer fires (`BATCH_FLUSH_INTERVAL_MS`, default 1000ms). Messages are `ack`ed on a successful flush and `nack`ed on failure.
+- **Tinybird sync batching** keeps separate buffers for automation runs and run steps. It flushes when a buffer reaches `TINYBIRD_SYNC_BATCH_SIZE` (default 50) or after `TINYBIRD_SYNC_BATCH_FLUSH_INTERVAL_MS` (default 1000ms).
 
 ### Synchronous proxy mode
 

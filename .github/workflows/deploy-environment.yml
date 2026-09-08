@@ -46,7 +46,7 @@ jobs:
         with:
           environment: ${{ inputs.environment }}
           region: ${{ inputs.region }}
-          service: ${{ inputs.environment == 'staging' && 'stg' || 'prd' }}-${{ inputs.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || '' }}
+          service: ${{ inputs.environment == 'staging' && 'stg' || 'prd' }}-${{ inputs.region_name }}-traffic-analytics${{ matrix.service == 'worker' && '-worker' || matrix.service == 'tinybird-sync' && '-tb-sync-worker' || '' }}
           image: ${{ inputs.image }}
           gcp_project_id: ${{ vars.GCP_PROJECT_ID }}${{ inputs.environment == 'staging' && '-stg' || '' }}
           gcp_workload_identity_provider: ${{ inputs.environment == 'staging' && vars.GCP_WORKFLOW_IDENTITY_PROVIDER_STG || vars.GCP_WORKFLOW_IDENTITY_PROVIDER_PRD }}

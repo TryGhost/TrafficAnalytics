@@ -6,6 +6,8 @@ describe('Tinybird sync worker app', () => {
     let app: FastifyInstance;
 
     beforeEach(async () => {
+        vi.stubEnv('PROXY_TARGET', 'http://127.0.0.1:8089/v0/events');
+        vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'test-token');
         vi.resetModules();
         const workerModule = await import('../../src/tinybird-sync-worker-app');
         app = workerModule.default;
