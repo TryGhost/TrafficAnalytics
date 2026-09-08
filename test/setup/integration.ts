@@ -1,6 +1,8 @@
 import {beforeEach, afterEach, vi} from 'vitest';
 import {createTopic, createSubscription, deleteSubscription, deleteTopic, cleanupTestSubscriptions} from '../utils/pubsub.js';
 
+process.env.TINYBIRD_SYNC_AUTH = 'test-sync-auth';
+
 // Use the base environment variable names, but we'll ensure cleanup between tests
 const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
 const subscriptionName = process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw-sub';
