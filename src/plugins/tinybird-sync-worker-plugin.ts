@@ -35,21 +35,21 @@ async function tinybirdSyncWorkerPlugin(fastify: FastifyInstance) {
             })
         };
 
-        const batchSize = parseInt(process.env.TINYBIRD_SYNC_BATCH_SIZE || '50', 10);
+        const batchSize = Number(process.env.TINYBIRD_SYNC_BATCH_SIZE || '50');
         const isBatchSizeValid = batchSize > 0 && Number.isSafeInteger(batchSize);
         if (!isBatchSizeValid) {
             throw new Error(`Invalid batch size: ${batchSize}`);
         }
 
-        const flushInterval = parseInt(process.env.TINYBIRD_SYNC_BATCH_FLUSH_INTERVAL_MS || '1000', 10);
+        const flushInterval = Number(process.env.TINYBIRD_SYNC_BATCH_FLUSH_INTERVAL_MS || '1000');
         const isFlushIntervalValid = flushInterval > 0 && Number.isInteger(flushInterval) && flushInterval <= MAX_FLUSH_INTERVAL_MS;
         if (!isFlushIntervalValid) {
             throw new Error(`Invalid flush interval: ${flushInterval}`);
         }
 
         tinybirdSyncWorker = new TinybirdSyncBatchWorker(subscriptionName, tinybirdClients, {
-            batchSize: parseInt(process.env.TINYBIRD_SYNC_BATCH_SIZE || '50', 10),
-            flushInterval: parseInt(process.env.TINYBIRD_SYNC_BATCH_FLUSH_INTERVAL_MS || '1000', 10)
+            batchSize,
+            flushInterval
         });
         tinybirdSyncWorker.start();
         fastify.log.info({event: 'TinybirdSyncWorkerStarted'});
