@@ -1,0 +1,64 @@
+import fastify, {type FastifyInstance} from 'fastify';
+import type {Message, Subscription} from '@google-cloud/pubsub';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import v1Routes from '../../src/routes/v1';
+import {serializerCompiler, validatorCompiler} from '../../src/schemas';
+import {createSubscription} from '../utils/pubsub';
+
+const TINYBIRD_SYNC_TOPIC = process.env.PUBSUB_TOPIC_TINYBIRD_SYNC || 'test-traffic-analytics-tinybird-sync';
+const TINYBIRD_SYNC_SUBSCRIPTION = process.env.PUBSUB_SUBSCRIPTION_TINYBIRD_SYNC || 'test-traffic-analytics-tinybird-sync-sub';
+
+const event = {
+    type: 'automation_runs',
+    site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f',
+    id: '6a99cd8cb5ac7c0052553383',
+    updated_at: '2026-09-03T19:42:04.000Z',
+    payload: {
+        id: '6a99cd8cb5ac7c0052553383',
+        automation_id: '6a99cd6cb5ac7c0052553378',
+        created_at: '2026-09-03T19:42:04.000Z',
+        updated_at: '2026-09-03T19:42:04.000Z',
+        site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f'
+    }
+};
+
+describe('Tinybird sync Pub/Sub publishing', () => {
+    let app: FastifyInstance;
+    let subscription: Subscription;
+
+    beforeEach(async () => {
+        vi.stubEnv('PUBSUB_TOPIC_TINYBIRD_SYNC', TINYBIRD_SYNC_TOPIC);
+        subscription = await createSubscription(TINYBIRD_SYNC_TOPIC, TINYBIRD_SYNC_SUBSCRIPTION);
+
+        app = fastify();
+        app.setValidatorCompiler(validatorCompiler);
+        app.setSerializerCompiler(serializerCompiler);
+        await app.register(v1Routes, {prefix: '/api/v1'});
+    });
+
+    afterEach(async () => {
+        await app.close();
+        await subscription.close();
+    });
+
+    it('publishes a validated NDJSON event through the route', async () => {
+        const receivedMessage = new Promise<Message>((resolve) => {
+            subscription.once('message', resolve);
+        });
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {
+                authorization: 'Bearer test-sync-auth',
+                'content-type': 'application/x-ndjson'
+            },
+            payload: JSON.stringify(event)
+        });
+        const message = await receivedMessage;
+        message.ack();
+
+        expect(response.statusCode).toBe(202);
+        expect(JSON.parse(message.data.toString())).toEqual(event);
+    });
+});
