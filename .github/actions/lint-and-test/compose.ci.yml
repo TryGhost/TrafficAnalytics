@@ -17,6 +17,10 @@ services:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
       - TINYBIRD_TRACKER_TOKEN=test-token
 
+  tinybird-sync:
+    image: ${DOCKER_IMAGE}
+    build: {}  # Disable build in CI
+
   analytics-service-proxy:
     image: ${DOCKER_IMAGE}
     build: {}  # Disable build in CI

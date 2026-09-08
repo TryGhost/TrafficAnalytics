@@ -221,6 +221,17 @@ describe('Logger Config', () => {
                 versionAssertion: 'exact'
             },
             {
+                name: 'should include Tinybird sync service context when selected and K_SERVICE is missing',
+                event: 'service-context-tinybird-sync',
+                env: {
+                    WORKER_MODE: 'tinybird-sync',
+                    K_REVISION: 'tinybird-sync-rev'
+                },
+                expectedService: 'analytics-tinybird-sync-worker',
+                expectedVersion: 'tinybird-sync-rev',
+                versionAssertion: 'exact'
+            },
+            {
                 name: 'should not use worker service context when WORKER_MODE is false',
                 event: 'service-context-worker-mode-false',
                 env: {

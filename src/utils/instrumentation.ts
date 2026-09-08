@@ -8,6 +8,7 @@ import {HttpInstrumentation} from '@opentelemetry/instrumentation-http';
 import {UndiciInstrumentation} from '@opentelemetry/instrumentation-undici';
 import {fastifyOtelInstrumentation, IGNORED_PATHS} from './fastify-otel';
 import {SpanExporter} from '@opentelemetry/sdk-trace-base';
+import {getDefaultServiceName} from './service-name';
 
 // Determine which trace exporter to use based on environment
 function getTraceExporter(): SpanExporter {
@@ -27,8 +28,7 @@ function getTraceExporter(): SpanExporter {
 }
 
 // Use K_SERVICE for GCP, or WORKER_MODE for local development
-const isWorkerMode = process.env.WORKER_MODE === 'true';
-const serviceName = process.env.K_SERVICE || (isWorkerMode ? 'analytics-worker' : 'analytics-service');
+const serviceName = process.env.K_SERVICE || getDefaultServiceName(process.env.WORKER_MODE || '');
 const serviceVersion = process.env.K_REVISION || 'unknown';
 
 const sdk = new NodeSDK({

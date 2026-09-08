@@ -4,10 +4,11 @@ Traffic Analytics is a web analytics proxy for Ghost. It receives page-hit event
 
 ## Run modes
 
-The same Docker image runs in two roles, selected by the `WORKER_MODE` environment variable in [`server.ts`](../server.ts):
+The same Docker image runs in three roles, selected by the `WORKER_MODE` environment variable in [`server.ts`](../server.ts):
 
 - **Ingest app** (`WORKER_MODE` unset — [`src/app.ts`](../src/app.ts)) — the Fastify HTTP server that receives `POST /api/v1/page_hit`.
 - **Worker app** (`WORKER_MODE=true` — [`src/worker-app.ts`](../src/worker-app.ts)) — a Pub/Sub consumer that enriches events and forwards them to Tinybird. It exposes only health endpoints (`/` and `/health`) for Cloud Run.
+- **Tinybird sync worker** (`WORKER_MODE=tinybird-sync` — [`src/tinybird-sync-worker-app.ts`](../src/tinybird-sync-worker-app.ts)) — currently exposes health endpoints and emits a heartbeat every 10 seconds. Sync behavior will be added later.
 
 The ingest app has two request-handling strategies (see [`src/handlers/page-hit-handlers.ts`](../src/handlers/page-hit-handlers.ts)), chosen by whether `PUBSUB_TOPIC_PAGE_HITS_RAW` is set:
 
@@ -79,7 +80,7 @@ OpenTelemetry is initialised in [`src/utils/instrumentation.ts`](../src/utils/in
 
 - The trace exporter is Jaeger (OTLP HTTP) by default, or Google Cloud Trace when `OTEL_TRACE_EXPORTER=gcp` or `K_SERVICE` is set (Cloud Run sets `K_SERVICE` automatically).
 - OTLP endpoints default to the `jaeger` service (`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT`).
-- The reported service name is `analytics-worker` in worker mode and `analytics-service` otherwise.
+- The reported service name is `analytics-worker` in batch worker mode, `analytics-tinybird-sync-worker` in Tinybird sync mode, and `analytics-service` otherwise.
 
 ## Related docs
 

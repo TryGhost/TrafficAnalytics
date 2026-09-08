@@ -124,6 +124,34 @@ describe('Server Conditional Loading', () => {
         });
     });
 
+    describe('Tinybird Sync Worker Loading (WORKER_MODE=tinybird-sync)', () => {
+        beforeEach(async () => {
+            process.env.WORKER_MODE = 'tinybird-sync';
+            vi.resetModules();
+
+            const serverModule = await import('../../server');
+            app = serverModule.default;
+            await app.ready();
+        });
+
+        it('should load the Tinybird sync worker app', async () => {
+            const response = await request(app.server)
+                .get('/health')
+                .expect(200);
+
+            expect(response.body).toEqual({
+                status: 'tinybird-sync-healthy'
+            });
+        });
+
+        it('should expose no ingest routes', async () => {
+            await request(app.server)
+                .post('/api/v1/page_hit')
+                .send({})
+                .expect(404);
+        });
+    });
+
     describe('Environment Variable Handling', () => {
         it('should handle WORKER_MODE with different casing', async () => {
             process.env.WORKER_MODE = 'TRUE';
