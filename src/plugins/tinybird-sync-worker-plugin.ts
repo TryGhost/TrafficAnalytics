@@ -4,6 +4,8 @@ import TinybirdSyncBatchWorker, {type TinybirdSyncClients} from '../services/tin
 import {TINYBIRD_SYNC_EVENT_DATASOURCES} from '../services/tinybird/tinybird-sync';
 import {TinybirdClient} from '../services/tinybird/client';
 
+const MAX_FLUSH_INTERVAL_MS = 2147483647;
+
 async function tinybirdSyncWorkerPlugin(fastify: FastifyInstance) {
     let tinybirdSyncWorker: TinybirdSyncBatchWorker | null = null;
     let heartbeatInterval: NodeJS.Timeout | null = null;
@@ -32,6 +34,18 @@ async function tinybirdSyncWorkerPlugin(fastify: FastifyInstance) {
                 datasource: TINYBIRD_SYNC_EVENT_DATASOURCES.automation_run_steps
             })
         };
+
+        const batchSize = parseInt(process.env.TINYBIRD_SYNC_BATCH_SIZE || '50', 10);
+        const isBatchSizeValid = batchSize > 0 && Number.isSafeInteger(batchSize);
+        if (!isBatchSizeValid) {
+            throw new Error(`Invalid batch size: ${batchSize}`);
+        }
+
+        const flushInterval = parseInt(process.env.TINYBIRD_SYNC_BATCH_FLUSH_INTERVAL_MS || '1000', 10);
+        const isFlushIntervalValid = flushInterval > 0 && Number.isInteger(flushInterval) && flushInterval <= MAX_FLUSH_INTERVAL_MS;
+        if (!isFlushIntervalValid) {
+            throw new Error(`Invalid flush interval: ${flushInterval}`);
+        }
 
         tinybirdSyncWorker = new TinybirdSyncBatchWorker(subscriptionName, tinybirdClients, {
             batchSize: parseInt(process.env.TINYBIRD_SYNC_BATCH_SIZE || '50', 10),
