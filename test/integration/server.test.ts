@@ -155,7 +155,7 @@ describe('Server Conditional Loading', () => {
     });
 
     describe('Environment Variable Handling', () => {
-        it('should handle WORKER_MODE with different casing', async () => {
+        it('should handle WORKER_MODE with incorrect casing (it is case-sensitive)', async () => {
             process.env.WORKER_MODE = 'TRUE';
             vi.resetModules();
 
