@@ -2,6 +2,7 @@ import type {LoggerOptions} from 'pino';
 import type {PrettyOptions} from 'pino-pretty';
 import type {FastifyRequest, FastifyReply} from 'fastify';
 import {createGcpLoggingPinoConfig} from '@google-cloud/pino-logging-gcp-config';
+import {getDefaultServiceName} from './service-name';
 
 const LOG_FORMATS = ['gcp', 'json'] as const;
 
@@ -33,8 +34,7 @@ function getLogFormat(): LogFormat {
 }
 
 function getServiceContext(): {service: string; version?: string} {
-    const isWorkerMode = process.env.WORKER_MODE === 'true';
-    const service = process.env.K_SERVICE || (isWorkerMode ? 'analytics-worker' : 'analytics-service');
+    const service = process.env.K_SERVICE || getDefaultServiceName(process.env.WORKER_MODE || '');
     const version = process.env.K_REVISION || process.env.npm_package_version;
 
     return version ? {service, version} : {service};
