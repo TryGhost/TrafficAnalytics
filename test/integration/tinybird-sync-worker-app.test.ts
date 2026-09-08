@@ -18,9 +18,18 @@ describe('Tinybird sync worker app', () => {
         }
     });
 
-    it.each(['/', '/health'])('responds to GET %s with healthy status', async (path) => {
+    it('responds to GET / with healthy status', async () => {
         const response = await request(app.server)
-            .get(path)
+            .get('/')
+            .expect(200)
+            .expect('content-type', /application\/json/);
+
+        expect(response.body).toEqual({status: 'tinybird-sync-healthy'});
+    });
+
+    it('responds to GET /health with healthy status', async () => {
+        const response = await request(app.server)
+            .get('/health')
             .expect(200)
             .expect('content-type', /application\/json/);
 
