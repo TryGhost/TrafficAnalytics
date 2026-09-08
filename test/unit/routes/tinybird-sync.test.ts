@@ -5,6 +5,20 @@ import tinybirdSyncRoutes from '../../../src/routes/v1/tinybird-sync';
 describe('tinybird sync route', () => {
     let app: ReturnType<typeof fastify>;
 
+    const event = () => ({
+        type: 'automation_runs',
+        site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f',
+        id: '6a99cd8cb5ac7c0052553383',
+        updated_at: '2026-09-03T19:42:04.000Z',
+        payload: {
+            id: '6a99cd8cb5ac7c0052553383',
+            automation_id: '6a99cd6cb5ac7c0052553378',
+            created_at: '2026-09-03T19:42:04.000Z',
+            updated_at: '2026-09-03T19:42:04.000Z',
+            site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f'
+        }
+    });
+
     beforeEach(async () => {
         vi.stubEnv('TINYBIRD_SYNC_AUTH', 'sync-secret');
         app = fastify();
@@ -17,17 +31,143 @@ describe('tinybird sync route', () => {
         await app.close();
     });
 
-    it('should return 202 with an empty response body', async () => {
+    it('should reject a valid event sent as regular JSON', async () => {
         const response = await app.inject({
             method: 'POST',
             url: '/api/v1/tinybird-sync',
             headers: {
                 authorization: 'Bearer sync-secret'
+            },
+            payload: event()
+        });
+
+        expect(response.statusCode).toBe(415);
+    });
+
+    it('should reject a valid event batch sent as regular JSON', async () => {
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {authorization: 'Bearer sync-secret'},
+            payload: [event()]
+        });
+
+        expect(response.statusCode).toBe(415);
+    });
+
+    it('should return 202 for a valid NDJSON batch', async () => {
+        const runStep = {
+            type: 'automation_run_steps',
+            site_uuid: event().site_uuid,
+            id: '6a99cd8cb5ac7c0052553384',
+            updated_at: '2026-09-03T19:42:04.000Z',
+            payload: {
+                id: '6a99cd8cb5ac7c0052553384',
+                automation_run_id: '6a99cd8cb5ac7c0052553383',
+                automation_action_revision_id: '6a99cd7db5ac7c005255337a',
+                status: 'pending',
+                step_attempts: 0,
+                ready_at: '2026-09-04T19:42:04.000Z',
+                started_at: null,
+                finished_at: null,
+                created_at: '2026-09-03T19:42:04.000Z',
+                updated_at: '2026-09-03T19:42:04.000Z',
+                site_uuid: event().site_uuid
             }
+        };
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {
+                authorization: 'Bearer sync-secret',
+                'content-type': 'application/x-ndjson'
+            },
+            payload: `${JSON.stringify(event())}\n${JSON.stringify(runStep)}`
         });
 
         expect(response.statusCode).toBe(202);
         expect(response.body).toBe('');
+    });
+
+    it('should reject invalid payloads without coercing column types', async () => {
+        const value = event();
+        value.payload.automation_id = 'invalid';
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {
+                authorization: 'Bearer sync-secret',
+                'content-type': 'application/x-ndjson'
+            },
+            payload: JSON.stringify(value)
+        });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.json().message).toMatch(/payload\/automation_id/);
+    });
+
+    it('should reject unexpected payload fields', async () => {
+        const value = event();
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {
+                authorization: 'Bearer sync-secret',
+                'content-type': 'application/x-ndjson'
+            },
+            payload: JSON.stringify({...value, payload: {...value.payload, secret: 'not-in-schema'}})
+        });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.json().message).toMatch(/additional properties/);
+    });
+
+    it('should reject an empty NDJSON batch', async () => {
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {
+                authorization: 'Bearer sync-secret',
+                'content-type': 'application/x-ndjson'
+            },
+            payload: '\n'
+        });
+
+        expect(response.statusCode).toBe(400);
+    });
+
+    it('should reject unknown event types', async () => {
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {
+                authorization: 'Bearer sync-secret',
+                'content-type': 'application/x-ndjson'
+            },
+            payload: JSON.stringify({...event(), type: 'unknown_table'})
+        });
+
+        expect(response.statusCode).toBe(400);
+    });
+
+    it('should reject NDJSON payloads larger than 10 MiB', async () => {
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {
+                authorization: 'Bearer sync-secret',
+                'content-type': 'application/x-ndjson'
+            },
+            payload: `${JSON.stringify(event())}\n${' '.repeat(10 * 1024 * 1024)}`
+        });
+
+        expect(response.statusCode).toBe(413);
+        expect(response.json()).toMatchObject({
+            code: 'FST_ERR_CTP_BODY_TOO_LARGE',
+            error: 'Payload Too Large'
+        });
     });
 
     it('should reject invalid authorization', async () => {

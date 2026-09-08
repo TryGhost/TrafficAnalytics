@@ -85,4 +85,21 @@ describe('NDJSON plugin', () => {
             message: 'Invalid NDJSON on line 2'
         });
     });
+
+    it('rejects payloads larger than the route body limit', async () => {
+        app.post('/limited-events', {bodyLimit: 32}, async request => request.body);
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/limited-events',
+            headers: {'content-type': 'application/x-ndjson'},
+            payload: `${JSON.stringify({event: true})}\n${' '.repeat(32)}`
+        });
+
+        expect(response.statusCode).toBe(413);
+        expect(response.json()).toMatchObject({
+            code: 'FST_ERR_CTP_BODY_TOO_LARGE',
+            error: 'Payload Too Large'
+        });
+    });
 });

@@ -170,9 +170,32 @@ describe('Fastify App', () => {
             const response = await request(proxyServer)
                 .post('/api/v1/tinybird-sync')
                 .auth('test-sync-auth', {type: 'bearer'})
+                .set('Content-Type', 'application/x-ndjson')
+                .send(JSON.stringify({
+                    type: 'automation_runs',
+                    site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f',
+                    id: '6a99cd8cb5ac7c0052553383',
+                    updated_at: '2026-09-03T19:42:04.000Z',
+                    payload: {
+                        id: '6a99cd8cb5ac7c0052553383',
+                        automation_id: '6a99cd6cb5ac7c0052553378',
+                        created_at: '2026-09-03T19:42:04.000Z',
+                        updated_at: '2026-09-03T19:42:04.000Z',
+                        site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f'
+                    }
+                }))
                 .expect(202);
 
             expect(response.text).toBe('');
+        });
+
+        it('should reject an invalid sync event', async function () {
+            await request(proxyServer)
+                .post('/api/v1/tinybird-sync')
+                .auth('test-sync-auth', {type: 'bearer'})
+                .set('Content-Type', 'application/x-ndjson')
+                .send(JSON.stringify({type: 'unknown_table'}))
+                .expect(400);
         });
     });
 
