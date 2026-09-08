@@ -1,8 +1,7 @@
-import {FastifyInstance, FastifyRequest} from 'fastify';
+import {errorCodes, FastifyInstance, FastifyRequest} from 'fastify';
 import fp from 'fastify-plugin';
-import split from 'split2';
 import {IncomingMessage} from 'node:http';
-import {pipeline} from 'node:stream/promises';
+import {StringDecoder} from 'node:string_decoder';
 import type {JsonValue} from 'type-fest';
 
 type NdjsonParseError = SyntaxError & {
@@ -16,31 +15,46 @@ function parseError(lineNumber: number): NdjsonParseError {
 }
 
 function ndjsonPlugin(fastify: FastifyInstance) {
-    fastify.addContentTypeParser('application/x-ndjson', async (_request: FastifyRequest, payload: IncomingMessage) => {
+    fastify.addContentTypeParser('application/x-ndjson', async (request: FastifyRequest, payload: IncomingMessage) => {
         const values: JsonValue[] = [];
         let lineNumber = 0;
+        let receivedBytes = 0;
+        let remainder = '';
+        const decoder = new StringDecoder('utf8');
 
-        await pipeline(
-            payload,
-            split(),
-            async (stream) => {
-                for await (const value of stream) {
-                    lineNumber += 1;
+        const parseLine = (line: string) => {
+            lineNumber += 1;
 
-                    const line = String(value);
-
-                    if (line.trim() === '') {
-                        continue;
-                    }
-
-                    try {
-                        values.push(JSON.parse(line));
-                    } catch {
-                        throw parseError(lineNumber);
-                    }
-                }
+            if (line.trim() === '') {
+                return;
             }
-        );
+
+            try {
+                values.push(JSON.parse(line));
+            } catch {
+                throw parseError(lineNumber);
+            }
+        };
+
+        for await (const chunk of payload) {
+            receivedBytes += chunk.length;
+            if (receivedBytes > request.routeOptions.bodyLimit) {
+                throw new errorCodes.FST_ERR_CTP_BODY_TOO_LARGE();
+            }
+
+            remainder += decoder.write(chunk);
+            let newlineIndex = remainder.indexOf('\n');
+            while (newlineIndex !== -1) {
+                parseLine(remainder.slice(0, newlineIndex));
+                remainder = remainder.slice(newlineIndex + 1);
+                newlineIndex = remainder.indexOf('\n');
+            }
+        }
+
+        remainder += decoder.end();
+        if (remainder !== '') {
+            parseLine(remainder);
+        }
 
         return values;
     });
