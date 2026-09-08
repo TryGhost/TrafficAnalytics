@@ -1,6 +1,6 @@
 # Deployment
 
-Traffic Analytics deploys to **Google Cloud Run** in a single region (`europe-west4`, "netherlands"), across **staging** and **production** environments. Each environment runs two Cloud Run services: the ingest service and the worker.
+Traffic Analytics deploys to **Google Cloud Run** in a single region (`europe-west4`, "netherlands"), across **staging** and **production** environments. Each environment runs three Cloud Run services: the ingest service, the page-hit worker, and the automation worker.
 
 All deployment logic lives in [`.github/workflows/`](../.github/workflows) and a set of composite actions under [`.github/actions/`](../.github/actions).
 
@@ -12,8 +12,8 @@ flowchart TD
     Deploy --> Bump["Bump patch version<br/>commit + tag vX.Y.Z<br/>Slack notify"]
     Bump --> DH["Trigger docker-hub.yml<br/>(publish to Docker Hub)"]
     Bump --> Build["deploy-image-to-gcp.yml<br/>build + push to GCP Artifact Registry"]
-    Build --> Stg["deploy-environment.yml<br/>staging (analytics + worker)"]
-    Build --> Prd["deploy-environment.yml<br/>production (analytics + worker)"]
+    Build --> Stg["deploy-environment.yml<br/>staging (analytics + workers)"]
+    Build --> Prd["deploy-environment.yml<br/>production (analytics + workers)"]
     Stg --> HCS["run-healthchecks.yml<br/>staging"]
     Prd --> HCP["run-healthchecks.yml<br/>production"]
     Stg --> SlackS["Slack deploy summary"]
@@ -27,7 +27,7 @@ Triggered on every push to `main` (and via manual `workflow_dispatch`). Jobs:
 1. **Bump Version** — bumps the patch version with `npm version patch` (e.g. `1.2.3 → 1.2.4`), commits it as `vX.Y.Z [skip ci]`, pushes to `main`, and creates + pushes the `vX.Y.Z` git tag. Sends a Slack "new version released" notification. (The commit carries `[skip ci]`, so it does not re-trigger CI/deploy; a `GH_PAT` authorizes the push and tag to the protected branch, and the Docker Hub build is dispatched explicitly by the next job.)
 2. **Trigger Docker Hub Deploy** — dispatches [`docker-hub.yml`](../.github/workflows/docker-hub.yml) at the new `vX.Y.Z` tag.
 3. **Build** — calls [`deploy-image-to-gcp.yml`](../.github/workflows/deploy-image-to-gcp.yml) to build and push the image to GCP Artifact Registry.
-4. **Deploy Staging** and **Deploy Production** — both call [`deploy-environment.yml`](../.github/workflows/deploy-environment.yml) after the build, so the two environments deploy in parallel. Each deploys the `analytics` and `worker` services.
+4. **Deploy Staging** and **Deploy Production** — both call [`deploy-environment.yml`](../.github/workflows/deploy-environment.yml) after the build, so the two environments deploy in parallel. Each deploys the `analytics`, `worker`, and `automation-worker` services.
 5. **Healthcheck Staging / Production** — each runs [`run-healthchecks.yml`](../.github/workflows/run-healthchecks.yml), gated on its deploy job reporting `success`.
 
 ## Build & push image — [`deploy-image-to-gcp.yml`](../.github/workflows/deploy-image-to-gcp.yml)
@@ -44,10 +44,10 @@ A reusable (`workflow_call`) workflow that:
 Reusable workflow that takes `environment`, `image`, `region`, `region_name`, and a JSON `services` array. It runs a matrix over the services, deploying each to Cloud Run via the [`deploy-gcp-cloud-run`](../.github/actions/deploy-gcp-cloud-run) composite action. Cloud Run service names follow:
 
 ```text
-<stg|prd>-<region_name>-traffic-analytics[-worker]
+<stg|prd>-<region_name>-traffic-analytics[-worker|-automation-worker]
 ```
 
-(the `-worker` suffix is added for the `worker` service). A `notify` job then posts a Slack deployment summary.
+(the appropriate suffix is added for each worker service). The deployment explicitly sets `WORKER_MODE=true` for the page-hit worker and `WORKER_MODE=automation` for the automation worker. A `notify` job then posts a Slack deployment summary.
 
 ## Docker Hub release — [`docker-hub.yml`](../.github/workflows/docker-hub.yml)
 
@@ -64,7 +64,7 @@ The workflow requires the `HEALTHCHECK_WAF_BYPASS_TOKEN` GitHub Actions secret. 
 To test a branch on staging **without merging**, add the **`deploy-staging`** label to its PR. The workflow:
 
 1. Waits for the PR's CI run to finish if one is in progress.
-2. Builds and pushes the image, then deploys the `analytics` and `worker` services to staging.
+2. Builds and pushes the image, then deploys the `analytics`, `worker`, and `automation-worker` services to staging.
 3. Runs staging health checks.
 4. In a `finalize` step (always runs): comments on the PR with the result and the tree SHA, then **removes the `deploy-staging` label** so it can be re-applied to deploy again.
 

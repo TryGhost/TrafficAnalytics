@@ -124,6 +124,44 @@ describe('Server Conditional Loading', () => {
         });
     });
 
+    describe('Automation Worker App Loading (WORKER_MODE=automation)', () => {
+        beforeEach(async () => {
+            process.env.WORKER_MODE = 'automation';
+            vi.resetModules();
+
+            const serverModule = await import('../../server');
+            app = serverModule.default;
+            await app.ready();
+        });
+
+        it('should load the automation worker app', async () => {
+            const response = await request(app.server)
+                .get('/')
+                .expect(200);
+
+            expect(response.body).toEqual({
+                status: 'automation-worker-healthy'
+            });
+        });
+
+        it('should expose the automation worker health endpoint', async () => {
+            const response = await request(app.server)
+                .get('/health')
+                .expect(200);
+
+            expect(response.body).toEqual({
+                status: 'automation-worker-healthy'
+            });
+        });
+
+        it('should not expose ingest routes', async () => {
+            await request(app.server)
+                .post('/api/v1/page_hit')
+                .send({})
+                .expect(404);
+        });
+    });
+
     describe('Environment Variable Handling', () => {
         it('should handle WORKER_MODE with different casing', async () => {
             process.env.WORKER_MODE = 'TRUE';

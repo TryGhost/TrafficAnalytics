@@ -221,6 +221,17 @@ describe('Logger Config', () => {
                 versionAssertion: 'exact'
             },
             {
+                name: 'should include automation worker service context when WORKER_MODE is automation and K_SERVICE is missing',
+                event: 'service-context-automation-worker',
+                env: {
+                    K_SERVICE: '',
+                    WORKER_MODE: 'automation'
+                },
+                expectedService: 'automation-worker',
+                expectedVersion: undefined,
+                versionAssertion: 'ignore'
+            },
+            {
                 name: 'should not use worker service context when WORKER_MODE is false',
                 event: 'service-context-worker-mode-false',
                 env: {

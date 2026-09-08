@@ -26,9 +26,10 @@ TrafficAnalytics is a web analytics proxy service for Ghost that processes and e
 
 ## Run Modes
 
-The same image runs in two roles, selected by `WORKER_MODE` (see `server.ts`):
+The same image runs in three roles, selected by `WORKER_MODE` (see `server.ts`):
 - **Ingest app** (`WORKER_MODE` unset — `src/app.ts`): the Fastify HTTP server that receives `POST /api/v1/page_hit`.
 - **Worker app** (`WORKER_MODE=true` — `src/worker-app.ts`): a Pub/Sub consumer that enriches events and forwards them to Tinybird. Exposes only health endpoints (`/`, `/health`).
+- **Automation worker app** (`WORKER_MODE=automation` — `src/automation-worker-app.ts`): a deployable worker scaffold with health endpoints and heartbeat logging. It does not subscribe to Pub/Sub yet.
 
 The ingest app has two request strategies (see `src/handlers/page-hit-handlers.ts`), chosen by whether `PUBSUB_TOPIC_PAGE_HITS_RAW` is set:
 - **Batch mode (default in dev/prod)**: filter bot traffic, publish non-bot raw events to the Pub/Sub topic, and return `202`; enrichment + forwarding happen later in the worker app. This is the `dev:batch` Compose profile (`analytics-service` + `worker`).
@@ -39,9 +40,9 @@ See `docs/architecture.md` for a diagram and deeper detail, and `docs/deployment
 ## Architecture
 
 Key modules under `src/`:
-- **Entrypoints**: `server.ts` (selects app by `WORKER_MODE`), `src/app.ts` (ingest), `src/worker-app.ts` (worker).
+- **Entrypoints**: `server.ts` (selects app by `WORKER_MODE`), `src/app.ts` (ingest), `src/worker-app.ts` (page-hit worker), `src/automation-worker-app.ts` (automation worker scaffold).
 - **Routes / handlers** (`src/routes/v1`, `src/handlers/page-hit-handlers.ts`): defines `POST /api/v1/page_hit`, chooses batch vs proxy strategy.
-- **Plugins** (`src/plugins/`): `hmac-validation` (global `preValidation` HMAC check), `bot-detection` (page-hit `preHandler` bot filter), `timestamp` (records `serverReceivedAt` on request), `cors`, `logging`, `proxy` (local `/local-proxy` test endpoint), `worker-plugin` (batch worker lifecycle in the worker app).
+- **Plugins** (`src/plugins/`): `hmac-validation` (global `preValidation` HMAC check), `bot-detection` (page-hit `preHandler` bot filter), `timestamp` (records `serverReceivedAt` on request), `cors`, `logging`, `proxy` (local `/local-proxy` test endpoint), `worker-plugin` (batch worker lifecycle in the page-hit worker), `automation-worker-plugin` (automation worker startup and heartbeat lifecycle).
 - **Events** (`src/services/events/`): `publisher.ts` / `publisherUtils.ts` publish raw page hits to Pub/Sub; `subscriber.ts` consumes from a subscription. Uses `@google-cloud/pubsub`.
 - **Batch worker** (`src/services/batch-worker/`): subscribes, transforms each message, batches, and flushes to Tinybird (`BATCH_SIZE`, `BATCH_FLUSH_INTERVAL_MS`).
 - **Tinybird** (`src/services/tinybird/`): `client.ts` posts single or NDJSON-batch events to `{PROXY_TARGET}/v0/events?name=analytics_events`.
@@ -89,7 +90,7 @@ Adapter pattern behind `ISaltStore`, selected by `SALT_STORE_TYPE` (see `SaltSto
 ### Core / run mode
 - `PORT` - Server port (default: 3000)
 - `LISTEN_HOST` - Server listen host (default: 0.0.0.0)
-- `WORKER_MODE` - When `'true'`, `server.ts` runs the worker app (Pub/Sub consumer) instead of the ingest app (default: unset)
+- `WORKER_MODE` - Process role: unset runs the ingest app, `'true'` runs the page-hit Pub/Sub worker, and `'automation'` runs the automation worker scaffold
 - `PROXY_TARGET` - Upstream URL to forward requests. Used directly in proxy mode, and as the Tinybird base URL by the worker (`/v0/events` is stripped/re-added). Default: `http://localhost:3000/local-proxy`
 - `TINYBIRD_TRACKER_TOKEN` - Bearer token for authenticating with Tinybird
 - `TINYBIRD_WAIT` - Pass `wait=true` parameter to Tinybird, which makes it respond only after data is ingested (default: false)

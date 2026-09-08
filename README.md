@@ -47,7 +47,7 @@ The "Process Request" and "forward to Tinybird" steps above happen in one of two
 - **Batch mode (default)** — The ingest service validates the request, filters bot traffic, publishes non-bot raw events to a Google Cloud Pub/Sub topic, and immediately returns `202`. A separate **worker** process consumes from the subscription, enriches each event (user-agent parsing, referrer parsing, user signature), batches events, and forwards them to Tinybird's `/v0/events` endpoint. This decouples request handling from Tinybird ingestion. Started with `pnpm dev` (alias for `pnpm dev:batch`).
 - **Proxy mode (synchronous)** — With no Pub/Sub topic configured, the ingest service filters bot traffic, enriches non-bot requests inline, and proxies them straight to Tinybird in the same request/response cycle. Started with `pnpm dev:proxy`.
 
-Both modes run from the same image; the role is selected by the `WORKER_MODE` environment variable (worker vs. ingest) and the presence of `PUBSUB_TOPIC_PAGE_HITS_RAW` (batch vs. proxy). See [docs/architecture.md](docs/architecture.md) for a diagram and full detail.
+All roles run from the same image; `WORKER_MODE` selects ingest, page-hit worker, or automation worker, while `PUBSUB_TOPIC_PAGE_HITS_RAW` selects batch vs. proxy handling for ingest. See [docs/architecture.md](docs/architecture.md) for a diagram and full detail.
 
 ## Features
 

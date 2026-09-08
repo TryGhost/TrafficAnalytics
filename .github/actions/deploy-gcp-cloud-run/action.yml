@@ -20,6 +20,9 @@ inputs:
   gcp_workload_identity_provider:
     description: The GCP workload identity provider
     required: true
+  env_vars:
+    description: Environment variables to set on the Cloud Run service
+    required: false
 
 runs:
   using: composite
@@ -37,6 +40,7 @@ runs:
         image: ${{ inputs.image }}
         region: ${{ inputs.region }}
         service: ${{ inputs.service }}
+        env_vars: ${{ inputs.env_vars }}
         skip_default_labels: true
         labels: |-
           commit-sha=${{ github.sha }}

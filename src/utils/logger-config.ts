@@ -33,8 +33,14 @@ function getLogFormat(): LogFormat {
 }
 
 function getServiceContext(): {service: string; version?: string} {
-    const isWorkerMode = process.env.WORKER_MODE === 'true';
-    const service = process.env.K_SERVICE || (isWorkerMode ? 'analytics-worker' : 'analytics-service');
+    let localService = 'analytics-service';
+    if (process.env.WORKER_MODE === 'true') {
+        localService = 'analytics-worker';
+    } else if (process.env.WORKER_MODE === 'automation') {
+        localService = 'automation-worker';
+    }
+
+    const service = process.env.K_SERVICE || localService;
     const version = process.env.K_REVISION || process.env.npm_package_version;
 
     return version ? {service, version} : {service};

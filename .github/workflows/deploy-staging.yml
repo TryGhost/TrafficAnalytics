@@ -51,7 +51,7 @@ jobs:
       image: ${{ needs.deploy-image-to-gcp.outputs.image }}
       region: europe-west4
       region_name: netherlands
-      services: '["analytics", "worker"]'
+      services: '["analytics", "worker", "automation-worker"]'
 
   healthchecks:
     name: Healthchecks
