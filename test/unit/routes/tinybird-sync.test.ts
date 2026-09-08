@@ -1,9 +1,15 @@
 import fastify from 'fastify';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import tinybirdSyncRoutes from '../../../src/routes/v1/tinybird-sync';
+import * as publisherModule from '../../../src/services/events/publisher';
+
+vi.mock('../../../src/services/events/publisher', () => ({
+    publishEvent: vi.fn()
+}));
 
 describe('tinybird sync route', () => {
     let app: ReturnType<typeof fastify>;
+    let fetchMock: ReturnType<typeof vi.fn>;
 
     const event = () => ({
         type: 'automation_runs',
@@ -21,6 +27,12 @@ describe('tinybird sync route', () => {
 
     beforeEach(async () => {
         vi.stubEnv('TINYBIRD_SYNC_AUTH', 'sync-secret');
+        vi.stubEnv('PUBSUB_TOPIC_TINYBIRD_SYNC', 'tinybird-sync-topic');
+        vi.stubEnv('PROXY_TARGET', 'https://api.tinybird.co/v0/events');
+        vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'test-token');
+        vi.mocked(publisherModule.publishEvent).mockResolvedValue('message-id');
+        fetchMock = vi.fn().mockResolvedValue({ok: true});
+        vi.stubGlobal('fetch', fetchMock);
         app = fastify();
         await app.register(tinybirdSyncRoutes, {prefix: '/api/v1/tinybird-sync'});
         app.post('/unprotected', async () => ({ok: true}));
@@ -29,6 +41,8 @@ describe('tinybird sync route', () => {
 
     afterEach(async () => {
         await app.close();
+        vi.unstubAllEnvs();
+        vi.unstubAllGlobals();
     });
 
     it('should reject a valid event sent as regular JSON', async () => {
@@ -87,6 +101,62 @@ describe('tinybird sync route', () => {
 
         expect(response.statusCode).toBe(202);
         expect(response.body).toBe('');
+        expect(publisherModule.publishEvent).toHaveBeenCalledTimes(2);
+        expect(publisherModule.publishEvent).toHaveBeenNthCalledWith(1, {
+            topic: 'tinybird-sync-topic',
+            payload: event(),
+            logger: expect.anything()
+        });
+        expect(publisherModule.publishEvent).toHaveBeenNthCalledWith(2, {
+            topic: 'tinybird-sync-topic',
+            payload: runStep,
+            logger: expect.anything()
+        });
+    });
+
+    it('should return 500 when publishing fails', async () => {
+        vi.mocked(publisherModule.publishEvent).mockRejectedValue(new Error('Pub/Sub unavailable'));
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {
+                authorization: 'Bearer sync-secret',
+                'content-type': 'application/x-ndjson'
+            },
+            payload: JSON.stringify(event())
+        });
+
+        expect(response.statusCode).toBe(500);
+    });
+
+    it('should send events directly to Tinybird when the Pub/Sub topic is not configured', async () => {
+        vi.stubEnv('PUBSUB_TOPIC_TINYBIRD_SYNC', undefined);
+        const value = event();
+
+        const response = await app.inject({
+            method: 'POST',
+            url: '/api/v1/tinybird-sync',
+            headers: {
+                authorization: 'Bearer sync-secret',
+                'content-type': 'application/x-ndjson'
+            },
+            payload: JSON.stringify(value)
+        });
+
+        expect(response.statusCode).toBe(202);
+        expect(publisherModule.publishEvent).not.toHaveBeenCalled();
+        expect(fetchMock).toHaveBeenCalledWith(
+            'https://api.tinybird.co/v0/events?name=automation_run_events',
+            expect.objectContaining({
+                body: JSON.stringify({
+                    site_uuid: value.site_uuid,
+                    id: value.id,
+                    updated_at: value.updated_at,
+                    payload: value.payload
+                })
+            })
+        );
     });
 
     it('should reject invalid payloads without coercing column types', async () => {

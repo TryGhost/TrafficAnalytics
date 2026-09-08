@@ -1,7 +1,8 @@
 import bearerAuthPlugin from '@fastify/bearer-auth';
 import type {FastifyInstance} from 'fastify';
+import {tinybirdSyncRequestHandler} from '../../handlers/tinybird-sync-handlers';
 import ndjsonPlugin from '../../plugins/ndjson';
-import {dataValidatorCompiler, TinybirdSyncRequestBodySchema, type ZodTypeProvider} from '../../schemas';
+import {dataValidatorCompiler, TinybirdSyncRequestBodySchema, type TinybirdSyncRequestBody, type ZodTypeProvider} from '../../schemas';
 
 async function tinybirdSyncRoutes(fastify: FastifyInstance) {
     const auth = process.env.TINYBIRD_SYNC_AUTH;
@@ -13,7 +14,7 @@ async function tinybirdSyncRoutes(fastify: FastifyInstance) {
         keys: new Set(auth ? [auth] : [])
     });
 
-    fastify.withTypeProvider<ZodTypeProvider>().post('/', {
+    fastify.withTypeProvider<ZodTypeProvider>().post<{Body: TinybirdSyncRequestBody}>('/', {
         bodyLimit: 10 * 1024 * 1024,
         onRequest: async (request, reply) => {
             const contentType = request.headers['content-type']?.split(';', 1)[0].trim().toLowerCase();
@@ -27,7 +28,7 @@ async function tinybirdSyncRoutes(fastify: FastifyInstance) {
         schema: {
             body: TinybirdSyncRequestBodySchema
         }
-    }, async (_request, reply) => reply.status(202).send());
+    }, tinybirdSyncRequestHandler);
 }
 
 export default tinybirdSyncRoutes;

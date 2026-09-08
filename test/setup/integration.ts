@@ -4,27 +4,35 @@ import {createTopic, createSubscription, deleteSubscription, deleteTopic, cleanu
 process.env.TINYBIRD_SYNC_AUTH = 'test-sync-auth';
 
 // Use the base environment variable names, but we'll ensure cleanup between tests
-const topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
-const subscriptionName = process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw-sub';
+const pageHitsTopicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw';
+const pageHitsSubscriptionName = process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW || 'test-traffic-analytics-page-hits-raw-sub';
+const tinybirdSyncTopicName = process.env.PUBSUB_TOPIC_TINYBIRD_SYNC || 'test-traffic-analytics-tinybird-sync';
+const tinybirdSyncSubscriptionName = process.env.PUBSUB_SUBSCRIPTION_TINYBIRD_SYNC || 'test-traffic-analytics-tinybird-sync-sub';
 
 // eslint-disable-next-line ghost/mocha/no-top-level-hooks
 beforeEach(async () => {
     vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'test-token');
     // Clean up any orphaned test resources first
     await cleanupTestSubscriptions(/^test-.*-\d+-[a-z0-9]+$/);
-    
+
     // Clean up the main test resources if they exist
-    await deleteSubscription(subscriptionName);
-    await deleteTopic(topicName);
-    
+    await deleteSubscription(pageHitsSubscriptionName);
+    await deleteSubscription(tinybirdSyncSubscriptionName);
+    await deleteTopic(pageHitsTopicName);
+    await deleteTopic(tinybirdSyncTopicName);
+
     // Create fresh resources for this test
-    await createTopic(topicName);
-    await createSubscription(topicName, subscriptionName);
+    await createTopic(pageHitsTopicName);
+    await createSubscription(pageHitsTopicName, pageHitsSubscriptionName);
+    await createTopic(tinybirdSyncTopicName);
+    await createSubscription(tinybirdSyncTopicName, tinybirdSyncSubscriptionName);
 });
 
-// eslint-disable-next-line ghost/mocha/no-top-level-hooks  
+// eslint-disable-next-line ghost/mocha/no-top-level-hooks
 afterEach(async () => {
-    await deleteSubscription(subscriptionName);
-    await deleteTopic(topicName);
+    await deleteSubscription(pageHitsSubscriptionName);
+    await deleteSubscription(tinybirdSyncSubscriptionName);
+    await deleteTopic(pageHitsTopicName);
+    await deleteTopic(tinybirdSyncTopicName);
     vi.unstubAllEnvs();
 });
