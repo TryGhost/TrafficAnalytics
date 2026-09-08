@@ -43,7 +43,7 @@ describe('automation Pub/Sub publishing', () => {
         await deleteSubscription(AUTOMATION_SUBSCRIPTION);
     });
 
-    it('publishes a validated event through the route', async () => {
+    it('publishes a validated event through the route as a chunk', async () => {
         const event = automationRunEvent();
         const receivedMessage = new Promise<Message>((resolve) => {
             subscription.once('message', resolve);
@@ -58,6 +58,7 @@ describe('automation Pub/Sub publishing', () => {
         message.ack();
 
         expect(response.statusCode).toBe(202);
-        expect(JSON.parse(message.data.toString())).toEqual(event);
+        const {type, ...eventBody} = event;
+        expect(JSON.parse(message.data.toString())).toEqual({type, events: [eventBody]});
     });
 });

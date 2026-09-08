@@ -34,19 +34,38 @@ const EventEnvelopeSchema = z.strictObject({
     updated_at: ISO8601DateTimeSchema
 });
 
-export const AutomationRunEventSchema = EventEnvelopeSchema.extend({
-    type: z.literal('automation_runs'),
+const AutomationRunEventBodySchema = EventEnvelopeSchema.extend({
     payload: AutomationRunPayloadSchema
 });
 
-export const AutomationRunStepEventSchema = EventEnvelopeSchema.extend({
-    type: z.literal('automation_run_steps'),
+const AutomationRunStepEventBodySchema = EventEnvelopeSchema.extend({
     payload: AutomationRunStepPayloadSchema
+});
+
+export const AutomationRunEventSchema = AutomationRunEventBodySchema.extend({
+    type: z.literal('automation_runs')
+});
+
+export const AutomationRunStepEventSchema = AutomationRunStepEventBodySchema.extend({
+    type: z.literal('automation_run_steps')
 });
 
 export const AutomationEventSchema = z.discriminatedUnion('type', [
     AutomationRunEventSchema,
     AutomationRunStepEventSchema
+]);
+
+// The Pub/Sub message shape: one type, many events, so a sync of thousands of rows is a
+// few hundred messages rather than one per row.
+export const AutomationEventChunkSchema = z.discriminatedUnion('type', [
+    z.strictObject({
+        type: z.literal('automation_runs'),
+        events: z.array(AutomationRunEventBodySchema).min(1)
+    }),
+    z.strictObject({
+        type: z.literal('automation_run_steps'),
+        events: z.array(AutomationRunStepEventBodySchema).min(1)
+    })
 ]);
 
 export const AutomationEventBatchSchema = z.array(AutomationEventSchema).min(1);
@@ -58,4 +77,5 @@ export const AutomationRequestBodySchema = z.union([
 export type AutomationRunEvent = z.infer<typeof AutomationRunEventSchema>;
 export type AutomationRunStepEvent = z.infer<typeof AutomationRunStepEventSchema>;
 export type AutomationEvent = z.infer<typeof AutomationEventSchema>;
+export type AutomationEventChunk = z.infer<typeof AutomationEventChunkSchema>;
 export type AutomationRequestBody = z.infer<typeof AutomationRequestBodySchema>;

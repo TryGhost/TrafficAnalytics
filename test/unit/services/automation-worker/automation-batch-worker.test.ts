@@ -1,6 +1,7 @@
 import type {Message} from '@google-cloud/pubsub';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import AutomationBatchWorker, {type AutomationTinybirdClients} from '../../../../src/services/automation-worker/AutomationBatchWorker';
+import {EventSubscriber} from '../../../../src/services/events/subscriber';
 
 const subscriberMocks = vi.hoisted(() => ({
     close: vi.fn(),
@@ -23,8 +24,7 @@ vi.mock('../../../../src/utils/logger', () => ({
 
 const SITE_UUID = '45d99892-6304-4251-a75d-2d9ff9c5b81f';
 
-const automationRunEvent = (id = '6a99cd8cb5ac7c0052553383') => ({
-    type: 'automation_runs' as const,
+const automationRunEventBody = (id = '6a99cd8cb5ac7c0052553383') => ({
     site_uuid: SITE_UUID,
     id,
     updated_at: '2026-09-03T19:42:04.000Z',
@@ -37,8 +37,7 @@ const automationRunEvent = (id = '6a99cd8cb5ac7c0052553383') => ({
     }
 });
 
-const automationRunStepEvent = (id = '6a99cd8cb5ac7c0052553384') => ({
-    type: 'automation_run_steps' as const,
+const automationRunStepEventBody = (id = '6a99cd8cb5ac7c0052553384') => ({
     site_uuid: SITE_UUID,
     id,
     updated_at: '2026-09-03T19:42:04.000Z',
@@ -74,60 +73,48 @@ describe('AutomationBatchWorker', () => {
     let runClient: {postEventBatch: ReturnType<typeof vi.fn>};
     let stepClient: {postEventBatch: ReturnType<typeof vi.fn>};
 
-    const startWorker = (batchSize = 2, flushInterval = 60_000) => {
-        worker = new AutomationBatchWorker('automation-events-sub', {
-            automation_runs: runClient,
-            automation_run_steps: stepClient
-        } as AutomationTinybirdClients, {batchSize, flushInterval});
-        worker.start();
-        handleMessage = subscriberMocks.subscribe.mock.calls.at(-1)?.[0];
-    };
-
     beforeEach(() => {
         vi.clearAllMocks();
         messageId = 0;
         subscriberMocks.close.mockResolvedValue(undefined);
         runClient = {postEventBatch: vi.fn().mockResolvedValue(undefined)};
         stepClient = {postEventBatch: vi.fn().mockResolvedValue(undefined)};
-        startWorker();
+        worker = new AutomationBatchWorker('automation-events-sub', {
+            automation_runs: runClient,
+            automation_run_steps: stepClient
+        } as AutomationTinybirdClients, {concurrency: 3});
+        worker.start();
+        handleMessage = subscriberMocks.subscribe.mock.calls.at(-1)?.[0];
     });
 
     afterEach(async () => {
         await worker.stop();
-        vi.useRealTimers();
     });
 
-    it('keeps event types in separate batches and strips the routing type', async () => {
-        const runMessage1 = createMessage(automationRunEvent());
-        const stepMessage1 = createMessage(automationRunStepEvent());
-        const runMessage2 = createMessage(automationRunEvent('6a99cd8cb5ac7c0052553385'));
-        const stepMessage2 = createMessage(automationRunStepEvent('6a99cd8cb5ac7c0052553386'));
+    it('caps outstanding messages at the configured concurrency', () => {
+        expect(EventSubscriber).toHaveBeenCalledWith('automation-events-sub', {
+            flowControl: {maxMessages: 3, allowExcessMessages: false}
+        });
+    });
 
-        await handleMessage(runMessage1);
-        await handleMessage(stepMessage1);
-        await handleMessage(runMessage2);
+    it('posts each chunk to the Tinybird datasource for its type and acks it', async () => {
+        const runChunk = createMessage({type: 'automation_runs', events: [automationRunEventBody(), automationRunEventBody('6a99cd8cb5ac7c0052553385')]});
+        const stepChunk = createMessage({type: 'automation_run_steps', events: [automationRunStepEventBody()]});
+
+        await handleMessage(runChunk);
+        await handleMessage(stepChunk);
 
         expect(runClient.postEventBatch).toHaveBeenCalledOnce();
-        expect(stepClient.postEventBatch).not.toHaveBeenCalled();
-        expect(runClient.postEventBatch).toHaveBeenCalledWith([
-            expect.not.objectContaining({type: expect.anything()}),
-            expect.not.objectContaining({type: expect.anything()})
-        ]);
-
-        await handleMessage(stepMessage2);
-
+        expect(runClient.postEventBatch).toHaveBeenCalledWith([automationRunEventBody(), automationRunEventBody('6a99cd8cb5ac7c0052553385')]);
         expect(stepClient.postEventBatch).toHaveBeenCalledOnce();
-        expect(stepClient.postEventBatch).toHaveBeenCalledWith([
-            expect.not.objectContaining({type: expect.anything()}),
-            expect.not.objectContaining({type: expect.anything()})
-        ]);
-        [runMessage1, runMessage2, stepMessage1, stepMessage2].forEach((message) => {
+        expect(stepClient.postEventBatch).toHaveBeenCalledWith([automationRunStepEventBody()]);
+        [runChunk, stepChunk].forEach((message) => {
             expect(message.ack).toHaveBeenCalledOnce();
             expect(message.nack).not.toHaveBeenCalled();
         });
     });
 
-    it('acks invalid messages without sending them to Tinybird', async () => {
+    it('acks a malformed message without sending anything to Tinybird', async () => {
         const message = createMessage('not-json');
 
         await handleMessage(message);
@@ -138,59 +125,37 @@ describe('AutomationBatchWorker', () => {
         expect(stepClient.postEventBatch).not.toHaveBeenCalled();
     });
 
-    it('nacks only the event type whose Tinybird request fails', async () => {
+    it('drops rows that fail validation and posts the rest', async () => {
+        const good = automationRunEventBody();
+        const bad = {...automationRunEventBody('6a99cd8cb5ac7c0052553385'), payload: {email: 'private@example.com'}};
+        const message = createMessage({type: 'automation_runs', events: [bad, good]});
+
+        await handleMessage(message);
+
+        expect(runClient.postEventBatch).toHaveBeenCalledWith([good]);
+        expect(message.ack).toHaveBeenCalledOnce();
+    });
+
+    it('acks a chunk with no valid rows without posting', async () => {
+        const message = createMessage({type: 'automation_runs', events: [{id: 'nope'}]});
+
+        await handleMessage(message);
+
+        expect(runClient.postEventBatch).not.toHaveBeenCalled();
+        expect(message.ack).toHaveBeenCalledOnce();
+    });
+
+    it('nacks the chunk when its Tinybird request fails', async () => {
         runClient.postEventBatch.mockRejectedValue(new Error('Tinybird unavailable'));
-        const runMessages = [
-            createMessage(automationRunEvent()),
-            createMessage(automationRunEvent('6a99cd8cb5ac7c0052553385'))
-        ];
-        const stepMessages = [
-            createMessage(automationRunStepEvent()),
-            createMessage(automationRunStepEvent('6a99cd8cb5ac7c0052553386'))
-        ];
+        const runChunk = createMessage({type: 'automation_runs', events: [automationRunEventBody()]});
+        const stepChunk = createMessage({type: 'automation_run_steps', events: [automationRunStepEventBody()]});
 
-        for (const message of [...runMessages, ...stepMessages]) {
-            await handleMessage(message);
-        }
+        await handleMessage(runChunk);
+        await handleMessage(stepChunk);
 
-        runMessages.forEach((message) => {
-            expect(message.nack).toHaveBeenCalledOnce();
-            expect(message.ack).not.toHaveBeenCalled();
-        });
-        stepMessages.forEach((message) => {
-            expect(message.ack).toHaveBeenCalledOnce();
-            expect(message.nack).not.toHaveBeenCalled();
-        });
-    });
-
-    it('flushes both partial batches when stopped', async () => {
-        const runMessage = createMessage(automationRunEvent());
-        const stepMessage = createMessage(automationRunStepEvent());
-        await handleMessage(runMessage);
-        await handleMessage(stepMessage);
-
-        await worker.stop();
-
-        expect(runClient.postEventBatch).toHaveBeenCalledOnce();
-        expect(stepClient.postEventBatch).toHaveBeenCalledOnce();
-        expect(runMessage.ack).toHaveBeenCalledOnce();
-        expect(stepMessage.ack).toHaveBeenCalledOnce();
-    });
-
-    it('flushes both event types on the configured interval', async () => {
-        await worker.stop();
-        vi.useFakeTimers();
-        startWorker(2, 1000);
-        const runMessage = createMessage(automationRunEvent());
-        const stepMessage = createMessage(automationRunStepEvent());
-        await handleMessage(runMessage);
-        await handleMessage(stepMessage);
-
-        await vi.advanceTimersByTimeAsync(1000);
-
-        expect(runClient.postEventBatch).toHaveBeenCalledOnce();
-        expect(stepClient.postEventBatch).toHaveBeenCalledOnce();
-        expect(runMessage.ack).toHaveBeenCalledOnce();
-        expect(stepMessage.ack).toHaveBeenCalledOnce();
+        expect(runChunk.nack).toHaveBeenCalledOnce();
+        expect(runChunk.ack).not.toHaveBeenCalled();
+        expect(stepChunk.ack).toHaveBeenCalledOnce();
+        expect(stepChunk.nack).not.toHaveBeenCalled();
     });
 });

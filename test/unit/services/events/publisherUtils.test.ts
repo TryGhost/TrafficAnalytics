@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import type {FastifyRequest} from 'fastify';
-import {publishAutomationEvent, publishPageHitRaw} from '../../../../src/services/events/publisherUtils';
-import {type AutomationEvent, PageHitRaw, PageHitRequestType} from '../../../../src/schemas';
+import {publishAutomationChunk, publishPageHitRaw} from '../../../../src/services/events/publisherUtils';
+import {type AutomationEventChunk, PageHitRaw, PageHitRequestType} from '../../../../src/schemas';
 import * as publisherModule from '../../../../src/services/events/publisher';
 
 vi.mock('../../../../src/services/events/publisher', () => ({
@@ -11,7 +11,7 @@ vi.mock('../../../../src/services/events/publisher', () => ({
 describe('publisherUtils', () => {
     let mockRequest: PageHitRequestType;
     let mockPayload: PageHitRaw;
-    let mockAutomationEvent: AutomationEvent;
+    let mockAutomationChunk: AutomationEventChunk;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -33,37 +33,39 @@ describe('publisherUtils', () => {
         process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'test-topic';
         process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS = 'test-automation-topic';
 
-        mockAutomationEvent = {
+        mockAutomationChunk = {
             type: 'automation_runs',
-            site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f',
-            id: '6a99cd8cb5ac7c0052553383',
-            updated_at: '2026-09-03T19:42:04.000Z',
-            payload: {
+            events: [{
+                site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f',
                 id: '6a99cd8cb5ac7c0052553383',
-                automation_id: '6a99cd6cb5ac7c0052553378',
-                created_at: '2026-09-03T19:42:04.000Z',
                 updated_at: '2026-09-03T19:42:04.000Z',
-                site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f'
-            }
+                payload: {
+                    id: '6a99cd8cb5ac7c0052553383',
+                    automation_id: '6a99cd6cb5ac7c0052553378',
+                    created_at: '2026-09-03T19:42:04.000Z',
+                    updated_at: '2026-09-03T19:42:04.000Z',
+                    site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f'
+                }
+            }]
         };
     });
 
-    describe('publishAutomationEvent', () => {
-        it('publishes the complete automation event to its configured topic', async () => {
+    describe('publishAutomationChunk', () => {
+        it('publishes the chunk to its configured topic', async () => {
             const publishEventSpy = vi.spyOn(publisherModule, 'publishEvent').mockResolvedValue('automation-message-id');
 
-            await publishAutomationEvent(mockRequest as unknown as FastifyRequest, mockAutomationEvent);
+            await publishAutomationChunk(mockRequest as unknown as FastifyRequest, mockAutomationChunk);
 
             expect(publishEventSpy).toHaveBeenCalledWith({
                 topic: 'test-automation-topic',
-                payload: mockAutomationEvent,
+                payload: mockAutomationChunk,
                 logger: mockRequest.log
             });
             expect(mockRequest.log.info).toHaveBeenCalledWith({
-                event: 'PublishedAutomationEvent',
+                event: 'PublishedAutomationChunk',
                 message_id: 'automation-message-id',
-                automation_event_id: mockAutomationEvent.id,
-                automation_event_type: mockAutomationEvent.type
+                automation_event_type: 'automation_runs',
+                event_count: 1
             });
         });
 
@@ -71,7 +73,7 @@ describe('publisherUtils', () => {
             delete process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS;
             const publishEventSpy = vi.spyOn(publisherModule, 'publishEvent');
 
-            await publishAutomationEvent(mockRequest as unknown as FastifyRequest, mockAutomationEvent);
+            await publishAutomationChunk(mockRequest as unknown as FastifyRequest, mockAutomationChunk);
 
             expect(publishEventSpy).not.toHaveBeenCalled();
         });

@@ -1,168 +1,127 @@
 import type {Message} from '@google-cloud/pubsub';
+import {z} from 'zod';
 import {AutomationEventSchema, createValidator, type AutomationEvent} from '../../schemas';
 import logger from '../../utils/logger';
 import {EventSubscriber} from '../events/subscriber';
 import {AUTOMATION_EVENT_DATASOURCES, AUTOMATION_EVENT_TYPES} from '../tinybird/automation';
 import type {TinybirdClient, TinybirdEvent} from '../tinybird/client';
 
+// Rows are validated one at a time below so a bad row is dropped rather than the
+// whole chunk; the envelope only needs to be the right shape.
+const ChunkEnvelopeSchema = z.strictObject({
+    type: z.enum(AUTOMATION_EVENT_TYPES),
+    events: z.array(z.unknown()).min(1)
+});
+
+const validateChunkEnvelope = createValidator(ChunkEnvelopeSchema);
 const validateAutomationEvent = createValidator(AutomationEventSchema);
 
 export interface AutomationBatchWorkerConfig {
-    batchSize?: number;
-    flushInterval?: number;
+    concurrency?: number;
 }
 
 export type AutomationTinybirdClients = Record<AutomationEvent['type'], Pick<TinybirdClient, 'postEventBatch'>>;
-
-interface PendingMessage {
-    message: Message;
-    event: TinybirdEvent;
-}
 
 class AutomationBatchWorker {
     private subscriptionName: string;
     private subscriber: EventSubscriber;
     private tinybirdClients: AutomationTinybirdClients;
-    private batches: Record<AutomationEvent['type'], PendingMessage[]>;
-    private batchSize: number;
-    private flushInterval: number;
-    private flushTimer: NodeJS.Timeout | null;
-    private isShuttingDown: boolean;
 
     constructor(subscriptionName: string, tinybirdClients: AutomationTinybirdClients, config: AutomationBatchWorkerConfig = {}) {
         logger.info({event: 'AutomationBatchWorkerCreating', subscriptionName});
         this.subscriptionName = subscriptionName;
-        this.subscriber = new EventSubscriber(subscriptionName);
         this.tinybirdClients = tinybirdClients;
-        this.batches = {
-            automation_runs: [],
-            automation_run_steps: []
-        };
-        this.batchSize = config.batchSize || parseInt(process.env.BATCH_SIZE || '50', 10);
-        this.flushInterval = config.flushInterval || parseInt(process.env.BATCH_FLUSH_INTERVAL_MS || '1000', 10);
-        this.flushTimer = null;
-        this.isShuttingDown = false;
 
-        logger.info({
-            event: 'AutomationBatchWorkerConfigured',
-            batchSize: this.batchSize,
-            flushIntervalMs: this.flushInterval
+        // Each message is one chunk that becomes one Tinybird request, so outstanding
+        // messages is the number of Tinybird requests in flight.
+        const concurrency = config.concurrency || parseInt(process.env.AUTOMATION_WORKER_CONCURRENCY || '4', 10);
+        this.subscriber = new EventSubscriber(subscriptionName, {
+            flowControl: {
+                maxMessages: concurrency,
+                allowExcessMessages: false
+            }
         });
+
+        logger.info({event: 'AutomationBatchWorkerConfigured', concurrency});
     }
 
     public start(): void {
         logger.info({event: 'AutomationBatchWorkerStarting', subscriptionName: this.subscriptionName});
         this.subscriber.subscribe(this.handleMessage.bind(this));
-        this.scheduleFlush();
     }
 
     public async stop(): Promise<void> {
         logger.info({event: 'AutomationBatchWorkerStopping', subscriptionName: this.subscriptionName});
-        this.isShuttingDown = true;
-
-        if (this.flushTimer) {
-            clearTimeout(this.flushTimer);
-            this.flushTimer = null;
-        }
-
         await this.subscriber.close();
-        await this.flushAllBatches();
     }
 
     private async handleMessage(message: Message): Promise<void> {
-        const automationEvent = this.parseMessage(message);
-        if (!automationEvent) {
+        const chunk = this.parseChunk(message);
+        if (!chunk) {
+            return;
+        }
+
+        const {type, events} = chunk;
+        if (events.length === 0) {
+            message.ack();
             return;
         }
 
         try {
-            const {type, ...event} = automationEvent;
-            this.batches[type].push({message, event});
-
-            logger.debug({
-                event: 'AutomationWorkerQueuedEvent',
+            await this.tinybirdClients[type].postEventBatch(events);
+            message.ack();
+            logger.info({
+                event: 'AutomationWorkerPostedChunk',
                 messageId: message.id,
-                automationEventId: automationEvent.id,
                 automationEventType: type,
-                batchSize: this.batches[type].length
+                datasource: AUTOMATION_EVENT_DATASOURCES[type],
+                eventCount: events.length
             });
-
-            if (this.batches[type].length >= this.batchSize) {
-                await this.flushBatch(type);
-            }
         } catch (err) {
             logger.error({
-                event: 'AutomationWorkerMessageProcessingFailed',
+                event: 'AutomationWorkerChunkPostFailed',
                 messageId: message.id,
+                automationEventType: type,
+                datasource: AUTOMATION_EVENT_DATASOURCES[type],
+                eventCount: events.length,
                 err
             });
             message.nack();
         }
     }
 
-    private parseMessage(message: Message): AutomationEvent | null {
+    private parseChunk(message: Message): {type: AutomationEvent['type']; events: TinybirdEvent[]} | null {
+        let envelope;
         try {
-            return validateAutomationEvent(JSON.parse(message.data.toString()));
+            envelope = validateChunkEnvelope(JSON.parse(message.data.toString()));
         } catch (err) {
             logger.error({
                 event: 'AutomationWorkerMessageParsingFailed',
                 messageId: message.id,
                 err
             });
+            // A malformed message will not parse next time either.
             message.ack();
             return null;
         }
-    }
 
-    private async flushBatch(type: AutomationEvent['type']): Promise<void> {
-        const batch = this.batches[type];
-        if (batch.length === 0) {
-            return;
-        }
-
-        this.batches[type] = [];
-
-        try {
-            await this.tinybirdClients[type].postEventBatch(batch.map(item => item.event));
-            batch.forEach(item => item.message.ack());
-
-            logger.info({
-                event: 'AutomationWorkerFlushedBatch',
-                automationEventType: type,
-                datasource: AUTOMATION_EVENT_DATASOURCES[type],
-                batchSize: batch.length,
-                messageIds: batch.map(item => item.message.id)
-            });
-        } catch (err) {
-            logger.error({
-                event: 'AutomationWorkerBatchFlushFailed',
-                automationEventType: type,
-                datasource: AUTOMATION_EVENT_DATASOURCES[type],
-                batchSize: batch.length,
-                messageIds: batch.map(item => item.message.id),
-                err
-            });
-            batch.forEach(item => item.message.nack());
-        }
-    }
-
-    private async flushAllBatches(): Promise<void> {
-        await Promise.all(AUTOMATION_EVENT_TYPES.map(type => this.flushBatch(type)));
-    }
-
-    private scheduleFlush(): void {
-        if (this.isShuttingDown || this.flushTimer) {
-            return;
-        }
-
-        this.flushTimer = setTimeout(async () => {
-            this.flushTimer = null;
-            await this.flushAllBatches();
-
-            if (!this.isShuttingDown) {
-                this.scheduleFlush();
+        const events: TinybirdEvent[] = [];
+        for (const candidate of envelope.events) {
+            try {
+                const {type, ...event} = validateAutomationEvent({type: envelope.type, ...(candidate as object)});
+                void type;
+                events.push(event);
+            } catch (err) {
+                logger.error({
+                    event: 'AutomationWorkerEventDropped',
+                    messageId: message.id,
+                    automationEventType: envelope.type,
+                    err
+                });
             }
-        }, this.flushInterval);
+        }
+
+        return {type: envelope.type, events};
     }
 }
 
