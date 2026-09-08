@@ -127,6 +127,8 @@ describe('Server Conditional Loading', () => {
     describe('Tinybird Sync Worker Loading (WORKER_MODE=tinybird-sync)', () => {
         beforeEach(async () => {
             process.env.WORKER_MODE = 'tinybird-sync';
+            vi.stubEnv('PROXY_TARGET', 'http://127.0.0.1:8089/v0/events');
+            vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'test-token');
             vi.resetModules();
 
             const serverModule = await import('../../server');

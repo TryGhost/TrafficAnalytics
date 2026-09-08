@@ -100,7 +100,7 @@ jobs:
       image: ${{ needs.build.outputs.version && format('{0}:{1}', vars.DOCKER_IMAGE, needs.build.outputs.version) || '' }}
       region: europe-west4
       region_name: netherlands
-      services: '["analytics", "worker"]'
+      services: '["analytics", "worker", "tinybird-sync"]'
 
   healthcheck-staging:
     name: Healthcheck Staging
@@ -121,7 +121,7 @@ jobs:
       image: ${{ needs.build.outputs.version && format('{0}:{1}', vars.DOCKER_IMAGE, needs.build.outputs.version) || '' }}
       region: europe-west4
       region_name: netherlands
-      services: '["analytics", "worker"]'
+      services: '["analytics", "worker", "tinybird-sync"]'
 
   healthcheck-production:
     name: Healthcheck Production

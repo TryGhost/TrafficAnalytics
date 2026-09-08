@@ -20,6 +20,10 @@ services:
   tinybird-sync:
     image: ${DOCKER_IMAGE}
     build: {}  # Disable build in CI
+    environment:
+      - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
+      - TINYBIRD_TRACKER_TOKEN=test-token
+      - PUBSUB_SUBSCRIPTION_TINYBIRD_SYNC=traffic-analytics-tinybird-sync-sub
 
   analytics-service-proxy:
     image: ${DOCKER_IMAGE}
@@ -37,6 +41,8 @@ services:
       - GOOGLE_CLOUD_PROJECT=traffic-analytics-ci
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+      - PUBSUB_TOPIC_TINYBIRD_SYNC=traffic-analytics-tinybird-sync
+      - PUBSUB_SUBSCRIPTION_TINYBIRD_SYNC=traffic-analytics-tinybird-sync-sub
 
   
 
@@ -51,6 +57,8 @@ services:
       - PUBSUB_EMULATOR_HOST=pubsub:8085
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW=traffic-analytics-page-hits-raw-sub
+      - PUBSUB_TOPIC_TINYBIRD_SYNC=traffic-analytics-tinybird-sync
+      - PUBSUB_SUBSCRIPTION_TINYBIRD_SYNC=traffic-analytics-tinybird-sync-sub
       - FIRESTORE_DATABASE_ID=(default)
       - FIRESTORE_SALT_COLLECTION=salts
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
