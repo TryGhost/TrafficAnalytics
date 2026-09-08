@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import type {FastifyRequest} from 'fastify';
-import {publishAutomationEvent, publishPageHitRaw} from '../../../../src/services/events/publisherUtils';
-import {type AutomationEvent, PageHitRaw, PageHitRequestType} from '../../../../src/schemas';
+import {publishTinybirdSyncEvent, publishPageHitRaw} from '../../../../src/services/events/publisherUtils';
+import {type TinybirdSyncEvent, PageHitRaw, PageHitRequestType} from '../../../../src/schemas';
 import * as publisherModule from '../../../../src/services/events/publisher';
 
 vi.mock('../../../../src/services/events/publisher', () => ({
@@ -11,7 +11,7 @@ vi.mock('../../../../src/services/events/publisher', () => ({
 describe('publisherUtils', () => {
     let mockRequest: PageHitRequestType;
     let mockPayload: PageHitRaw;
-    let mockAutomationEvent: AutomationEvent;
+    let mockTinybirdSyncEvent: TinybirdSyncEvent;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -31,9 +31,9 @@ describe('publisherUtils', () => {
         } as unknown as PageHitRaw;
 
         process.env.PUBSUB_TOPIC_PAGE_HITS_RAW = 'test-topic';
-        process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS = 'test-automation-topic';
+        process.env.PUBSUB_TOPIC_TINYBIRD_SYNC = 'test-tinybird-sync-topic';
 
-        mockAutomationEvent = {
+        mockTinybirdSyncEvent = {
             type: 'automation_runs',
             site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f',
             id: '6a99cd8cb5ac7c0052553383',
@@ -48,30 +48,30 @@ describe('publisherUtils', () => {
         };
     });
 
-    describe('publishAutomationEvent', () => {
-        it('publishes the complete automation event to its configured topic', async () => {
-            const publishEventSpy = vi.spyOn(publisherModule, 'publishEvent').mockResolvedValue('automation-message-id');
+    describe('publishTinybirdSyncEvent', () => {
+        it('publishes the complete Tinybird sync event to its configured topic', async () => {
+            const publishEventSpy = vi.spyOn(publisherModule, 'publishEvent').mockResolvedValue('tinybird-sync-message-id');
 
-            await publishAutomationEvent(mockRequest as unknown as FastifyRequest, mockAutomationEvent);
+            await publishTinybirdSyncEvent(mockRequest as unknown as FastifyRequest, mockTinybirdSyncEvent);
 
             expect(publishEventSpy).toHaveBeenCalledWith({
-                topic: 'test-automation-topic',
-                payload: mockAutomationEvent,
+                topic: 'test-tinybird-sync-topic',
+                payload: mockTinybirdSyncEvent,
                 logger: mockRequest.log
             });
             expect(mockRequest.log.info).toHaveBeenCalledWith({
-                event: 'PublishedAutomationEvent',
-                message_id: 'automation-message-id',
-                automation_event_id: mockAutomationEvent.id,
-                automation_event_type: mockAutomationEvent.type
+                event: 'PublishedTinybirdSyncEvent',
+                message_id: 'tinybird-sync-message-id',
+                tinybird_sync_event_id: mockTinybirdSyncEvent.id,
+                tinybird_sync_event_type: mockTinybirdSyncEvent.type
             });
         });
 
-        it('does not publish when PUBSUB_TOPIC_AUTOMATION_EVENTS is not set', async () => {
-            delete process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS;
+        it('does not publish when PUBSUB_TOPIC_TINYBIRD_SYNC is not set', async () => {
+            delete process.env.PUBSUB_TOPIC_TINYBIRD_SYNC;
             const publishEventSpy = vi.spyOn(publisherModule, 'publishEvent');
 
-            await publishAutomationEvent(mockRequest as unknown as FastifyRequest, mockAutomationEvent);
+            await publishTinybirdSyncEvent(mockRequest as unknown as FastifyRequest, mockTinybirdSyncEvent);
 
             expect(publishEventSpy).not.toHaveBeenCalled();
         });

@@ -1,5 +1,5 @@
 import {FastifyInstance} from 'fastify';
-import {automationRouteOptions} from '../../handlers/automation-handlers';
+import {tinybirdSyncRouteOptions} from '../../handlers/tinybird-sync-handlers';
 import {dataValidatorCompiler, type ZodTypeProvider} from '../../schemas';
 
 class InvalidNDJSONError extends Error {
@@ -21,7 +21,7 @@ const parseNDJSON = (body: string | Buffer): unknown[] => {
         });
 };
 
-async function automationsRoutes(fastify: FastifyInstance) {
+async function tinybirdSyncRoutes(fastify: FastifyInstance) {
     fastify.setValidatorCompiler(dataValidatorCompiler);
 
     fastify.addContentTypeParser('application/x-ndjson', {parseAs: 'string'}, (_request, body, done) => {
@@ -32,7 +32,7 @@ async function automationsRoutes(fastify: FastifyInstance) {
         }
     });
 
-    fastify.withTypeProvider<ZodTypeProvider>().post('/', automationRouteOptions);
+    fastify.withTypeProvider<ZodTypeProvider>().post('/', tinybirdSyncRouteOptions);
 }
 
-export default automationsRoutes;
+export default tinybirdSyncRoutes;

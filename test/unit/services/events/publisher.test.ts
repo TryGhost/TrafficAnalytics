@@ -25,12 +25,12 @@ describe('event publisher', () => {
     it('reuses the Topic publisher for events sent to the same topic', async () => {
         const logger = createMockLogger();
 
-        await publishEvent({topic: 'automation-events', payload: {id: 'one'}, logger});
-        await publishEvent({topic: 'automation-events', payload: {id: 'two'}, logger});
+        await publishEvent({topic: 'tinybird-sync', payload: {id: 'one'}, logger});
+        await publishEvent({topic: 'tinybird-sync', payload: {id: 'two'}, logger});
         await publishEvent({topic: 'page-hits', payload: {id: 'three'}, logger});
 
         expect(mocks.topic).toHaveBeenCalledTimes(2);
-        expect(mocks.topic).toHaveBeenNthCalledWith(1, 'automation-events');
+        expect(mocks.topic).toHaveBeenNthCalledWith(1, 'tinybird-sync');
         expect(mocks.topic).toHaveBeenNthCalledWith(2, 'page-hits');
         expect(mocks.publishMessage).toHaveBeenCalledTimes(3);
     });

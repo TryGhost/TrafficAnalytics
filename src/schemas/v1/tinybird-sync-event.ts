@@ -44,18 +44,18 @@ export const AutomationRunStepEventSchema = EventEnvelopeSchema.extend({
     payload: AutomationRunStepPayloadSchema
 });
 
-export const AutomationEventSchema = z.discriminatedUnion('type', [
+export const TinybirdSyncEventSchema = z.discriminatedUnion('type', [
     AutomationRunEventSchema,
     AutomationRunStepEventSchema
 ]);
 
-export const AutomationEventBatchSchema = z.array(AutomationEventSchema).min(1);
-export const AutomationRequestBodySchema = z.union([
-    AutomationEventSchema,
-    AutomationEventBatchSchema
+export const TinybirdSyncEventBatchSchema = z.array(TinybirdSyncEventSchema).min(1);
+export const TinybirdSyncRequestBodySchema = z.union([
+    TinybirdSyncEventSchema,
+    TinybirdSyncEventBatchSchema
 ]);
 
 export type AutomationRunEvent = z.infer<typeof AutomationRunEventSchema>;
 export type AutomationRunStepEvent = z.infer<typeof AutomationRunStepEventSchema>;
-export type AutomationEvent = z.infer<typeof AutomationEventSchema>;
-export type AutomationRequestBody = z.infer<typeof AutomationRequestBodySchema>;
+export type TinybirdSyncEvent = z.infer<typeof TinybirdSyncEventSchema>;
+export type TinybirdSyncRequestBody = z.infer<typeof TinybirdSyncRequestBodySchema>;

@@ -5,8 +5,8 @@ import v1Routes from '../../src/routes/v1';
 import {serializerCompiler, validatorCompiler} from '../../src/schemas';
 import {createSubscription, deleteSubscription} from '../utils/pubsub';
 
-const AUTOMATION_TOPIC = process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS || 'test-traffic-analytics-automation-events';
-const AUTOMATION_SUBSCRIPTION = process.env.PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS || 'test-traffic-analytics-automation-events-sub';
+const TINYBIRD_SYNC_TOPIC = process.env.PUBSUB_TOPIC_TINYBIRD_SYNC || 'test-traffic-analytics-tinybird-sync';
+const TINYBIRD_SYNC_SUBSCRIPTION = process.env.PUBSUB_SUBSCRIPTION_TINYBIRD_SYNC || 'test-traffic-analytics-tinybird-sync-sub';
 const SITE_UUID = '45d99892-6304-4251-a75d-2d9ff9c5b81f';
 
 const automationRunEvent = () => ({
@@ -23,13 +23,13 @@ const automationRunEvent = () => ({
     }
 });
 
-describe('automation Pub/Sub publishing', () => {
+describe('Tinybird sync Pub/Sub publishing', () => {
     let app: FastifyInstance;
     let subscription: Subscription;
 
     beforeEach(async () => {
-        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', AUTOMATION_TOPIC);
-        subscription = await createSubscription(AUTOMATION_TOPIC, AUTOMATION_SUBSCRIPTION);
+        vi.stubEnv('PUBSUB_TOPIC_TINYBIRD_SYNC', TINYBIRD_SYNC_TOPIC);
+        subscription = await createSubscription(TINYBIRD_SYNC_TOPIC, TINYBIRD_SYNC_SUBSCRIPTION);
 
         app = fastify();
         app.setValidatorCompiler(validatorCompiler);
@@ -40,7 +40,7 @@ describe('automation Pub/Sub publishing', () => {
     afterEach(async () => {
         await app.close();
         await subscription.close();
-        await deleteSubscription(AUTOMATION_SUBSCRIPTION);
+        await deleteSubscription(TINYBIRD_SYNC_SUBSCRIPTION);
     });
 
     it('publishes a validated event through the route', async () => {
@@ -51,7 +51,7 @@ describe('automation Pub/Sub publishing', () => {
 
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             payload: event
         });
         const message = await receivedMessage;

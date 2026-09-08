@@ -1,28 +1,28 @@
 import type {FastifyReply, FastifyRequest} from 'fastify';
 import {TinybirdClient} from '../services/tinybird/client';
 import {
-    AutomationRequestBodySchema,
-    type AutomationRequestBody
+    TinybirdSyncRequestBodySchema,
+    type TinybirdSyncRequestBody
 } from '../schemas';
-import {publishAutomationEvent} from '../services/events/publisherUtils';
-import {AUTOMATION_EVENT_DATASOURCES} from '../services/tinybird/automation';
+import {publishTinybirdSyncEvent} from '../services/events/publisherUtils';
+import {TINYBIRD_SYNC_EVENT_DATASOURCES} from '../services/tinybird/tinybird-sync';
 
-type AutomationRequest = FastifyRequest<{Body: AutomationRequestBody}>;
+type TinybirdSyncRequest = FastifyRequest<{Body: TinybirdSyncRequestBody}>;
 
-export const handleAutomationRequestStrategyInline = async (request: AutomationRequest, reply: FastifyReply): Promise<void> => {
+export const handleTinybirdSyncRequestStrategyInline = async (request: TinybirdSyncRequest, reply: FastifyReply): Promise<void> => {
     const events = Array.isArray(request.body) ? request.body : [request.body];
     const apiUrl = process.env.PROXY_TARGET;
     const apiToken = process.env.TINYBIRD_TRACKER_TOKEN;
 
     if (!apiUrl || !apiToken) {
-        throw new Error('Automation endpoint requires PROXY_TARGET and TINYBIRD_TRACKER_TOKEN');
+        throw new Error('Tinybird sync endpoint requires PROXY_TARGET and TINYBIRD_TRACKER_TOKEN');
     }
 
     const clients = new Map<string, TinybirdClient>();
 
     for (const event of events) {
         const {type, ...payload} = event;
-        const datasource = AUTOMATION_EVENT_DATASOURCES[type];
+        const datasource = TINYBIRD_SYNC_EVENT_DATASOURCES[type];
         let client = clients.get(datasource);
         if (!client) {
             client = new TinybirdClient({
@@ -40,31 +40,31 @@ export const handleAutomationRequestStrategyInline = async (request: AutomationR
     reply.status(202).send();
 };
 
-export const handleAutomationRequestStrategyBatch = async (request: AutomationRequest, reply: FastifyReply): Promise<void> => {
+export const handleTinybirdSyncRequestStrategyBatch = async (request: TinybirdSyncRequest, reply: FastifyReply): Promise<void> => {
     const events = Array.isArray(request.body) ? request.body : [request.body];
 
-    const results = await Promise.allSettled(events.map(event => publishAutomationEvent(request, event)));
+    const results = await Promise.allSettled(events.map(event => publishTinybirdSyncEvent(request, event)));
     const errors = results
         .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
         .map(result => result.reason);
 
     if (errors.length > 0) {
-        throw new AggregateError(errors, 'Failed to publish one or more automation events');
+        throw new AggregateError(errors, 'Failed to publish one or more Tinybird sync events');
     }
 
     reply.status(202).send();
 };
 
-export const automationRequestHandler = async (request: AutomationRequest, reply: FastifyReply): Promise<void> => {
+export const tinybirdSyncRequestHandler = async (request: TinybirdSyncRequest, reply: FastifyReply): Promise<void> => {
     try {
-        if (process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS) {
-            await handleAutomationRequestStrategyBatch(request, reply);
+        if (process.env.PUBSUB_TOPIC_TINYBIRD_SYNC) {
+            await handleTinybirdSyncRequestStrategyBatch(request, reply);
         } else {
-            await handleAutomationRequestStrategyInline(request, reply);
+            await handleTinybirdSyncRequestStrategyInline(request, reply);
         }
     } catch (err) {
         request.log.error({
-            event: 'AutomationRequestProcessingError',
+            event: 'TinybirdSyncRequestProcessingError',
             err,
             httpRequest: {
                 requestMethod: request.method,
@@ -77,14 +77,14 @@ export const automationRequestHandler = async (request: AutomationRequest, reply
             },
             type: 'processing_error'
         });
-        reply.status(500).send({error: 'Failed to process automation events'});
+        reply.status(500).send({error: 'Failed to process Tinybird sync events'});
     }
 };
 
-export const automationRouteOptions = {
+export const tinybirdSyncRouteOptions = {
     bodyLimit: 10 * 1024 * 1024,
     schema: {
-        body: AutomationRequestBodySchema
+        body: TinybirdSyncRequestBodySchema
     },
-    handler: automationRequestHandler
+    handler: tinybirdSyncRequestHandler
 };

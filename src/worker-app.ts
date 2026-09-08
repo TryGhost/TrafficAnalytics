@@ -2,7 +2,7 @@
 import fastify from 'fastify';
 import loggingPlugin from './plugins/logging';
 import workerPlugin from './plugins/worker-plugin';
-import automationWorkerPlugin from './plugins/automation-worker-plugin';
+import tinybirdSyncWorkerPlugin from './plugins/tinybird-sync-worker-plugin';
 import {getLoggerConfig} from './utils/logger-config';
 import proxyPlugin from './plugins/proxy';
 import {fastifyOtelInstrumentation} from './utils/fastify-otel';
@@ -21,7 +21,7 @@ app.register(loggingPlugin);
 
 // Register worker plugin for heartbeat logging
 app.register(workerPlugin);
-app.register(automationWorkerPlugin);
+app.register(tinybirdSyncWorkerPlugin);
 
 // Register proxy plugin
 app.register(proxyPlugin);

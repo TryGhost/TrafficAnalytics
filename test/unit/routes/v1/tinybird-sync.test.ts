@@ -44,13 +44,13 @@ const automationRunStepEvent = () => ({
     }
 });
 
-describe('automations routes', () => {
+describe('tinybird sync routes', () => {
     let app: FastifyInstance;
     let fetchMock: ReturnType<typeof vi.fn>;
 
     beforeEach(async () => {
         vi.clearAllMocks();
-        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', undefined);
+        vi.stubEnv('PUBSUB_TOPIC_TINYBIRD_SYNC', undefined);
         vi.stubEnv('PROXY_TARGET', 'https://api.tinybird.co/v0/events');
         vi.stubEnv('TINYBIRD_TRACKER_TOKEN', 'test-token');
         vi.mocked(publisherModule.publishEvent).mockResolvedValue('message-id');
@@ -74,7 +74,7 @@ describe('automations routes', () => {
         const event = automationRunEvent();
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             payload: event
         });
 
@@ -102,7 +102,7 @@ describe('automations routes', () => {
         ].join('\n');
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             headers: {
                 'content-type': 'application/x-ndjson'
             },
@@ -138,19 +138,19 @@ describe('automations routes', () => {
     });
 
     it('publishes a JSON event to Pub/Sub in batch mode', async () => {
-        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
+        vi.stubEnv('PUBSUB_TOPIC_TINYBIRD_SYNC', 'tinybird-sync-topic');
         const event = automationRunEvent();
 
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             payload: event
         });
 
         expect(response.statusCode).toBe(202);
         expect(response.body).toBe('');
         expect(publisherModule.publishEvent).toHaveBeenCalledWith({
-            topic: 'automation-events-topic',
+            topic: 'tinybird-sync-topic',
             payload: event,
             logger: expect.anything()
         });
@@ -158,7 +158,7 @@ describe('automations routes', () => {
     });
 
     it('publishes each NDJSON event to Pub/Sub in batch mode', async () => {
-        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
+        vi.stubEnv('PUBSUB_TOPIC_TINYBIRD_SYNC', 'tinybird-sync-topic');
         const runEvent = automationRunEvent();
         const stepEvent = automationRunStepEvent();
         let firstPublishResolved = false;
@@ -175,7 +175,7 @@ describe('automations routes', () => {
 
         const responsePromise = app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             headers: {
                 'content-type': 'application/x-ndjson'
             },
@@ -185,12 +185,12 @@ describe('automations routes', () => {
 
         expect(response.statusCode).toBe(202);
         expect(publisherModule.publishEvent).toHaveBeenNthCalledWith(1, {
-            topic: 'automation-events-topic',
+            topic: 'tinybird-sync-topic',
             payload: runEvent,
             logger: expect.anything()
         });
         expect(publisherModule.publishEvent).toHaveBeenNthCalledWith(2, {
-            topic: 'automation-events-topic',
+            topic: 'tinybird-sync-topic',
             payload: stepEvent,
             logger: expect.anything()
         });
@@ -198,17 +198,17 @@ describe('automations routes', () => {
     });
 
     it('returns 500 when publishing to Pub/Sub fails', async () => {
-        vi.stubEnv('PUBSUB_TOPIC_AUTOMATION_EVENTS', 'automation-events-topic');
+        vi.stubEnv('PUBSUB_TOPIC_TINYBIRD_SYNC', 'tinybird-sync-topic');
         vi.mocked(publisherModule.publishEvent).mockRejectedValue(new Error('Pub/Sub unavailable'));
 
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             payload: automationRunEvent()
         });
 
         expect(response.statusCode).toBe(500);
-        expect(response.json()).toEqual({error: 'Failed to process automation events'});
+        expect(response.json()).toEqual({error: 'Failed to process Tinybird sync events'});
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
@@ -219,7 +219,7 @@ describe('automations routes', () => {
 
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             headers: {
                 'content-type': 'application/x-ndjson'
             },
@@ -234,7 +234,7 @@ describe('automations routes', () => {
     it('rejects an empty NDJSON body', async () => {
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             headers: {
                 'content-type': 'application/x-ndjson'
             },
@@ -251,7 +251,7 @@ describe('automations routes', () => {
 
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             headers: {
                 'content-type': 'application/x-ndjson'
             },
@@ -271,7 +271,7 @@ describe('automations routes', () => {
 
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             headers: {
                 'content-type': 'application/x-ndjson'
             },
@@ -291,7 +291,7 @@ describe('automations routes', () => {
 
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             headers: {
                 'content-type': 'application/x-ndjson'
             },
@@ -309,7 +309,7 @@ describe('automations routes', () => {
     it('rejects events from unmapped Ghost tables', async () => {
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             headers: {
                 'content-type': 'application/x-ndjson'
             },
@@ -324,7 +324,7 @@ describe('automations routes', () => {
     it('reports invalid JSON with its NDJSON line number', async () => {
         const response = await app.inject({
             method: 'POST',
-            url: '/api/v1/automations',
+            url: '/api/v1/tinybird-sync',
             headers: {
                 'content-type': 'application/x-ndjson'
             },
@@ -339,7 +339,7 @@ describe('automations routes', () => {
     it('does not accept other request methods', async () => {
         const response = await app.inject({
             method: 'GET',
-            url: '/api/v1/automations'
+            url: '/api/v1/tinybird-sync'
         });
 
         expect(response.statusCode).toBe(404);

@@ -3,8 +3,8 @@ import {z} from 'zod';
 import {
     createValidator,
     validatorCompiler,
-    AutomationEventSchema,
-    AutomationRequestBodySchema,
+    TinybirdSyncEventSchema,
+    TinybirdSyncRequestBodySchema,
     PageHitRawSchema,
     PageHitRequestBodySchema,
     PageHitRequestHeadersSchema,
@@ -13,7 +13,7 @@ import {
 
 const UUID = '940b73e9-4952-4752-b23d-9486f999c47e';
 
-function validAutomationEvent() {
+function validTinybirdSyncEvent() {
     return {
         type: 'automation_runs',
         site_uuid: UUID,
@@ -87,19 +87,19 @@ describe('schema validation', () => {
     describe('the ajv projection agrees with Zod', () => {
         // Built lazily so each case is constructed inside its own `it`.
         const cases: Array<[string, z.ZodType, () => unknown]> = [
-            ['a valid automation event', AutomationEventSchema, () => validAutomationEvent()],
-            ['a valid automation event batch', AutomationRequestBodySchema, () => [validAutomationEvent()]],
-            ['an empty automation event batch', AutomationRequestBodySchema, () => []],
-            ['an automation event with a field not included in the schema', AutomationEventSchema, () => ({
-                ...validAutomationEvent(),
-                payload: {...validAutomationEvent().payload, email: 'private@example.com'}
+            ['a valid Tinybird sync event', TinybirdSyncEventSchema, () => validTinybirdSyncEvent()],
+            ['a valid Tinybird sync event batch', TinybirdSyncRequestBodySchema, () => [validTinybirdSyncEvent()]],
+            ['an empty Tinybird sync event batch', TinybirdSyncRequestBodySchema, () => []],
+            ['a Tinybird sync event with a field not included in the schema', TinybirdSyncEventSchema, () => ({
+                ...validTinybirdSyncEvent(),
+                payload: {...validTinybirdSyncEvent().payload, email: 'private@example.com'}
             })],
-            ['an automation event with the wrong payload for its discriminator', AutomationEventSchema, () => ({
-                ...validAutomationEvent(),
+            ['a Tinybird sync event with the wrong payload for its discriminator', TinybirdSyncEventSchema, () => ({
+                ...validTinybirdSyncEvent(),
                 type: 'automation_run_steps'
             })],
-            ['an automation event with an invalid BSON ObjectId', AutomationEventSchema, () => ({
-                ...validAutomationEvent(),
+            ['a Tinybird sync event with an invalid BSON ObjectId', TinybirdSyncEventSchema, () => ({
+                ...validTinybirdSyncEvent(),
                 id: 'not-an-object-id'
             })],
             ['a valid raw event', PageHitRawSchema, () => validRawEvent()],

@@ -1,6 +1,6 @@
 import type {Message} from '@google-cloud/pubsub';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import AutomationBatchWorker, {type AutomationTinybirdClients} from '../../../../src/services/automation-worker/AutomationBatchWorker';
+import TinybirdSyncBatchWorker, {type TinybirdSyncClients} from '../../../../src/services/tinybird-sync-worker/TinybirdSyncBatchWorker';
 
 const subscriberMocks = vi.hoisted(() => ({
     close: vi.fn(),
@@ -68,17 +68,17 @@ const createMessage = (data: unknown): Message => {
     } as unknown as Message;
 };
 
-describe('AutomationBatchWorker', () => {
-    let worker: AutomationBatchWorker;
+describe('TinybirdSyncBatchWorker', () => {
+    let worker: TinybirdSyncBatchWorker;
     let handleMessage: (message: Message) => Promise<void>;
     let runClient: {postEventBatch: ReturnType<typeof vi.fn>};
     let stepClient: {postEventBatch: ReturnType<typeof vi.fn>};
 
     const startWorker = (batchSize = 2, flushInterval = 60_000) => {
-        worker = new AutomationBatchWorker('automation-events-sub', {
+        worker = new TinybirdSyncBatchWorker('tinybird-sync-sub', {
             automation_runs: runClient,
             automation_run_steps: stepClient
-        } as AutomationTinybirdClients, {batchSize, flushInterval});
+        } as TinybirdSyncClients, {batchSize, flushInterval});
         worker.start();
         handleMessage = subscriberMocks.subscribe.mock.calls.at(-1)?.[0];
     };

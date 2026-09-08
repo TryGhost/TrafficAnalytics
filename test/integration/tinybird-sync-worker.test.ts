@@ -1,11 +1,11 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import AutomationBatchWorker, {type AutomationTinybirdClients} from '../../src/services/automation-worker/AutomationBatchWorker';
+import TinybirdSyncBatchWorker, {type TinybirdSyncClients} from '../../src/services/tinybird-sync-worker/TinybirdSyncBatchWorker';
 import {publishEvent} from '../../src/services/events/publisher';
 import type {TinybirdEvent} from '../../src/services/tinybird/client';
 import {createMockLogger} from '../utils/mock-logger';
 
-const AUTOMATION_SUBSCRIPTION = process.env.PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS || 'test-traffic-analytics-automation-events-sub';
-const AUTOMATION_TOPIC = process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS || 'test-traffic-analytics-automation-events';
+const TINYBIRD_SYNC_SUBSCRIPTION = process.env.PUBSUB_SUBSCRIPTION_TINYBIRD_SYNC || 'test-traffic-analytics-tinybird-sync-sub';
+const TINYBIRD_SYNC_TOPIC = process.env.PUBSUB_TOPIC_TINYBIRD_SYNC || 'test-traffic-analytics-tinybird-sync';
 const SITE_UUID = '45d99892-6304-4251-a75d-2d9ff9c5b81f';
 
 const automationRunEvent = {
@@ -42,8 +42,8 @@ const automationRunStepEvent = {
     }
 };
 
-describe('automation worker', () => {
-    let worker: AutomationBatchWorker;
+describe('Tinybird sync worker', () => {
+    let worker: TinybirdSyncBatchWorker;
     let runBatch: Promise<TinybirdEvent[]>;
     let stepBatch: Promise<TinybirdEvent[]>;
 
@@ -64,9 +64,9 @@ describe('automation worker', () => {
             automation_run_steps: {
                 postEventBatch: vi.fn(async (events: TinybirdEvent[]) => resolveStepBatch(events))
             }
-        } as AutomationTinybirdClients;
+        } as TinybirdSyncClients;
 
-        worker = new AutomationBatchWorker(AUTOMATION_SUBSCRIPTION, tinybirdClients, {
+        worker = new TinybirdSyncBatchWorker(TINYBIRD_SYNC_SUBSCRIPTION, tinybirdClients, {
             batchSize: 1,
             flushInterval: 60_000
         });
@@ -80,8 +80,8 @@ describe('automation worker', () => {
     it('routes Pub/Sub events into separate Tinybird batches', async () => {
         const logger = createMockLogger();
         await Promise.all([
-            publishEvent({topic: AUTOMATION_TOPIC, payload: automationRunEvent, logger}),
-            publishEvent({topic: AUTOMATION_TOPIC, payload: automationRunStepEvent, logger})
+            publishEvent({topic: TINYBIRD_SYNC_TOPIC, payload: automationRunEvent, logger}),
+            publishEvent({topic: TINYBIRD_SYNC_TOPIC, payload: automationRunStepEvent, logger})
         ]);
 
         const [receivedRunBatch, receivedStepBatch] = await Promise.all([runBatch, stepBatch]);

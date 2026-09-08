@@ -1,14 +1,14 @@
 import type {FastifyRequest} from 'fastify';
-import {type AutomationEvent, PageHitRaw, PageHitRequestType} from '../../schemas';
+import {type TinybirdSyncEvent, PageHitRaw, PageHitRequestType} from '../../schemas';
 import {publishEvent} from './publisher';
 
-export const publishAutomationEvent = async (request: FastifyRequest, payload: AutomationEvent): Promise<void> => {
-    const topic = process.env.PUBSUB_TOPIC_AUTOMATION_EVENTS;
+export const publishTinybirdSyncEvent = async (request: FastifyRequest, payload: TinybirdSyncEvent): Promise<void> => {
+    const topic = process.env.PUBSUB_TOPIC_TINYBIRD_SYNC;
     if (topic) {
         request.log.debug({
-            event: 'PublishingAutomationEvent',
-            automation_event_id: payload.id,
-            automation_event_type: payload.type,
+            event: 'PublishingTinybirdSyncEvent',
+            tinybird_sync_event_id: payload.id,
+            tinybird_sync_event_type: payload.type,
             payload
         });
         const messageId = await publishEvent({
@@ -17,10 +17,10 @@ export const publishAutomationEvent = async (request: FastifyRequest, payload: A
             logger: request.log
         });
         request.log.info({
-            event: 'PublishedAutomationEvent',
+            event: 'PublishedTinybirdSyncEvent',
             message_id: messageId,
-            automation_event_id: payload.id,
-            automation_event_type: payload.type
+            tinybird_sync_event_id: payload.id,
+            tinybird_sync_event_type: payload.type
         });
     }
 };

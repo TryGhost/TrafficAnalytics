@@ -1,36 +1,36 @@
 import type {Message} from '@google-cloud/pubsub';
-import {AutomationEventSchema, createValidator, type AutomationEvent} from '../../schemas';
+import {TinybirdSyncEventSchema, createValidator, type TinybirdSyncEvent} from '../../schemas';
 import logger from '../../utils/logger';
 import {EventSubscriber} from '../events/subscriber';
-import {AUTOMATION_EVENT_DATASOURCES, AUTOMATION_EVENT_TYPES} from '../tinybird/automation';
+import {TINYBIRD_SYNC_EVENT_DATASOURCES, TINYBIRD_SYNC_EVENT_TYPES} from '../tinybird/tinybird-sync';
 import type {TinybirdClient, TinybirdEvent} from '../tinybird/client';
 
-const validateAutomationEvent = createValidator(AutomationEventSchema);
+const validateTinybirdSyncEvent = createValidator(TinybirdSyncEventSchema);
 
-export interface AutomationBatchWorkerConfig {
+export interface TinybirdSyncBatchWorkerConfig {
     batchSize?: number;
     flushInterval?: number;
 }
 
-export type AutomationTinybirdClients = Record<AutomationEvent['type'], Pick<TinybirdClient, 'postEventBatch'>>;
+export type TinybirdSyncClients = Record<TinybirdSyncEvent['type'], Pick<TinybirdClient, 'postEventBatch'>>;
 
 interface PendingMessage {
     message: Message;
     event: TinybirdEvent;
 }
 
-class AutomationBatchWorker {
+class TinybirdSyncBatchWorker {
     private subscriptionName: string;
     private subscriber: EventSubscriber;
-    private tinybirdClients: AutomationTinybirdClients;
-    private batches: Record<AutomationEvent['type'], PendingMessage[]>;
+    private tinybirdClients: TinybirdSyncClients;
+    private batches: Record<TinybirdSyncEvent['type'], PendingMessage[]>;
     private batchSize: number;
     private flushInterval: number;
     private flushTimer: NodeJS.Timeout | null;
     private isShuttingDown: boolean;
 
-    constructor(subscriptionName: string, tinybirdClients: AutomationTinybirdClients, config: AutomationBatchWorkerConfig = {}) {
-        logger.info({event: 'AutomationBatchWorkerCreating', subscriptionName});
+    constructor(subscriptionName: string, tinybirdClients: TinybirdSyncClients, config: TinybirdSyncBatchWorkerConfig = {}) {
+        logger.info({event: 'TinybirdSyncBatchWorkerCreating', subscriptionName});
         this.subscriptionName = subscriptionName;
         this.subscriber = new EventSubscriber(subscriptionName);
         this.tinybirdClients = tinybirdClients;
@@ -44,20 +44,20 @@ class AutomationBatchWorker {
         this.isShuttingDown = false;
 
         logger.info({
-            event: 'AutomationBatchWorkerConfigured',
+            event: 'TinybirdSyncBatchWorkerConfigured',
             batchSize: this.batchSize,
             flushIntervalMs: this.flushInterval
         });
     }
 
     public start(): void {
-        logger.info({event: 'AutomationBatchWorkerStarting', subscriptionName: this.subscriptionName});
+        logger.info({event: 'TinybirdSyncBatchWorkerStarting', subscriptionName: this.subscriptionName});
         this.subscriber.subscribe(this.handleMessage.bind(this));
         this.scheduleFlush();
     }
 
     public async stop(): Promise<void> {
-        logger.info({event: 'AutomationBatchWorkerStopping', subscriptionName: this.subscriptionName});
+        logger.info({event: 'TinybirdSyncBatchWorkerStopping', subscriptionName: this.subscriptionName});
         this.isShuttingDown = true;
 
         if (this.flushTimer) {
@@ -70,20 +70,20 @@ class AutomationBatchWorker {
     }
 
     private async handleMessage(message: Message): Promise<void> {
-        const automationEvent = this.parseMessage(message);
-        if (!automationEvent) {
+        const tinybirdSyncEvent = this.parseMessage(message);
+        if (!tinybirdSyncEvent) {
             return;
         }
 
         try {
-            const {type, ...event} = automationEvent;
+            const {type, ...event} = tinybirdSyncEvent;
             this.batches[type].push({message, event});
 
             logger.debug({
-                event: 'AutomationWorkerQueuedEvent',
+                event: 'TinybirdSyncWorkerQueuedEvent',
                 messageId: message.id,
-                automationEventId: automationEvent.id,
-                automationEventType: type,
+                tinybirdSyncEventId: tinybirdSyncEvent.id,
+                tinybirdSyncEventType: type,
                 batchSize: this.batches[type].length
             });
 
@@ -92,7 +92,7 @@ class AutomationBatchWorker {
             }
         } catch (err) {
             logger.error({
-                event: 'AutomationWorkerMessageProcessingFailed',
+                event: 'TinybirdSyncWorkerMessageProcessingFailed',
                 messageId: message.id,
                 err
             });
@@ -100,12 +100,12 @@ class AutomationBatchWorker {
         }
     }
 
-    private parseMessage(message: Message): AutomationEvent | null {
+    private parseMessage(message: Message): TinybirdSyncEvent | null {
         try {
-            return validateAutomationEvent(JSON.parse(message.data.toString()));
+            return validateTinybirdSyncEvent(JSON.parse(message.data.toString()));
         } catch (err) {
             logger.error({
-                event: 'AutomationWorkerMessageParsingFailed',
+                event: 'TinybirdSyncWorkerMessageParsingFailed',
                 messageId: message.id,
                 err
             });
@@ -114,7 +114,7 @@ class AutomationBatchWorker {
         }
     }
 
-    private async flushBatch(type: AutomationEvent['type']): Promise<void> {
+    private async flushBatch(type: TinybirdSyncEvent['type']): Promise<void> {
         const batch = this.batches[type];
         if (batch.length === 0) {
             return;
@@ -127,17 +127,17 @@ class AutomationBatchWorker {
             batch.forEach(item => item.message.ack());
 
             logger.info({
-                event: 'AutomationWorkerFlushedBatch',
-                automationEventType: type,
-                datasource: AUTOMATION_EVENT_DATASOURCES[type],
+                event: 'TinybirdSyncWorkerFlushedBatch',
+                tinybirdSyncEventType: type,
+                datasource: TINYBIRD_SYNC_EVENT_DATASOURCES[type],
                 batchSize: batch.length,
                 messageIds: batch.map(item => item.message.id)
             });
         } catch (err) {
             logger.error({
-                event: 'AutomationWorkerBatchFlushFailed',
-                automationEventType: type,
-                datasource: AUTOMATION_EVENT_DATASOURCES[type],
+                event: 'TinybirdSyncWorkerBatchFlushFailed',
+                tinybirdSyncEventType: type,
+                datasource: TINYBIRD_SYNC_EVENT_DATASOURCES[type],
                 batchSize: batch.length,
                 messageIds: batch.map(item => item.message.id),
                 err
@@ -147,7 +147,7 @@ class AutomationBatchWorker {
     }
 
     private async flushAllBatches(): Promise<void> {
-        await Promise.all(AUTOMATION_EVENT_TYPES.map(type => this.flushBatch(type)));
+        await Promise.all(TINYBIRD_SYNC_EVENT_TYPES.map(type => this.flushBatch(type)));
     }
 
     private scheduleFlush(): void {
@@ -166,4 +166,4 @@ class AutomationBatchWorker {
     }
 }
 
-export default AutomationBatchWorker;
+export default TinybirdSyncBatchWorker;

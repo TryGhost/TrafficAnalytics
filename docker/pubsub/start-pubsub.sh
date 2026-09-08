@@ -12,16 +12,16 @@ HOST=0.0.0.0:8085
 PROJECT_ID=${GOOGLE_CLOUD_PROJECT:-traffic-analytics-dev}
 PAGE_HITS_TOPIC_NAME=${PUBSUB_TOPIC_PAGE_HITS_RAW:-traffic-analytics-page-hits-raw}
 PAGE_HITS_SUBSCRIPTION_NAME=${PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW:-traffic-analytics-page-hits-raw-subscription}
-AUTOMATION_EVENTS_TOPIC_NAME=${PUBSUB_TOPIC_AUTOMATION_EVENTS:-traffic-analytics-automation-events}
-AUTOMATION_EVENTS_SUBSCRIPTION_NAME=${PUBSUB_SUBSCRIPTION_AUTOMATION_EVENTS:-traffic-analytics-automation-events-sub}
+TINYBIRD_SYNC_TOPIC_NAME=${PUBSUB_TOPIC_TINYBIRD_SYNC:-traffic-analytics-tinybird-sync}
+TINYBIRD_SYNC_SUBSCRIPTION_NAME=${PUBSUB_SUBSCRIPTION_TINYBIRD_SYNC:-traffic-analytics-tinybird-sync-sub}
 
 echo "Starting Pub/Sub emulator..."
 echo "Host: $HOST"
 echo "Project: $PROJECT_ID"
 echo "Page hits topic: $PAGE_HITS_TOPIC_NAME"
 echo "Page hits subscription: $PAGE_HITS_SUBSCRIPTION_NAME"
-echo "Automation events topic: $AUTOMATION_EVENTS_TOPIC_NAME"
-echo "Automation events subscription: $AUTOMATION_EVENTS_SUBSCRIPTION_NAME"
+echo "Tinybird sync topic: $TINYBIRD_SYNC_TOPIC_NAME"
+echo "Tinybird sync subscription: $TINYBIRD_SYNC_SUBSCRIPTION_NAME"
 
 # Start the emulator in the background
 gcloud beta emulators pubsub start --host-port=${HOST} --project=${PROJECT_ID} &
@@ -69,9 +69,9 @@ else
     }
 
     create_topic "$PAGE_HITS_TOPIC_NAME"
-    create_topic "$AUTOMATION_EVENTS_TOPIC_NAME"
+    create_topic "$TINYBIRD_SYNC_TOPIC_NAME"
     create_subscription "$PAGE_HITS_TOPIC_NAME" "$PAGE_HITS_SUBSCRIPTION_NAME"
-    create_subscription "$AUTOMATION_EVENTS_TOPIC_NAME" "$AUTOMATION_EVENTS_SUBSCRIPTION_NAME"
+    create_subscription "$TINYBIRD_SYNC_TOPIC_NAME" "$TINYBIRD_SYNC_SUBSCRIPTION_NAME"
 
     # Verify topics and subscriptions were created
     echo "Verifying topic and subscription creation..."

@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {
-    AutomationEventBatchSchema,
-    AutomationEventSchema,
+    TinybirdSyncEventBatchSchema,
+    TinybirdSyncEventSchema,
     AutomationRunEventSchema,
     AutomationRunStepEventSchema
 } from '../../../../src/schemas';
@@ -42,16 +42,16 @@ const automationRunStepEvent = () => ({
     }
 });
 
-describe('automation event schemas', () => {
-    it('accepts a complete automation event batch', () => {
-        expect(AutomationEventBatchSchema.safeParse([
+describe('Tinybird sync event schemas', () => {
+    it('accepts a complete Tinybird sync event batch', () => {
+        expect(TinybirdSyncEventBatchSchema.safeParse([
             automationRunEvent(),
             automationRunStepEvent()
         ]).success).toBe(true);
     });
 
-    it('rejects an empty automation event batch', () => {
-        expect(AutomationEventBatchSchema.safeParse([]).success).toBe(false);
+    it('rejects an empty Tinybird sync event batch', () => {
+        expect(TinybirdSyncEventBatchSchema.safeParse([]).success).toBe(false);
     });
 
     it('accepts an automation run event', () => {
@@ -133,7 +133,7 @@ describe('automation event schemas', () => {
     });
 
     it('selects the payload schema using the event type', () => {
-        expect(AutomationEventSchema.safeParse({
+        expect(TinybirdSyncEventSchema.safeParse({
             ...automationRunEvent(),
             type: 'automation_run_steps'
         }).success).toBe(false);
