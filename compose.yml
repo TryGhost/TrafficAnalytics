@@ -25,6 +25,7 @@ services:
       - PUBSUB_TOPIC_PAGE_HITS_RAW=traffic-analytics-page-hits-raw
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
       - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
+      - TINYBIRD_SYNC_AUTH=${TINYBIRD_SYNC_AUTH:-test-sync-auth}
       - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
     networks:
       - dev-network
@@ -126,6 +127,7 @@ services:
       - SALT_STORE_TYPE=${SALT_STORE_TYPE:-firestore}
       - GOOGLE_APPLICATION_CREDENTIALS=/dev/null
       - TINYBIRD_TRACKER_TOKEN=${TINYBIRD_TRACKER_TOKEN:-test-token}
+      - TINYBIRD_SYNC_AUTH=${TINYBIRD_SYNC_AUTH:-test-sync-auth}
       - PROXY_TARGET=${PROXY_TARGET:-http://fake-tinybird:8080/v0/events}
     networks:
       - dev-network

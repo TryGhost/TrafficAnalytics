@@ -165,6 +165,17 @@ describe('Fastify App', () => {
         });
     });
 
+    describe('POST /api/v1/tinybird-sync', function () {
+        it('should accept request with empty response body', async function () {
+            const response = await request(proxyServer)
+                .post('/api/v1/tinybird-sync')
+                .auth('test-sync-auth', {type: 'bearer'})
+                .expect(202);
+
+            expect(response.text).toBe('');
+        });
+    });
+
     describe('POST /api/v1/page_hit', function () {
         const path = '/api/v1/page_hit';
         it('should proxy requests to the target server', async function () {
