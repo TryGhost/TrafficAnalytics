@@ -30,19 +30,19 @@ describe('tinybird sync route', () => {
         expect(response.body).toBe('');
     });
 
-    it.each([
-        ['missing', undefined],
-        ['wrong scheme', 'Basic sync-secret'],
-        ['wrong value', 'Bearer wrong-secret']
-    ])('should reject %s authorization', async (_name, authorization) => {
-        const response = await app.inject({
-            method: 'POST',
-            url: '/api/v1/tinybird-sync',
-            headers: authorization ? {authorization} : undefined
-        });
+    it('should reject invalid authorization', async () => {
+        const authorizations = [undefined, 'Basic sync-secret', 'Bearer wrong-secret'];
 
-        expect(response.statusCode).toBe(401);
-        expect(response.statusCode).not.toBe(202);
+        await Promise.all(authorizations.map(async (authorization) => {
+            const response = await app.inject({
+                method: 'POST',
+                url: '/api/v1/tinybird-sync',
+                headers: authorization ? {authorization} : undefined
+            });
+
+            expect(response.statusCode).toBe(401);
+            expect(response.statusCode).not.toBe(202);
+        }));
     });
 
     it('should reject requests when TINYBIRD_SYNC_AUTH is not configured', async () => {
