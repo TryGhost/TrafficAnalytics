@@ -1,5 +1,5 @@
 // Worker module file
-import fastify from 'fastify';
+import fastify, {LogController} from 'fastify';
 import loggingPlugin from './plugins/logging';
 import workerPlugin from './plugins/worker-plugin';
 import {getLoggerConfig} from './utils/logger-config';
@@ -8,7 +8,7 @@ import {fastifyOtelInstrumentation} from './utils/fastify-otel';
 
 const app = fastify({
     logger: getLoggerConfig(),
-    disableRequestLogging: true,
+    logController: new LogController({disableRequestLogging: true}),
     trustProxy: process.env.TRUST_PROXY !== 'false'
 });
 
