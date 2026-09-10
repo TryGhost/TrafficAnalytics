@@ -13,7 +13,7 @@
     "dev": "pnpm dev:batch",
     "dev:proxy": "docker compose up -d --wait && docker compose up analytics-service-proxy",
     "dev:batch": "docker compose up -d --wait && docker compose up analytics-service worker tinybird-sync",
-    "dev:ghost": "docker compose -f compose.yml -f compose.ghost.yml -f compose.override.yml up -d --wait && docker compose -f compose.yml -f compose.ghost.yml -f compose.override.yml up --force-recreate analytics-service worker",
+    "dev:ghost": "docker compose -f compose.yml -f compose.ghost.yml -f compose.override.yml up -d --wait && docker compose -f compose.yml -f compose.ghost.yml -f compose.override.yml up --force-recreate analytics-service worker tinybird-sync",
     "start": "node --enable-source-maps dist/server.js",
     "start:worker": "WORKER_MODE=true node --enable-source-maps dist/server.js",
     "start:tinybird-sync-worker": "WORKER_MODE=tinybird-sync node --enable-source-maps dist/server.js",

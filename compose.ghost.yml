@@ -15,6 +15,12 @@ services:
     networks:
       - ghost
 
+  tinybird-sync:
+    volumes:
+      - ghost-shared-config:/mnt/shared-config:ro
+    networks:
+      - ghost
+
 volumes:
   ghost-shared-config:
     external: true

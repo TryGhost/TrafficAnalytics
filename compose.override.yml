@@ -18,6 +18,11 @@ services:
       - .:/app
       - node_modules_volume:/app/node_modules
 
+  tinybird-sync:
+    volumes:
+      - .:/app
+      - node_modules_volume:/app/node_modules
+
   test:
     volumes:
       - .:/app
