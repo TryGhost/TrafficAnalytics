@@ -3,11 +3,12 @@ import type {TinybirdSyncRequestBody} from '../schemas';
 import {publishTinybirdSyncEvent} from '../services/events/publisherUtils';
 import {TinybirdClient} from '../services/tinybird/client';
 import {TINYBIRD_SYNC_EVENT_DATASOURCES} from '../services/tinybird/tinybird-sync';
+import {lazyMap} from '../utils/lazy-map';
 
 export type TinybirdSyncRequest = FastifyRequest<{Body: TinybirdSyncRequestBody}>;
 
 export const handleTinybirdSyncRequestStrategyBatch = async (request: TinybirdSyncRequest): Promise<void> => {
-    const results = await Promise.allSettled(request.body.map(event => publishTinybirdSyncEvent(request, event)));
+    const results = await Promise.allSettled(lazyMap(request.body, event => publishTinybirdSyncEvent(request, event)));
     const errors = results
         .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
         .map(result => result.reason);
