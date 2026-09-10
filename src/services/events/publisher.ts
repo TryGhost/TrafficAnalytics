@@ -29,7 +29,11 @@ class EventPublisher {
     private getTopic(name: string): Topic {
         let topic = this.topics.get(name);
         if (!topic) {
-            topic = this.pubsub.topic(name);
+            topic = this.pubsub.topic(name, {
+                batching: {
+                    maxMessages: 1000
+                }
+            });
             this.topics.set(name, topic);
         }
         return topic;
