@@ -1,12 +1,12 @@
 import {z} from 'zod';
 
 const NonEmptyStringSchema = z.string().min(1);
-export const BSONObjectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/);
+const BSONObjectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/);
 const ISO8601DateTimeSchema = z.iso.datetime();
 // See page-hit-request.ts: UUID-shaped is enough, RFC compliance is not required.
 const UUIDSchema = z.guid();
 
-export const AutomationRunPayloadSchema = z.strictObject({
+const AutomationRunPayloadSchema = z.strictObject({
     id: BSONObjectIdSchema,
     automation_id: BSONObjectIdSchema,
     created_at: ISO8601DateTimeSchema,
@@ -14,7 +14,7 @@ export const AutomationRunPayloadSchema = z.strictObject({
     site_uuid: UUIDSchema
 });
 
-export const AutomationRunStepPayloadSchema = z.strictObject({
+const AutomationRunStepPayloadSchema = z.strictObject({
     id: BSONObjectIdSchema,
     automation_run_id: BSONObjectIdSchema,
     automation_action_revision_id: BSONObjectIdSchema,
@@ -34,12 +34,12 @@ const EventEnvelopeSchema = z.strictObject({
     updated_at: ISO8601DateTimeSchema
 });
 
-export const AutomationRunEventSchema = EventEnvelopeSchema.extend({
+const AutomationRunEventSchema = EventEnvelopeSchema.extend({
     type: z.literal('automation_runs'),
     payload: AutomationRunPayloadSchema
 });
 
-export const AutomationRunStepEventSchema = EventEnvelopeSchema.extend({
+const AutomationRunStepEventSchema = EventEnvelopeSchema.extend({
     type: z.literal('automation_run_steps'),
     payload: AutomationRunStepPayloadSchema
 });
@@ -51,7 +51,5 @@ export const TinybirdSyncEventSchema = z.discriminatedUnion('type', [
 
 export const TinybirdSyncRequestBodySchema = z.array(TinybirdSyncEventSchema).min(1);
 
-export type AutomationRunEvent = z.infer<typeof AutomationRunEventSchema>;
-export type AutomationRunStepEvent = z.infer<typeof AutomationRunStepEventSchema>;
 export type TinybirdSyncEvent = z.infer<typeof TinybirdSyncEventSchema>;
 export type TinybirdSyncRequestBody = z.infer<typeof TinybirdSyncRequestBodySchema>;
