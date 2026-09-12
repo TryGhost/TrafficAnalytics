@@ -30,8 +30,7 @@ describe('event publisher', () => {
         await publishEvent({topic: 'page-hits', payload: {id: 'three'}, logger});
 
         expect(mocks.topic).toHaveBeenCalledTimes(2);
-        expect(mocks.topic).toHaveBeenNthCalledWith(1, 'tinybird-sync');
-        expect(mocks.topic).toHaveBeenNthCalledWith(2, 'page-hits');
+        expect(mocks.topic.mock.calls.map(([name]) => name)).toEqual(['tinybird-sync', 'page-hits']);
         expect(mocks.publishMessage).toHaveBeenCalledTimes(3);
     });
 });
