@@ -88,3 +88,27 @@ jobs:
           IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
           docker tag ${{ steps.docker-build.outputs.production-image-name }} "$IMAGE_NAME_LOWER"
           docker push "$IMAGE_NAME_LOWER"
+
+  # Stable aggregate gate for branch protection. Require this single check in the
+  # ruleset instead of a matrix-leg name like "Lint and Test (Node 22)", which
+  # renames (and silently stops gating) whenever the Node matrix changes. Runs
+  # on every matrix leg via `needs` and fails if any of them did not succeed.
+  ci-success:
+    name: CI success
+    if: always()
+    needs: [prepare, lint-and-test]
+    runs-on: ubuntu-latest
+    steps:
+      # Fail closed: require every needed job to be exactly 'success'. Checking
+      # only for 'failure'/'cancelled' would let a 'skipped' result pass — e.g.
+      # if prepare emitted an empty matrix, lint-and-test would be skipped and
+      # this gate would go green with zero tests run.
+      - name: Fail unless every required job succeeded
+        if: ${{ needs.prepare.result != 'success' || needs.lint-and-test.result != 'success' }}
+        run: |
+          echo "One or more required CI jobs did not succeed:"
+          echo "  prepare:       ${{ needs.prepare.result }}"
+          echo "  lint-and-test: ${{ needs.lint-and-test.result }}"
+          exit 1
+      - name: All required CI jobs passed
+        run: echo "All required CI jobs passed"
