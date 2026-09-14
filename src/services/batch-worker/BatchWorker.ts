@@ -18,65 +18,65 @@ interface PendingMessage {
 }
 
 class BatchWorker {
-    private topic: string;
-    private subscriber: EventSubscriber;
-    private tinybirdClient: TinybirdClient;
-    private batch: PendingMessage[];
-    private batchSize: number;
-    private flushInterval: number;
-    private flushTimer: NodeJS.Timeout | null;
-    private isShuttingDown: boolean;
+    #topic: string;
+    #subscriber: EventSubscriber;
+    #tinybirdClient: TinybirdClient;
+    #batch: PendingMessage[];
+    #batchSize: number;
+    #flushInterval: number;
+    #flushTimer: NodeJS.Timeout | null;
+    #isShuttingDown: boolean;
 
     constructor(topic: string, tinybirdClient: TinybirdClient, config: BatchWorkerConfig = {}) {
         logger.info({event: 'BatchWorkerCreating', topic});
-        this.topic = topic;
-        this.subscriber = new EventSubscriber(topic);
-        this.tinybirdClient = tinybirdClient;
-        this.batch = [];
-        this.batchSize = config.batchSize || parseInt(process.env.BATCH_SIZE || '50', 10);
-        this.flushInterval = config.flushInterval || parseInt(process.env.BATCH_FLUSH_INTERVAL_MS || '1000', 10);
-        this.flushTimer = null;
-        this.isShuttingDown = false;
+        this.#topic = topic;
+        this.#subscriber = new EventSubscriber(topic);
+        this.#tinybirdClient = tinybirdClient;
+        this.#batch = [];
+        this.#batchSize = config.batchSize || parseInt(process.env.BATCH_SIZE || '50', 10);
+        this.#flushInterval = config.flushInterval || parseInt(process.env.BATCH_FLUSH_INTERVAL_MS || '1000', 10);
+        this.#flushTimer = null;
+        this.#isShuttingDown = false;
 
-        logger.info({event: 'BatchWorkerConfigured', batchSize: this.batchSize, flushIntervalMs: this.flushInterval});
+        logger.info({event: 'BatchWorkerConfigured', batchSize: this.#batchSize, flushIntervalMs: this.#flushInterval});
     }
 
     public async start() {
-        logger.info({event: 'BatchWorkerStarting', topic: this.topic});
-        this.subscriber.subscribe(this.handleMessage.bind(this));
-        this.scheduleFlush();
+        logger.info({event: 'BatchWorkerStarting', topic: this.#topic});
+        this.#subscriber.subscribe(this.#handleMessage.bind(this));
+        this.#scheduleFlush();
     }
 
     public async stop() {
-        logger.info({event: 'BatchWorkerStopping', topic: this.topic});
-        this.isShuttingDown = true;
+        logger.info({event: 'BatchWorkerStopping', topic: this.#topic});
+        this.#isShuttingDown = true;
 
         // Cancel the flush timer
-        if (this.flushTimer) {
-            clearTimeout(this.flushTimer);
-            this.flushTimer = null;
+        if (this.#flushTimer) {
+            clearTimeout(this.#flushTimer);
+            this.#flushTimer = null;
         }
 
         // Flush any remaining events
-        await this.flushBatch();
+        await this.#flushBatch();
 
-        await this.subscriber.close();
+        await this.#subscriber.close();
     }
 
-    private async handleMessage(message: Message) {
+    async #handleMessage(message: Message) {
         try {
-            const pageHitRaw = await this.parseMessage(message);
+            const pageHitRaw = await this.#parseMessage(message);
             if (!pageHitRaw) {
                 return;
             }
-            const pageHitProcessed = await this.transformMessage(pageHitRaw);
+            const pageHitProcessed = await this.#transformMessage(pageHitRaw);
 
             // Filter bot traffic before adding to batch
             if (pageHitProcessed.payload.device === 'bot') {
                 logger.info({
                     event: 'BotEventFiltered',
                     messageId: message.id,
-                    messageData: this.getMessageData(message),
+                    messageData: this.#getMessageData(message),
                     pageHitProcessed: pageHitProcessed
                 });
                 // Acknowledge the message since we successfully processed it (by filtering it out)
@@ -85,7 +85,7 @@ class BatchWorker {
             }
 
             // Add to batch instead of posting immediately
-            this.batch.push({
+            this.#batch.push({
                 message,
                 processedEvent: pageHitProcessed
             });
@@ -93,27 +93,27 @@ class BatchWorker {
             logger.debug({
                 event: 'WorkerProcessedMessage',
                 messageId: message.id,
-                messageData: this.getMessageData(message),
+                messageData: this.#getMessageData(message),
                 eventId: pageHitProcessed.payload.event_id,
                 pageHitProcessed
             });
 
             // Check if batch is full
-            if (this.batch.length >= this.batchSize) {
-                await this.flushBatch();
+            if (this.#batch.length >= this.#batchSize) {
+                await this.#flushBatch();
             }
         } catch (err) {
             logger.error({
                 event: 'WorkerMessageProcessingFailed',
                 messageId: message.id,
-                messageData: this.getMessageData(message),
+                messageData: this.#getMessageData(message),
                 err
             });
             message.nack();
         }
     }
 
-    private async parseMessage(message: Message) {
+    async #parseMessage(message: Message) {
         try {
             const messageData = message.data.toString();
             const parsedMessageData = JSON.parse(messageData);
@@ -122,7 +122,7 @@ class BatchWorker {
             logger.error({
                 event: 'WorkerMessageParsingFailed',
                 messageId: message.id,
-                messageData: this.getMessageData(message),
+                messageData: this.#getMessageData(message),
                 err
             });
             // Ack the message. If we failed to parse it, we won't succeed next time.
@@ -131,21 +131,21 @@ class BatchWorker {
         }
     }
 
-    private async transformMessage(pageHitRaw: PageHitRaw) {
+    async #transformMessage(pageHitRaw: PageHitRaw) {
         return await transformPageHitRawToProcessed(pageHitRaw);
     }
 
-    private async flushBatch() {
-        if (this.batch.length === 0) {
+    async #flushBatch() {
+        if (this.#batch.length === 0) {
             return;
         }
 
-        const batchToFlush = [...this.batch];
-        this.batch = [];
+        const batchToFlush = [...this.#batch];
+        this.#batch = [];
 
         try {
             const events = batchToFlush.map(item => item.processedEvent);
-            await this.tinybirdClient.postEventBatch(events);
+            await this.#tinybirdClient.postEventBatch(events);
 
             // Acknowledge all messages in the batch
             batchToFlush.forEach((item) => {
@@ -174,18 +174,18 @@ class BatchWorker {
         }
     }
 
-    private scheduleFlush() {
-        if (this.isShuttingDown || this.flushTimer) {
+    #scheduleFlush() {
+        if (this.#isShuttingDown || this.#flushTimer) {
             return;
         }
 
-        this.flushTimer = setTimeout(async () => {
-            this.flushTimer = null;
+        this.#flushTimer = setTimeout(async () => {
+            this.#flushTimer = null;
 
-            const pendingBatchSize = this.batch.length;
-            const pendingMessageIds = this.batch.map(item => item.message.id);
+            const pendingBatchSize = this.#batch.length;
+            const pendingMessageIds = this.#batch.map(item => item.message.id);
             try {
-                await this.flushBatch();
+                await this.#flushBatch();
             } catch (err) {
                 logger.error({
                     event: 'WorkerScheduledFlushFailed',
@@ -196,18 +196,33 @@ class BatchWorker {
             }
 
             // Schedule the next flush if not shutting down
-            if (!this.isShuttingDown) {
-                this.scheduleFlush();
+            if (!this.#isShuttingDown) {
+                this.#scheduleFlush();
             }
-        }, this.flushInterval);
+        }, this.#flushInterval);
     }
 
-    private getMessageData(message: Message) {
+    #getMessageData(message: Message) {
         try {
             return JSON.parse(message.data.toString());
         } catch {
             return message.data.toString();
         }
+    }
+
+    /** @internal */
+    __testOnlyGetSubscriber(): EventSubscriber {
+        return this.#subscriber;
+    }
+
+    /** @internal */
+    async __testOnlyHandleMessage(message: Message): Promise<void> {
+        return this.#handleMessage(message);
+    }
+
+    /** @internal */
+    async __testOnlyFlushBatch(): Promise<void> {
+        return this.#flushBatch();
     }
 }
 

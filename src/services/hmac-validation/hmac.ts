@@ -11,20 +11,20 @@ export interface HmacValidationResult {
 }
 
 export class HmacValidationService {
-    private readonly secret: string;
+    readonly #secret: string;
 
     constructor(secret?: string) {
         if (!secret) {
             throw new Error('HMAC secret is required for validation');
         }
-        this.secret = secret;
+        this.#secret = secret;
     }
 
     /**
      * Extracts HMAC from URL parameters (assumes it's the last parameter)
      * and returns the cleaned URL without the HMAC parameter
      */
-    private extractHmacFromUrl(url: string): {hmac?: string; timestamp?: Date, validationUrl: string, cleanedUrl: string} {
+    #extractHmacFromUrl(url: string): {hmac?: string; timestamp?: Date, validationUrl: string, cleanedUrl: string} {
         const urlObj = new URL(url, 'http://localhost'); // Base URL for relative URLs
         const params = new URLSearchParams(urlObj.search);
 
@@ -60,7 +60,7 @@ export class HmacValidationService {
      */
     generateHmac(data: string): string {
         return crypto
-            .createHmac('sha1', this.secret)
+            .createHmac('sha1', this.#secret)
             .update(data)
             .digest('base64url') + '=';
     }
@@ -68,7 +68,7 @@ export class HmacValidationService {
     /**
      * Performs timing-safe comparison of two strings
      */
-    private timingSafeEqual(a: string, b: string): boolean {
+    #timingSafeEqual(a: string, b: string): boolean {
         if (a.length !== b.length) {
             return false;
         }
@@ -87,7 +87,7 @@ export class HmacValidationService {
     /**
      * Validates timestamp for a given request
      */
-    private validateTimestamp(timestamp: Date): { timestampValid: boolean, timestampError?: string } {
+    #validateTimestamp(timestamp: Date): { timestampValid: boolean, timestampError?: string } {
         if (isNaN(timestamp.getTime())) {
             return {
                 timestampValid: false,
@@ -118,7 +118,7 @@ export class HmacValidationService {
     async validateRequest(request: FastifyRequest): Promise<HmacValidationResult> {
         try {
             const fullUrl = request.url;
-            const {hmac: providedHmac, timestamp: providedTimestamp, validationUrl, cleanedUrl} = this.extractHmacFromUrl(fullUrl);
+            const {hmac: providedHmac, timestamp: providedTimestamp, validationUrl, cleanedUrl} = this.#extractHmacFromUrl(fullUrl);
 
             if (!providedHmac) {
                 return {
@@ -140,8 +140,8 @@ export class HmacValidationService {
 
             const expectedHmac = this.generateHmac(validationUrl);
 
-            const hmacValid = this.timingSafeEqual(providedHmac, expectedHmac);
-            const {timestampValid, timestampError} = this.validateTimestamp(providedTimestamp);
+            const hmacValid = this.#timingSafeEqual(providedHmac, expectedHmac);
+            const {timestampValid, timestampError} = this.#validateTimestamp(providedTimestamp);
             const isValid = hmacValid && timestampValid;
 
             return {

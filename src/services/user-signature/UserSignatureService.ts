@@ -10,8 +10,8 @@ import logger from '../../utils/logger';
  * personally identifiable information.
  */
 export class UserSignatureService {
-    private saltStore: ISaltStore;
-    private cleanupInterval: NodeJS.Timeout | null = null;
+    #saltStore: ISaltStore;
+    #cleanupInterval: NodeJS.Timeout | number | null = null;
 
     /**
      * Creates a new UserSignatureService instance.
@@ -19,14 +19,14 @@ export class UserSignatureService {
      * @param saltStore - The salt store implementation used to persist and retrieve salts
      */
     constructor(saltStore: ISaltStore) {
-        this.saltStore = saltStore;
-        this.startCleanupScheduler();
+        this.#saltStore = saltStore;
+        this.#startCleanupScheduler();
     }
 
     /**
      * Start the salt cleanup scheduler
      */
-    private startCleanupScheduler() {
+    #startCleanupScheduler() {
         // Only start scheduler in production (not during testing)
         if (process.env.NODE_ENV === 'testing' || process.env.ENABLE_SALT_CLEANUP_SCHEDULER === 'false') {
             return;
@@ -36,7 +36,7 @@ export class UserSignatureService {
         
         const runCleanup = async () => {
             try {
-                const deletedCount = await this.saltStore.cleanup();
+                const deletedCount = await this.#saltStore.cleanup();
                 logger.info({event: 'SaltCleanupCompleted', deletedCount});
             } catch (err) {
                 logger.error({event: 'SaltCleanupFailed', err});
@@ -54,7 +54,7 @@ export class UserSignatureService {
             await runCleanup();
             
             // Schedule subsequent cleanups every 24 hours
-            this.cleanupInterval = setInterval(runCleanup, CLEANUP_INTERVAL);
+            this.#cleanupInterval = setInterval(runCleanup, CLEANUP_INTERVAL);
         }, randomDelayMs);
     }
 
@@ -62,9 +62,9 @@ export class UserSignatureService {
      * Stop the salt cleanup scheduler (useful for testing or graceful shutdown)
      */
     public stopCleanupScheduler() {
-        if (this.cleanupInterval) {
-            clearInterval(this.cleanupInterval);
-            this.cleanupInterval = null;
+        if (this.#cleanupInterval) {
+            clearInterval(this.#cleanupInterval);
+            this.#cleanupInterval = null;
         }
     }
 
@@ -74,7 +74,7 @@ export class UserSignatureService {
      * @param siteUuid - The site_uuid to get the salt for
      * @returns The key to use to store the salt for the site
      */
-    private getKey(siteUuid: string): SaltKey {
+    #getKey(siteUuid: string): SaltKey {
         const date = new Date().toISOString().split('T')[0];
         return `salt:${date}:${siteUuid}` as SaltKey;
     }
@@ -84,7 +84,7 @@ export class UserSignatureService {
      *
      * @returns A 64-character hexadecimal string (256 bits of entropy)
      */
-    private generateRandomSalt(): string {
+    #generateRandomSalt(): string {
         return crypto.randomBytes(32).toString('hex');
     }
 
@@ -100,9 +100,9 @@ export class UserSignatureService {
      * @param siteUuid - The unique identifier of the site
      * @returns The salt for the site and current date
      */
-    private async getOrCreateSaltForSite(siteUuid: string): Promise<string> {
-        const key = this.getKey(siteUuid);
-        const saltRecord = await this.saltStore.getOrCreate(key, () => this.generateRandomSalt());
+    async #getOrCreateSaltForSite(siteUuid: string): Promise<string> {
+        const key = this.#getKey(siteUuid);
+        const saltRecord = await this.#saltStore.getOrCreate(key, () => this.#generateRandomSalt());
         return saltRecord.salt;
     }
 
@@ -125,9 +125,34 @@ export class UserSignatureService {
      * @returns A 64-character hexadecimal SHA-256 hash representing the user signature
      */
     async generateUserSignature(siteUuid: string, ipAddress: string, userAgent: string): Promise<string> {
-        const salt = await this.getOrCreateSaltForSite(siteUuid);
+        const salt = await this.#getOrCreateSaltForSite(siteUuid);
         const signature = `${salt}:${siteUuid}:${ipAddress}:${userAgent}`;
         const hashedSignature = crypto.createHash('sha256').update(signature).digest('hex');
         return hashedSignature;
+    }
+
+    /** @internal */
+    __testOnlyGetCleanupInterval(): NodeJS.Timeout | number | null {
+        return this.#cleanupInterval;
+    }
+
+    /** @internal */
+    __testOnlySetCleanupInterval(interval: NodeJS.Timeout | number): void {
+        this.#cleanupInterval = interval;
+    }
+
+    /** @internal */
+    __testOnlyGetKey(siteUuid: string): SaltKey {
+        return this.#getKey(siteUuid);
+    }
+
+    /** @internal */
+    __testOnlyGenerateRandomSalt(): string {
+        return this.#generateRandomSalt();
+    }
+
+    /** @internal */
+    async __testOnlyGetOrCreateSaltForSite(siteUuid: string): Promise<string> {
+        return this.#getOrCreateSaltForSite(siteUuid);
     }
 };

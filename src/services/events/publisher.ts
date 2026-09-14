@@ -8,33 +8,33 @@ export interface PublishEventOptions {
 }
 
 class EventPublisher {
-    private static instance: EventPublisher;
-    private pubsub: PubSub;
-    private topics = new Map<string, Topic>();
+    static #instance: EventPublisher;
+    #pubsub: PubSub;
+    #topics = new Map<string, Topic>();
 
     private constructor() {
-        this.pubsub = new PubSub({
+        this.#pubsub = new PubSub({
             projectId: process.env.GOOGLE_CLOUD_PROJECT,
             enableOpenTelemetryTracing: true
         });
     }
 
     static getInstance(): EventPublisher {
-        if (!EventPublisher.instance) {
-            EventPublisher.instance = new EventPublisher();
+        if (!EventPublisher.#instance) {
+            EventPublisher.#instance = new EventPublisher();
         }
-        return EventPublisher.instance;
+        return EventPublisher.#instance;
     }
 
-    private getTopic(name: string): Topic {
-        let topic = this.topics.get(name);
+    #getTopic(name: string): Topic {
+        let topic = this.#topics.get(name);
         if (!topic) {
-            topic = this.pubsub.topic(name, {
+            topic = this.#pubsub.topic(name, {
                 batching: {
                     maxMessages: 1000
                 }
             });
-            this.topics.set(name, topic);
+            this.#topics.set(name, topic);
         }
         return topic;
     }
@@ -45,7 +45,7 @@ class EventPublisher {
                 data: Buffer.from(JSON.stringify(payload))
             };
 
-            const messageId = await this.getTopic(topic).publishMessage(message);
+            const messageId = await this.#getTopic(topic).publishMessage(message);
 
             logger.debug({
                 event: 'EventPublishSuccessful',
