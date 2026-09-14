@@ -113,7 +113,7 @@ describe('UserSignatureService', () => {
             const mockDate = '2024-01-01T12:00:00.000Z';
             vi.spyOn(Date.prototype, 'toISOString').mockReturnValue(mockDate);
 
-            const salt = await (userSignatureService as any).getOrCreateSaltForSite(testSiteUuid);
+            const salt = await userSignatureService.__testOnlyGetOrCreateSaltForSite(testSiteUuid);
 
             const signature = await userSignatureService.generateUserSignature(testSiteUuid, testIp, testUserAgent);
 
@@ -152,10 +152,10 @@ describe('UserSignatureService', () => {
         });
     });
 
-    describe('private methods testing via reflection', () => {
+    describe('test-only methods', () => {
         it('should generate random salt of correct length', () => {
-            const salt1 = (userSignatureService as any).generateRandomSalt();
-            const salt2 = (userSignatureService as any).generateRandomSalt();
+            const salt1 = userSignatureService.__testOnlyGenerateRandomSalt();
+            const salt2 = userSignatureService.__testOnlyGenerateRandomSalt();
 
             expect(typeof salt1).toBe('string');
             expect(salt1).toHaveLength(64);
@@ -166,13 +166,13 @@ describe('UserSignatureService', () => {
         it('should generate key with date and site UUID', () => {
             vi.spyOn(Date.prototype, 'toISOString').mockReturnValue('2024-01-01T12:00:00.000Z');
 
-            const key = (userSignatureService as any).getKey('550e8400-e29b-41d4-a716-446655440000');
+            const key = userSignatureService.__testOnlyGetKey('550e8400-e29b-41d4-a716-446655440000');
 
             expect(key).toBe('salt:2024-01-01:550e8400-e29b-41d4-a716-446655440000');
         });
 
         it('should create and return new salt when salt does not exist', async () => {
-            const result = await (userSignatureService as any).getOrCreateSaltForSite('987fcdeb-51d2-43e1-9b45-123456789abc');
+            const result = await userSignatureService.__testOnlyGetOrCreateSaltForSite('987fcdeb-51d2-43e1-9b45-123456789abc');
 
             expect(typeof result).toBe('string');
             expect(result).toHaveLength(64);
@@ -187,7 +187,7 @@ describe('UserSignatureService', () => {
             const testSalt = 'existing-salt';
             await mockSaltStore.set(expectedKey, testSalt);
 
-            const result = await (userSignatureService as any).getOrCreateSaltForSite(existingSiteUuid);
+            const result = await userSignatureService.__testOnlyGetOrCreateSaltForSite(existingSiteUuid);
 
             expect(result).toBe(testSalt);
         });
@@ -251,12 +251,12 @@ describe('UserSignatureService', () => {
                 const service = new UserSignatureService(mockSaltStore);
                 
                 // Simulate that the interval was set
-                (service as any).cleanupInterval = 123;
+                service.__testOnlySetCleanupInterval(123);
                 
                 service.stopCleanupScheduler();
                 
                 expect(clearIntervalSpy).toHaveBeenCalledWith(123);
-                expect((service as any).cleanupInterval).toBeNull();
+                expect(service.__testOnlyGetCleanupInterval()).toBeNull();
             });
 
             it('should handle stopping scheduler when no interval is set', () => {
@@ -405,8 +405,8 @@ describe('UserSignatureService', () => {
                 const service = new UserSignatureService(raceSaltStore);
                 
                 // Both calls should succeed - one creates the salt, the other should retry and get it
-                const promise1 = (service as any).getOrCreateSaltForSite(testSiteUuid);
-                const promise2 = (service as any).getOrCreateSaltForSite(testSiteUuid);
+                const promise1 = service.__testOnlyGetOrCreateSaltForSite(testSiteUuid);
+                const promise2 = service.__testOnlyGetOrCreateSaltForSite(testSiteUuid);
                 
                 const results = await Promise.allSettled([promise1, promise2]);
                 

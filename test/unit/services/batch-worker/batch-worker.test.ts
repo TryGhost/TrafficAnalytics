@@ -84,7 +84,7 @@ describe('BatchWorker', () => {
             batchSize: 2,
             flushInterval: 100
         });
-        mockSubscriber = (batchWorker as any).subscriber;
+        mockSubscriber = batchWorker.__testOnlyGetSubscriber();
     });
 
     afterEach(() => {
@@ -168,7 +168,7 @@ describe('BatchWorker', () => {
         it('should process valid message and add to batch without immediate ack', async () => {
             const mockMessage = createMockMessage(JSON.stringify(validPageHitRawData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             // Message should not be acked yet since it's in batch
             expect(mockMessage.ack).not.toHaveBeenCalled();
@@ -178,7 +178,7 @@ describe('BatchWorker', () => {
         it('should transform pageHitRaw to pageHitProcessed and add to batch', async () => {
             const mockMessage = createMockMessage(JSON.stringify(validPageHitRawData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             const processedLog = getLogCapture().findByEvent('WorkerProcessedMessage');
             expect(processedLog).toBeDefined();
@@ -227,7 +227,7 @@ describe('BatchWorker', () => {
         it('should not immediately call TinybirdClient when single message processed', async () => {
             const mockMessage = createMockMessage(JSON.stringify(validPageHitRawData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             // Should not post individual events anymore - only batch posts
             expect(mockTinybirdClient.postEvent).not.toHaveBeenCalled();
@@ -245,7 +245,7 @@ describe('BatchWorker', () => {
             const invalidJson = 'invalid json';
             const mockMessage = createMockMessage(invalidJson);
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             const log = getLogCapture().findByEvent('WorkerMessageParsingFailed');
             expect(log).toBeDefined();
@@ -289,7 +289,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(invalidPageHitRawWithEmptyUserAgent));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             const log = getLogCapture().findByEvent('WorkerMessageParsingFailed');
             expect(log).toBeDefined();
@@ -313,7 +313,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(incompleteData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             expectMessageAcked(mockMessage);
         });
@@ -321,7 +321,7 @@ describe('BatchWorker', () => {
         it('should handle empty message data and ack message', async () => {
             const mockMessage = createMockMessage('');
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             expectMessageAcked(mockMessage);
         });
@@ -337,7 +337,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(dataWithNulls));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             // Message should be added to batch without immediate ack
             expect(mockMessage.ack).not.toHaveBeenCalled();
@@ -359,7 +359,7 @@ describe('BatchWorker', () => {
                 const mockMessage = createMockMessage(JSON.stringify(dataWithPostType));
                 messages.push(mockMessage);
 
-                await (batchWorker as any).handleMessage(mockMessage);
+                await batchWorker.__testOnlyHandleMessage(mockMessage);
             }
 
             // First two messages should be acked (batch size is 2) but the third should still be pending
@@ -376,7 +376,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(invalidUuidData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             expectMessageAcked(mockMessage);
         });
@@ -391,7 +391,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(invalidUrlData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
             expect(mockMessage.nack).not.toHaveBeenCalled();
         });
 
@@ -405,7 +405,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(botData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             // Bot traffic should be acknowledged immediately without being batched
             expect(mockMessage.ack).toHaveBeenCalled();
@@ -436,7 +436,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(googleBotAndroidData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             // Bot traffic should be acknowledged immediately
             expect(mockMessage.ack).toHaveBeenCalled();
@@ -454,7 +454,7 @@ describe('BatchWorker', () => {
             };
             const mockMessage = createMockMessage(JSON.stringify(regularData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             // Regular traffic should not be acknowledged immediately (batched)
             expect(mockMessage.ack).not.toHaveBeenCalled();
@@ -493,7 +493,7 @@ describe('BatchWorker', () => {
         it('should accumulate messages in batch without immediately posting', async () => {
             const mockMessage = createMockMessage(JSON.stringify(validPageHitRawData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             // Should not have called postEventBatch yet (batch size is 2)
             expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
@@ -505,8 +505,8 @@ describe('BatchWorker', () => {
             const mockMessage1 = createMockMessage(JSON.stringify(validPageHitRawData));
             const mockMessage2 = createMockMessage(JSON.stringify(validPageHitRawData));
 
-            await (batchWorker as any).handleMessage(mockMessage1);
-            await (batchWorker as any).handleMessage(mockMessage2);
+            await batchWorker.__testOnlyHandleMessage(mockMessage1);
+            await batchWorker.__testOnlyHandleMessage(mockMessage2);
 
             // Should have flushed the batch
             expect(mockTinybirdClient.postEventBatch).toHaveBeenCalledWith(
@@ -531,7 +531,7 @@ describe('BatchWorker', () => {
             // Start the worker to initialize the timer
             await batchWorker.start();
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
 
             // Wait for timer to expire
             await sleep(150);
@@ -552,7 +552,7 @@ describe('BatchWorker', () => {
         it('should flush all pending batches on stop', async () => {
             const mockMessage = createMockMessage(JSON.stringify(validPageHitRawData));
 
-            await (batchWorker as any).handleMessage(mockMessage);
+            await batchWorker.__testOnlyHandleMessage(mockMessage);
             await batchWorker.stop();
 
             expect(mockTinybirdClient.postEventBatch).toHaveBeenCalledWith(
@@ -573,9 +573,9 @@ describe('BatchWorker', () => {
 
             (mockTinybirdClient.postEventBatch as any).mockRejectedValueOnce(tinybirdError);
 
-            await (batchWorker as any).handleMessage(mockMessage1);
+            await batchWorker.__testOnlyHandleMessage(mockMessage1);
 
-            await (batchWorker as any).handleMessage(mockMessage2);
+            await batchWorker.__testOnlyHandleMessage(mockMessage2);
 
             expect(mockMessage1.nack).toHaveBeenCalled();
             expect(mockMessage2.nack).toHaveBeenCalled();
@@ -584,7 +584,7 @@ describe('BatchWorker', () => {
         });
 
         it('should handle empty batch gracefully', async () => {
-            await (batchWorker as any).flushBatch();
+            await batchWorker.__testOnlyFlushBatch();
             expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
         });
 
@@ -622,17 +622,17 @@ describe('BatchWorker', () => {
             const regularMessage2 = createMockMessage(JSON.stringify(regularData));
 
             // Send bot traffic first - should not contribute to batch
-            await (batchWorker as any).handleMessage(botMessage);
+            await batchWorker.__testOnlyHandleMessage(botMessage);
             expect(botMessage.ack).toHaveBeenCalled();
             expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
 
             // Send first regular message - should not trigger batch flush yet
-            await (batchWorker as any).handleMessage(regularMessage1);
+            await batchWorker.__testOnlyHandleMessage(regularMessage1);
             expect(regularMessage1.ack).not.toHaveBeenCalled();
             expect(mockTinybirdClient.postEventBatch).not.toHaveBeenCalled();
 
             // Send second regular message - should trigger batch flush (batch size is 2)
-            await (batchWorker as any).handleMessage(regularMessage2);
+            await batchWorker.__testOnlyHandleMessage(regularMessage2);
             expect(mockTinybirdClient.postEventBatch).toHaveBeenCalledWith(
                 expect.arrayContaining([
                     expect.objectContaining({

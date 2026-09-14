@@ -42,14 +42,14 @@ interface WireMockRequestLog {
 }
 
 export class WireMock {
-    private baseUrl: string;
+    #baseUrl: string;
 
     constructor(baseUrl: string = 'http://localhost:8089') {
-        this.baseUrl = baseUrl;
+        this.#baseUrl = baseUrl;
     }
 
     async setupStub(mapping: WireMockStubMapping): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/__admin/mappings`, {
+        const response = await fetch(`${this.#baseUrl}/__admin/mappings`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -64,7 +64,7 @@ export class WireMock {
     }
 
     async resetAll(): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/__admin/reset`, {
+        const response = await fetch(`${this.#baseUrl}/__admin/reset`, {
             method: 'POST'
         });
 
@@ -74,7 +74,7 @@ export class WireMock {
     }
 
     async getRequestLogs(): Promise<WireMockRequestLog[]> {
-        const response = await fetch(`${this.baseUrl}/__admin/requests`);
+        const response = await fetch(`${this.#baseUrl}/__admin/requests`);
         
         if (!response.ok) {
             throw new Error(`Failed to get request logs: ${response.status}`);
@@ -90,7 +90,7 @@ export class WireMock {
         urlPattern?: string;
         headers?: Record<string, string>;
     }): Promise<WireMockRequestLog[]> {
-        const response = await fetch(`${this.baseUrl}/__admin/requests/find`, {
+        const response = await fetch(`${this.#baseUrl}/__admin/requests/find`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -111,7 +111,7 @@ export class WireMock {
         
         while (Date.now() - start < timeoutMs) {
             try {
-                const response = await fetch(`${this.baseUrl}/__admin/health`);
+                const response = await fetch(`${this.#baseUrl}/__admin/health`);
                 if (response.ok) {
                     return;
                 }

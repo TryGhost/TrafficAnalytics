@@ -22,10 +22,10 @@ export class SaltAlreadyExistsError extends Error {
  * so they naturally rotate daily without needing explicit expiration.
  */
 export class FirestoreSaltStore implements ISaltStore {
-    private firestore: Firestore;
-    private collectionName: string;
-    private static readonly CLEANUP_BATCH_SIZE = 500;
-    private static readonly EXPIRE_AT_BUFFER_DAYS = 2;
+    #firestore: Firestore;
+    #collectionName: string;
+    static readonly #CLEANUP_BATCH_SIZE = 500;
+    static readonly #EXPIRE_AT_BUFFER_DAYS = 2;
 
     /**
      * Creates a new FirestoreSaltStore instance.
@@ -42,30 +42,30 @@ export class FirestoreSaltStore implements ISaltStore {
             databaseId
         };
         
-        this.firestore = new Firestore(firestoreConfig);
-        this.collectionName = collectionName;
+        this.#firestore = new Firestore(firestoreConfig);
+        this.#collectionName = collectionName;
         
         // Perform a basic health check to fail fast if Firestore is unavailable
-        this.healthCheck();
+        this.#healthCheck();
     }
 
-    private getCleanupBatchSize(): number {
+    #getCleanupBatchSize(): number {
         const envValue = process.env.FIRESTORE_CLEANUP_BATCH_SIZE;
         if (!envValue) {
-            return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
+            return FirestoreSaltStore.#CLEANUP_BATCH_SIZE;
         }
 
         const parsed = Number(envValue);
         if (!Number.isFinite(parsed) || parsed <= 0) {
-            return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
+            return FirestoreSaltStore.#CLEANUP_BATCH_SIZE;
         }
 
         const normalized = Math.floor(parsed);
         if (normalized < 1) {
-            return FirestoreSaltStore.CLEANUP_BATCH_SIZE;
+            return FirestoreSaltStore.#CLEANUP_BATCH_SIZE;
         }
 
-        return Math.min(normalized, FirestoreSaltStore.CLEANUP_BATCH_SIZE);
+        return Math.min(normalized, FirestoreSaltStore.#CLEANUP_BATCH_SIZE);
     }
 
     /**
@@ -75,7 +75,7 @@ export class FirestoreSaltStore implements ISaltStore {
      *
      * Falls back to fallbackDate + 2 days if the key format is unexpected.
      */
-    private getExpireAt(key: string, fallbackDate: Date) {
+    #getExpireAt(key: string, fallbackDate: Date) {
         const parts = key.split(':');
         // Expected format: salt:{YYYY-MM-DD}:{siteUuid}
         if (parts.length >= 3 && parts[0] === 'salt') {
@@ -83,13 +83,13 @@ export class FirestoreSaltStore implements ISaltStore {
             const parsed = new Date(dateStr);
             if (!isNaN(parsed.getTime())) {
                 const expireAt = new Date(parsed);
-                expireAt.setUTCDate(expireAt.getUTCDate() + FirestoreSaltStore.EXPIRE_AT_BUFFER_DAYS);
+                expireAt.setUTCDate(expireAt.getUTCDate() + FirestoreSaltStore.#EXPIRE_AT_BUFFER_DAYS);
                 return expireAt;
             }
         }
         // Fallback: created_at + 2 days
         const expireAt = new Date(fallbackDate);
-        expireAt.setUTCDate(expireAt.getUTCDate() + FirestoreSaltStore.EXPIRE_AT_BUFFER_DAYS);
+        expireAt.setUTCDate(expireAt.getUTCDate() + FirestoreSaltStore.#EXPIRE_AT_BUFFER_DAYS);
         return expireAt;
     }
 
@@ -97,10 +97,10 @@ export class FirestoreSaltStore implements ISaltStore {
      * Performs a basic health check to verify Firestore connectivity.
      * This helps fail fast during initialization if Firestore is unavailable.
      */
-    private async healthCheck(): Promise<void> {
+    async #healthCheck(): Promise<void> {
         try {
             // Simple operation to test connectivity - just get the collection reference
-            await this.firestore.collection(this.collectionName).limit(1).get();
+            await this.#firestore.collection(this.#collectionName).limit(1).get();
         } catch (err) {
             // Log warning but don't throw - allow graceful degradation
             logger.warn({event: 'FirestoreSaltStoreHealthCheckFailed', err});
@@ -115,8 +115,8 @@ export class FirestoreSaltStore implements ISaltStore {
      */
     async get(key: string): Promise<SaltRecord | undefined> {
         try {
-            const doc = await this.firestore
-                .collection(this.collectionName)
+            const doc = await this.#firestore
+                .collection(this.#collectionName)
                 .doc(key)
                 .get();
 
@@ -148,8 +148,8 @@ export class FirestoreSaltStore implements ISaltStore {
      */
     async getAll(): Promise<Record<string, SaltRecord>> {
         try {
-            const snapshot = await this.firestore
-                .collection(this.collectionName)
+            const snapshot = await this.#firestore
+                .collection(this.#collectionName)
                 .get();
 
             const records: Record<string, SaltRecord> = {};
@@ -185,7 +185,7 @@ export class FirestoreSaltStore implements ISaltStore {
      */
     async set(key: string, salt: string): Promise<SaltRecord> {
         try {
-            const docRef = this.firestore.collection(this.collectionName).doc(key);
+            const docRef = this.#firestore.collection(this.#collectionName).doc(key);
             const now = new Date();
 
             const record: SaltRecord = {
@@ -196,7 +196,7 @@ export class FirestoreSaltStore implements ISaltStore {
             // Write expires_at alongside the record for Firestore TTL support
             await docRef.create({
                 ...record,
-                expires_at: this.getExpireAt(key, now)
+                expires_at: this.#getExpireAt(key, now)
             });
 
             return {
@@ -222,8 +222,8 @@ export class FirestoreSaltStore implements ISaltStore {
      */
     async delete(key: string): Promise<void> {
         try {
-            await this.firestore
-                .collection(this.collectionName)
+            await this.#firestore
+                .collection(this.#collectionName)
                 .doc(key)
                 .delete();
         } catch (error) {
@@ -236,14 +236,14 @@ export class FirestoreSaltStore implements ISaltStore {
      * WARNING: This deletes all data! Use with caution, primarily for testing.
      */
     async clear(): Promise<void> {
-        const collection = this.firestore.collection(this.collectionName);
+        const collection = this.#firestore.collection(this.#collectionName);
         const snapshot = await collection.get();
         
         if (snapshot.size === 0) {
             return;
         }
 
-        const batch = this.firestore.batch();
+        const batch = this.#firestore.batch();
         snapshot.docs.forEach((doc) => {
             batch.delete(doc.ref);
         });
@@ -256,12 +256,12 @@ export class FirestoreSaltStore implements ISaltStore {
      * @returns Number of salts deleted
      */
     async cleanup(): Promise<number> {
-        const batchSize = this.getCleanupBatchSize();
+        const batchSize = this.#getCleanupBatchSize();
         const startTime = Date.now();
         const today = new Date().toISOString().split('T')[0];
         const cutoffDate = new Date(today); // This will be midnight UTC of today
-        const cleanupQuery = this.firestore
-            .collection(this.collectionName)
+        const cleanupQuery = this.#firestore
+            .collection(this.#collectionName)
             .where('created_at', '<', cutoffDate);
         const totalToBeDeleted = (await cleanupQuery.count().get()).data().count;
         let totalDeleted = 0;
@@ -284,7 +284,7 @@ export class FirestoreSaltStore implements ISaltStore {
                     break;
                 }
 
-                const batch = this.firestore.batch();
+                const batch = this.#firestore.batch();
                 snapshot.docs.forEach((doc) => {
                     batch.delete(doc.ref);
                 });
@@ -372,5 +372,10 @@ export class FirestoreSaltStore implements ISaltStore {
             logger.error({event: 'FirestoreSaltStoreGetOrCreateFailed', err});
             throw err;
         }
+    }
+
+    /** @internal */
+    __testOnlyGetFirestore(): Firestore {
+        return this.#firestore;
     }
 }

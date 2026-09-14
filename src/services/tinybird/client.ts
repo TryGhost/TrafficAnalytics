@@ -12,26 +12,26 @@ export interface TinybirdClientConfig {
 }
 
 export class TinybirdClient {
-    private apiUrl: string;
-    private apiToken: string;
-    private datasource: string;
-    private wait: boolean;
+    #apiUrl: string;
+    #apiToken: string;
+    #datasource: string;
+    #wait: boolean;
 
     constructor(config: TinybirdClientConfig) {
         if (!config.apiUrl || !config.apiToken || !config.datasource) {
             throw new Error('TinybirdClient constructor requires apiUrl, apiToken, and datasource');
         }
         // Remove /v0/events from the apiUrl if it exists
-        this.apiUrl = config.apiUrl.replace(/\/v0\/events$/, '');
-        this.apiToken = config.apiToken;
-        this.datasource = config.datasource;
-        this.wait = config.wait ?? false;
-        logger.info({event: 'TinybirdClientInitialized', apiUrl: this.apiUrl, datasource: this.datasource});
+        this.#apiUrl = config.apiUrl.replace(/\/v0\/events$/, '');
+        this.#apiToken = config.apiToken;
+        this.#datasource = config.datasource;
+        this.#wait = config.wait ?? false;
+        logger.info({event: 'TinybirdClientInitialized', apiUrl: this.#apiUrl, datasource: this.#datasource});
     }
 
     get endpoint(): string {
-        let url = `${this.apiUrl}/v0/events?name=${encodeURIComponent(this.datasource)}`;
-        if (this.wait) {
+        let url = `${this.#apiUrl}/v0/events?name=${encodeURIComponent(this.#datasource)}`;
+        if (this.#wait) {
             url += '&wait=true';
         }
         return url;
@@ -41,7 +41,7 @@ export class TinybirdClient {
         const response = await fetch(this.endpoint, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${this.apiToken}`,
+                Authorization: `Bearer ${this.#apiToken}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(event)
@@ -64,7 +64,7 @@ export class TinybirdClient {
         const response = await fetch(this.endpoint, {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${this.apiToken}`,
+                Authorization: `Bearer ${this.#apiToken}`,
                 'Content-Type': 'application/json'
             },
             body: batchPayload

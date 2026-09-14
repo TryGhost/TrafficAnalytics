@@ -156,7 +156,7 @@ describe('FirestoreSaltStore', () => {
             await saltStore.set(key3, 'old-salt');
 
             // Update timestamps
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const batch = firestore.batch();
             
             batch.update(firestore.collection(testCollectionName).doc(key1), { 
@@ -188,7 +188,7 @@ describe('FirestoreSaltStore', () => {
             const key = 'salt:2024-01-15:midnight-test';
             await saltStore.set(key, 'midnight-salt');
 
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             await firestore.collection(testCollectionName).doc(key).update({
                 created_at: new Date('2024-01-15T00:00:00.000Z') 
             });
@@ -214,7 +214,7 @@ describe('FirestoreSaltStore', () => {
         });
 
         it('should cleanup old salts in multiple query pages', async () => {
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const collection = firestore.collection(testCollectionName);
             const oldCreatedAt = new Date('2024-01-10T12:00:00.000Z');
             const todayCreatedAt = new Date('2024-01-15T00:00:00.000Z');
@@ -255,7 +255,7 @@ describe('FirestoreSaltStore', () => {
         });
 
         it('should cap cleanup batch size at Firestore batch limit', async () => {
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const collection = firestore.collection(testCollectionName);
             const oldCreatedAt = new Date('2024-01-10T12:00:00.000Z');
             const oldSaltCount = 510;
@@ -286,7 +286,7 @@ describe('FirestoreSaltStore', () => {
         });
 
         it('should fallback to default cleanup batch size when configured value rounds below one', async () => {
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const collection = firestore.collection(testCollectionName);
 
             await collection.doc('salt:2024-01-10:fractional-1').set({
@@ -311,7 +311,7 @@ describe('FirestoreSaltStore', () => {
         });
 
         it('should log deleted progress when cleanup fails mid-run', async () => {
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const collection = firestore.collection(testCollectionName);
 
             await collection.doc('salt:2024-01-10:fail-1').set({
@@ -356,7 +356,7 @@ describe('FirestoreSaltStore', () => {
         });
 
         it('should log total documents to delete in completion metadata', async () => {
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const collection = firestore.collection(testCollectionName);
 
             await collection.doc('salt:2024-01-10:total-1').set({
@@ -392,7 +392,7 @@ describe('FirestoreSaltStore', () => {
         });
 
         it('should log per-batch cleanup progress metadata', async () => {
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const collection = firestore.collection(testCollectionName);
             const oldCreatedAt = new Date('2024-01-10T12:00:00.000Z');
 
@@ -518,7 +518,7 @@ describe('FirestoreSaltStore', () => {
             await saltStore.set(key, 'test-salt');
 
             // Read the raw Firestore document to check expires_at
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const doc = await firestore.collection(testCollectionName).doc(key).get();
             const data = doc.data();
 
@@ -533,7 +533,7 @@ describe('FirestoreSaltStore', () => {
             const key = 'salt:2024-03-20:550e8400-e29b-41d4-a716-446655440000';
             await saltStore.getOrCreate(key, () => 'test-salt');
 
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const doc = await firestore.collection(testCollectionName).doc(key).get();
             const data = doc.data();
 
@@ -546,7 +546,7 @@ describe('FirestoreSaltStore', () => {
             const key = 'unexpected-key-format';
             await saltStore.set(key, 'test-salt');
 
-            const firestore = (saltStore as any).firestore;
+            const firestore = saltStore.__testOnlyGetFirestore();
             const doc = await firestore.collection(testCollectionName).doc(key).get();
             const data = doc.data();
 

@@ -338,9 +338,9 @@ describe('MemorySaltStore', () => {
             await saltStore.set(key3, 'old-salt');
 
             // Manually set the created_at dates
-            (saltStore as any).salts[key1].created_at = new Date('2024-01-14T23:59:59.999Z'); // Yesterday
-            (saltStore as any).salts[key2].created_at = new Date('2024-01-15T00:00:00.000Z'); // Today at midnight
-            (saltStore as any).salts[key3].created_at = new Date('2024-01-10T12:00:00.000Z'); // 5 days ago
+            saltStore.__testOnlyGetSalts()[key1].created_at = new Date('2024-01-14T23:59:59.999Z'); // Yesterday
+            saltStore.__testOnlyGetSalts()[key2].created_at = new Date('2024-01-15T00:00:00.000Z'); // Today at midnight
+            saltStore.__testOnlyGetSalts()[key3].created_at = new Date('2024-01-10T12:00:00.000Z'); // 5 days ago
 
             const deletedCount = await saltStore.cleanup();
 
@@ -361,7 +361,7 @@ describe('MemorySaltStore', () => {
 
             const key = '550e8400-e29b-41d4-a716-446655440000';
             await saltStore.set(key, 'midnight-salt');
-            (saltStore as any).salts[key].created_at = new Date('2024-01-15T00:00:00.000Z');
+            saltStore.__testOnlyGetSalts()[key].created_at = new Date('2024-01-15T00:00:00.000Z');
 
             const deletedCount = await saltStore.cleanup();
 
@@ -407,11 +407,11 @@ describe('MemorySaltStore', () => {
             }
             
             // Set created_at based on the date in the key
-            (saltStore as any).salts[keys[0]].created_at = new Date('2024-01-10T12:00:00.000Z');
-            (saltStore as any).salts[keys[1]].created_at = new Date('2024-01-14T12:00:00.000Z');
-            (saltStore as any).salts[keys[2]].created_at = new Date('2024-01-15T01:00:00.000Z');
-            (saltStore as any).salts[keys[3]].created_at = new Date('2024-01-15T23:59:59.999Z');
-            (saltStore as any).salts[keys[4]].created_at = new Date('2024-01-13T12:00:00.000Z');
+            saltStore.__testOnlyGetSalts()[keys[0]].created_at = new Date('2024-01-10T12:00:00.000Z');
+            saltStore.__testOnlyGetSalts()[keys[1]].created_at = new Date('2024-01-14T12:00:00.000Z');
+            saltStore.__testOnlyGetSalts()[keys[2]].created_at = new Date('2024-01-15T01:00:00.000Z');
+            saltStore.__testOnlyGetSalts()[keys[3]].created_at = new Date('2024-01-15T23:59:59.999Z');
+            saltStore.__testOnlyGetSalts()[keys[4]].created_at = new Date('2024-01-13T12:00:00.000Z');
 
             const deletedCount = await saltStore.cleanup();
 

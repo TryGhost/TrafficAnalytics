@@ -4,8 +4,8 @@ import errors from '@tryghost/errors';
 import logger from '../../utils/logger.js';
 
 export class EventSubscriber {
-    private pubsub: PubSub;
-    private subscription: Subscription;
+    #pubsub: PubSub;
+    #subscription: Subscription;
 
     constructor(subscriptionName: string) {
         if (!subscriptionName) {
@@ -19,15 +19,15 @@ export class EventSubscriber {
             });
         }
 
-        this.pubsub = new PubSub({
+        this.#pubsub = new PubSub({
             projectId: process.env.GOOGLE_CLOUD_PROJECT,
             enableOpenTelemetryTracing: true
         });
         try {
-            this.subscription = this.pubsub.subscription(subscriptionName);
+            this.#subscription = this.#pubsub.subscription(subscriptionName);
             logger.info({
                 event: 'EventSubscriberCreated',
-                subscriptionName: this.subscription.name
+                subscriptionName: this.#subscription.name
             });
         } catch {
             throw new errors.IncorrectUsageError({
@@ -39,13 +39,13 @@ export class EventSubscriber {
     subscribe(handler: (message: Message) => void): void {
         logger.info({
             event: 'SubscribingToEvent',
-            subscriptionName: this.subscription.name
+            subscriptionName: this.#subscription.name
         });
-        this.subscription.on('message', handler);
+        this.#subscription.on('message', handler);
     }
 
     async close(): Promise<void> {
-        await this.subscription.close();
+        await this.#subscription.close();
     }
 }
 

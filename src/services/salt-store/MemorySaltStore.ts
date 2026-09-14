@@ -1,11 +1,11 @@
 import type {ISaltStore, SaltRecord} from './ISaltStore';
 
 export class MemorySaltStore implements ISaltStore {
-    private readonly salts: Record<string, SaltRecord> = {};
+    readonly #salts: Record<string, SaltRecord> = {};
 
     async getAll(): Promise<Record<string, SaltRecord>> {
         const copy: Record<string, SaltRecord> = {};
-        for (const [key, record] of Object.entries(this.salts)) {
+        for (const [key, record] of Object.entries(this.#salts)) {
             copy[key] = {
                 salt: record.salt,
                 created_at: new Date(record.created_at)
@@ -15,15 +15,15 @@ export class MemorySaltStore implements ISaltStore {
     }
 
     async set(key: string, salt: string): Promise<SaltRecord> {
-        if (this.salts[key]) {
+        if (this.#salts[key]) {
             throw new Error(`Salt for key "${key}" already exists`);
         }
-        this.salts[key] = {salt, created_at: new Date()};
-        return this.salts[key];
+        this.#salts[key] = {salt, created_at: new Date()};
+        return this.#salts[key];
     }
 
     async get(key: string): Promise<SaltRecord | undefined> {
-        const record = this.salts[key];
+        const record = this.#salts[key];
         if (!record) {
             return undefined;
         }
@@ -34,12 +34,12 @@ export class MemorySaltStore implements ISaltStore {
     }
 
     async delete(key: string): Promise<void> {
-        delete this.salts[key];
+        delete this.#salts[key];
     }
 
     async clear(): Promise<void> {
-        for (const key in this.salts) {
-            delete this.salts[key];
+        for (const key in this.#salts) {
+            delete this.#salts[key];
         }
     }
 
@@ -49,9 +49,9 @@ export class MemorySaltStore implements ISaltStore {
         const cutoffDate = new Date(today); // This will be midnight UTC of today
         
         let deletedCount = 0;
-        for (const [key, record] of Object.entries(this.salts)) {
+        for (const [key, record] of Object.entries(this.#salts)) {
             if (record.created_at < cutoffDate) {
-                delete this.salts[key];
+                delete this.#salts[key];
                 deletedCount += 1;
             }
         }
@@ -59,7 +59,7 @@ export class MemorySaltStore implements ISaltStore {
     }
 
     async getOrCreate(key: string, saltGenerator: () => string): Promise<SaltRecord> {
-        const existing = this.salts[key];
+        const existing = this.#salts[key];
         if (existing) {
             return {
                 salt: existing.salt,
@@ -73,12 +73,17 @@ export class MemorySaltStore implements ISaltStore {
             created_at: new Date()
         };
         
-        this.salts[key] = record;
+        this.#salts[key] = record;
         
         // Return a copy to prevent external modifications
         return {
             salt: record.salt,
             created_at: new Date(record.created_at)
         };
+    }
+
+    /** @internal */
+    __testOnlyGetSalts(): Record<string, SaltRecord> {
+        return this.#salts;
     }
 }

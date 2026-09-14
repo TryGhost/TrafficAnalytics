@@ -26,10 +26,10 @@ export class SaltAlreadyExistsError extends Error {
  * have access to cloud services like Firestore.
  */
 export class FileSaltStore implements ISaltStore {
-    private readonly filePath: string;
-    private fileOperationPromise: Promise<void> = Promise.resolve();
-    private initPromise: Promise<void>;
-    private pendingCreations: Map<string, Promise<SaltRecord>> = new Map();
+    readonly #filePath: string;
+    #fileOperationPromise: Promise<void> = Promise.resolve();
+    #initPromise: Promise<void>;
+    #pendingCreations: Map<string, Promise<SaltRecord>> = new Map();
 
     /**
      * Creates a new FileSaltStore instance.
@@ -37,23 +37,23 @@ export class FileSaltStore implements ISaltStore {
      * @param filePath - The path to the JSON file where salts will be stored
      */
     constructor(filePath: string = './data/salts.json') {
-        this.filePath = path.resolve(filePath);
-        this.initPromise = this.initializeFile();
+        this.#filePath = path.resolve(filePath);
+        this.#initPromise = this.#initializeFile();
     }
 
     /**
      * Ensures the directory and file exist.
      */
-    private async initializeFile(): Promise<void> {
+    async #initializeFile(): Promise<void> {
         try {
-            const dir = path.dirname(this.filePath);
+            const dir = path.dirname(this.#filePath);
             await fs.mkdir(dir, {recursive: true});
             
             try {
-                await fs.access(this.filePath);
+                await fs.access(this.#filePath);
             } catch {
                 // File doesn't exist, create it with empty object
-                await this.writeFile({});
+                await this.#writeFile({});
             }
         } catch (err) {
             logger.warn({event: 'FileSaltStoreInitializationFailed', err});
@@ -63,9 +63,9 @@ export class FileSaltStore implements ISaltStore {
     /**
      * Reads the salt data from the file.
      */
-    private async readFile(): Promise<Record<string, SaltRecord>> {
+    async #readFile(): Promise<Record<string, SaltRecord>> {
         try {
-            const data = await fs.readFile(this.filePath, 'utf-8');
+            const data = await fs.readFile(this.#filePath, 'utf-8');
             const parsed = JSON.parse(data);
             
             // Convert created_at strings back to Date objects
@@ -86,7 +86,7 @@ export class FileSaltStore implements ISaltStore {
             }
             // Handle corrupted file
             logger.error({event: 'FileSaltStoreReadFailed', err});
-            await this.writeFile({});
+            await this.#writeFile({});
             return {};
         }
     }
@@ -94,8 +94,8 @@ export class FileSaltStore implements ISaltStore {
     /**
      * Writes salt data to the file atomically.
      */
-    private async writeFile(data: Record<string, SaltRecord>): Promise<void> {
-        const tempPath = `${this.filePath}.tmp`;
+    async #writeFile(data: Record<string, SaltRecord>): Promise<void> {
+        const tempPath = `${this.#filePath}.tmp`;
         
         // Convert Date objects to ISO strings for JSON serialization
         const serializable: Record<string, {salt: string; created_at: string}> = {};
@@ -107,16 +107,16 @@ export class FileSaltStore implements ISaltStore {
         }
         
         await fs.writeFile(tempPath, JSON.stringify(serializable, null, 2), 'utf-8');
-        await fs.rename(tempPath, this.filePath);
+        await fs.rename(tempPath, this.#filePath);
     }
 
     /**
      * Executes a file operation with queuing to prevent concurrent writes.
      */
-    private async executeFileOperation<T>(operation: () => Promise<T>): Promise<T> {
+    async #executeFileOperation<T>(operation: () => Promise<T>): Promise<T> {
         // Queue operations to prevent concurrent file access issues
-        const currentOperation = this.fileOperationPromise.then(operation);
-        this.fileOperationPromise = currentOperation.then(() => {}, () => {});
+        const currentOperation = this.#fileOperationPromise.then(operation);
+        this.#fileOperationPromise = currentOperation.then(() => {}, () => {});
         return currentOperation;
     }
 
@@ -127,8 +127,8 @@ export class FileSaltStore implements ISaltStore {
      * @returns The salt record if found, undefined if not found
      */
     async get(key: string): Promise<SaltRecord | undefined> {
-        await this.initPromise;
-        const data = await this.readFile();
+        await this.#initPromise;
+        const data = await this.#readFile();
         const record = data[key];
         
         if (!record) {
@@ -148,8 +148,8 @@ export class FileSaltStore implements ISaltStore {
      * @returns A record of key to salt record
      */
     async getAll(): Promise<Record<string, SaltRecord>> {
-        await this.initPromise;
-        const data = await this.readFile();
+        await this.#initPromise;
+        const data = await this.#readFile();
         
         // Return a deep copy to prevent external modifications
         const copy: Record<string, SaltRecord> = {};
@@ -172,9 +172,9 @@ export class FileSaltStore implements ISaltStore {
      * @throws SaltAlreadyExistsError if the key already exists
      */
     async set(key: string, salt: string): Promise<SaltRecord> {
-        await this.initPromise;
-        return this.executeFileOperation(async () => {
-            const data = await this.readFile();
+        await this.#initPromise;
+        return this.#executeFileOperation(async () => {
+            const data = await this.#readFile();
             
             if (data[key]) {
                 throw new SaltAlreadyExistsError(key);
@@ -186,7 +186,7 @@ export class FileSaltStore implements ISaltStore {
             };
             
             data[key] = record;
-            await this.writeFile(data);
+            await this.#writeFile(data);
             
             return {
                 salt: record.salt,
@@ -201,11 +201,11 @@ export class FileSaltStore implements ISaltStore {
      * @param key - The unique key for the salt to delete
      */
     async delete(key: string): Promise<void> {
-        await this.initPromise;
-        await this.executeFileOperation(async () => {
-            const data = await this.readFile();
+        await this.#initPromise;
+        await this.#executeFileOperation(async () => {
+            const data = await this.#readFile();
             delete data[key];
-            await this.writeFile(data);
+            await this.#writeFile(data);
         });
     }
 
@@ -214,9 +214,9 @@ export class FileSaltStore implements ISaltStore {
      * WARNING: This deletes all data! Use with caution, primarily for testing.
      */
     async clear(): Promise<void> {
-        await this.initPromise;
-        await this.executeFileOperation(async () => {
-            await this.writeFile({});
+        await this.#initPromise;
+        await this.#executeFileOperation(async () => {
+            await this.#writeFile({});
         });
     }
 
@@ -225,14 +225,14 @@ export class FileSaltStore implements ISaltStore {
      * @returns Number of salts deleted
      */
     async cleanup(): Promise<number> {
-        await this.initPromise;
-        return this.executeFileOperation(async () => {
+        await this.#initPromise;
+        return this.#executeFileOperation(async () => {
             try {
                 // Get today's date in UTC (same logic as UserSignatureService)
                 const today = new Date().toISOString().split('T')[0];
                 const cutoffDate = new Date(today); // This will be midnight UTC of today
                 
-                const data = await this.readFile();
+                const data = await this.#readFile();
                 let deletedCount = 0;
                 
                 for (const [key, record] of Object.entries(data)) {
@@ -243,7 +243,7 @@ export class FileSaltStore implements ISaltStore {
                 }
                 
                 if (deletedCount > 0) {
-                    await this.writeFile(data);
+                    await this.#writeFile(data);
                 }
                 
                 return deletedCount;
@@ -264,7 +264,7 @@ export class FileSaltStore implements ISaltStore {
      * @returns The salt for the given key (existing or newly created)
      */
     async getOrCreate(key: string, saltGenerator: () => string): Promise<SaltRecord> {
-        await this.initPromise;
+        await this.#initPromise;
         // Fast path: try to read first (most common case - salt already exists)
         const existingSalt = await this.get(key);
         if (existingSalt) {
@@ -272,15 +272,15 @@ export class FileSaltStore implements ISaltStore {
         }
         
         // Check if there's already a pending creation for this key
-        const pendingCreation = this.pendingCreations.get(key);
+        const pendingCreation = this.#pendingCreations.get(key);
         if (pendingCreation) {
             return pendingCreation;
         }
         
         // Create a promise for this creation operation
-        const creationPromise = this.executeFileOperation(async () => {
+        const creationPromise = this.#executeFileOperation(async () => {
             // Re-read inside the queued operation to handle race conditions
-            const data = await this.readFile();
+            const data = await this.#readFile();
             
             // Check again in case another process created it
             if (data[key]) {
@@ -297,7 +297,7 @@ export class FileSaltStore implements ISaltStore {
             };
             
             data[key] = record;
-            await this.writeFile(data);
+            await this.#writeFile(data);
             
             return {
                 salt: record.salt,
@@ -305,11 +305,11 @@ export class FileSaltStore implements ISaltStore {
             };
         }).finally(() => {
             // Clean up the pending creation once it's done
-            this.pendingCreations.delete(key);
+            this.#pendingCreations.delete(key);
         });
         
         // Store the pending creation
-        this.pendingCreations.set(key, creationPromise);
+        this.#pendingCreations.set(key, creationPromise);
         
         return creationPromise;
     }
