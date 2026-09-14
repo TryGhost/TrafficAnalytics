@@ -38,8 +38,7 @@ class EventPublisher {
     async publishEvent({topic, payload, logger}: PublishEventOptions): Promise<string> {
         try {
             const message = {
-                data: Buffer.from(JSON.stringify(payload)),
-                timestamp: new Date().toISOString()
+                data: Buffer.from(JSON.stringify(payload))
             };
 
             const messageId = await this.getTopic(topic).publishMessage(message);
