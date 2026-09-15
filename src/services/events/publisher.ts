@@ -31,7 +31,8 @@ class EventPublisher {
         if (!topic) {
             topic = this.#pubsub.topic(name, {
                 batching: {
-                    maxMessages: 1000
+                    maxMessages: 1000,
+                    maxMilliseconds: 100
                 }
             });
             this.#topics.set(name, topic);

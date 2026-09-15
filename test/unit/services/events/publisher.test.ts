@@ -31,6 +31,12 @@ describe('event publisher', () => {
 
         expect(mocks.topic).toHaveBeenCalledTimes(2);
         expect(mocks.topic.mock.calls.map(([name]) => name)).toEqual(['tinybird-sync', 'page-hits']);
+        expect(mocks.topic).toHaveBeenCalledWith('tinybird-sync', {
+            batching: {
+                maxMessages: 1000,
+                maxMilliseconds: 100
+            }
+        });
         expect(mocks.publishMessage).toHaveBeenCalledTimes(3);
     });
 });
