@@ -1,5 +1,5 @@
 // Main module file
-import fastify from 'fastify';
+import fastify, {LogController} from 'fastify';
 import {serializerCompiler, validatorCompiler, type ZodTypeProvider} from './schemas';
 import loggingPlugin from './plugins/logging';
 import timestampPlugin from './plugins/timestamp';
@@ -14,7 +14,7 @@ import {fastifyOtelInstrumentation} from './utils/fastify-otel';
 
 const app = fastify({
     logger: getLoggerConfig(),
-    disableRequestLogging: true,
+    logController: new LogController({disableRequestLogging: true}),
     trustProxy: process.env.TRUST_PROXY !== 'false'
 }).withTypeProvider<ZodTypeProvider>();
 
