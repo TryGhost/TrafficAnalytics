@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {randomUUID} from 'crypto';
 import {FastifyRequest} from 'fastify';
+import {MemberStatusSchema} from './member-status';
 
 // Common types
 const StringSchema = z.string();
@@ -78,7 +79,7 @@ export const PageHitRequestPayloadSchema = z.looseObject({
     post_type: z.enum(['null', 'post', 'page']),
     gift_link: StringSchema.nullable().optional(),
     member_uuid: z.union([UUIDSchema, z.literal('undefined')]),
-    member_status: z.union([NonEmptyStringSchema, z.literal('undefined')]),
+    member_status: MemberStatusSchema,
     utm_source: StringSchema.nullable().optional(),
     utm_medium: StringSchema.nullable().optional(),
     utm_campaign: StringSchema.nullable().optional(),

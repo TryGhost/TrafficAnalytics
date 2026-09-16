@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {StoredMemberStatusSchema} from './member-status';
 import {PageHitRaw} from './page-hit-raw';
 import type {ParsedReferrer} from './page-hit-raw';
 import uap from 'ua-parser-js';
@@ -24,7 +25,7 @@ export const PageHitProcessedSchema = z.object({
         event_id: UUIDSchema,
         site_uuid: UUIDSchema,
         member_uuid: z.union([UUIDSchema, z.literal('undefined')]),
-        member_status: z.union([z.string().min(1), z.literal('undefined')]),
+        member_status: StoredMemberStatusSchema,
         post_uuid: z.union([UUIDSchema, z.literal('undefined')]),
         post_type: z.enum(['null', 'post', 'page']),
         gift_link: NullableString.optional(),
