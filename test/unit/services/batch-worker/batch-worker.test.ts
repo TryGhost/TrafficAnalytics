@@ -175,6 +175,28 @@ describe('BatchWorker', () => {
             expect(mockMessage.nack).not.toHaveBeenCalled();
         });
 
+        it('should forward a queued message with a legacy member status and ack after flushing', async () => {
+            const legacyEvent = {
+                ...validPageHitRawData,
+                payload: {...validPageHitRawData.payload, member_status: 'legacy-status'}
+            };
+            const message = createMockMessage(JSON.stringify(legacyEvent));
+
+            await batchWorker.__testOnlyHandleMessage(message);
+
+            expect(message.ack).not.toHaveBeenCalled();
+            expect(message.nack).not.toHaveBeenCalled();
+            await batchWorker.stop();
+
+            expect(mockTinybirdClient.postEventBatch).toHaveBeenCalledWith([
+                expect.objectContaining({
+                    payload: expect.objectContaining({member_status: 'legacy-status'})
+                })
+            ]);
+            expectMessageAcked(message);
+            expect(getLogCapture().findByEvent('WorkerMessageParsingFailed')).toBeUndefined();
+        });
+
         it('should transform pageHitRaw to pageHitProcessed and add to batch', async () => {
             const mockMessage = createMockMessage(JSON.stringify(validPageHitRawData));
 
