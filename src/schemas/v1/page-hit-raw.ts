@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {StoredMemberStatusSchema} from './member-status';
 
 // Common types
 const StringSchema = z.string();
@@ -24,7 +25,7 @@ export type ParsedReferrer = z.infer<typeof ParsedReferrerSchema>;
 const PayloadSchema = z.object({
     event_id: StringSchema.optional(),
     member_uuid: z.union([UUIDSchema, z.literal('undefined')]),
-    member_status: z.union([NonEmptyStringSchema, z.literal('undefined')]),
+    member_status: StoredMemberStatusSchema,
     post_uuid: z.union([UUIDSchema, z.literal('undefined')]),
     post_type: z.enum(['null', 'post', 'page']),
     gift_link: StringSchema.nullable().optional(),
