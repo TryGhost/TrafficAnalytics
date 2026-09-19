@@ -188,8 +188,8 @@ importers:
         specifier: 1.3.6
         version: 1.3.6(supports-color@7.2.0)
       '@google-cloud/pubsub':
-        specifier: 6.0.1
-        version: 6.0.1(supports-color@7.2.0)
+        specifier: 6.1.0
+        version: 6.1.0(supports-color@7.2.0)
       '@opentelemetry/api':
         specifier: 1.9.1
         version: 1.9.1
@@ -674,8 +674,8 @@ packages:
     resolution: {integrity: sha512-x1L+lrIHgaMwN5fAhnNVS7rh0BZn9eKmqOBXnOUM3jkilF4GE4ooETS9SYnCtPCVHwQtByDTh5b7KIMUW7XAHQ==}
     engines: {node: '>=22'}
 
-  '@google-cloud/pubsub@6.0.1':
-    resolution: {integrity: sha512-Ms/cE5wyxWoHHj6IUWZO67j7nDhAKa7eAUkUYBJjRie0Yr1V82NclaaIntdqAmmpOgXbIzdDlrIyWXLVMeGSDg==}
+  '@google-cloud/pubsub@6.1.0':
+    resolution: {integrity: sha512-amPObGHTojTGLeaSTogY22vGkNc/cWaNXphS64Jmwkn2rcvIHnYnwsFwQaxYd+BfML48ninINn5gziRmcfOqPA==}
     engines: {node: '>=22'}
 
   '@grpc/grpc-js@1.14.4':
@@ -3489,7 +3489,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@google-cloud/pubsub@6.0.1(supports-color@7.2.0)':
+  '@google-cloud/pubsub@6.1.0(supports-color@7.2.0)':
     dependencies:
       '@google-cloud/paginator': 7.0.1
       '@google-cloud/precise-date': 6.0.1
