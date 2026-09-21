@@ -7,7 +7,7 @@
   "license": "MIT",
   "main": "dist/server.js",
   "type": "module",
-  "packageManager": "pnpm@12.4.2",
+  "packageManager": "pnpm@12.5.1",
   "scripts": {
     "build": "vite build",
     "dev": "pnpm dev:batch",
