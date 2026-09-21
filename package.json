@@ -85,7 +85,7 @@
     "@opentelemetry/sdk-trace-base": "2.11.0",
     "@opentelemetry/semantic-conventions": "1.43.0",
     "@tryghost/errors": "3.3.14",
-    "@tryghost/referrer-parser": "0.1.22",
+    "@tryghost/referrer-parser": "0.1.23",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
     "fast-json-stringify": "7.0.1",
