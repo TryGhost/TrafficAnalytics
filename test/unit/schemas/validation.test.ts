@@ -4,6 +4,7 @@ import {
     createValidator,
     validatorCompiler,
     PageHitRawSchema,
+    PageHitProcessedSchema,
     PageHitRequestBodySchema,
     PageHitRequestHeadersSchema,
     PageHitRequestQueryParamsSchema
@@ -63,6 +64,71 @@ function accepts(schema: z.ZodType, value: unknown): boolean {
 }
 
 describe('schema validation', () => {
+    describe('member_status', () => {
+        const schemas: Array<[string, typeof PageHitRequestBodySchema | typeof PageHitRawSchema | typeof PageHitProcessedSchema]> = [
+            ['request', PageHitRequestBodySchema],
+            ['raw', PageHitRawSchema],
+            ['processed', PageHitProcessedSchema]
+        ];
+
+        for (const [name, eventSchema] of schemas) {
+            it(`should enforce member status validation in the ${name} schema`, () => {
+                const schema = z.object({member_status: eventSchema.shape.payload.shape.member_status});
+                const validate = createValidator(schema);
+
+                for (const memberStatus of ['undefined', 'paid', 'free', 'comped', 'gift']) {
+                    const payload = {member_status: memberStatus};
+                    expect(schema.safeParse(payload).success).toBe(true);
+                    expect(validate(payload)).toEqual(payload);
+                }
+
+                for (const memberStatus of ['unknown', 'PAID', ' paid ', '   ']) {
+                    const payload = {member_status: memberStatus};
+                    const expected = name !== 'request';
+                    expect(schema.safeParse(payload).success).toBe(expected);
+                    expect(accepts(schema, payload)).toBe(expected);
+                }
+
+                for (const memberStatus of ['', null, 123, true, ['paid'], {}]) {
+                    const payload = {member_status: memberStatus};
+                    expect(schema.safeParse(payload).success).toBe(false);
+                    expect(() => validate(payload)).toThrow(/member_status/);
+                }
+            });
+
+            it(`should require member_status in the ${name} schema`, () => {
+                const schema = z.object({member_status: eventSchema.shape.payload.shape.member_status});
+                const payload = {};
+                expect(schema.safeParse(payload).success).toBe(false);
+                expect(() => createValidator(schema)(payload)).toThrow(/member_status/);
+            });
+        }
+
+        it('should enforce allowed and required statuses in HTTP requests', () => {
+            const validate = validatorCompiler({
+                schema: PageHitRequestBodySchema,
+                method: 'POST',
+                url: '/api/v1/page_hit',
+                httpPart: 'body'
+            });
+
+            for (const memberStatus of ['undefined', 'paid', 'free', 'comped', 'gift']) {
+                const body = validRequestBody();
+                body.payload.member_status = memberStatus;
+                expect(validate(body)).toBe(true);
+            }
+
+            for (const memberStatus of ['unknown', 'PAID', ' paid ', '', '   ', null, 123, true, undefined]) {
+                const body = validRequestBody();
+                const payload: Record<string, unknown> = {...body.payload, member_status: memberStatus};
+                if (memberStatus === undefined) {
+                    delete payload.member_status;
+                }
+                expect(validate({...body, payload})).toBe(false);
+            }
+        });
+    });
+
     // Schemas are written in Zod but enforced by ajv, against a JSON Schema projection of
     // them. Nothing in the type system keeps the two in step, and `toJSONSchema` drops what
     // it cannot express without complaining - so check that they actually agree.
