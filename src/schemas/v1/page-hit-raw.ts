@@ -1,7 +1,8 @@
 import {z} from 'zod';
 
 // Common types
-const StringSchema = z.string();
+// See page-hit-request.ts: preserve the JSON Schema representation of nullable strings.
+const StringSchema = z.string().min(0);
 const NonEmptyStringSchema = z.string().min(1);
 // See page-hit-request.ts: UUID-shaped is enough, RFC compliance is not required.
 const UUIDSchema = z.guid();

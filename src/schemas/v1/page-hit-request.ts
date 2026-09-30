@@ -3,7 +3,9 @@ import {randomUUID} from 'crypto';
 import {FastifyRequest} from 'fastify';
 
 // Common types
-const StringSchema = z.string();
+// min(0) accepts every string but keeps nullable unions as ordered anyOf branches
+// in Zod's JSON Schema output, preserving AJV's null-to-empty-string coercion.
+const StringSchema = z.string().min(0);
 const NonEmptyStringSchema = z.string().min(1).regex(/^.*\S.*$/); // At least one non-whitespace character
 // `guid`, not `uuid`: we only require UUID-shaped values, not RFC-compliant version and
 // variant nibbles. Sites in the wild send IDs that fail the stricter check.
