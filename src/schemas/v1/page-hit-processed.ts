@@ -11,7 +11,8 @@ const referrerParser = new ReferrerParser();
 // See page-hit-request.ts: UUID-shaped is enough, RFC compliance is not required.
 const UUIDSchema = z.guid();
 const ISO8601DateTimeSchema = z.iso.datetime({precision: 3});
-const NullableString = z.string().nullable();
+// See page-hit-request.ts: preserve the JSON Schema representation of nullable strings.
+const NullableString = z.string().min(0).nullable();
 
 // Complete page hit processed schema
 export const PageHitProcessedSchema = z.object({

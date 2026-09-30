@@ -106,6 +106,32 @@ describe('schema validation', () => {
     });
 
     describe('validatorCompiler', () => {
+        it('should preserve request coercion for explicit nullable fields', () => {
+            const validate = validatorCompiler({
+                schema: PageHitRequestBodySchema,
+                method: 'POST',
+                url: '/api/v1/page_hit',
+                httpPart: 'body'
+            });
+            const body = {
+                ...validRequestBody(),
+                payload: {
+                    ...validRequestBody().payload,
+                    location: null,
+                    parsedReferrer: {source: null, medium: null, url: null},
+                    referrer: null,
+                    utm_source: null
+                }
+            };
+
+            expect(validate(body)).toBe(true);
+            expect(body.payload.parsedReferrer).toEqual({source: '', medium: '', url: ''});
+            expect(body.payload.referrer).toBe('');
+            expect(body.payload.utm_source).toBe('');
+            // The non-empty constraint keeps location's string branch from accepting ''.
+            expect(body.payload.location).toBeNull();
+        });
+
         it('should return ajv errors rather than throwing, so Fastify can format them', () => {
             const validate = validatorCompiler({
                 schema: PageHitRequestQueryParamsSchema,
