@@ -221,8 +221,8 @@ importers:
         specifier: 3.4.1
         version: 3.4.1
       '@tryghost/referrer-parser':
-        specifier: 0.1.23
-        version: 0.1.23
+        specifier: 0.1.24
+        version: 0.1.24
       ajv:
         specifier: 8.20.0
         version: 8.20.0
@@ -1099,8 +1099,8 @@ packages:
   '@tryghost/errors@3.4.1':
     resolution: {integrity: sha512-kUsC+QDJC+C7z8KPhwSxR0uXwloTNxRL9yzvyV7X/XMT2Wc/tz114uQgrqUMVbEWYhyzlNa7WvlqcOsyK0wo+g==}
 
-  '@tryghost/referrer-parser@0.1.23':
-    resolution: {integrity: sha512-7GECWUSiLEXc0TG0jq7fFdbBij3SJQUiBCb7LE+yNPBpnZQitWmggSfmdIj+CYziX8JwjKCKamhMeV+/czUUaw==}
+  '@tryghost/referrer-parser@0.1.24':
+    resolution: {integrity: sha512-bQrQ3SewJfWsBm2KuvXO3ZULwjUo76AsU42gT2uktW+gVmdU6rAdM13RIjJt4+AdqJxZBFtKC1/uZ8YB18a7oA==}
     engines: {node: '>=16.0.0'}
 
   '@types/chai@5.2.3':
@@ -3925,7 +3925,7 @@ snapshots:
 
   '@tryghost/errors@3.4.1': {}
 
-  '@tryghost/referrer-parser@0.1.23': {}
+  '@tryghost/referrer-parser@0.1.24': {}
 
   '@types/chai@5.2.3':
     dependencies:
