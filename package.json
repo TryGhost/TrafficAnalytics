@@ -92,7 +92,7 @@
     "fastify": "5.12.5",
     "fastify-plugin": "6.0.0",
     "google-auth-library": "11.1.0",
-    "pino": "10.3.1",
+    "pino": "10.4.0",
     "split2": "4.2.0",
     "ua-parser-js": "1.0.41",
     "zod": "4.6.5"
