@@ -179,8 +179,8 @@ importers:
         specifier: 12.6.5
         version: 12.6.5
       '@google-cloud/firestore':
-        specifier: 9.3.0
-        version: 9.3.0(supports-color@7.2.0)
+        specifier: 9.3.1
+        version: 9.3.1(supports-color@7.2.0)
       '@google-cloud/opentelemetry-cloud-trace-exporter':
         specifier: 3.1.0
         version: 3.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.11.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0)
@@ -615,8 +615,8 @@ packages:
     resolution: {integrity: sha512-wfHJPZmLqzpy6FN6U+7HkkP/AKhGsbHSpEy/qL2TyI3/pKRAvpamQxZ2qvps5hMRgAjfuHCim+oeJj9RveCaqg==}
     engines: {node: '>=18'}
 
-  '@google-cloud/firestore@9.3.0':
-    resolution: {integrity: sha512-OeLAXk+gDjysfUqVmdo401K0FWGgUTa6vFt85LFtA2Qiaq6jHkqhAq6N4Kn09asv1F9fsO4Fkv8TwpnGutQZ6Q==}
+  '@google-cloud/firestore@9.3.1':
+    resolution: {integrity: sha512-ofGTiSpfXrHrrS3KaDOmsupSzCHr4WVl1+s6Ke0F8rPBRyb/OuZSC8u1NjCKtt/fO7A1GvqASQGhdAwVsnGpQA==}
     engines: {node: '>=22'}
 
   '@google-cloud/logging-api@0.3.0':
@@ -3389,7 +3389,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@google-cloud/firestore@9.3.0(supports-color@7.2.0)':
+  '@google-cloud/firestore@9.3.1(supports-color@7.2.0)':
     dependencies:
       '@google-cloud/firestore-api': 0.2.0(supports-color@7.2.0)
       '@opentelemetry/api': 1.9.1
