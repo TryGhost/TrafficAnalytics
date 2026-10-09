@@ -218,8 +218,8 @@ importers:
         specifier: 1.43.0
         version: 1.43.0
       '@tryghost/errors':
-        specifier: 3.4.1
-        version: 3.4.1
+        specifier: 3.4.2
+        version: 3.4.2
       '@tryghost/referrer-parser':
         specifier: 0.1.24
         version: 0.1.24
@@ -1086,8 +1086,8 @@ packages:
   '@simple-dom/interface@1.4.0':
     resolution: {integrity: sha512-l5qumKFWU0S+4ZzMaLXFU8tQZsicHEMEyAxI5kDFGhJsRqDwe0a7/iPA/GdxlGyDKseQQAgIz5kzU7eXTrlSpA==}
 
-  '@tryghost/errors@3.4.1':
-    resolution: {integrity: sha512-kUsC+QDJC+C7z8KPhwSxR0uXwloTNxRL9yzvyV7X/XMT2Wc/tz114uQgrqUMVbEWYhyzlNa7WvlqcOsyK0wo+g==}
+  '@tryghost/errors@3.4.2':
+    resolution: {integrity: sha512-vKkoorFbIoFEATz0wojDAKnZs4jrezlaA3r0xSaaAGrweZPqMBwGfFx16T6zTOgwK8Moms2ciyMtQepYS/2eiA==}
 
   '@tryghost/referrer-parser@0.1.24':
     resolution: {integrity: sha512-bQrQ3SewJfWsBm2KuvXO3ZULwjUo76AsU42gT2uktW+gVmdU6rAdM13RIjJt4+AdqJxZBFtKC1/uZ8YB18a7oA==}
@@ -3893,7 +3893,7 @@ snapshots:
 
   '@simple-dom/interface@1.4.0': {}
 
-  '@tryghost/errors@3.4.1': {}
+  '@tryghost/errors@3.4.2': {}
 
   '@tryghost/referrer-parser@0.1.24': {}
 
