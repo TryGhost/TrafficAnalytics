@@ -176,8 +176,8 @@ importers:
         specifier: 0.21.2
         version: 0.21.2(@opentelemetry/api@1.9.1)(supports-color@7.2.0)
       '@fastify/reply-from':
-        specifier: 12.6.5
-        version: 12.6.5
+        specifier: 12.7.1
+        version: 12.7.1
       '@google-cloud/firestore':
         specifier: 9.3.1
         version: 9.3.1(supports-color@7.2.0)
@@ -592,8 +592,8 @@ packages:
   '@fastify/proxy-addr@5.1.1':
     resolution: {integrity: sha512-zv07Y9GEuDsJPegZoDFd4SDWaZOW8N2pa0GSrYmKpId/tjt1Hgo3BjZBVjdVpfVrHaA+Qv5jawtS2O50J5xM9g==}
 
-  '@fastify/reply-from@12.6.5':
-    resolution: {integrity: sha512-/4MP+iF6T2+UBEmVYveMU2Tbx3lR1Q7xsDo8GAGjNeQrLF/JqNRlOMhOksh8fXBA47KI8ifsIlUXYdMOUXGZNQ==}
+  '@fastify/reply-from@12.7.1':
+    resolution: {integrity: sha512-F26CIcy6PKqyhsTwQI7p5UwH5vrv2yz7BOqAnkHTmNVSU9J+vmRh8CNfOk/ZD8AjcKbiyRkNl6Lb3AuJdxIADQ==}
 
   '@glimmer/interfaces@0.94.6':
     resolution: {integrity: sha512-sp/1WePvB/8O+jrcUHwjboNPTKrdGicuHKA9T/lh0vkYK2qM5Xz4i25lQMQ38tEMiw7KixrjHiTUiaXRld+IwA==}
@@ -1813,8 +1813,8 @@ packages:
   extend@3.0.2:
     resolution: {integrity: sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g==}
 
-  fast-content-type-parse@3.0.0:
-    resolution: {integrity: sha512-ZvLdcY8P+N8mGQJahJV5G4U88CSvT1rP8ApL6uETe88MBXrBHAkZlSEySdUlyztF7ccb+Znos3TFqaepHxdhBg==}
+  fast-content-type-parse@4.0.0:
+    resolution: {integrity: sha512-rvu3AY9s3EsDXSDUWzFU5M9/fDpjAUwyIkDR9VrwZA3H9J5f4ymkT0J4iWw9iLaMvFVwsYTGFClUgy9VIvnabA==}
 
   fast-copy@4.1.1:
     resolution: {integrity: sha512-A4QTJmuiztpGtr6AMeJts9R4hbj2ZBUwtOaKrG6rw2y7t6+IaJKjz5M3XDs8BUznxDH43FVc6A0y/gWlMl4UtA==}
@@ -3341,11 +3341,11 @@ snapshots:
       '@fastify/forwarded': 3.0.2
       ipaddr.js: 2.5.0
 
-  '@fastify/reply-from@12.6.5':
+  '@fastify/reply-from@12.7.1':
     dependencies:
       '@fastify/error': 4.2.0
       end-of-stream: 1.4.5
-      fast-content-type-parse: 3.0.0
+      fast-content-type-parse: 4.0.0
       fast-querystring: 1.1.2
       fastify-plugin: 6.0.0
       toad-cache: 3.7.4
@@ -4661,7 +4661,7 @@ snapshots:
 
   extend@3.0.2: {}
 
-  fast-content-type-parse@3.0.0: {}
+  fast-content-type-parse@4.0.0: {}
 
   fast-copy@4.1.1: {}
 
