@@ -1,4 +1,5 @@
-import type {Message} from '@google-cloud/pubsub';
+import {SubscriptionCloseBehaviors, type Message} from '@google-cloud/pubsub';
+import {EventSubscriber} from '../../../../src/services/events/subscriber';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import TinybirdSyncBatchWorker, {type TinybirdSyncClients} from '../../../../src/services/tinybird-sync-worker/TinybirdSyncBatchWorker';
 
@@ -88,6 +89,12 @@ describe('TinybirdSyncBatchWorker', () => {
         vi.useRealTimers();
     });
 
+    it('configures pubsub subscriber\'s close to wait for message processing', () => {
+        expect(EventSubscriber).toHaveBeenLastCalledWith('tinybird-sync-sub', {
+            closeOptions: {behavior: SubscriptionCloseBehaviors.WaitForProcessing}
+        });
+    });
+
     it('keeps event types in separate batches and strips routing type', async () => {
         const runs = [message(runEvent()), message(runEvent('6a99cd8cb5ac7c0052553385'))];
         const steps = [message(stepEvent()), message(stepEvent('6a99cd8cb5ac7c0052553386'))];
@@ -104,13 +111,16 @@ describe('TinybirdSyncBatchWorker', () => {
         ]);
 
         await handleMessage(steps[1]);
+
         expect(stepClient.postEventBatch).toHaveBeenCalledOnce();
         [...runs, ...steps].forEach(value => expect(value.ack).toHaveBeenCalledOnce());
     });
 
     it('nacks invalid messages without sending them to Tinybird', async () => {
         const value = message('not-json');
+
         await handleMessage(value);
+
         expect(value.nack).toHaveBeenCalledOnce();
         expect(value.ack).not.toHaveBeenCalled();
         expect(runClient.postEventBatch).not.toHaveBeenCalled();
@@ -121,9 +131,11 @@ describe('TinybirdSyncBatchWorker', () => {
         runClient.postEventBatch.mockRejectedValue(new Error('Tinybird unavailable'));
         const runs = [message(runEvent()), message(runEvent('6a99cd8cb5ac7c0052553385'))];
         const steps = [message(stepEvent()), message(stepEvent('6a99cd8cb5ac7c0052553386'))];
+
         for (const value of [...runs, ...steps]) {
             await handleMessage(value);
         }
+
         runs.forEach(value => expect(value.nack).toHaveBeenCalledOnce());
         steps.forEach(value => expect(value.ack).toHaveBeenCalledOnce());
     });
@@ -131,9 +143,11 @@ describe('TinybirdSyncBatchWorker', () => {
     it('flushes partial batches when stopped', async () => {
         const run = message(runEvent());
         const step = message(stepEvent());
+
         await handleMessage(run);
         await handleMessage(step);
         await worker.stop();
+
         expect(runClient.postEventBatch).toHaveBeenCalledOnce();
         expect(stepClient.postEventBatch).toHaveBeenCalledOnce();
         expect(run.ack).toHaveBeenCalledOnce();
@@ -147,15 +161,112 @@ describe('TinybirdSyncBatchWorker', () => {
         expect(subscriberMocks.close).toHaveBeenCalledOnce();
     });
 
+    it('starts closing while a successful batch upload finishes', async () => {
+        const upload = Promise.withResolvers<void>();
+        runClient.postEventBatch.mockReturnValueOnce(upload.promise);
+        const run = message(runEvent());
+        await handleMessage(message(runEvent()));
+
+        const handling = handleMessage(run);
+        const stopping = worker.stop();
+        const closedDuringUpload = subscriberMocks.close.mock.calls.length > 0;
+        upload.resolve();
+        await handling;
+        await stopping;
+
+        expect(closedDuringUpload).toBe(true);
+        expect(run.ack).toHaveBeenCalledOnce();
+        expect(subscriberMocks.close).toHaveBeenCalledBefore(vi.mocked(run.ack));
+        expect(subscriberMocks.close).toHaveBeenCalledOnce();
+    });
+
+    it('drains partial batches while close waits and waits for close completion', async () => {
+        const closing = Promise.withResolvers<void>();
+        subscriberMocks.close.mockReturnValueOnce(closing.promise);
+        const run = message(runEvent());
+        await handleMessage(run);
+        let stopped = false;
+        const stopping = worker.stop().then(() => {
+            stopped = true;
+        });
+
+        // Flush queued messages while `close` waits for their acknowledgments.
+        await vi.waitFor(() => expect(run.ack).toHaveBeenCalledOnce());
+
+        expect(subscriberMocks.close).toHaveBeenCalledBefore(vi.mocked(run.ack));
+        expect(stopped).toBe(false);
+        closing.resolve();
+        await stopping;
+        expect(stopped).toBe(true);
+    });
+
+    it('starts closing while a failed batch upload finishes', async () => {
+        const upload = Promise.withResolvers<void>();
+        runClient.postEventBatch.mockReturnValueOnce(upload.promise);
+        const run = message(runEvent());
+        await handleMessage(message(runEvent()));
+
+        const handling = handleMessage(run);
+        const stopping = worker.stop();
+        const closedDuringUpload = subscriberMocks.close.mock.calls.length > 0;
+        upload.reject(new Error('Tinybird unavailable'));
+        await handling;
+        await stopping;
+
+        expect(closedDuringUpload).toBe(true);
+        expect(run.nack).toHaveBeenCalledOnce();
+        expect(subscriberMocks.close).toHaveBeenCalledBefore(vi.mocked(run.nack));
+        expect(subscriberMocks.close).toHaveBeenCalledOnce();
+    });
+
+    it('nacks messages received after shutdown starts', async () => {
+        const stopping = worker.stop();
+        const run = message(runEvent());
+
+        await handleMessage(run);
+
+        await stopping;
+        expect(run.nack).toHaveBeenCalledOnce();
+        expect(run.ack).not.toHaveBeenCalled();
+        expect(runClient.postEventBatch).not.toHaveBeenCalled();
+    });
+
+    it('starts closing while an active timer flush finishes', async () => {
+        await worker.stop();
+        vi.useFakeTimers();
+        start(2, 1000);
+        subscriberMocks.close.mockClear();
+        const upload = Promise.withResolvers<void>();
+        runClient.postEventBatch.mockReturnValueOnce(upload.promise);
+        const run = message(runEvent());
+        await handleMessage(run);
+
+        vi.advanceTimersByTime(1000);
+
+        expect(runClient.postEventBatch).toHaveBeenCalledOnce();
+
+        const stopping = worker.stop();
+        const closedDuringUpload = subscriberMocks.close.mock.calls.length > 0;
+        upload.resolve();
+        await stopping;
+
+        expect(closedDuringUpload).toBe(true);
+        expect(subscriberMocks.close).toHaveBeenCalledBefore(vi.mocked(run.ack));
+        expect(subscriberMocks.close).toHaveBeenCalledOnce();
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
     it('flushes partial batches on configured interval', async () => {
         await worker.stop();
         vi.useFakeTimers();
         start(2, 1000);
         const run = message(runEvent());
         const step = message(stepEvent());
+
         await handleMessage(run);
         await handleMessage(step);
         await vi.advanceTimersByTimeAsync(1000);
+
         expect(runClient.postEventBatch).toHaveBeenCalledOnce();
         expect(stepClient.postEventBatch).toHaveBeenCalledOnce();
     });
