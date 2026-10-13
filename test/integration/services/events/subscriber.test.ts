@@ -1,7 +1,10 @@
 import {describe, it, expect, beforeAll, vi, afterAll} from 'vitest';
+import {setImmediate} from 'node:timers/promises';
+import {SubscriptionCloseBehaviors, type Message} from '@google-cloud/pubsub';
 import EventSubscriber from '../../../../src/services/events/subscriber.js';
 import {publishEvent} from '../../../../src/services/events/publisher.js';
 import {createMockLogger} from '../../../utils/mock-logger.js';
+import {createSubscription, deleteSubscription, generateUniqueSubscriptionName} from '../../../utils/pubsub.js';
 
 describe('EventSubscriber Integration Tests', () => {
     let subscriber: EventSubscriber;
@@ -12,7 +15,7 @@ describe('EventSubscriber Integration Tests', () => {
     beforeAll(async () => {
         topicName = process.env.PUBSUB_TOPIC_PAGE_HITS_RAW!;
         subscriptionName = process.env.PUBSUB_SUBSCRIPTION_PAGE_HITS_RAW!;
-        
+
         subscriber = new EventSubscriber(subscriptionName);
         mockLogger = createMockLogger();
     });
@@ -51,6 +54,47 @@ describe('EventSubscriber Integration Tests', () => {
             }, 100);
         });
 
-        await eventPromise;
+        try {
+            await eventPromise;
+        } finally {
+            await subscriber.close();
+        }
+    });
+
+    it('waits for outstanding messages to be acknowledged when closing with WaitForProcessing', async () => {
+        const isolatedSubscriptionName = generateUniqueSubscriptionName('subscriber-close-sub');
+        let waitingSubscriber: EventSubscriber | undefined;
+        let heldMessage: Message | undefined;
+        let closing: Promise<void> | undefined;
+
+        try {
+            await createSubscription(topicName, isolatedSubscriptionName);
+            waitingSubscriber = new EventSubscriber(isolatedSubscriptionName, {
+                closeOptions: {behavior: SubscriptionCloseBehaviors.WaitForProcessing}
+            });
+            const received = Promise.withResolvers<Message>();
+            waitingSubscriber.subscribe((message) => {
+                heldMessage = message;
+                received.resolve(message);
+            });
+            await publishEvent({topic: topicName, payload: {message: 'held during close'}, logger: mockLogger});
+            const message = await received.promise;
+            let closed = false;
+            closing = waitingSubscriber.close().then(() => {
+                closed = true;
+            });
+
+            // Let close progress without releasing the message or using a fixed delay.
+            await setImmediate();
+            expect(closed).toBe(false);
+
+            message.ack();
+            await closing;
+        } finally {
+            // Release the message even if an assertion fails, so close can finish.
+            heldMessage?.ack();
+            await (closing ?? waitingSubscriber?.close());
+            await deleteSubscription(isolatedSubscriptionName);
+        }
     });
 });

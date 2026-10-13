@@ -1,4 +1,4 @@
-import type {Message} from '@google-cloud/pubsub';
+import {SubscriptionCloseBehaviors, type Message} from '@google-cloud/pubsub';
 import {TinybirdSyncEventSchema, createValidator, type TinybirdSyncEvent} from '../../schemas';
 import logger from '../../utils/logger';
 import {EventSubscriber} from '../events/subscriber';
@@ -37,11 +37,14 @@ class TinybirdSyncBatchWorker {
     #flushInterval: number;
     #flushTimer: NodeJS.Timeout | null;
     #isShuttingDown: boolean;
+    #activeFlushes = new Set<PromiseLike<unknown>>();
 
     constructor(subscriptionName: string, tinybirdClients: TinybirdSyncClients, config: TinybirdSyncBatchWorkerConfig) {
         logger.info({event: 'TinybirdSyncBatchWorkerCreating', subscriptionName});
         this.#subscriptionName = subscriptionName;
-        this.#subscriber = new EventSubscriber(subscriptionName);
+        this.#subscriber = new EventSubscriber(subscriptionName, {
+            closeOptions: {behavior: SubscriptionCloseBehaviors.WaitForProcessing}
+        });
         this.#tinybirdClients = tinybirdClients;
         this.#batches = {
             automation_runs: [],
@@ -78,11 +81,19 @@ class TinybirdSyncBatchWorker {
             this.#flushTimer = null;
         }
 
-        await this.#subscriber.close();
+        // Stop new messages immediately, then wait for everything to complete.
+        const closePromise = this.#subscriber.close();
+        await Promise.allSettled(this.#activeFlushes);
         await this.#flushAllBatches();
+        await closePromise;
     }
 
     async #handleMessage(message: Message): Promise<void> {
+        if (this.#isShuttingDown) {
+            message.nack();
+            return;
+        }
+
         const tinybirdSyncEvent = parseMessage(message);
         if (!tinybirdSyncEvent) {
             message.nack();
@@ -106,6 +117,16 @@ class TinybirdSyncBatchWorker {
     }
 
     async #flushBatch(type: TinybirdSyncEvent['type']): Promise<void> {
+        const flushPromise = this.#actuallyFlushBatch(type);
+        this.#activeFlushes.add(flushPromise);
+        try {
+            await flushPromise;
+        } finally {
+            this.#activeFlushes.delete(flushPromise);
+        }
+    }
+
+    async #actuallyFlushBatch(type: TinybirdSyncEvent['type']): Promise<void> {
         const batch = this.#batches[type];
         if (batch.length === 0) {
             return;
