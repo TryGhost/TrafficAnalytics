@@ -5,35 +5,12 @@ on:
     branches: [main]
 
 jobs:
-  prepare:
-    name: Prepare
-    runs-on: ubuntu-latest
-    outputs:
-      node-versions: ${{ steps.set-matrix.outputs.node-versions }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Extract node version
-        id: extract-node-version
-        uses: ./.github/actions/extract-node-version
-
-      - name: Set matrix
-        id: set-matrix
-        run: |
-          DOCKERFILE_VERSION=${{ steps.extract-node-version.outputs.node-version }}
-          VERSIONS=$(echo "[22, $DOCKERFILE_VERSION]" | jq -c 'unique')
-          echo "node-versions=$VERSIONS" >> $GITHUB_OUTPUT
-
   lint-and-test:
-    name: Lint and Test (Node ${{ matrix.node }})
-    needs: prepare
+    name: Lint and Test
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    strategy:
-      matrix:
-        node: ${{ fromJSON(needs.prepare.outputs.node-versions) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -45,43 +22,37 @@ jobs:
         id: docker-build
         uses: ./.github/actions/docker-build
         with:
-          node-version: ${{ matrix.node }}
-          image-name: traffic-analytics-${{ matrix.node }}
+          node-version: ${{ steps.extract-node-version.outputs.node-version }}
+          image-name: traffic-analytics-${{ steps.extract-node-version.outputs.node-version }}
 
       - name: Lint & Test
         uses: ./.github/actions/lint-and-test
         with:
           docker-image: ${{ steps.docker-build.outputs.base-image-name }}
 
-      # The Lint & Test action leaves the cobertura report in the workspace;
-      # upload it from the primary matrix leg only.
+      # The Lint & Test action leaves the cobertura report in the workspace.
       - name: Upload coverage reports
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
-        if: ${{ success() && fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
         with:
           files: ./coverage/cobertura-coverage.xml
           fail_ci_if_error: false
 
       - name: Get tree SHA
         id: tree
-        if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
         run: echo "sha=$(git rev-parse HEAD^{tree})" >> $GITHUB_OUTPUT
 
       - name: Output tree SHA
-        if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
         run: |
           echo "Tree SHA: ${{ steps.tree.outputs.sha }}"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
-        if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Retag & Push Docker Image
-        if: ${{ fromJSON(steps.extract-node-version.outputs.node-version) == matrix.node }}
         env:
           IMAGE_NAME: ghcr.io/${{ github.repository }}:tree-${{ steps.tree.outputs.sha }}
         run: |
