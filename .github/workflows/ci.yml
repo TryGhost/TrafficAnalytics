@@ -95,6 +95,7 @@ jobs:
   # on every matrix leg via `needs` and fails if any of them did not succeed.
   ci-success:
     name: All required tests passed or skipped
+    permissions: {}
     if: always()
     needs: [prepare, lint-and-test]
     runs-on: ubuntu-latest
