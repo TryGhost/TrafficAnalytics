@@ -88,3 +88,20 @@ jobs:
           IMAGE_NAME_LOWER=$(echo "$IMAGE_NAME" | tr '[:upper:]' '[:lower:]')
           docker tag ${{ steps.docker-build.outputs.production-image-name }} "$IMAGE_NAME_LOWER"
           docker push "$IMAGE_NAME_LOWER"
+
+  ci-success:
+    name: All required tests passed
+    permissions: {}
+    if: always()
+    needs: [prepare, lint-and-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless every required job succeeded
+        if: ${{ needs.prepare.result != 'success' || needs.lint-and-test.result != 'success' }}
+        run: |
+          echo "One or more required CI jobs did not succeed:"
+          echo "  prepare:       ${{ needs.prepare.result }}"
+          echo "  lint-and-test: ${{ needs.lint-and-test.result }}"
+          exit 1
+      - name: All required CI jobs passed
+        run: echo "All required CI jobs passed"
