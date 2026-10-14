@@ -94,7 +94,7 @@ jobs:
   # renames (and silently stops gating) whenever the Node matrix changes. Runs
   # on every matrix leg via `needs` and fails if any of them did not succeed.
   ci-success:
-    name: CI success
+    name: All required tests passed or skipped
     if: always()
     needs: [prepare, lint-and-test]
     runs-on: ubuntu-latest
