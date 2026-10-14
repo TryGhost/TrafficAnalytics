@@ -55,7 +55,7 @@
     "@types/ua-parser-js": "0.7.39",
     "@vitest/coverage-v8": "5.0.3",
     "eslint": "8.57.1",
-    "eslint-plugin-ghost": "3.5.0",
+    "eslint-plugin-ghost": "4.0.0",
     "husky": "9.1.7",
     "pino-pretty": "13.2.0",
     "playwright": "1.64.0",
