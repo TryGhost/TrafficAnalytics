@@ -7,12 +7,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  healthcheck-staging:
-    name: Healthcheck Staging
-    uses: ./.github/workflows/run-healthchecks.yml
-    secrets: inherit
-    with:
-      environment: staging
+  # Temporarily disabled due to staging issues outside this repository.
+  # Uncomment this job once those issues are resolved.
+  # healthcheck-staging:
+  #   name: Healthcheck Staging
+  #   uses: ./.github/workflows/run-healthchecks.yml
+  #   secrets: inherit
+  #   with:
+  #     environment: staging
 
   healthcheck-production:
     name: Healthcheck Production
