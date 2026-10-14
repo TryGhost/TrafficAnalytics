@@ -64,14 +64,13 @@ jobs:
     name: All required tests passed
     permissions: {}
     if: always()
-    needs: [prepare, lint-and-test]
+    needs: [lint-and-test]
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless every required job succeeded
-        if: ${{ needs.prepare.result != 'success' || needs.lint-and-test.result != 'success' }}
+        if: ${{ needs.lint-and-test.result != 'success' }}
         run: |
           echo "One or more required CI jobs did not succeed:"
-          echo "  prepare:       ${{ needs.prepare.result }}"
           echo "  lint-and-test: ${{ needs.lint-and-test.result }}"
           exit 1
       - name: All required CI jobs passed
