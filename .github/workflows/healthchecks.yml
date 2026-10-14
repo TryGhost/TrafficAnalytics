@@ -6,6 +6,9 @@ on:
     - cron: '0 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   # Temporarily disabled due to staging issues outside this repository.
   # Uncomment this job once those issues are resolved.

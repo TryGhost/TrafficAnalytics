@@ -12,10 +12,14 @@ on:
         description: "Token accepted by the WAF healthcheck allow rule"
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   prepare:
     name: Prepare
     runs-on: ubuntu-latest
+    permissions: {}
     outputs:
       healthcheck_urls: ${{ steps.set-urls.outputs.urls }}
     steps:
