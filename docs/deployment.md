@@ -74,7 +74,7 @@ Manual `workflow_dispatch` with two inputs: `environment` (`staging`, `productio
 
 ## CI on pull requests — [`ci.yml`](../.github/workflows/ci.yml)
 
-On PRs to `main`, CI builds the Docker image and runs lint & tests across a Node version matrix (`20`, `22`, and the version pinned in the Dockerfile). For the Dockerfile-pinned leg it pushes the built image to GHCR tagged `tree-<treeSHA>`, which the deploy pipeline later reuses as a build cache.
+On PRs to `main`, CI builds the Docker image and runs lint & tests on the Node version pinned in the Dockerfile. It pushes the built image to GHCR tagged `tree-<treeSHA>`, which the deploy pipeline later reuses as a build cache.
 
 ## Housekeeping — [`cleanup-ghcr.yml`](../.github/workflows/cleanup-ghcr.yml)
 

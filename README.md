@@ -64,6 +64,8 @@ Copy `.env.example` to `.env` and configure as needed. Set `ENABLE_BOT_DETECTION
 Pre-requisites:
 - A container runtime, such as Docker Desktop or Orbstack
 - Docker Compose
+- Node.js 26 (`nvm install` uses `.nvmrc`)
+- Corepack (`npm install --global corepack@0.36.0 && corepack enable`); pnpm's version is pinned in `package.json`
 
 1. `git clone` this repo & `cd` into it as usual
 2. `pnpm dev` to build & start all required development services. The Analytics Service will be reachable at `http://localhost:3000`.

@@ -45,11 +45,11 @@
     "dist"
   ],
   "engines": {
-    "node": "^22.18.0"
+    "node": "^26.11.1"
   },
   "devDependencies": {
     "@playwright/test": "1.64.0",
-    "@types/node": "24.19.2",
+    "@types/node": "26.6.5",
     "@types/split2": "4.2.3",
     "@types/supertest": "7.2.1",
     "@types/ua-parser-js": "0.7.39",

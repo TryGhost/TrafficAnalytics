@@ -1,4 +1,4 @@
-ARG NODE_VERSION=22
+ARG NODE_VERSION=26
 
 FROM node:${NODE_VERSION}-alpine AS base
 
@@ -7,8 +7,8 @@ RUN apk add --no-cache curl
 
 WORKDIR /app
 
-# Enable pnpm via corepack, pinned by the "packageManager" field in package.json
-RUN corepack enable
+# Node 26 does not bundle Corepack. pnpm is pinned by "packageManager" in package.json.
+RUN npm install --global corepack@0.36.0 && corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
