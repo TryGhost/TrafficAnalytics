@@ -239,8 +239,8 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
       google-auth-library:
-        specifier: 11.2.0
-        version: 11.2.0(supports-color@7.2.0)
+        specifier: 11.3.0
+        version: 11.3.0(supports-color@7.2.0)
       pino:
         specifier: 10.4.0
         version: 10.4.0
@@ -2002,6 +2002,10 @@ packages:
     resolution: {integrity: sha512-R9/Dwc3swSur04RnizQ6EBUmmcno2cC5cAKtrG/C+pY+W7c5l6rSnFWgMkR7NSYj1n6XWmb/KhcjxGslWm4yIA==}
     engines: {node: '>=22'}
 
+  google-auth-library@11.3.0:
+    resolution: {integrity: sha512-gZCyszARHj47WNcKrAcQtimDwtTZpydRZ3HSeb66hObfQU9uaG50ejsZ8LzGISIVAjpsZEouGVs65Q/XRau0Qg==}
+    engines: {node: '>=22'}
+
   google-gax@5.0.8:
     resolution: {integrity: sha512-M4vpZcXQIC1gqIVGQ7eaU3jXQA6zecStyTXu514TYfThlgSurYJOxHZo9fzU6hAgwPWvuEynAVHWyaIk80VeEA==}
     engines: {node: '>=18'}
@@ -3493,7 +3497,7 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.39.0
       arrify: 2.0.1
       extend: 3.0.2
-      google-auth-library: 11.2.0(supports-color@7.2.0)
+      google-auth-library: 11.3.0(supports-color@7.2.0)
       google-gax: 6.12.1(supports-color@7.2.0)
       google-logging-utils: 2.0.1
       heap-js: 2.7.1
@@ -4914,6 +4918,17 @@ snapshots:
       - supports-color
 
   google-auth-library@11.2.0(supports-color@7.2.0):
+    dependencies:
+      base64-js: 1.5.1
+      ecdsa-sig-formatter: 1.0.11
+      gaxios: 7.3.1(supports-color@7.2.0)
+      gcp-metadata: 9.1.0(supports-color@7.2.0)
+      google-logging-utils: 2.0.1
+      jws: 4.0.1
+    transitivePeerDependencies:
+      - supports-color
+
+  google-auth-library@11.3.0(supports-color@7.2.0):
     dependencies:
       base64-js: 1.5.1
       ecdsa-sig-formatter: 1.0.11
