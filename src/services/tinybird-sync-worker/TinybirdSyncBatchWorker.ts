@@ -82,10 +82,16 @@ class TinybirdSyncBatchWorker {
         }
 
         // Stop new messages immediately, then wait for everything to complete.
-        const closePromise = this.#subscriber.close();
+        let closeError: unknown;
+        const closePromise = this.#subscriber.close().catch((err: unknown) => {
+            closeError = err;
+        });
         await Promise.allSettled(this.#activeFlushes);
         await this.#flushAllBatches();
         await closePromise;
+        if (closeError !== undefined) {
+            throw closeError;
+        }
     }
 
     async #handleMessage(message: Message): Promise<void> {

@@ -256,6 +256,32 @@ describe('TinybirdSyncBatchWorker', () => {
         expect(vi.getTimerCount()).toBe(0);
     });
 
+    it('handles close rejection immediately and propagates it after draining uploads and partial batches', async () => {
+        const upload = Promise.withResolvers<void>();
+        runClient.postEventBatch.mockReturnValueOnce(upload.promise);
+        const closeError = new Error('Subscription close failed');
+        const closing = Promise.withResolvers<void>();
+        subscriberMocks.close.mockReturnValueOnce(closing.promise);
+        const run = message(runEvent());
+        const step = message(stepEvent());
+        await handleMessage(message(runEvent()));
+        await handleMessage(step);
+
+        const handling = handleMessage(run);
+        const stopping = worker.stop();
+        const rejected = expect(stopping).rejects.toBe(closeError);
+        closing.reject(closeError);
+        const partialBatchStartedDuringUpload = stepClient.postEventBatch.mock.calls.length > 0;
+        upload.resolve();
+        await handling;
+        await rejected;
+
+        expect(partialBatchStartedDuringUpload).toBe(false);
+        expect(run.ack).toHaveBeenCalledOnce();
+        expect(step.ack).toHaveBeenCalledOnce();
+        expect(stepClient.postEventBatch).toHaveBeenCalledOnce();
+    });
+
     it('flushes partial batches on configured interval', async () => {
         await worker.stop();
         vi.useFakeTimers();
