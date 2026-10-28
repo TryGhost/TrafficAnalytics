@@ -173,8 +173,8 @@ importers:
         specifier: 11.3.1
         version: 11.3.1
       '@fastify/otel':
-        specifier: 0.21.3
-        version: 0.21.3(@opentelemetry/api@1.9.1)(supports-color@7.2.0)
+        specifier: 0.21.4
+        version: 0.21.4(@opentelemetry/api@1.9.1)(supports-color@7.2.0)
       '@fastify/reply-from':
         specifier: 12.8.0
         version: 12.8.0
@@ -587,8 +587,8 @@ packages:
   '@fastify/merge-json-schemas@0.2.2':
     resolution: {integrity: sha512-d/gx9sRbUCVgGRGzma46wLcwiY8noTqO2Nmjg/vbTARxHRE5bdh5PIL8s97Lt1X7ScRWRW52eVYxwIoPwIdVUA==}
 
-  '@fastify/otel@0.21.3':
-    resolution: {integrity: sha512-qyEqVSEGdT1xu/BmaSDdOgivR3EC7mJcea2YpaAxg6D03qc9RfmuDBZAL5uWIE0Um7K8fBzAmUfbyA1CHrDo/Q==}
+  '@fastify/otel@0.21.4':
+    resolution: {integrity: sha512-NffBJPiU9T1APHug0ZS6ld56IGaUebV6d7N/ZI6JmmjS3bHcRQP1qPqXlvY2s47TvTR8OZO+0DlDNCV3h64a/A==}
     peerDependencies:
       '@opentelemetry/api': ^1.9.0
 
@@ -3302,7 +3302,7 @@ snapshots:
     dependencies:
       dequal: 2.0.3
 
-  '@fastify/otel@0.21.3(@opentelemetry/api@1.9.1)(supports-color@7.2.0)':
+  '@fastify/otel@0.21.4(@opentelemetry/api@1.9.1)(supports-color@7.2.0)':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
