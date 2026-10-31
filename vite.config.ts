@@ -1,5 +1,8 @@
+import {createRequire} from 'node:module';
 import {resolve} from 'node:path';
 import {defineConfig} from 'vite';
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
     server: {
@@ -12,6 +15,12 @@ export default defineConfig({
             {
                 find: /^@google-cloud\/logging$/,
                 replacement: resolve(import.meta.dirname, 'src/utils/gcp-logging-shim.ts')
+            },
+            // The ESM build uses a runtime __require('forwarded-parse') that escapes
+            // Vite's bundle. Use the CommonJS entry so the dependency is bundled.
+            {
+                find: /^@opentelemetry\/instrumentation-http$/,
+                replacement: require.resolve('@opentelemetry/instrumentation-http')
             }
         ]
     },
