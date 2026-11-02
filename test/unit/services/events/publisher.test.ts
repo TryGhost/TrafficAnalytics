@@ -1,3 +1,4 @@
+import {activePublishes} from '../../../../src/utils/active-operations';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {createMockLogger} from '../../../utils/mock-logger';
 import {publishEvent} from '../../../../src/services/events/publisher';
@@ -22,6 +23,19 @@ describe('event publisher', () => {
         mocks.topic.mockReturnValue({publishMessage: mocks.publishMessage});
     });
 
+    it('tracks a pending publish and removes it on rejection', async () => {
+        let reject!: (error: Error) => void;
+        mocks.publishMessage.mockImplementationOnce(() => new Promise((_resolve, rejectPromise) => {
+            reject = rejectPromise;
+        }));
+        const pending = publishEvent({topic: 'pending-test', payload: {}, logger: createMockLogger()});
+        expect(activePublishes.snapshot().count).toBe(1);
+        const failed = expect(pending).rejects.toThrow('unavailable');
+        reject(new Error('unavailable'));
+        await failed;
+        expect(activePublishes.snapshot()).toEqual({count: 0, oldestAgeMs: 0});
+    });
+
     it('reuses the Topic publisher for events sent to the same topic', async () => {
         const logger = createMockLogger();
 
@@ -37,5 +51,6 @@ describe('event publisher', () => {
             }
         });
         expect(mocks.publishMessage).toHaveBeenCalledTimes(3);
+        expect(activePublishes.snapshot().count).toBe(0);
     });
 });

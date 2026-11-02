@@ -87,3 +87,27 @@ OpenTelemetry is initialised in [`src/utils/instrumentation.ts`](../src/utils/in
 
 - [Deployment](deployment.md) — CI and the deploy pipeline.
 - [AGENTS.md](../AGENTS.md) — module map, commands, and environment variables for contributors and coding agents.
+
+### Process diagnostic snapshots
+
+All three run modes emit `DiagnosticSnapshot` at info level every 10 seconds after
+Fastify is ready. Filter Cloud Logging by `jsonPayload.event="DiagnosticSnapshot"`
+and the affected `labels.instanceId`; `processStartId` distinguishes process starts,
+and `revision` identifies the deployment.
+
+Each snapshot contains interval CPU time (user/system milliseconds), process memory
+in bytes, event-loop utilization (0–1), p99/max event-loop delay in milliseconds,
+and observed GC count/total/max pause milliseconds for the interval. Request and
+Pub/Sub publish counts include the oldest outstanding operation's age in milliseconds.
+Requests are removed when the response finishes or its connection closes; publishes
+remain outstanding until the client promise settles. These are application-level
+operations, not a measurement of Pub/Sub's internal queue or individual RPC retries.
+Only operation timestamps are retained, without request bodies or identifiers.
+
+`intervalMs` measures actual elapsed monotonic time; `missedIntervals` counts whole
+10-second intervals skipped by a delayed callback. A blocked process cannot report
+while blocked: a delayed snapshot is evidence only after recovery, and a missing
+snapshot alone cannot distinguish a stall, termination, or logging failure. These
+snapshots complement Cloud Run request and lifecycle logs. The timer does not keep
+the process alive and is stopped, along with the GC observer and event-loop monitor,
+when Fastify closes. GC entries are attributed to the interval in which observed.

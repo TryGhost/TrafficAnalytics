@@ -1,5 +1,6 @@
 import {PubSub, type Topic} from '@google-cloud/pubsub';
 import type {FastifyBaseLogger} from 'fastify';
+import {activePublishes} from '../../utils/active-operations';
 
 export interface PublishEventOptions {
     topic: string;
@@ -40,6 +41,7 @@ class EventPublisher {
     }
 
     async publishEvent({topic, payload, logger}: PublishEventOptions): Promise<string> {
+        const finish = activePublishes.start();
         try {
             const message = {
                 data: Buffer.from(JSON.stringify(payload))
@@ -63,6 +65,8 @@ class EventPublisher {
                 payload
             });
             throw err;
+        } finally {
+            finish();
         }
     }
 }

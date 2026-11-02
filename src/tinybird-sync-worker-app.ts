@@ -1,4 +1,5 @@
 import fastify, {LogController} from 'fastify';
+import diagnosticSnapshots from './plugins/diagnostic-snapshots';
 import loggingPlugin from './plugins/logging';
 import tinybirdSyncWorkerPlugin from './plugins/tinybird-sync-worker-plugin';
 import {getLoggerConfig} from './utils/logger-config';
@@ -11,6 +12,7 @@ const app = fastify({
 });
 
 app.register(fastifyOtelInstrumentation.plugin());
+app.register(diagnosticSnapshots);
 app.register(loggingPlugin);
 app.register(tinybirdSyncWorkerPlugin);
 

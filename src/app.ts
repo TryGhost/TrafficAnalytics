@@ -1,6 +1,7 @@
 // Main module file
 import fastify, {LogController} from 'fastify';
 import {serializerCompiler, validatorCompiler, type ZodTypeProvider} from './schemas';
+import diagnosticSnapshots from './plugins/diagnostic-snapshots';
 import loggingPlugin from './plugins/logging';
 import timestampPlugin from './plugins/timestamp';
 import corsPlugin from './plugins/cors';
@@ -29,6 +30,7 @@ app.register(fastifyOtelInstrumentation.plugin());
 app.setErrorHandler(errorHandler());
 app.register(replyFrom);
 app.register(corsPlugin);
+app.register(diagnosticSnapshots);
 app.register(loggingPlugin);
 
 // Record timestamp request was received as early as possible
