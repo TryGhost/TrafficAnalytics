@@ -1,6 +1,5 @@
 // Worker module file
 import fastify, {LogController} from 'fastify';
-import diagnosticSnapshots from './plugins/diagnostic-snapshots';
 import loggingPlugin from './plugins/logging';
 import workerPlugin from './plugins/worker-plugin';
 import {getLoggerConfig} from './utils/logger-config';
@@ -17,7 +16,6 @@ const app = fastify({
 app.register(fastifyOtelInstrumentation.plugin());
 
 // Register logging plugin for consistent log formatting
-app.register(diagnosticSnapshots);
 app.register(loggingPlugin);
 
 // Register worker plugin for heartbeat logging
