@@ -11,6 +11,7 @@ export const publishPageHitRaw = async (request: PageHitRequestType, payload: Pa
             event_id: eventId,
             payload
         });
+        const start = performance.now();
         const messageId = await publishEvent({
             topic,
             payload,
@@ -18,6 +19,7 @@ export const publishPageHitRaw = async (request: PageHitRequestType, payload: Pa
         });
         request.log.info({
             event: 'PublishedPageHitRawEvent',
+            durationMs: performance.now() - start,
             message_id: messageId,
             event_id: eventId
         });
@@ -39,6 +41,7 @@ export const publishTinybirdSyncEvent = async (request: FastifyRequest, payload:
             tinybird_sync_event_type: payload.type,
             payload
         });
+        const start = performance.now();
         const messageId = await publishEvent({
             topic,
             payload,
@@ -46,6 +49,7 @@ export const publishTinybirdSyncEvent = async (request: FastifyRequest, payload:
         });
         request.log.info({
             event: 'PublishedTinybirdSyncEvent',
+            durationMs: performance.now() - start,
             message_id: messageId,
             tinybird_sync_event_id: payload.id,
             tinybird_sync_event_type: payload.type

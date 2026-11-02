@@ -53,11 +53,21 @@ describe('publisherUtils', () => {
             );
         });
 
-        it('should not log error on successful publish', async () => {
-            vi.spyOn(publisherModule, 'publishEvent').mockResolvedValue('message-id');
+        it('should log publish duration on success', async () => {
+            const now = vi.spyOn(performance, 'now').mockReturnValue(100);
+            vi.spyOn(publisherModule, 'publishEvent').mockImplementation(async () => {
+                now.mockReturnValue(125.5);
+                return 'message-id';
+            });
 
             await publishPageHitRaw(mockRequest, mockPayload);
 
+            expect(mockRequest.log.info).toHaveBeenCalledWith({
+                event: 'PublishedPageHitRawEvent',
+                message_id: 'message-id',
+                event_id: 'test-event-123',
+                durationMs: 25.5
+            });
             expect(mockRequest.log.error).not.toHaveBeenCalled();
         });
 
@@ -100,9 +110,21 @@ describe('publisherUtils', () => {
                     site_uuid: '45d99892-6304-4251-a75d-2d9ff9c5b81f'
                 }
             };
-            const publishEventSpy = vi.spyOn(publisherModule, 'publishEvent').mockResolvedValue('sync-message-id');
+            const now = vi.spyOn(performance, 'now').mockReturnValue(200);
+            const publishEventSpy = vi.spyOn(publisherModule, 'publishEvent').mockImplementation(async () => {
+                now.mockReturnValue(212.5);
+                return 'sync-message-id';
+            });
 
             await publishTinybirdSyncEvent(mockRequest, payload);
+
+            expect(mockRequest.log.info).toHaveBeenCalledWith({
+                event: 'PublishedTinybirdSyncEvent',
+                message_id: 'sync-message-id',
+                tinybird_sync_event_id: payload.id,
+                tinybird_sync_event_type: payload.type,
+                durationMs: 12.5
+            });
 
             expect(publishEventSpy).toHaveBeenCalledWith({
                 topic: 'tinybird-sync-topic',
