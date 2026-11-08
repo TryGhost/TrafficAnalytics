@@ -68,7 +68,7 @@
   },
   "dependencies": {
     "@fastify/bearer-auth": "10.1.4",
-    "@fastify/cors": "11.4.0",
+    "@fastify/cors": "11.4.1",
     "@fastify/otel": "0.21.4",
     "@fastify/reply-from": "12.8.1",
     "@google-cloud/firestore": "9.4.0",
