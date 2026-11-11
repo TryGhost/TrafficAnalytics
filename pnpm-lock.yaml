@@ -223,8 +223,8 @@ importers:
         specifier: 1.43.0
         version: 1.43.0
       '@tryghost/errors':
-        specifier: 3.4.6
-        version: 3.4.6
+        specifier: 3.4.7
+        version: 3.4.7
       '@tryghost/referrer-parser':
         specifier: 0.1.25
         version: 0.1.25
@@ -1076,8 +1076,8 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@tryghost/errors@3.4.6':
-    resolution: {integrity: sha512-ASkzjp0gZrJ0KBEDdzFwU2CMiNjVv35gDhMjPHrE3HM+tOPLjCGKVyJTAESd+5dGg4oVnvbLa0JMy0GlcS3GGQ==}
+  '@tryghost/errors@3.4.7':
+    resolution: {integrity: sha512-z8s9WXE/aun0arvza/Sl7MpZItxFOgaoDqSdEgiJW+rWidqEELmBp4+K0x6ZB7Gw9/7uGl/TQi0vGeB2Ub2jgg==}
 
   '@tryghost/referrer-parser@0.1.25':
     resolution: {integrity: sha512-MCN/qTnPg0HG/CAeGNGeZz0Dd8XeY3e0WpHMnJUaVOAhSVL4Dhb0MWDQJS/p+tozGXHgtCkykHj75CmiuRoJFg==}
@@ -3785,7 +3785,7 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@tryghost/errors@3.4.6': {}
+  '@tryghost/errors@3.4.7': {}
 
   '@tryghost/referrer-parser@0.1.25': {}
 
