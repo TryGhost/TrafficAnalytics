@@ -91,3 +91,5 @@ playwright/.cache/
 
 # Data Directory
 data/**
+# Amp orb portal state
+.amp/portals/

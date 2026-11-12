@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Prepares an Amp orb for this repository: Docker with Compose (the dev server,
+# tests and lint all run in Docker per package.json), host node_modules for
+# editor tooling, and pre-pulled/pre-built images so `pnpm test` and `pnpm dev`
+# start without downloads.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+step() {
+    local start=$SECONDS
+    echo "==> $1"
+    shift
+    "$@"
+    echo "    done in $((SECONDS - start))s"
+}
+
+install_docker_plugins() {
+    if docker compose version >/dev/null 2>&1 && docker buildx version >/dev/null 2>&1; then
+        return
+    fi
+    sudo apt-get update -q
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q docker-compose-plugin docker-buildx-plugin
+}
+
+start_docker() {
+    # The agent process does not carry the docker group, so open the socket to
+    # every local user. The orb is a single-user sandbox.
+    local dropin=/etc/systemd/system/docker.socket.d/amp-orb.conf
+    if [ ! -f "$dropin" ]; then
+        sudo mkdir -p "$(dirname "$dropin")"
+        printf '[Socket]\nSocketMode=0666\n' | sudo tee "$dropin" >/dev/null
+        sudo systemctl daemon-reload
+        sudo systemctl restart docker.socket
+    fi
+    sudo systemctl enable --now docker.socket docker.service
+    docker info >/dev/null
+}
+
+pull_images() {
+    docker compose --profile testing --profile batch --profile proxy pull --ignore-buildable -q
+}
+
+build_dev_image() {
+    # Builds local/traffic-analytics:development, shared by the dev, test and e2e services.
+    docker compose --profile batch build -q analytics-service
+}
+
+step "Docker Compose and Buildx plugins" install_docker_plugins
+step "Docker daemon" start_docker
+step "pnpm install" pnpm install --frozen-lockfile
+step "Pull emulator and mock images" pull_images
+step "Build dev image" build_dev_image
