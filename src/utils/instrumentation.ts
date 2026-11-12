@@ -3,21 +3,28 @@ import {NodeSDK} from '@opentelemetry/sdk-node';
 import {ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION} from '@opentelemetry/semantic-conventions';
 import {resourceFromAttributes} from '@opentelemetry/resources';
 import {OTLPTraceExporter} from '@opentelemetry/exporter-trace-otlp-http';
-import {TraceExporter as GCPTraceExporter} from '@google-cloud/opentelemetry-cloud-trace-exporter';
+import {OTLPTraceExporter as OTLPProtoTraceExporter} from '@opentelemetry/exporter-trace-otlp-proto';
+import {GoogleAuth} from 'google-auth-library';
 import {HttpInstrumentation} from '@opentelemetry/instrumentation-http';
 import {UndiciInstrumentation} from '@opentelemetry/instrumentation-undici';
 import {fastifyOtelInstrumentation, IGNORED_PATHS} from './fastify-otel';
 import {SpanExporter} from '@opentelemetry/sdk-trace-base';
 import {getDefaultServiceName} from './service-name';
 
+const useGcp = process.env.OTEL_TRACE_EXPORTER === 'gcp' || Boolean(process.env.K_SERVICE);
+const googleAuth = useGcp ? new GoogleAuth({
+    scopes: ['https://www.googleapis.com/auth/cloud-platform']
+}) : undefined;
+
 // Determine which trace exporter to use based on environment
 function getTraceExporter(): SpanExporter {
-    const traceExporterType = process.env.OTEL_TRACE_EXPORTER || 'jaeger';
-
-    if (traceExporterType === 'gcp' || process.env.K_SERVICE) {
-        // Use Google Cloud Trace for GCP environments
-        // K_SERVICE is automatically set by Cloud Run
-        return new GCPTraceExporter();
+    if (googleAuth) {
+        const auth = googleAuth;
+        return new OTLPProtoTraceExporter({
+            url: 'https://telemetry.googleapis.com/v1/traces',
+            // Resolve headers for every export so ADC can refresh expired tokens.
+            headers: async () => Object.fromEntries((await auth.getRequestHeaders()).entries())
+        });
     } else {
         // Use Jaeger for local development
         return new OTLPTraceExporter({
@@ -34,7 +41,9 @@ const serviceVersion = process.env.K_REVISION || 'unknown';
 const sdk = new NodeSDK({
     resource: resourceFromAttributes({
         [ATTR_SERVICE_NAME]: serviceName,
-        [ATTR_SERVICE_VERSION]: serviceVersion
+        [ATTR_SERVICE_VERSION]: serviceVersion,
+        // The SDK waits for asynchronous resource attributes before exporting.
+        ...(googleAuth ? {'gcp.project_id': googleAuth.getProjectId()} : {})
     }),
     traceExporter: getTraceExporter(),
     // Only instrumentations that survive the bundled production build: the
