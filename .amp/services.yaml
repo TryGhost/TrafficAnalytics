@@ -1,0 +1,10 @@
+services:
+  # Batch-mode dev stack (`pnpm dev`): ingest API, worker and Tinybird sync
+  # worker, plus the Firestore/Pub/Sub emulators and fake Tinybird, in Docker.
+  analytics:
+    command: ANALYTICS_PORT="$PORT" pnpm dev
+    port: 3000
+    health: /
+    portal:
+      title: Analytics ingest API
+      description: POST /api/v1/page_hit. Events are forwarded to the fake Tinybird (WireMock) on port 8089.

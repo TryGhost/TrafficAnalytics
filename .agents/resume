@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Docker may not be running after an orb wakes; the dev server and tests need it.
+set -euo pipefail
+
+sudo systemctl start docker.socket docker.service
+docker info >/dev/null
