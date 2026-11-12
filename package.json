@@ -91,7 +91,7 @@
     "fast-json-stringify": "7.3.3",
     "fastify": "5.12.8",
     "fastify-plugin": "6.0.1",
-    "google-auth-library": "11.3.3",
+    "google-auth-library": "11.3.4",
     "pino": "10.4.0",
     "split2": "4.2.0",
     "ua-parser-js": "1.0.41",
