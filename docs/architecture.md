@@ -80,6 +80,7 @@ The user signature ([`UserSignatureService`](../src/services/user-signature/User
 OpenTelemetry is initialised in [`src/utils/instrumentation.ts`](../src/utils/instrumentation.ts) before the app loads:
 
 - The trace exporter is Jaeger (OTLP HTTP) by default, or Google Cloud Trace when `OTEL_TRACE_EXPORTER=gcp` or `K_SERVICE` is set (Cloud Run sets `K_SERVICE` automatically).
+- Google Cloud Trace uses OTLP HTTP/protobuf at `https://telemetry.googleapis.com/v1/traces`. Application Default Credentials supply refreshed authentication headers and the `gcp.project_id` resource attribute. Before deploying, enable `telemetry.googleapis.com` and grant the runtime service account `roles/telemetry.tracesWriter` on the destination project. If ADC specifies a quota project, grant `roles/serviceusage.serviceUsageConsumer` there too. Send a staging request and confirm its trace arrives in Cloud Trace before promoting. See [Google's migration guide](https://docs.cloud.google.com/trace/docs/migrate-to-otlp-endpoints).
 - OTLP endpoints default to the `jaeger` service (`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, `OTEL_EXPORTER_OTLP_METRICS_ENDPOINT`).
 - The reported service name is `analytics-worker` in batch worker mode, `analytics-tinybird-sync-worker` in Tinybird sync mode, and `analytics-service` otherwise.
 
