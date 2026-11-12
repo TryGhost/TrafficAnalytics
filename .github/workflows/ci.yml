@@ -3,6 +3,13 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  # Deploy pushes a version commit with [skip ci]. A workflow_run trigger still
+  # runs on the latest main commit, so Codecov gets a report for the PR base.
+  workflow_run:
+    workflows: [Deploy]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
 
 jobs:
   lint-and-test:
@@ -11,6 +18,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -35,7 +43,8 @@ jobs:
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7
         with:
           files: ./coverage/cobertura-coverage.xml
-          fail_ci_if_error: false
+          use_oidc: ${{ github.ref == 'refs/heads/main' }}
+          fail_ci_if_error: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Get tree SHA
         id: tree
