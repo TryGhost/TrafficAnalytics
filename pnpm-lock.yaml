@@ -223,11 +223,11 @@ importers:
         specifier: 1.43.0
         version: 1.43.0
       '@tryghost/errors':
-        specifier: 3.4.7
-        version: 3.4.7
+        specifier: 3.4.8
+        version: 3.4.8
       '@tryghost/referrer-parser':
-        specifier: 0.1.25
-        version: 0.1.25
+        specifier: 0.1.26
+        version: 0.1.26
       ajv:
         specifier: 8.20.0
         version: 8.20.0
@@ -1076,11 +1076,11 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@tryghost/errors@3.4.7':
-    resolution: {integrity: sha512-z8s9WXE/aun0arvza/Sl7MpZItxFOgaoDqSdEgiJW+rWidqEELmBp4+K0x6ZB7Gw9/7uGl/TQi0vGeB2Ub2jgg==}
+  '@tryghost/errors@3.4.8':
+    resolution: {integrity: sha512-wRQPjb0TuTW6ROexYKEevbePGHQTY443pTJO3/3EDZlxzWLizdP64EkL0pVh+9Y9E/wfRdyqIjzECc5+rxhTDQ==}
 
-  '@tryghost/referrer-parser@0.1.25':
-    resolution: {integrity: sha512-MCN/qTnPg0HG/CAeGNGeZz0Dd8XeY3e0WpHMnJUaVOAhSVL4Dhb0MWDQJS/p+tozGXHgtCkykHj75CmiuRoJFg==}
+  '@tryghost/referrer-parser@0.1.26':
+    resolution: {integrity: sha512-GKczqlCmFSjD21bdpMoGqzYNLu2gVp/8TMtO46c5dle+iuPPe6Ku8QPAVWbu7Vd7z2qU8PPYCQa9KFWKkRFw+g==}
     engines: {node: '>=16.0.0'}
 
   '@types/chai@5.2.3':
@@ -3785,9 +3785,9 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@tryghost/errors@3.4.7': {}
+  '@tryghost/errors@3.4.8': {}
 
-  '@tryghost/referrer-parser@0.1.25': {}
+  '@tryghost/referrer-parser@0.1.26': {}
 
   '@types/chai@5.2.3':
     dependencies:
