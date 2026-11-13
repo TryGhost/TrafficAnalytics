@@ -184,8 +184,8 @@ importers:
         specifier: 12.8.1
         version: 12.8.1
       '@google-cloud/firestore':
-        specifier: 9.4.0
-        version: 9.4.0(supports-color@7.2.0)
+        specifier: 9.4.1
+        version: 9.4.1(supports-color@7.2.0)
       '@google-cloud/opentelemetry-cloud-trace-exporter':
         specifier: 3.1.0
         version: 3.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0)
@@ -610,12 +610,12 @@ packages:
     resolution: {integrity: sha512-sl6sfukASNpdCHGP8zAHgC+7qx3PBYR0tTEhFbiEPjyZs2QX5Ygl4Yuulql5MoD/VzXe9w55UzNgQQNVEVuVmw==}
     engines: {node: '>=22'}
 
-  '@google-cloud/firestore-api@0.2.0':
-    resolution: {integrity: sha512-wfHJPZmLqzpy6FN6U+7HkkP/AKhGsbHSpEy/qL2TyI3/pKRAvpamQxZ2qvps5hMRgAjfuHCim+oeJj9RveCaqg==}
-    engines: {node: '>=18'}
+  '@google-cloud/firestore-api@0.7.1':
+    resolution: {integrity: sha512-CM6Xm8P/eU59AgH94whcJxA4jaUUgH8Lj4Ki425yFlICEsOaw7Sc6XuezvrZGoXec+W5iVsQgPrZHnwF5g98Kg==}
+    engines: {node: '>=22'}
 
-  '@google-cloud/firestore@9.4.0':
-    resolution: {integrity: sha512-4tVhdRFepX5w+fRfl3H6D2+gaGQjmMiA9l+OwIwInfAkCi8iacfRx4jS9SmSfpQNlXequ55DfzFopwyFnIIJ9w==}
+  '@google-cloud/firestore@9.4.1':
+    resolution: {integrity: sha512-arD6dY7H8G1647OqxHmgxb3m1IYAAoVDm9ev/MW1meQRl1XuaNP8j/aGT5HPHTeaV/8AHZVGeXwOGTovWvIKIA==}
     engines: {node: '>=22'}
 
   '@google-cloud/logging-api@0.3.0':
@@ -1883,10 +1883,6 @@ packages:
   functional-red-black-tree@1.0.1:
     resolution: {integrity: sha512-dsKNQNdj6xA3T+QlADDA7mOSlX0qiMINjn0cgr+eGHGsbSHzTabcIogz2+p/iqP1Xs6EP/sS2SbqH+brGTbq0g==}
 
-  gaxios@7.1.3:
-    resolution: {integrity: sha512-YGGyuEdVIjqxkxVH1pUTMY/XtmmsApXrCVv5EU25iX6inEPbV+VakJfLealkBtJN69AQmh1eGOdCl9Sm1UP6XQ==}
-    engines: {node: '>=18'}
-
   gaxios@7.3.1:
     resolution: {integrity: sha512-kB3rzJV7d9juLZh8/56QTXCwQfxyhdOMdyYk1HdQKFtF8TJTDTZQJtixWIwXdE9Jji91mC41DUNpjleo4L4eAQ==}
     engines: {node: '>=18'}
@@ -1897,10 +1893,6 @@ packages:
 
   gcp-metadata@8.1.2:
     resolution: {integrity: sha512-zV/5HKTfCeKWnxG0Dmrw51hEWFGfcF2xiXqcA3+J90WDuP0SvoiSO5ORvcBsifmx/FoIjgQN3oNOGaQ5PhLFkg==}
-    engines: {node: '>=18'}
-
-  gcp-metadata@8.1.4:
-    resolution: {integrity: sha512-iJ9KMsiu+xKtNRX0PmGLSaIU3bUBAyzWTyqKemKPzNPsmmsBCQYmlNg+brEbES7IHSXtdVwzBPzx1vz3FAaipw==}
     engines: {node: '>=18'}
 
   gcp-metadata@9.2.3:
@@ -1945,10 +1937,6 @@ packages:
   globrex@0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
 
-  google-auth-library@10.5.0:
-    resolution: {integrity: sha512-7ABviyMOlX5hIVD60YOfHw4/CxOfBhyduaYB+wbFWCWoni4N7SLcV46hrVRktuBbZjFC9ONyqamZITN7q3n32w==}
-    engines: {node: '>=18'}
-
   google-auth-library@10.9.1:
     resolution: {integrity: sha512-i1ydyHrqcIxXkWh/uBmVkzCvIuq5yiK2ATndIe5XxKholrG/MTYP9xGYka4sQhrbIAgGjL2B6NOE7rFaiF3fXw==}
     engines: {node: '>=18'}
@@ -1956,10 +1944,6 @@ packages:
   google-auth-library@11.3.4:
     resolution: {integrity: sha512-RaYCDoeYIIFTRgH8hesSxqLrmtC2l+DB3cSCS/SN1TPGjI2VpPdJmF3bfRLUn8VvP/4I2Af9fsktw2f9SvVSVg==}
     engines: {node: '>=22'}
-
-  google-gax@5.0.8:
-    resolution: {integrity: sha512-M4vpZcXQIC1gqIVGQ7eaU3jXQA6zecStyTXu514TYfThlgSurYJOxHZo9fzU6hAgwPWvuEynAVHWyaIk80VeEA==}
-    engines: {node: '>=18'}
 
   google-gax@6.16.0:
     resolution: {integrity: sha512-qJz0RSuLgaPhiZDStTv04Q5MryjBNX6DJk7t3RlcOTHkLm3R3XxRhSjcSp1eDtU415IuBlV/bncyD5vnBFje1w==}
@@ -1982,10 +1966,6 @@ packages:
 
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
-
-  gtoken@8.0.0:
-    resolution: {integrity: sha512-+CqsMbHPiSTdtSO14O51eMNlrp9N79gmeqmXeouJOhfucAedHw9noVe/n5uJk3tbKE6a+6ZCQg3RPhVhHByAIw==}
-    engines: {node: '>=18'}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -2478,10 +2458,6 @@ packages:
   process-warning@5.1.1:
     resolution: {integrity: sha512-oCkNVj4OKnKEcocVBcDfiIugN1/cE6rgfT3nCtzeqZPA8+rIxMaQ0xXzIkGP8Gj2qUaP1UR7uhJ1VD8lUCpzCg==}
 
-  proto3-json-serializer@3.0.4:
-    resolution: {integrity: sha512-E1sbAYg3aEbXrq0n1ojJkRHQJGE1kaE/O6GLA94y8rnJBfgvOPTOd1b9hOceQK1FFZI9qMh1vBERCyO2ifubcw==}
-    engines: {node: '>=18'}
-
   proto3-json-serializer@4.1.0:
     resolution: {integrity: sha512-Z0Blk2BTZTPp9ZXOWnRG/P3bkEs53FtMv59sl4xU44xcDdYhKlVO/AqAHTYXAlW9HdislqQxjSornP3457wkag==}
     engines: {node: '>=22'}
@@ -2563,10 +2539,6 @@ packages:
   ret@0.5.1:
     resolution: {integrity: sha512-Z/nyvABwcRnRD2mMP7Kz6G1dFZZqX1mNErOnxF42OCQKE07b9k9hK9SQxHL3LFEZUdzQaLM4dId1E/E6Vm4WhA==}
     engines: {node: '>=10'}
-
-  retry-request@8.0.4:
-    resolution: {integrity: sha512-pI6/7eabUYkZxamkOq0g0uMxKLLGnjzhefY+vL8bVXag5rto4OU2YBTPytWLuHH7aEKD6fn7kJycQfid0Mwnkw==}
-    engines: {node: '>=18'}
 
   retry-request@9.1.0:
     resolution: {integrity: sha512-FILyVbis+DTo3KRbtKceqpj1595wIF+XQFW/+AVOBdCQmxwNDgcNXXr2FNM0Ej2qD7zVXbJGfH7lo4jB0wwhKA==}
@@ -2743,10 +2715,6 @@ packages:
   tapable@2.3.3:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
-
-  teeny-request@10.1.4:
-    resolution: {integrity: sha512-R1Cg4Vu0UULeDfHL/kjABLaTW++9yD/B6n2g48y5dJ04hsEaxcfmAqbNDzNsbqAYJyIpZafjklLG9YxRu9uzOg==}
-    engines: {node: '>=18'}
 
   teeny-request@11.1.1:
     resolution: {integrity: sha512-I5OLOkPN3QDN2l1H/eGueuKaq32CdAcXt91WOF/bOfadtZD1WQ8/Fk28WsqDcGjIyhAW/GQDagYhVEjhuZUFyQ==}
@@ -3278,15 +3246,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@google-cloud/firestore-api@0.2.0(supports-color@7.2.0)':
+  '@google-cloud/firestore-api@0.7.1(supports-color@7.2.0)':
     dependencies:
-      google-gax: 5.0.8(supports-color@7.2.0)
+      google-gax: 6.16.0(supports-color@7.2.0)
+      long: 5.3.2
     transitivePeerDependencies:
       - supports-color
 
-  '@google-cloud/firestore@9.4.0(supports-color@7.2.0)':
+  '@google-cloud/firestore@9.4.1(supports-color@7.2.0)':
     dependencies:
-      '@google-cloud/firestore-api': 0.2.0(supports-color@7.2.0)
+      '@google-cloud/firestore-api': 0.7.1(supports-color@7.2.0)
       '@opentelemetry/api': 1.9.1
       fast-deep-equal: 3.1.3
       functional-red-black-tree: 1.0.1
@@ -4635,14 +4604,6 @@ snapshots:
 
   functional-red-black-tree@1.0.1: {}
 
-  gaxios@7.1.3(supports-color@7.2.0):
-    dependencies:
-      extend: 3.0.2
-      https-proxy-agent: 7.0.6(supports-color@7.2.0)
-      node-fetch: 3.3.2
-    transitivePeerDependencies:
-      - supports-color
-
   gaxios@7.3.1(supports-color@7.2.0):
     dependencies:
       extend: 3.0.2
@@ -4662,14 +4623,6 @@ snapshots:
   gcp-metadata@8.1.2(supports-color@7.2.0):
     dependencies:
       gaxios: 7.3.1(supports-color@7.2.0)
-      google-logging-utils: 1.1.3
-      json-bigint: 1.0.0
-    transitivePeerDependencies:
-      - supports-color
-
-  gcp-metadata@8.1.4(supports-color@7.2.0):
-    dependencies:
-      gaxios: 7.1.3(supports-color@7.2.0)
       google-logging-utils: 1.1.3
       json-bigint: 1.0.0
     transitivePeerDependencies:
@@ -4730,18 +4683,6 @@ snapshots:
 
   globrex@0.1.2: {}
 
-  google-auth-library@10.5.0(supports-color@7.2.0):
-    dependencies:
-      base64-js: 1.5.1
-      ecdsa-sig-formatter: 1.0.11
-      gaxios: 7.3.1(supports-color@7.2.0)
-      gcp-metadata: 8.1.4(supports-color@7.2.0)
-      google-logging-utils: 1.1.3
-      gtoken: 8.0.0(supports-color@7.2.0)
-      jws: 4.0.1
-    transitivePeerDependencies:
-      - supports-color
-
   google-auth-library@10.9.1(supports-color@7.2.0):
     dependencies:
       base64-js: 1.5.1
@@ -4761,21 +4702,6 @@ snapshots:
       gcp-metadata: 9.2.3(supports-color@7.2.0)
       google-logging-utils: 2.1.1
       jws: 4.0.1
-    transitivePeerDependencies:
-      - supports-color
-
-  google-gax@5.0.8(supports-color@7.2.0):
-    dependencies:
-      '@grpc/grpc-js': 1.14.7
-      '@grpc/proto-loader': 0.8.1
-      duplexify: 4.1.3
-      google-auth-library: 10.5.0(supports-color@7.2.0)
-      google-logging-utils: 1.1.3
-      node-fetch: 3.3.2
-      object-hash: 3.0.0
-      proto3-json-serializer: 3.0.4
-      protobufjs: 7.6.6
-      retry-request: 8.0.4(supports-color@7.2.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -4804,13 +4730,6 @@ snapshots:
   graceful-fs@4.2.11: {}
 
   graphemer@1.4.0: {}
-
-  gtoken@8.0.0(supports-color@7.2.0):
-    dependencies:
-      gaxios: 7.3.1(supports-color@7.2.0)
-      jws: 4.0.1
-    transitivePeerDependencies:
-      - supports-color
 
   has-flag@4.0.0: {}
 
@@ -5235,10 +5154,6 @@ snapshots:
 
   process-warning@5.1.1: {}
 
-  proto3-json-serializer@3.0.4:
-    dependencies:
-      protobufjs: 7.6.6
-
   proto3-json-serializer@4.1.0:
     dependencies:
       protobufjs: 7.6.6
@@ -5329,13 +5244,6 @@ snapshots:
       supports-preserve-symlinks-flag: 1.0.0
 
   ret@0.5.1: {}
-
-  retry-request@8.0.4(supports-color@7.2.0):
-    dependencies:
-      extend: 3.0.2
-      teeny-request: 10.1.4(supports-color@7.2.0)
-    transitivePeerDependencies:
-      - supports-color
 
   retry-request@9.1.0:
     dependencies:
@@ -5528,15 +5436,6 @@ snapshots:
   tagged-tag@1.0.0: {}
 
   tapable@2.3.3: {}
-
-  teeny-request@10.1.4(supports-color@7.2.0):
-    dependencies:
-      http-proxy-agent: 7.0.2(supports-color@7.2.0)
-      https-proxy-agent: 7.0.6(supports-color@7.2.0)
-      node-fetch: 3.3.2
-      stream-events: 1.0.5
-    transitivePeerDependencies:
-      - supports-color
 
   teeny-request@11.1.1(supports-color@7.2.0):
     dependencies:
