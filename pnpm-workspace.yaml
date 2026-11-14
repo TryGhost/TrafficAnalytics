@@ -1,7 +1,3 @@
-# pnpm settings (not a monorepo — no `packages:`; pnpm reads its config here).
-
-# 3-day supply-chain soak, matching the `minimumReleaseAge` Renovate already
-# applies via the shared TryGhost/renovate-config this repo extends.
 minimumReleaseAge: 4320 # 3 days in minutes
 minimumReleaseAgeExclude:
   - '@tryghost/*' # first-party, we publish these
@@ -12,7 +8,7 @@ overrides:
   'gaxios@7.1.3>rimraf': '-'
   'google-gax@5.0.8>rimraf': '-'
   # @fastify/otel and typescript-estree still request v10 (GHSA-g3hv-75wg-m249).
-  'minimatch@10': 11.0.5
+  'minimatch@10': 11.0.8
 
 # Dependency build scripts allowed to run on install (pnpm blocks them by
 # default). The Docker build skips all of them via --ignore-scripts and still
