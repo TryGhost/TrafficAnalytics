@@ -195,9 +195,6 @@ importers:
       '@google-cloud/firestore':
         specifier: 9.4.1
         version: 9.4.1(supports-color@7.2.0)
-      '@google-cloud/opentelemetry-cloud-trace-exporter':
-        specifier: 3.1.0
-        version: 3.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0)
       '@google-cloud/pino-logging-gcp-config':
         specifier: 1.3.6
         version: 1.3.6(supports-color@7.2.0)
@@ -211,6 +208,9 @@ importers:
         specifier: 2.12.0
         version: 2.12.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/exporter-trace-otlp-http':
+        specifier: 0.223.0
+        version: 0.223.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/exporter-trace-otlp-proto':
         specifier: 0.223.0
         version: 0.223.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/instrumentation-http':
@@ -634,25 +634,6 @@ packages:
   '@google-cloud/logging@12.3.0':
     resolution: {integrity: sha512-7c5arcLyG3WbHmQWCHSB1a1h06539U7VQax67FJWfiKKwoxkekpDzOukB5pwdtglca5/8ur1RGfx4w1ng9pz4g==}
     engines: {node: '>=22'}
-
-  '@google-cloud/opentelemetry-cloud-trace-exporter@3.1.0':
-    resolution: {integrity: sha512-O7tpsMYLcZA7eE+y5ZpLBYHZfruvnYhmh4RLI2xTelVMsmR2JJolQCi3gk6dlDo58QDh7UzmX48X8TeNG1oG2g==}
-    engines: {node: '>=18'}
-    deprecated: Google Cloud Platform now supports native OpenTelemetry Protocol (OTLP) endpoints via the Telemetry API. Please follow https://github.com/GoogleCloudPlatform/opentelemetry-operations-js/blob/main/MIGRATION.md
-    peerDependencies:
-      '@opentelemetry/api': ^1.0.0
-      '@opentelemetry/core': ^2.0.0
-      '@opentelemetry/resources': ^2.0.0
-      '@opentelemetry/sdk-trace-base': ^2.0.0
-
-  '@google-cloud/opentelemetry-resource-util@3.1.0':
-    resolution: {integrity: sha512-dTvbFl+q9ac0Me8+GaDrFdwDBia/L8Qxxi/NY/jeHaUogDIpqOtLoqcXV9HdgiLxy5vjEGaJMqir1nVra1qG7w==}
-    engines: {node: '>=18'}
-    deprecated: Google Cloud Platform now supports native OpenTelemetry Protocol (OTLP) endpoints via the Telemetry API. Please follow https://github.com/GoogleCloudPlatform/opentelemetry-operations-js/blob/main/MIGRATION.md
-    peerDependencies:
-      '@opentelemetry/api': ^1.0.0
-      '@opentelemetry/core': ^2.0.0
-      '@opentelemetry/resources': ^2.0.0
 
   '@google-cloud/paginator@7.2.0':
     resolution: {integrity: sha512-l+x6YObHGTuqBCMvC0SXo3Cnyqg4FkWWKYRptf46PACHJ5GAUuhsd2b3wphgGrg1ybs/LAb+q5MnUTuG/3+v7w==}
@@ -1892,17 +1873,9 @@ packages:
   functional-red-black-tree@1.0.1:
     resolution: {integrity: sha512-dsKNQNdj6xA3T+QlADDA7mOSlX0qiMINjn0cgr+eGHGsbSHzTabcIogz2+p/iqP1Xs6EP/sS2SbqH+brGTbq0g==}
 
-  gaxios@7.3.1:
-    resolution: {integrity: sha512-kB3rzJV7d9juLZh8/56QTXCwQfxyhdOMdyYk1HdQKFtF8TJTDTZQJtixWIwXdE9Jji91mC41DUNpjleo4L4eAQ==}
-    engines: {node: '>=18'}
-
   gaxios@8.3.2:
     resolution: {integrity: sha512-7VsaTExxjbDv2ZK1YuC4jbgfN33NI/6/7zdYWUHB6mcg51v4tCBZe+xzjqPzOpVzI+C5k1Kk9OQ80WVrXAHOqw==}
     engines: {node: '>=22'}
-
-  gcp-metadata@8.1.2:
-    resolution: {integrity: sha512-zV/5HKTfCeKWnxG0Dmrw51hEWFGfcF2xiXqcA3+J90WDuP0SvoiSO5ORvcBsifmx/FoIjgQN3oNOGaQ5PhLFkg==}
-    engines: {node: '>=18'}
 
   gcp-metadata@9.2.3:
     resolution: {integrity: sha512-d2OI/dJJ3IIaeOz3c9jvr5j5G5beI5fQzbgilNiWhDKGwvJN9o10Qub70NkbF6PNJSUoNKZ77JKYGz0Fs4+9Lg==}
@@ -1946,10 +1919,6 @@ packages:
   globrex@0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
 
-  google-auth-library@10.9.1:
-    resolution: {integrity: sha512-i1ydyHrqcIxXkWh/uBmVkzCvIuq5yiK2ATndIe5XxKholrG/MTYP9xGYka4sQhrbIAgGjL2B6NOE7rFaiF3fXw==}
-    engines: {node: '>=18'}
-
   google-auth-library@11.3.4:
     resolution: {integrity: sha512-RaYCDoeYIIFTRgH8hesSxqLrmtC2l+DB3cSCS/SN1TPGjI2VpPdJmF3bfRLUn8VvP/4I2Af9fsktw2f9SvVSVg==}
     engines: {node: '>=22'}
@@ -1957,10 +1926,6 @@ packages:
   google-gax@6.16.0:
     resolution: {integrity: sha512-qJz0RSuLgaPhiZDStTv04Q5MryjBNX6DJk7t3RlcOTHkLm3R3XxRhSjcSp1eDtU415IuBlV/bncyD5vnBFje1w==}
     engines: {node: '>=22'}
-
-  google-logging-utils@1.1.3:
-    resolution: {integrity: sha512-eAmLkjDjAFCVXg7A1unxHsLf961m6y17QFqXqAXGj/gVkKFrEICfStRfwUlGNfeCEjNRa32JEWOUTlYXPyyKvA==}
-    engines: {node: '>=14'}
 
   google-logging-utils@2.1.1:
     resolution: {integrity: sha512-jYZOPMaRGS3Hldyudft6bdibW9ZWUKBkMdB2TeSETkV1c2T9TR4zxEWZETHv9xJ8KHr2hgkNLaSa8kcEcwlpeQ==}
@@ -3301,29 +3266,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@google-cloud/opentelemetry-cloud-trace-exporter@3.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.12.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0)':
-    dependencies:
-      '@google-cloud/opentelemetry-resource-util': 3.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0)
-      '@grpc/grpc-js': 1.14.7
-      '@grpc/proto-loader': 0.8.1
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/sdk-trace-base': 2.12.0(@opentelemetry/api@1.9.1)
-      google-auth-library: 10.9.1(supports-color@7.2.0)
-    transitivePeerDependencies:
-      - supports-color
-
-  '@google-cloud/opentelemetry-resource-util@3.1.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(supports-color@7.2.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.1
-      '@opentelemetry/core': 2.12.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
-      '@opentelemetry/semantic-conventions': 1.43.0
-      gcp-metadata: 9.2.3(supports-color@7.2.0)
-    transitivePeerDependencies:
-      - supports-color
-
   '@google-cloud/paginator@7.2.0':
     dependencies:
       extend: 3.0.2
@@ -4613,27 +4555,11 @@ snapshots:
 
   functional-red-black-tree@1.0.1: {}
 
-  gaxios@7.3.1(supports-color@7.2.0):
-    dependencies:
-      extend: 3.0.2
-      https-proxy-agent: 7.0.6(supports-color@7.2.0)
-      node-fetch: 3.3.2
-    transitivePeerDependencies:
-      - supports-color
-
   gaxios@8.3.2(supports-color@7.2.0):
     dependencies:
       extend: 3.0.2
       https-proxy-agent: 7.0.6(supports-color@7.2.0)
       node-fetch: 3.3.2
-    transitivePeerDependencies:
-      - supports-color
-
-  gcp-metadata@8.1.2(supports-color@7.2.0):
-    dependencies:
-      gaxios: 7.3.1(supports-color@7.2.0)
-      google-logging-utils: 1.1.3
-      json-bigint: 1.0.0
     transitivePeerDependencies:
       - supports-color
 
@@ -4692,17 +4618,6 @@ snapshots:
 
   globrex@0.1.2: {}
 
-  google-auth-library@10.9.1(supports-color@7.2.0):
-    dependencies:
-      base64-js: 1.5.1
-      ecdsa-sig-formatter: 1.0.11
-      gaxios: 7.3.1(supports-color@7.2.0)
-      gcp-metadata: 8.1.2(supports-color@7.2.0)
-      google-logging-utils: 1.1.3
-      jws: 4.0.1
-    transitivePeerDependencies:
-      - supports-color
-
   google-auth-library@11.3.4(supports-color@7.2.0):
     dependencies:
       base64-js: 1.5.1
@@ -4729,8 +4644,6 @@ snapshots:
       retry-request: 9.1.0
     transitivePeerDependencies:
       - supports-color
-
-  google-logging-utils@1.1.3: {}
 
   google-logging-utils@2.1.1: {}
 
