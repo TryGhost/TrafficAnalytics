@@ -244,8 +244,8 @@ importers:
         specifier: 3.0.1
         version: 3.0.1(ajv@8.20.0)
       fast-json-stringify:
-        specifier: 7.3.5
-        version: 7.3.5
+        specifier: 7.3.6
+        version: 7.3.6
       fastify:
         specifier: 5.12.8
         version: 5.12.8
@@ -1792,8 +1792,8 @@ packages:
   fast-json-stable-stringify@2.1.0:
     resolution: {integrity: sha512-lhd/wF+Lk98HZoTCtlVraHtfh5XYijIjalXck7saUtuanSDyLMxnHhSXEDJqHxD7msR8D0uCmqlkwjCV8xvwHw==}
 
-  fast-json-stringify@7.3.5:
-    resolution: {integrity: sha512-g7H3xqJmdH9aWLWh8S3CqrRZFZ321yaeNHZp3QUDl3wtXDWjPChDXCDDTwA4M/zsU42nOhE+z5KmpCzgBaaCgw==}
+  fast-json-stringify@7.3.6:
+    resolution: {integrity: sha512-hXCpiZTZGiER/Xree1Tb4PY1DREPUnlWTP5Df9hgtoDnUppulV7Km8lh1/NEBuqz4JnNGSXghnABudfZ/iwIzg==}
 
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
@@ -3180,7 +3180,7 @@ snapshots:
 
   '@fastify/fast-json-stringify-compiler@5.1.1':
     dependencies:
-      fast-json-stringify: 7.3.5
+      fast-json-stringify: 7.3.6
 
   '@fastify/forwarded@3.1.2': {}
 
@@ -4463,7 +4463,7 @@ snapshots:
 
   fast-json-stable-stringify@2.1.0: {}
 
-  fast-json-stringify@7.3.5:
+  fast-json-stringify@7.3.6:
     dependencies:
       '@fastify/merge-json-schemas': 0.2.2
       ajv: 8.20.0
@@ -4494,7 +4494,7 @@ snapshots:
       '@fastify/proxy-addr': 5.1.2
       abstract-logging: 2.0.1
       avvio: 9.3.1
-      fast-json-stringify: 7.3.5
+      fast-json-stringify: 7.3.6
       find-my-way: 9.10.0
       light-my-request: 6.8.0
       pino: 10.4.0
