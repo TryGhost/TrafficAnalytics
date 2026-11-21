@@ -190,8 +190,8 @@ importers:
         specifier: 1.0.1
         version: 1.0.1(@opentelemetry/api@1.10.0)(supports-color@7.2.0)
       '@fastify/reply-from':
-        specifier: 12.8.2
-        version: 12.8.2
+        specifier: 12.8.3
+        version: 12.8.3
       '@google-cloud/firestore':
         specifier: 9.4.1
         version: 9.4.1(supports-color@7.2.0)
@@ -610,8 +610,8 @@ packages:
   '@fastify/proxy-addr@5.1.2':
     resolution: {integrity: sha512-uqB4QsgVoro0XDC+DIftIMGXHdBPn+lK6Ek3xXAIxPMCJfqxnbtyEoMCm2KPUVOuIosd7Cyw9HawEqMFM/UA+g==}
 
-  '@fastify/reply-from@12.8.2':
-    resolution: {integrity: sha512-m2Cgo+QyJhHdj1diUq8liHo8mkJsPP7etaSgoNzYKlewD6cIiO3VAk4wXIUJ1v+tiyfj7q2h5tX9VnQEYRWcGg==}
+  '@fastify/reply-from@12.8.3':
+    resolution: {integrity: sha512-txrCVpuVlIcGxItszmmlyg8IQVSrSr1GKpwY0Ag1El/Y3wuB8XGP+yEJSDorCxfIvJtM+9QBFCQF8rGabktkpg==}
 
   '@glimmer/syntax@0.97.0':
     resolution: {integrity: sha512-uDUqlAxU40eJHJjMUR6ffdpDp6W53gNvS9YZNrBbf77sUL5xUFsBAaReB3FuyVPbwRg09p5rviioUJ8nyg7BBA==}
@@ -3203,7 +3203,7 @@ snapshots:
       '@fastify/forwarded': 3.1.2
       ipaddr.js: 2.5.0
 
-  '@fastify/reply-from@12.8.2':
+  '@fastify/reply-from@12.8.3':
     dependencies:
       '@fastify/error': 4.2.1
       end-of-stream: 1.4.5
